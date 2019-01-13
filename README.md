@@ -1,24 +1,33 @@
 # TorBox
 TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
+For more information visit the [TorBox website](https://www.torbox.ch)
+TorBox Image (900 MB) : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox-20190108-v023.gz)
+TorBox Menu only : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox/data/torbox023-20190108.zip)
+
 
 ### Disclaimer
-TorBox is in an „alpha test phase“, it is a hobby-hack, a proof of concept ... not more and not less! USE IT AT YOUR OWN RISK!!! It is strongly advised not to use TorBox, if your well-being depends from your anonymity. Anonymity is hard to get - solely using Tor will not guarantee it. Malware, Cookies, Java, Flash, Javaskript and so on can compromise you. The Tor-website itself states that using it can't solve all anonymity problems. It focuses only on protecting the transport of data (https://www.torproject.org/about/overview.html.en). In this high-risk cases using the Tor Browser only (https://www.torproject.org/projects/torbrowser.html.en#downloads) or better Tails (https://tails.boum.org/) is highly recommended.
+**TorBox is in an “alpha test phase”. Use it at your own risk!**
 
-This HOWTO and the available TorBox image were build for Raspberry Pi 3 (Model B or Model B+; the B+ has a remarkable better network performance), because it is the most powerful version of the Raspberry Pi family so far and it comes with its own wireless network / Bluetooth chip.
-
-
-###How to access
-If you downloaded the TorBox image, then write it on a SD Card (for example with https://etcher.io), put the SD Card into a Raspberry Pi, start it, wait some minutes until the green LED stops to flicker and then try to connect the new access-point „TorBox023“. Connect with your SSH client to 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu.
+TorBox is ideal for providing additional protection for the entire data stream up to the Tor network and for overcoming censorship. However, **anonymity is hard to get – solely using Tor doesn’t guarantee it**. Malware, Cookies, Java, Flash, Javascript and more will most certainly compromise your anonymity. Even the people from the [Tor Project themselves state](https://www.torproject.org/about/overview.html.en) that “Tor can’t solve all anonymity problems. It focuses only on protecting the transport of data.” Therefore, **it is strongly advised not to use TorBox, if your well-being depends on your anonymity**. In such a situation it is advisable to use [Tails](https://tails.boum.org/) (read [here](https://browserleaks.com/), [here](https://en.wikipedia.org/wiki/Device_fingerprint) and [here](https://panopticlick.eff.org/about#defend-against) why).
 
 
-###Passwords      
-If you are using the TorBox image, then all passwords are set to CHANGE-IT. Root login of the TorBox image: pi/CHANGE-IT
-You should change the default passwords a soon as possible. This is an easy task: login into your TorBox with an SSH client, "go to the advanced menu" (menu entry 10) and choose the right menu entries.
+### Quick Installation Guide
+1. Download the latest Torbox image file.
+2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 Gbyte SD Card, but 8 Gbyte is recommended.
+3. Put the SD Card into your Raspberry Pi, link it with an Internet router using an Ethernet cable or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
+4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox023”. Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the advanced menu).
+
+Raspberry Pi 3 (Model B or better a Model B+) is recommended because it is the most powerful version of the Raspberry Pi family and comes with an integrated WiFi chip.
 
 
 
-##BUILDING FROM SCRATCH
+
+
+
+
+
+## BUILDING FROM SCRATCH
 This installation/configuration is not necessary, if you have downloaded the TorBox image. Nevertheless, with the steps below, you should be able to built a TorBox from scratch based on Raspbian „Stretch“ Lite (based on Debian 9 „Stretch“). We suppose that you already did the basic configurations with raspbi-config (localization, keyboard layout and so on), that your Raspbian installation is working properly, that it has access to the internet and a sufficient power supply
 
 
