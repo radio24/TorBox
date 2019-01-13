@@ -2,27 +2,27 @@
 TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 
-# Disclaimer
+### Disclaimer
 TorBox is in an „alpha test phase“, it is a hobby-hack, a proof of concept ... not more and not less! USE IT AT YOUR OWN RISK!!! It is strongly advised not to use TorBox, if your well-being depends from your anonymity. Anonymity is hard to get - solely using Tor will not guarantee it. Malware, Cookies, Java, Flash, Javaskript and so on can compromise you. The Tor-website itself states that using it can't solve all anonymity problems. It focuses only on protecting the transport of data (https://www.torproject.org/about/overview.html.en). In this high-risk cases using the Tor Browser only (https://www.torproject.org/projects/torbrowser.html.en#downloads) or better Tails (https://tails.boum.org/) is highly recommended.
 
 This HOWTO and the available TorBox image were build for Raspberry Pi 3 (Model B or Model B+; the B+ has a remarkable better network performance), because it is the most powerful version of the Raspberry Pi family so far and it comes with its own wireless network / Bluetooth chip.
 
 
-#How to access
+###How to access
 If you downloaded the TorBox image, then write it on a SD Card (for example with https://etcher.io), put the SD Card into a Raspberry Pi, start it, wait some minutes until the green LED stops to flicker and then try to connect the new access-point „TorBox023“. Connect with your SSH client to 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu.
 
 
-#Passwords      
+###Passwords      
 If you are using the TorBox image, then all passwords are set to CHANGE-IT. Root login of the TorBox image: pi/CHANGE-IT
 You should change the default passwords a soon as possible. This is an easy task: login into your TorBox with an SSH client, "go to the advanced menu" (menu entry 10) and choose the right menu entries.
 
 
 
-#BUILDING FROM SCRATCH
+##BUILDING FROM SCRATCH
 This installation/configuration is not necessary, if you have downloaded the TorBox image. Nevertheless, with the steps below, you should be able to built a TorBox from scratch based on Raspbian „Stretch“ Lite (based on Debian 9 „Stretch“). We suppose that you already did the basic configurations with raspbi-config (localization, keyboard layout and so on), that your Raspbian installation is working properly, that it has access to the internet and a sufficient power supply
 
 
-A - Preparing your system
+####A - Preparing your system
 
 If you didn’t expand your filesystem over all your SD card storage, than it would be a good time to do it now with „sudo raspi-config“. Already started, eventually you should configure some additional options, like the hostname, the SSID etc, which will save you time later.
 
