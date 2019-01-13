@@ -20,6 +20,5 @@ Raspberry Pi 3 (Model B or better a Model B+) is recommended because it is the m
 
 Do you have additional questions? Check out our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112).
 <br />
-<br />
-## BUILDING FROM SCRATCH
+### Building From Scratch
 All that you need to run TorBox on your Raspberry Pi is the image file. However, if you like to build it from scratch on your own, whether you like to implement it to an existing system, to another hardware, respectively another operating system or you don’t trust an image file, which you didn’t bundle of your own. Then [check out our detailed manual](https://www.torbox.ch/?page_id=205). It helps you to build a TorBox from scratch.
