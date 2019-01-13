@@ -4,14 +4,14 @@ TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creat
 For more information visit the [TorBox website](https://www.torbox.ch)
 TorBox Image (900 MB) : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox-20190108-v023.gz)
 TorBox Menu only : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox/data/torbox023-20190108.zip)
-{nbsp} +
-{nbsp} +
+<br />
+<br />
 ### Disclaimer
 **TorBox is in an “alpha test phase”. Use it at your own risk!**
 
 TorBox is ideal for providing additional protection for the entire data stream up to the Tor network and for overcoming censorship. However, **anonymity is hard to get – solely using Tor doesn’t guarantee it**. Malware, Cookies, Java, Flash, Javascript and more will most certainly compromise your anonymity. Even the people from the [Tor Project themselves state](https://www.torproject.org/about/overview.html.en) that “Tor can’t solve all anonymity problems. It focuses only on protecting the transport of data.” Therefore, **it is strongly advised not to use TorBox, if your well-being depends on your anonymity**. In such a situation it is advisable to use [Tails](https://tails.boum.org/) (read [here](https://browserleaks.com/), [here](https://en.wikipedia.org/wiki/Device_fingerprint) and [here](https://panopticlick.eff.org/about#defend-against) why).
-{nbsp} +
-{nbsp} +
+<br />
+<br />
 ### Quick Installation Guide
 1. Download the latest Torbox image file.
 2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 Gbyte SD Card, but 8 Gbyte is recommended.
