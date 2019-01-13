@@ -5,12 +5,10 @@ For more information visit the [TorBox website](https://www.torbox.ch)
 TorBox Image (900 MB) : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox-20190108-v023.gz)
 TorBox Menu only : [v.023 (09.01.2019)](https://www.torbox.ch/data/torbox/data/torbox023-20190108.zip)
 <br />
-<br />
 ### Disclaimer
 **TorBox is in an “alpha test phase”. Use it at your own risk!**
 
 TorBox is ideal for providing additional protection for the entire data stream up to the Tor network and for overcoming censorship. However, **anonymity is hard to get – solely using Tor doesn’t guarantee it**. Malware, Cookies, Java, Flash, Javascript and more will most certainly compromise your anonymity. Even the people from the [Tor Project themselves state](https://www.torproject.org/about/overview.html.en) that “Tor can’t solve all anonymity problems. It focuses only on protecting the transport of data.” Therefore, **it is strongly advised not to use TorBox, if your well-being depends on your anonymity**. In such a situation it is advisable to use [Tails](https://tails.boum.org/) (read [here](https://browserleaks.com/), [here](https://en.wikipedia.org/wiki/Device_fingerprint) and [here](https://panopticlick.eff.org/about#defend-against) why).
-<br />
 <br />
 ### Quick Installation Guide
 1. Download the latest Torbox image file.
@@ -21,8 +19,7 @@ TorBox is ideal for providing additional protection for the entire data stream u
 Raspberry Pi 3 (Model B or better a Model B+) is recommended because it is the most powerful version of the Raspberry Pi family and comes with an integrated WiFi chip.
 
 Do you have additional questions? Check out our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112).
-
-
-
+<br />
+<br />
 ## BUILDING FROM SCRATCH
 All that you need to run TorBox on your Raspberry Pi is the image file. However, if you like to build it from scratch on your own, whether you like to implement it to an existing system, to another hardware, respectively another operating system or you don’t trust an image file, which you didn’t bundle of your own. Then [check out our detailed manual](https://www.torbox.ch/?page_id=205). It helps you to build a TorBox from scratch.
