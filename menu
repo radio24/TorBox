@@ -38,8 +38,8 @@ NO_SPACER=7
 #
 #Set the the variables for the menu
 MENU_ROWS=80
-MENU_HEIGHT=8+$NO_ITEMS+$NO_SPACER
-MENU_LIST_HEIGHT=$NO_ITEMS+$NO_SPACER #Height of the list (its the last number below)
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 #
 #
 # OTHER VARIABLES
