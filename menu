@@ -1,0 +1,295 @@
+#!/bin/sh -e
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file displays the main menu and executes all relevant scripts.
+#
+# SYNTAX
+# sh menu
+#
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=14
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=7
+#
+#Set the the variables for the menu
+MENU_ROWS=80
+MENU_HEIGHT=8+$NO_ITEMS+$NO_SPACER
+MENU_LIST_HEIGHT=$NO_ITEMS+$NO_SPACER #Height of the list (its the last number below)
+#
+#
+# OTHER VARIABLES
+#
+SCREENSAVE="termsaver quotes4all"
+TORSTATS="sudo -u debian-tor nyx"
+NEWIDENT="new_ident"
+WICDCONFFILE="/etc/wicd/manager-settings.conf"
+RUNFILE="run/torbox.run"
+EXITID="EXITID=0"
+TOGGLE01=" "
+TOGGLE02=" "
+
+###########################
+
+# Resetting the run-file... (the initial EXITID in the runfile has to be 0)
+clear
+sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+
+# ...and reading from run-file (sre we in the WiFi or CABLE mode?)
+MODE=$(grep "^MODE=" ${RUNFILE})
+if [ $MODE = "MODE=WLAN" ]; then
+    TOGGLE01="ON"
+    TOGGLE02="OFF"
+else
+    TOGGLE01="OFF"
+    TOGGLE02="ON"
+fi
+
+# Display the menu
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.23 - MAIN MENU" --menu "Choose an Option (ESC -> command prompt)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
+" " " " \
+"===" "==============================[Tools                ]===" \
+"  1" "Screen saver" \
+"  2" "Tor statistics (press q twice to leave it)" \
+"  3" "Enforce a new exit node with a new IP" \
+"===" "==============================[Wireless-client "$TOGGLE01"   ]===" \
+"  4" "Cable-internet to wireless-clients" \
+"  5" "Wireless-internet to wireless-clients" \
+"  6" "Tethering-internet to wireless-clients" \
+"===" "==============================[Cable-client    "$TOGGLE02"  ]===" \
+"  7" "Cable-internet to cable-clients" \
+"  8" "Wireless-internet to cable-clients" \
+"  9" "Tethering-internet to cable-clients" \
+"===" "==============================[Change mode & Save   ]===" \
+" 10" "Change wireless <-> cable client" \
+" 11" "Save the current connection setting" \
+"===" "==============================[For advanced users   ]===" \
+" 12" "Go to the advanced menu..." \
+"===" "==============================[Reboot & Shutdown    ]===" \
+" 13" "Reboot TorBox" \
+" 14" "Shutdown TorBox" 3>&1 1>&2 2>&3)
+
+exitstatus=$?
+
+# Programing
+if [ $exitstatus = 0 ]; then
+	if [ "$CHOICE" != " " ]; then
+		if [ $CHOICE = 1 ]; then
+      whiptail --title "TorBox - INFO" --textbox text/termsaver-text 10 40
+			clear
+			$SCREENSAVE
+		elif [ $CHOICE = 2 ]; then
+			clear
+			$TORSTATS
+		elif [ $CHOICE = 3 ]; then
+			sudo sh $NEWIDENT
+# Here begins the WiFi mode
+    elif [ $CHOICE = 4 ]; then
+      if [ $MODE = "MODE=WLAN" ]; then
+	      INPUT=$(cat text/captive_or_not-text)
+	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 80); then
+	         CAPTIVE=1
+	      else
+	         CAPTIVE=0
+	      fi
+	      sudo sh set_interfaces eth0 wlan0 $CAPTIVE
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+	      if [ $EXITID = "EXITID=0" ]; then
+	         whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+	      else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+        fi
+      fi
+		elif [ $CHOICE = 5 ]; then
+      if [ $MODE = "MODE=WLAN" ]; then
+		    INPUT=$(cat text/captive_or_not-text)
+	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 80); then
+	         CAPTIVE=1
+	      else
+	         CAPTIVE=0
+	      fi
+	      sudo sh set_interfaces wlan1 wlan0 $CAPTIVE
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+        if [ $EXITID = "EXITID=0" ]; then
+	        whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+	      else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+	      fi
+      fi
+		elif [ $CHOICE = 6 ]; then
+      if [ $MODE = "MODE=WLAN" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/tethering-text 35 80
+        sudo sh set_interfaces eth1 wlan0 0
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+        if [ $EXITID = "EXITID=0" ]; then
+	         whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+	      else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+	      fi
+      fi
+# Important for the CABLE mode:
+# The Internet have to be connected with an external ethernet interface (usually a USB-ethernet adapter)
+# The client has always to be connected to the internal ethernet interface, fix assembled on the board!!
+    elif [ $CHOICE = 7 ]; then
+      if [ $MODE = "MODE=CABLE" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/cable-cable-text 15 80
+        INPUT=$(cat text/captive_or_not-text)
+	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 80); then
+	         CAPTIVE=1
+	      else
+	         CAPTIVE=0
+	      fi
+	      sudo sh set_interfaces eth1 eth0 $CAPTIVE
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+	      if [ $EXITID = "EXITID=0" ]; then
+	        whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+	      else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+        fi
+	    fi
+    elif [ $CHOICE = 8 ]; then
+      if [ $MODE = "MODE=CABLE" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/wlan-cable-text 15 80
+        INPUT=$(cat text/captive_or_not-text)
+	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 80); then
+	         CAPTIVE=1
+	      else
+	         CAPTIVE=0
+	      fi
+	      sudo sh set_interfaces wlan0 eth0 $CAPTIVE
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+	      if [ $EXITID = "EXITID=0" ]; then
+	        whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+	      else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+	      fi
+	    fi
+		elif [ $CHOICE = 9 ]; then
+      if [ $MODE = "MODE=CABLE" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/wlan-cable-text 15 80
+        whiptail --title "TorBox - INFO" --textbox text/tethering-text 35 80
+        sudo sh set_interfaces eth1 eth0 0
+	      EXITID=$(grep "^EXITID=" ${RUNFILE})
+        if [ $EXITID = "EXITID=0" ]; then
+          whiptail --title "TorBox - INFO" --textbox text/finish-text 35 80
+        else
+          EXITID="EXITID=0"
+          sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+        fi
+      fi
+		elif [ $CHOICE = 10 ]; then
+	    INPUT=$(cat text/change-mode-text)
+      if [ $MODE = "MODE=WLAN" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO CABLE" --yesno "$INPUT" 35 80); then
+          clear
+				  echo "[+] Configuring the interfaces..."
+				  if [ ! -f /etc/network/interfaces.ORIG ]; then
+				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
+				  fi
+				  sudo cp etc/network/interfaces.cable /etc/network/interfaces
+				  sudo sed -i "s/^MODE=.*/MODE=CABLE/" ${RUNFILE}
+          echo "[+] Preparing connection settings..."
+          sleep 2
+				  sudo sh set_interfaces eth1 eth0 0
+				  echo "[+] Save connection settings..."
+				  sleep 2
+          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+          echo "[+] Re-activating AP capibilities..."
+          sleep 2
+          sudo update-rc.d hostapd enable
+          echo "[+] Configuring wicd..."
+          sleep 2
+  				sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan0/" ${WICDCONFFILE}
+  				sudo sed -i "s/^wired_interface.*/wired_interface = eth1/" ${WICDCONFFILE}
+          echo "[+] Rebooting TorBox..."
+          sleep 2
+          sudo reboot -h now
+          exit 0
+	      fi
+      else
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO WIRELESS" --yesno "$INPUT" 35 80); then
+          clear
+				  echo "[+] Configuring the interfaces..."
+				  if [ ! -f /etc/network/interfaces.ORIG ]; then
+				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
+				  fi
+				  sudo cp etc/network/interfaces.wlan /etc/network/interfaces
+				  sudo sed -i "s/^MODE=.*/MODE=WLAN/" ${RUNFILE}
+          echo "[+] Preparing connection settings..."
+          sleep 2
+				  sudo sh set_interfaces eth0 wlan0 0
+          echo "[+] Saving connection settings..."
+          sleep 2
+          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+          echo "[+] Deactivating AP capibilities..."
+          sleep 2
+          sudo update-rc.d hostapd disable
+          echo "[+] Configuring wicd..."
+          sleep 2
+  			  sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan1/" ${WICDCONFFILE}
+  			  sudo sed -i "s/^wired_interface.*/wired_interface = eth0/" ${WICDCONFFILE}
+          echo "[+] Rebooting TorBox..."
+          sleep 2
+          sudo reboot -h now
+          exit 0
+        fi
+      fi
+		elif [ $CHOICE = 11 ]; then
+      sudo sh save_connection
+      sleep 2
+		elif [ $CHOICE = 12 ]; then
+      sh menu-a
+		elif [ $CHOICE = 13 ]; then
+      sudo sh save_connection
+      echo "[+] Rebooting down TorBox..."
+      sleep 2
+      sudo reboot
+      exit 0
+		elif [ $CHOICE = 14 ]; then
+      sudo sh save_connection
+      echo "[+] Shutting down TorBox..."
+      sleep 2
+      echo "[!] You can disconnect TorBox from the power source in about 30 second..."
+      echo ""
+      sleep 2
+      sudo shutdown -h now
+      exit 0
+		fi
+	fi
+else
+	clear
+	PROMPTTEXT=$(cat text/prompt-text)
+	echo "$PROMPTTEXT"
+	echo " "
+	exit 0
+fi
+sh menu
