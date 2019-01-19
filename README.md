@@ -16,7 +16,7 @@ TorBox is ideal for providing additional protection for the entire data stream u
 3. Put the SD Card into your Raspberry Pi, link it with an Internet router using an Ethernet cable or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
 4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox023” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the advanced menu).
 
-Raspberry Pi 3 (Model B or better a Model B+) is recommended because it is the most powerful version of the Raspberry Pi family and comes with an integrated WiFi chip.
+Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) or better a [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) is recommended because it is the most powerful version of the Raspberry Pi family and comes with an integrated WiFi chip.
 
 Do you have additional questions? Check out our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112).
 
