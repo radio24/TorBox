@@ -270,7 +270,7 @@ if [ $exitstatus = 0 ]; then
       sh menu-a
 		elif [ $CHOICE = 13 ]; then
       sudo sh save_connection
-      echo "[+] Rebooting down TorBox..."
+      echo "[+] Rebooting TorBox..."
       sleep 2
       sudo reboot
       exit 0
