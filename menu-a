@@ -162,9 +162,10 @@ if [ $exitstatus = 0 ]; then
 			sleep 5
 		elif [ $CHOICE = 8 ]; then
 			clear
-			echo "[!] Flushing ALL log files..."
+			echo "[!] Erasing all log files..."
 			echo " "
 			sudo sh erase_logs
+      sudo service rsyslog restart
 			sleep 2
     elif [ $CHOICE = 9 ]; then
 			clear
@@ -206,8 +207,8 @@ if [ $exitstatus = 0 ]; then
   	  fi
  		elif [ $CHOICE = 13 ]; then
 			if (whiptail --title "Changing the logging behaviour - EXPERIMENTAL !" --yes-button "Logging" --no-button "STOP Logging" --yesno "\n\nWould you like to erase ALL your log files and stop/start logging?" 20 60 3>&1 1>&2 2>&3); then
-				LOG_STATUS=sudo systemctl is-active rsyslog
-				if [ $LOG_STATUS != "active" ]; then
+				LOG_STATUS=$(sudo systemctl is-active rsyslog)
+				if [ $LOG_STATUS = inactive ]; then
 					sudo systemctl enable rsyslog
 					sudo service rsyslog start
 				fi
