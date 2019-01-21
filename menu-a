@@ -214,8 +214,6 @@ if [ $exitstatus = 0 ]; then
 				fi
 			else
 		  	clear
-				echo "[!] Erase ALL log files..."
-				echo " "
 				sudo sh erase_logs
 				sleep 2
 				echo "[+] Stopping logging now..."
