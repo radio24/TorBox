@@ -53,8 +53,9 @@ EXITID="EXITID=0"
 TOGGLE01=" "
 TOGGLE02=" "
 
-###########################
+##############################
 
+######## PREPARATIONS ########
 # Resetting the run-file... (the initial EXITID in the runfile has to be 0)
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
@@ -69,7 +70,7 @@ else
     TOGGLE02="ON"
 fi
 
-# Display the menu
+###### DISPLAY THE MENU ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.23 - MAIN MENU" --menu "Choose an Option (ESC -> command prompt)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
 " " " " \
 "===" "==============================[Tools                ]===" \
@@ -95,7 +96,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.23 - MAIN MENU" --menu "Choose 
 
 exitstatus=$?
 
-# Programing
+
 if [ $exitstatus = 0 ]; then
 	if [ "$CHOICE" != " " ]; then
 		if [ $CHOICE = 1 ]; then
@@ -107,7 +108,7 @@ if [ $exitstatus = 0 ]; then
 			$TORSTATS
 		elif [ $CHOICE = 3 ]; then
 			sudo sh $NEWIDENT
-# Here begins the WiFi mode
+# Here begins the WIFI mode
     elif [ $CHOICE = 4 ]; then
       if [ $MODE = "MODE=WLAN" ]; then
 	      INPUT=$(cat text/captive_or_not-text)
@@ -154,7 +155,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 	      fi
       fi
-# Important for the CABLE mode:
+# Here begis the CABLE mosde. Important:
 # The Internet have to be connected with an external ethernet interface (usually a USB-ethernet adapter)
 # The client has always to be connected to the internal ethernet interface, fix assembled on the board!!
     elif [ $CHOICE = 7 ]; then
