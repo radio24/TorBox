@@ -1,0 +1,93 @@
+#!/bin/sh -e
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file helps to overcome censorship using bridges which support
+# pluggable transports. However, this is just a first try — there are
+# still several problems to deal with, and the usability isn’t great, yet.
+#
+# SYNTAX
+# sh set_bridged_mode
+#
+#
+###### SET VARIABLES ######
+#
+TORRC="/etc/tor/torrc"
+number_bridges=0
+old=0
+bridge_address=" "
+
+###########################
+
+# Check if old bridges are available
+if grep "^#Bridge" ${TORRC}; then
+  clear
+  if (whiptail --title "TorBox - EXPERIMENTAL" --yesno "\n\nWould you like to try the old bridge-addresses which are already in the config file?" 20 80); then
+    old=1
+    sudo sed -i "s/^#Bridge/Bridge/g" ${TORRC}
+  else
+    sudo sed -i "/^#Bridge.*/d" ${TORRC}
+  fi
+fi
+
+# Set new bridges (this is not a good approach -- see feedback by dalavere)
+if [ $old = 0 ]; then
+  number_bridges=$(whiptail --title "GET THE BRIDGES" --inputbox "\n\nHow many bridge-addresses do you have?" 20 60 3>&1 1>&2 2>&3)
+  if [ $number_bridges > 0 ]; then
+    i=1
+    while [ $i -le $number_bridges ]
+    do
+      bridge_address=$(whiptail --title "GET THE BRIDGES" --inputbox "\n\nInsert one bridge-address (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" 20 60 3>&1 1>&2 2>&3)
+      bridge_address="Bridge $bridge_address"
+      sudo echo $bridge_address >> $TORRC
+      i=$(( $i+1 ))
+    done
+  else
+    exit 0
+  fi
+fi
+
+# Configure torrc
+sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
+
+# Restart Tor (in a future revision, we have to consider that peaople have disabled login --> nyx have to be started first)
+sudo service tor restart
+INPUT=$(cat text/bridged-mode-002-text)
+if (whiptail --title "TorBox - EXPERIMENTAL" --no-button "UNSUCCESSFUL" --yes-button "SUCCESSFULL" --yesno "$INPUT" 30 80); then
+
+# Undo torrx configuration (this is not a good idea -- see feedback by dalavere)
+  sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
+  sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+  sudo sed -i "s/^UpdateBridges/#UpdateBridges/g" ${TORRC}
+  sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+  whiptail --title "TorBox - INFO" --textbox text/bridged-mode-004-text 20 80
+  exit 0
+else
+  sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
+  sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+  sudo sed -i "s/^UpdateBridges/#UpdateBridges/g" ${TORRC}
+  sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+  whiptail --title "TorBox - INFO" --textbox text/bridged-mode-003-text 20 80
+  sudo service tor restart
+fi
+exit 0
