@@ -55,9 +55,9 @@ KERNEL_VERS=" "
 TOR_VERS=" "
 WICD_VERS=" "
 
-###########################
+##############################
 
-#Display the menu
+###### DISPLAY THE MENU ######
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.23 - ADVANCED MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
@@ -82,6 +82,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.23 - ADVANCED MENU"
 " 13" "Erase ALL log files and stop/start logging permanently" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
+
 
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
