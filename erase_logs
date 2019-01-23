@@ -31,5 +31,5 @@ for logs in `find /var/log -type f`; do
 	sudo rm $logs
 	sleep 1
 done
-echo "[+] Erasing ~/.bash_history"
-sudo rm ~/.bash_history 
+echo "[+] Erasing .bash_history"
+sudo rm ../.bash_history
