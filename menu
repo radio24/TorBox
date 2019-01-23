@@ -108,7 +108,7 @@ if [ $exitstatus = 0 ]; then
 			$TORSTATS
 		elif [ $CHOICE = 3 ]; then
 			sudo sh $NEWIDENT
-# Here begins the WIFI mode
+# Here begins the WIRELESS mode
     elif [ $CHOICE = 4 ]; then
       if [ $MODE = "MODE=WLAN" ]; then
 	      INPUT=$(cat text/captive_or_not-text)
@@ -155,7 +155,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 	      fi
       fi
-# Here begis the CABLE mosde. Important:
+# Here begis the CABLE mode. Important:
 # The Internet have to be connected with an external ethernet interface (usually a USB-ethernet adapter)
 # The client has always to be connected to the internal ethernet interface, fix assembled on the board!!
     elif [ $CHOICE = 7 ]; then
