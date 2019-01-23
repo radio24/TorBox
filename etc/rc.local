@@ -1,0 +1,19 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]; then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+# Added by TorBox
+sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+sudo service dnsmasq start
+sleep 10
+sudo /usr/sbin/ntpdate pool.ntp.org
+sudo service dnsmasq stop
+
+exit 0

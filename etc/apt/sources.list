@@ -1,0 +1,9 @@
+# This configuration file was modified by TorBox
+
+deb http://raspbian.raspberrypi.org/raspbian/ stretch main contrib non-free rpi
+# Uncomment line below then 'apt-get update' to enable 'apt-get source'
+#deb-src http://raspbian.raspberrypi.org/raspbian/ stretch main contrib non-free rpi
+
+# Added by TorBox
+deb https://deb.torproject.org/torproject.org stretch main
+deb-src https://deb.torproject.org/torproject.org stretch main
