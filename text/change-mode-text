@@ -1,0 +1,13 @@
+With this menu entry, you can change the WORKING MODE of TorBox. The WORKING MODE decides how a client can connect with the TorBox. Therefore, choosing between two working modes: WIRELESS or CABLE is possible.
+
+WIRELESS means that TorBox acts as an access point which provides a wireless network with the name "TorBox" which a client has to connect. WIRELESS is the DEFAULT working mode.
+
+CABLE means that the client is directly connected with an Ethernet cable to the TorBox. In this mode, Torbox stops working as an access point until you change back to WIRELESS.
+
+IMPORTANT: In the CABLE mode, the Internet has to be connected with an external Ethernet interface (usually a USB-Ethernet adapter), and the client has, IN ANY CASE, to be connected to the internal Ethernet interface, fix assembled on the board. In the CABLE, mode a client can't connect your TorBox wirelessly until you change back to WIRELESS. 
+
+TorBox reboots at the end of the procedure.
+
+Would you like to change the working mode of TorBox?
+
+  

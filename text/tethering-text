@@ -1,0 +1,10 @@
+!!! ATTENTION !!! READ IT CAREFULLY !!!
+
+If you use tethering via USB, your smartphone is probably charging its battery. This could be problematic: If the Raspberry Pi doesn’t receive enough power (indicated by a flashing red LED), you are eventually unable to connect to the AP of an internet provider or experience all sorts of other strange behaviors. 
+
+A better solution may be to create a personal hotspot with your smartphone instead of using tethering. However, if you are using the tethering option, you should remove other power consumption devices and make sure that your Raspberry Pi has the best power source as you can get. For example the RS Pro PB-10400 Power Bank, 5V / 10,4Ah worked well with us.
+
+Using tethering is simple. For example in case of an iPhone: Unlock your iPhone, but let the personal hotspot disabled for the time being and connect it with your Raspberry Pi’s USB port. Choose to trust your iPhone (necessary!). Enable personal hotspot on your iPhone (USB only) and continue with the configuration.
+
+
+  

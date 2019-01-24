@@ -1,0 +1,13 @@
+You choose to connect your TorBox with a wireless network. For this purpose, it is necessary to connect to the wireless network intended for use. The following easy to use program intends to help you with that.
+
+IMPORTANT
+Your Pi needs to have enough power (the red led must not blink!). If not, the process stucks at "Validating authentification" or breaks completely. If the process stucks at "Obtaining IP address", try to reboot after you completed the configuration (see below) and try to repeat the process a second time (probably the network is connected and set up during the boot). If nothing helps, try to reset the network manager (entry 9 in the advanced menu).
+
+DESCRIPTION
+After the program has started, please choose the specific wireless network with the up-/down-arrow-keys. Then press the right-arrow-key. IN ALL CASES, activate "Use these settings for all networks sharing this essid" and "Automatically connect to this network". If necessary, toggle "Use encryption" on, usually select "WPA 1/2 (Passphrase)" and write the password in the field below. Save with SHIFT-S. 
+
+IN ALL CASES press SHIFT-P and choose "Automatic Reconnection" "Automatically reconnect on connection loss". Save with SHIFT-S. 
+
+Check again, if the wireless network, which you wish to connect, is still selected and press ENTER. Wait a minute or two. The connection was successful if you can read "Connected to..." in the left corner.
+
+Press OK, if you are ready to continue...
