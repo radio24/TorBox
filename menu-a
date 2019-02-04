@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=7
+NO_SPACER=5
 #
 #Set the the variables for the menu
 MENU_ROWS=80
@@ -44,18 +44,34 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 #
 # OTHER VARIABLES
 #
-HOSTAPD="/etc/hostapd/hostapd.conf"
 CRDAFILE="/etc/default/crda"
-TORRC="/etc/tor/torrc"
+HOSTAPD="/etc/hostapd/hostapd.conf"
 NEWIDENT="new_ident"
+RUNFILE="run/torbox.run"
+TORRC="/etc/tor/torrc"
+KERNEL_VERS=" "
 LOG_STATUS=" "
 REGDOMAIN=" "
 TLC=" "
-KERNEL_VERS=" "
+TOGGLE03=" "
+TOGGLE04=" "
 TOR_VERS=" "
 WICD_VERS=" "
 
 ##############################
+
+######## PREPARATIONS ########
+# Reading from run-file (are we in the WiFi or CABLE mode?)
+# TOGGLE03 represents the extent of logging
+# TOGGLE03 represents the extent of logging
+MODE=$(grep "^LOG=" ${RUNFILE})
+if [ $MODE = "MODE=LOW" ]; then
+    TOGGLE03=" LOW"
+    TOGGLE04="HIGH"
+else
+    TOGGLE03="HIGH"
+    TOGGLE04=" LOW"
+fi
 
 ###### DISPLAY THE MENU ######
 clear
@@ -69,17 +85,16 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.23 - ADVANCED MENU"
 "  4" "Hide / Unhide your wireless lan (reboot required)"  \
 "  5" "Change the password of your Tor control port"  \
 "  6" "Update the base system to the newest version (reboot required)"  \
-" " " " \
+"===" "==================================[Logging "$TOGGLE03"]===" \
+"  7" "Changing the extent of logging ("$TOGGLE03" -> "$TOGGLE04")" \
+"  8" "Erase all log files" \
 "===" "=========================================[Troubleshooting]===" \
-"  7" "Countermeasure against a disconnect when idle feature" \
-"  8" "Flush ALL log files" \
-"  9" "Reset network manager (needed when it crashes)" \
-" 10" "Reset Tor and its statistics (needed when it crashes)" \
-" 11" "Set the wifi regulatory domain" \
-" " " " \
+"  9" "Countermeasure against a disconnect when idle feature" \
+" 10" "Reset network manager (needed when it crashes)" \
+" 12" "Reset Tor and its statistics (needed when it crashes)" \
+" 12" "Set the wifi regulatory domain" \
 "===" "=========================================[EXPERIMENTAL!! ]===" \
-" 12" "Using Bridges with obfs4 pluggable transports" \
-" 13" "Erase ALL log files and stop/start logging permanently" 3>&1 1>&2 2>&3)
+" 13" "Using Bridges with obfs4 pluggable transports" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -157,11 +172,25 @@ if [ $exitstatus = 0 ]; then
          screen sh update
 			fi
     elif [ $CHOICE = 7 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/ping-text 30 80
-			ping -q google.com >/dev/null &
-			echo "[+] Countermeasure against a disconnect when idle feature activated!"
-			sleep 5
-		elif [ $CHOICE = 8 ]; then
+			if (whiptail --title "Changing the extent of logging ("$TOGGLE03" -> "$TOGGLE04")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
+				LOG_STATUS=$(sudo systemctl is-active rsyslog)
+				if [ $LOG_STATUS = inactive ]; then
+					sudo systemctl enable rsyslog
+					sudo service rsyslog start
+          sudo sed -i "s/^LOG=.*/LOG=HIGH/" ${RUNFILE}
+				fi
+			else
+		  	clear
+				sudo sh erase_logs
+				sleep 2
+				echo "[+] Stopping logging now..."
+				sudo service rsyslog stop
+				echo "[+] Making it permanent..."
+	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
+				sudo systemctl disable rsyslog
+        sudo sed -i "s/^LOG=.*/LOG=LOW/" ${RUNFILE}
+			fi
+    elif [ $CHOICE = 8 ]; then
 			clear
 			echo "[!] Erasing all log files..."
 			echo " "
@@ -169,6 +198,11 @@ if [ $exitstatus = 0 ]; then
       sudo service rsyslog restart
 			sleep 2
     elif [ $CHOICE = 9 ]; then
+      whiptail --title "TorBox - INFO" --textbox text/ping-text 30 80
+			ping -q google.com >/dev/null &
+			echo "[+] Countermeasure against a disconnect when idle feature activated!"
+			sleep 5
+    elif [ $CHOICE = 10 ]; then
 			clear
 			echo "[+] Resetting wicd..."
 			echo " "
@@ -176,7 +210,7 @@ if [ $exitstatus = 0 ]; then
 			sudo rm /etc/wicd/wireless-settings.conf
 			sudo service wicd start
 			sleep 2
-		elif [ $CHOICE = 10 ]; then
+		elif [ $CHOICE = 11 ]; then
       clear
       echo "[+] Resetting Tor statistics..."
 			echo " "
@@ -185,7 +219,7 @@ if [ $exitstatus = 0 ]; then
 			sudo chown debian-tor /var/log/tor/notices.log
 			sudo service tor start
       sleep 2
- 		elif [ $CHOICE = 11 ]; then
+ 		elif [ $CHOICE = 12 ]; then
  		  whiptail --title "TorBox - INFO" --textbox text/wrd-text 30 80
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
@@ -201,28 +235,11 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
         fi
       fi
- 		elif [ $CHOICE = 12 ]; then
+ 		elif [ $CHOICE = 13 ]; then
       INPUT=$(cat text/bridged-mode-001-text)
 	    if (whiptail --title "TorBox - EXPERIMENTAL" --yesno "$INPUT" 30 80); then
 	      sudo sh set_bridged_mode
   	  fi
- 		elif [ $CHOICE = 13 ]; then
-			if (whiptail --title "Changing the logging behaviour - EXPERIMENTAL !" --yes-button "Logging" --no-button "STOP Logging" --yesno "\n\nWould you like to erase ALL your log files and stop/start logging?" 20 60 3>&1 1>&2 2>&3); then
-				LOG_STATUS=$(sudo systemctl is-active rsyslog)
-				if [ $LOG_STATUS = inactive ]; then
-					sudo systemctl enable rsyslog
-					sudo service rsyslog start
-				fi
-			else
-		  	clear
-				sudo sh erase_logs
-				sleep 2
-				echo "[+] Stopping logging now..."
-				sudo service rsyslog stop
-				echo "[+] Making it permanent..."
-	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
-				sudo systemctl disable rsyslog
-			fi
 		fi
 	fi
 else
