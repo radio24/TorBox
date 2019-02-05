@@ -182,6 +182,13 @@ if [ $exitstatus = 0 ]; then
 					sudo systemctl enable rsyslog
 					sudo service rsyslog start
           sudo sed -i "s/^LOG=.*/LOG=HIGH/" ${RUNFILE}
+          if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" 20 60); then
+            sudo sh save_connection
+    				echo "[+] Rebooting TorBox..."
+            sleep 2
+    				sudo reboot
+    				exit 0
+    			fi
 				fi
 			else
 		  	clear
