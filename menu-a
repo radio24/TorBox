@@ -65,12 +65,16 @@ WICD_VERS=" "
 # TOGGLE03 represents the extent of logging
 # TOGGLE03 represents the extent of logging
 MODE=$(grep "^LOG=" ${RUNFILE})
-if [ $MODE = "MODE=LOW" ]; then
-    TOGGLE03=" LOW"
-    TOGGLE04="HIGH"
+if [ $MODE = "LOG=LOW" ]; then
+    TOGGLE03="LOW]=============="
+    TOGGLE03b="LOW"
+    TOGGLE04="HIGH]============="
+    TOGGLE04b="HIGH"
 else
-    TOGGLE03="HIGH"
-    TOGGLE04=" LOW"
+    TOGGLE03="HIGH]============="
+    TOGGLE03b="HIGH"
+    TOGGLE04="LOW]=============="
+    TOGGLE04b="LOW"
 fi
 
 ###### DISPLAY THE MENU ######
@@ -85,15 +89,15 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.23 - ADVANCED MENU"
 "  4" "Hide / Unhide your wireless lan (reboot required)"  \
 "  5" "Change the password of your Tor control port"  \
 "  6" "Update the base system to the newest version (reboot required)"  \
-"===" "==================================[Logging "$TOGGLE03"]===" \
-"  7" "Changing the extent of logging ("$TOGGLE03" -> "$TOGGLE04")" \
+"===" "==================================[Logging "$TOGGLE03 \
+"  7" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
 "  8" "Erase all log files" \
-"===" "=========================================[Troubleshooting]===" \
+"===" "==================================[Troubleshooting]==========" \
 "  9" "Countermeasure against a disconnect when idle feature" \
 " 10" "Reset network manager (needed when it crashes)" \
 " 12" "Reset Tor and its statistics (needed when it crashes)" \
 " 12" "Set the wifi regulatory domain" \
-"===" "=========================================[EXPERIMENTAL!! ]===" \
+"===" "==================================[EXPERIMENTAL!!]===========" \
 " 13" "Using Bridges with obfs4 pluggable transports" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
@@ -172,7 +176,7 @@ if [ $exitstatus = 0 ]; then
          screen sh update
 			fi
     elif [ $CHOICE = 7 ]; then
-			if (whiptail --title "Changing the extent of logging ("$TOGGLE03" -> "$TOGGLE04")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
+			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
 					sudo systemctl enable rsyslog
