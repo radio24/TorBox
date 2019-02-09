@@ -47,7 +47,6 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 NEWIDENT="new_ident"
-RUNFILE="run/torbox.run"
 TORRC="/etc/tor/torrc"
 KERNEL_VERS=" "
 LOG_STATUS=" "
@@ -61,11 +60,10 @@ WICD_VERS=" "
 ##############################
 
 ######## PREPARATIONS ########
-# Reading from run-file (are we in the WiFi or CABLE mode?)
 # TOGGLE03 represents the extent of logging
 # TOGGLE03 represents the extent of logging
-MODE=$(grep "^LOG=" ${RUNFILE})
-if [ $MODE = "LOG=LOW" ]; then
+LOG_STATUS=$(sudo systemctl is-active rsyslog)
+if [ $LOG_STATUS = inactive ]; then
     TOGGLE03="LOW]=============="
     TOGGLE03b="LOW"
     TOGGLE04="HIGH]============="
@@ -181,7 +179,6 @@ if [ $exitstatus = 0 ]; then
 				if [ $LOG_STATUS = inactive ]; then
 					sudo systemctl enable rsyslog
 					sudo service rsyslog start
-          sudo sed -i "s/^LOG=.*/LOG=HIGH/" ${RUNFILE}
           if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" 20 60); then
             sudo sh save_connection
     				echo "[+] Rebooting TorBox..."
@@ -199,7 +196,6 @@ if [ $exitstatus = 0 ]; then
 				echo "[+] Making it permanent..."
 	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
 				sudo systemctl disable rsyslog
-        sudo sed -i "s/^LOG=.*/LOG=LOW/" ${RUNFILE}
 			fi
     elif [ $CHOICE = 8 ]; then
 			clear
