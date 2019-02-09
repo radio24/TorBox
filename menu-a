@@ -202,7 +202,6 @@ if [ $exitstatus = 0 ]; then
 			echo "[!] Erasing all log files..."
 			echo " "
 			sudo sh erase_logs
-      sudo service rsyslog restart
 			sleep 2
     elif [ $CHOICE = 9 ]; then
       whiptail --title "TorBox - INFO" --textbox text/ping-text 30 80
