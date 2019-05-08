@@ -1,15 +1,13 @@
 !!! ATTENTION !!! READ IT CAREFULLY !!!
 
-The default behaviour of TorBox is to create a wireless network, with which clients can connect. With this menu entry, TorBox expects that your client will be connected with a cable only. If you proceed, TorBox will stop working as an access point until you choose the "Undo the connection to a cable-client" entry.
+The default behavior of TorBox is to create a wireless network, with which clients can connect. With this menu entry, TorBox expects that your client will be connected with a cable only. If you proceed, TorBox will stop working as an access point until you choose the "Undo the connection to a cable-client" entry.
 
-IMPORTANT 
-- Choosing this menu entry will change the basic configuration of your 
+IMPORTANT
+- Choosing this menu entry will change the basic configuration of your
   TorBox and shut it down.
-- After the shut down, you have to connect TorBox with a cable to its 
+- After the shut down, you have to connect TorBox with a cable to its
   client. For that, you need a USB-ethernet adapter.
-- After the shut down, you will not be able to connect your TorBox with 
+- After the shut down, you will not be able to connect your TorBox with
   a wireless client --> you need a cable-client to undo the configuration.
-- You have to undo the cable-client connection before you can acces TorBox 
+- You have to undo the cable-client connection before you can access TorBox 
   again with a wireless client !!
-
-  
