@@ -1,6 +1,6 @@
 ## This is the configuration file of Tor
 
-## DONT CHANGE!
+## DON'T CHANGE THE FOLLOWING 13 LINES!
 ######################################################
 ## Configuration for TorBox
 
@@ -10,73 +10,58 @@ AutomapHostsSuffixes .onion,.exit
 AutomapHostsOnResolve 1
 TransPort 192.168.42.1:9040
 DNSPort 192.168.42.1:9053
+SocksPort 192.168.42.1:9050
 DisableDebuggerAttachment 0
 ControlPort 9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
 
+## TO OVERCOME A FIREWALL, START HERE!
+## HOWEVER, USE IT ONLY, IF REALLY NECESSARY!
+######################################################
+## This will allow you to run Tor as a client behind a firewall with
+## restrictive policies, but will not allow you to run as a server behind such
+## a firewall.
+## ReachableAddresses IP[/MASK][:PORT]…
+## A comma-separated list of IP addresses and ports that your firewall allows
+## you to connect to. The format is as for the addresses in ExitPolicy, except
+## that "accept" is understood unless "reject" is explicitly provided. For
+## example, 'ReachableAddresses 99.0.0.0/8, reject 18.0.0.0/8:80, accept *:80'
+## means that your firewall allows connections to everything inside net 99,
+## rejects port 80 connections to net 18, and accepts connections to port 80
+## otherwise.
+#ReachableAddresses *:80, *:443
 
-## START HERE!
+## TO OVERCOME CENSORSHIP, START HERE!
 ######################################################
 ## If you like to use bridges to overcome censorship, EDIT THE LINES BELOW!
-#  ReachableAddresses IP[/MASK][:PORT]…
-#  A comma-separated list of IP addresses and ports that your firewall allows you to
-#  connect to. The format is as for the addresses in ExitPolicy, except that "accept" 
-#  is understood unless "reject" is explicitly provided. For example, 
-#  'ReachableAddresses 99.0.0.0/8, reject 18.0.0.0/8:80, accept *:80' means that your
-#  firewall allows connections to everything inside net 99, rejects port 80 connections 
-#  to net 18, and accepts connections to port 80 otherwise.
-#  Use it only, if really necessary!
-#  ReachableAddresses *:80, *:443
-
 ## To use bridges, uncomment the three lines below...
 #UseBridges 1
 #UpdateBridgesFromAuthority 1
 #ClientTransportPlugin obfs4 exec /usr/bin/obfs4proxy
 
-## ...and add your bridges below (the bridges below are examples which may or may not 
-#  work. Uncomment to use them). Please give us feedback, if some of the bridges below 
-#  doesn't work anymore: anonym@torbox.ch
-#
-#  You have two ways to get new bridge-addresses:
-#  1. Get them here https://bridges.torproject.org/ 
-#     (chose "Advanced Options", "obfs4" and press "Get Bridges)
-#  2. Or send an email to bridges@torproject.org, using an address 
-#     from Riseup, Gmail or Yahoo with "get transport obfs4" in the 
-#     body of the mail.
+## ...and add your bridges below (the bridges below are examples which may or
+## may not work. Uncomment to use them). Please give us feedback, if some of
+## the bridges below doesn't work anymore: anonym@torbox.ch
+##
+## You have two ways to get new bridge-addresses:
+## 1. Get them here https://bridges.torproject.org/
+##    (chose "Advanced Options", "obfs4" and press "Get Bridges)
+## 2. Or send an email to bridges@torproject.org, using an address
+##    from Riseup, Gmail or Yahoo with "get transport obfs4" in the
+##    body of the mail.
 
-#Bridge obfs4 77.93.216.5:36735 179446D1793F4C7E4B2A935815B360ACF50F82F4 cert=DrR9Sz91616mnt560tAkCW491VSPDyV/CCqU5xvpyamcoV7jxI1/WepU4Dxq4fLsp7UZJw iat-mode=0
-#Bridge obfs4 192.155.86.22:9443 2555C20B6B2047B875041C6A11B0E04364AD3D9F cert=yPOErmj+7qha0lbAbYo3V4ewH7Mok30H4plUG3ty2AtXnqSVR3jWgfO6u3RckiTCvEwROQ iat-mode=0
 #Bridge obfs4 80.220.197.84:41043 6743F2AA0F9BD302AFD1AE41F83D5FE1C70159CE cert=0ITGWcBzMRj1dgzUxpcsW0lYbSWNzUZrAaq/syk++Yd6Znh0qLBhzsIAupUdrIPOsSxsFg iat-mode=0
-#Bridge obfs4 37.48.87.61:443 A469A75EBD3BD9E30090FD952A2CB498E31A92A0 cert=joJLEFXRquFarDkT5rIcAm3ulGf8BQDn3v2ErFlMztH5kt2ofKlWp6BleZyYv/M9QjesZA iat-mode=0
-#Bridge obfs4 95.129.40.200:443 6D165CA8DFF84FA261FF9064FC4A311BCE0899EC cert=WntG8RqQKIZOU1VtIFakKQCXlVUZPe129D/MRrNR1uLsU879FaE11jLiAf4qJFatvIDSKQ iat-mode=0
-#Bridge obfs4 217.86.20.186:34434 668EF87527F45C6BEEA19F00A486482438C4EEE8 cert=CZqI0HZnn/eB+v27+dE+P0gK5lP5s6nk4HlkXwe2/fsZo1hGmK7/M99VXgxhIKd+3tYCew iat-mode=0
-#Bridge obfs4 67.170.41.139:45370 738B17D5798F094D0EBB7D2420A5B24B2DFA80E1 cert=odH+ReqkouPvP/ZAJ/6UreAY+uiARLpoU0wj7MraH1eBEgqU510kgqSGdJXxU0/CJEvqQw iat-mode=0
-#Bridge obfs4 216.218.131.139:443 DC99C664E304326DC2A0CE66F76F3839F796EEC6 cert=OQcT+t2aA5PiY8VYs22O9Cl1bbXL0ZSpyJFFDikcZi3LVHOA4M/qrBhNF9MgxD8IbZLXdA iat-mode=0
-#Bridge obfs4 5.135.24.34:41593 CA9B7BAF71CEC056B57D9CD8E64EA65C712BEE16 cert=gsOniN2orje8JoVeM6J+0cTGJKwZnM233lVHJbsaGk1sRnrrU603Owyc4ceFJw6Jtu30Xg iat-mode=0
 #Bridge obfs4 144.217.20.138:80 FB70B257C162BF1038CA669D568D76F5B7F0BABB cert=vYIV5MgrghGQvZPIi1tJwnzorMgqgmlKaB77Y3Z9Q/v94wZBOAXkW+fdx4aSxLVnKO+xNw iat-mode=0
-#Bridge obfs4 83.212.101.3:50002 A09D536DD1752D542E1FBB3C9CE4449D51298239 cert=lPRQ/MXdD1t5SRZ9MquYQNT9m5DV757jtdXdlePmRCudUU9CFUOX1Tm7/meFSyPOsud7Cw iat-mode=0
 #Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
+#Bridge obfs4 [2001:470:b381:bfff:216:3eff:fe23:d6c3]:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
 #Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
 #Bridge obfs4 109.105.109.165:10527 8DFCD8FB3285E855F5A55EDDA35696C743ABFC4E cert=Bvg/itxeL4TWKLP6N1MaQzSOC6tcRIBv6q57DYAZc3b2AzuM+/TfB7mqTFEfXILCjEwzVA iat-mode=1
-#Bridge obfs4 38.229.33.83:80 0BAC39417268B96B9F514E7F63FA6FBA1A788955 cert=VwEFpk9F/UN9JED7XpG1XOjm/O8ZCXK80oPecgWnNDZDv5pdkhq1OpbAH0wNqOT6H6BmRQ iat-mode=1
-#Bridge obfs4 154.35.22.10:80 8FB9F4319E89E5C6223052AA525A192AFBC85D55 cert=GGGS1TX4R81m3r0HBl79wKy1OtPPNR2CZUIrHjkRg65Vc2VR8fOyo64f9kmT1UAFG7j0HQ iat-mode=0
-#Bridge obfs4 154.35.22.9:80 C73ADBAC8ADFDBF0FC0F3F4E8091C0107D093716 cert=gEGKc5WN/bSjFa6UkG9hOcft1tuK+cV8hbZ0H6cqXiMPLqSbCh2Q3PHe5OOr6oMVORhoJA iat-mode=0
-#Bridge obfs4 154.35.22.11:16488 A832D176ECD5C7C6B58825AE22FC4C90FA249637 cert=YPbQqXPiqTUBfjGFLpm9JYEFTBvnzEJDKJxXG5Sxzrr/v2qrhGU4Jls9lHjLAhqpXaEfZw iat-mode=0
-#Bridge obfs4 154.35.22.9:12166 C73ADBAC8ADFDBF0FC0F3F4E8091C0107D093716 cert=gEGKc5WN/bSjFa6UkG9hOcft1tuK+cV8hbZ0H6cqXiMPLqSbCh2Q3PHe5OOr6oMVORhoJA iat-mode=0
-#Bridge obfs4 154.35.22.10:443 8FB9F4319E89E5C6223052AA525A192AFBC85D55 cert=GGGS1TX4R81m3r0HBl79wKy1OtPPNR2CZUIrHjkRg65Vc2VR8fOyo64f9kmT1UAFG7j0HQ iat-mode=0
-#Bridge obfs4 154.35.22.13:16815 FE7840FE1E21FE0A0639ED176EDA00A3ECA1E34D cert=fKnzxr+m+jWXXQGCaXe4f2gGoPXMzbL+bTBbXMYXuK0tMotd+nXyS33y2mONZWU29l81CA iat-mode=0
 #Bridge obfs4 37.218.245.14:38224 D9A82D2F9C2F65A18407B1D2B764F130847F8B5D cert=bjRaMrr1BRiAW8IE9U5z27fQaYgOhX1UCmOpg2pFpoMvo6ZgQMzLsaTzzQNTlm7hNcb+Sg iat-mode=0
-#Bridge obfs4 154.35.22.11:443 A832D176ECD5C7C6B58825AE22FC4C90FA249637 cert=YPbQqXPiqTUBfjGFLpm9JYEFTBvnzEJDKJxXG5Sxzrr/v2qrhGU4Jls9lHjLAhqpXaEfZw iat-mode=0
-#Bridge obfs4 154.35.22.12:4304 00DC6C4FA49A65BD1472993CF6730D54F11E0DBB cert=N86E9hKXXXVz6G7w2z8wFfhIDztDAzZ/3poxVePHEYjbKDWzjkRDccFMAnhK75fc65pYSg iat-mode=0
 #Bridge obfs4 37.218.240.34:40035 88CD36D45A35271963EF82E511C8827A24730913 cert=eGXYfWODcgqIdPJ+rRupg4GGvVGfh25FWaIXZkit206OSngsp7GAIiGIXOJJROMxEqFKJg iat-mode=1
-#Bridge obfs4 38.229.1.78:80 C8CBDB2464FC9804A69531437BCF2BE31FDD2EE4 cert=Hmyfd2ev46gGY7NoVxA9ngrPF2zCZtzskRTzoWXbxNkzeVnGFPWmrTtILRyqCTjHR+s9dg iat-mode=1
 #Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
 #Bridge obfs4 85.17.30.79:443 FC259A04A328A07FED1413E9FC6526530D9FD87A cert=RutxZlu8BtyP+y0NX7bAVD41+J/qXNhHUrKjFkRSdiBAhIHIQLhKQ2HxESAKZprn/lR3KA iat-mode=0
-#Bridge obfs4 154.35.22.10:15937 8FB9F4319E89E5C6223052AA525A192AFBC85D55 cert=GGGS1TX4R81m3r0HBl79wKy1OtPPNR2CZUIrHjkRg65Vc2VR8fOyo64f9kmT1UAFG7j0HQ iat-mode=0
 #Bridge obfs4 216.252.162.21:46089 0DB8799466902192B6C7576D58D4F7F714EC87C1 cert=XPUwcQPxEXExHfJYX58gZXN7mYpos7VNAHbkgERNFg+FCVNzuYo1Wp+uMscl3aR9hO2DRQ iat-mode=0
 #Bridge obfs4 109.105.109.147:13764 BBB28DF0F201E706BE564EFE690FE9577DD8386D cert=KfMQN/tNMFdda61hMgpiMI7pbwU1T+wxjTulYnfw+4sgvG0zSH7N7fwT10BI8MUdAD7iJA iat-mode=2
-#Bridge obfs4 154.35.22.11:80 A832D176ECD5C7C6B58825AE22FC4C90FA249637 cert=YPbQqXPiqTUBfjGFLpm9JYEFTBvnzEJDKJxXG5Sxzrr/v2qrhGU4Jls9lHjLAhqpXaEfZw iat-mode=0
-#Bridge obfs4 154.35.22.9:443 C73ADBAC8ADFDBF0FC0F3F4E8091C0107D093716 cert=gEGKc5WN/bSjFa6UkG9hOcft1tuK+cV8hbZ0H6cqXiMPLqSbCh2Q3PHe5OOr6oMVORhoJA iat-mode=0
-#Bridge obfs4 192.99.11.54:443 7B126FAB960E5AC6A629C729434FF84FB5074EC2 cert=VW5f8+IBUWpPFxF+rsiVy2wXkyTQG7vEd+rHeN2jV5LIDNu8wMNEOqZXPwHdwMVEBdqXEw iat-mode=0
-#Bridge obfs4 154.35.22.12:80 00DC6C4FA49A65BD1472993CF6730D54F11E0DBB cert=N86E9hKXXXVz6G7w2z8wFfhIDztDAzZ/3poxVePHEYjbKDWzjkRDccFMAnhK75fc65pYSg iat-mode=0
-#Bridge obfs4 154.35.22.13:443 FE7840FE1E21FE0A0639ED176EDA00A3ECA1E34D cert=fKnzxr+m+jWXXQGCaXe4f2gGoPXMzbL+bTBbXMYXuK0tMotd+nXyS33y2mONZWU29l81CA iat-mode=0
+#Bridge obfs4 104.153.209.217:30262 D28E0345809AE4BAC903EF7FC78CAAF111A63C58 cert=DtNNYXeRG4ds+iTM7sdbJHJgH7RmxDb1lt8JR17BiT7eHnORyn+4y+RcoqAI65XGvhXKJg iat-mode=0
+#Bridge obfs4 31.16.84.99:37977 C870AEF0F044BED09B7F86CCDF448276F994F961 cert=GsqbIk7PnimoDf1K4ixmoXkH6wRrxaHtX7acbDrEQqzmgbTd9HJopFvr4OVVv8avE109ew iat-mode=0
+#Bridge obfs4 82.181.163.163:41043 6743F2AA0F9BD302AFD1AE41F83D5FE1C70159CE cert=0ITGWcBzMRj1dgzUxpcsW0lYbSWNzUZrAaq/syk++Yd6Znh0qLBhzsIAupUdrIPOsSxsFg iat-mode=0

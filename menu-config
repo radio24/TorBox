@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
@@ -20,10 +20,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file displays the advanced menu and executes all relevant scripts.
+# This file displays the configuration menu and executes all relevant scripts.
 #
 # SYNTAX
-# sh menu-a
+# ./menu-config
 #
 #
 ###### SET VARIABLES ######
@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=9
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=5
@@ -52,16 +52,13 @@ KERNEL_VERS=" "
 LOG_STATUS=" "
 REGDOMAIN=" "
 TLC=" "
-TOGGLE03=" "
-TOGGLE04=" "
 TOR_VERS=" "
 WICD_VERS=" "
 
 ##############################
 
 ######## PREPARATIONS ########
-# TOGGLE03 represents the extent of logging
-# TOGGLE03 represents the extent of logging
+# TOGGLE03 / TOGGLE04 represents the extent of logging
 LOG_STATUS=$(sudo systemctl is-active rsyslog)
 if [ $LOG_STATUS = inactive ]; then
     TOGGLE03="LOW]=============="
@@ -78,28 +75,22 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.24 - ADVANCED MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.24 - CONFIGURATION MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
 " " " " \
-"===" "==================================[Configuration / Update]===" \
+"===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) passwort"  \
 "  2" "Change the name of your wireless lan (reboot required)"  \
 "  3" "Change the password of your wireless lan (reboot required)"  \
 "  4" "Hide / Unhide your wireless lan (reboot required)"  \
-"  5" "Change the password of your Tor control port"  \
-"  6" "Update the base system to the newest version (reboot required)"  \
+"  5" "Set the wifi regulatory domain" \
+"  6" "Change the password of your Tor control port"  \
 "===" "==================================[Logging "$TOGGLE03 \
 "  7" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
 "  8" "Erase all log files" \
-"===" "==================================[Troubleshooting]==========" \
-"  9" "Countermeasure against a disconnect when idle feature" \
-" 10" "Reset network manager (needed when it crashes)" \
-" 12" "Reset Tor and its statistics (needed when it crashes)" \
-" 12" "Set the wifi regulatory domain" \
-"===" "==================================[EXPERIMENTAL!!]===========" \
-" 13" "Using Bridges with obfs4 pluggable transports" 3>&1 1>&2 2>&3)
+"===" "===========================================[Update]==========" \
+"  9" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
-
 
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
@@ -109,9 +100,9 @@ if [ $exitstatus = 0 ]; then
 		elif [ $CHOICE = 2 ]; then
 			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new name for your wireless lan:" 20 60 3>&1 1>&2 2>&3)
 			if [ $INPUT != " " ]; then
-			  sudo sh change_ssid $INPUT
+			  sudo bash change_ssid $INPUT
 				if (whiptail --yesno "The name of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
-					sudo sh save_connection
+					sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
         	sleep 2
 					sudo reboot
@@ -121,9 +112,9 @@ if [ $exitstatus = 0 ]; then
 		elif [ $CHOICE = 3 ]; then
 			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new password:" 20 60 3>&1 1>&2 2>&3)
 			if [ $INPUT != " " ]; then
-				sudo sh change_ssid_pw $INPUT
+				sudo bash change_ssid_pw $INPUT
 				if (whiptail --yesno "The password of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
-          sudo sh save_connection
+          sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
         	sleep 2
 					sudo reboot
@@ -136,97 +127,20 @@ if [ $exitstatus = 0 ]; then
 			else
 				INPUT=ignore_broadcast_ssid=1
 			fi
-      #Old: if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
 			if grep "^ignore_broadcast_ssid=" ${HOSTAPD}; then
       	sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
 			else
       	sudo echo ${INPUT} >> ${HOSTAPD}
 			fi
 			if (whiptail --yesno "\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
-        sudo sh save_connection
+        sudo bash save_connection
 				echo "[+] Rebooting TorBox..."
         sleep 2
 				sudo reboot
 				exit 0
 			fi
-		elif [ $CHOICE = 5 ]; then
-			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" 20 60 3>&1 1>&2 2>&3)
-			if [ $INPUT != " " ]; then
-				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
-				INPUT=PASSWORD=$INPUT
-        #Old: if grep -q "^HashedControlPassword\ " ${TORRC}; then
-				if grep "^HashedControlPassword\ " ${TORRC}; then
-      	  sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
-				else
-        	sudo echo ${INPUTHASH} >> ${TORRC}
-				fi
-				sudo sed -i "s/^PASSWORD=.*/${INPUT}/" ${NEWIDENT}
-				sudo service tor restart
-			fi
-    elif [ $CHOICE = 6 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/update-text 30 80
-      clear
- 			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version)
-    	WICD_VERS=$(wicd-curses --version)
-			INPUT="\n\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
-      if (whiptail --yesno "$INPUT" 20 60); then
-         screen sh update
-			fi
-    elif [ $CHOICE = 7 ]; then
-			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
-				LOG_STATUS=$(sudo systemctl is-active rsyslog)
-				if [ $LOG_STATUS = inactive ]; then
-					sudo systemctl enable rsyslog
-					sudo service rsyslog start
-          if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" 20 60); then
-            sudo sh save_connection
-    				echo "[+] Rebooting TorBox..."
-            sleep 2
-    				sudo reboot
-    				exit 0
-    			fi
-				fi
-			else
-		  	clear
-				sudo sh erase_logs
-				sleep 2
-				echo "[+] Stopping logging now..."
-				sudo service rsyslog stop
-				echo "[+] Making it permanent..."
-	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
-				sudo systemctl disable rsyslog
-			fi
-    elif [ $CHOICE = 8 ]; then
-			clear
-			echo "[!] Erasing all log files..."
-			echo " "
-			sudo sh erase_logs
-			sleep 2
-    elif [ $CHOICE = 9 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/ping-text 30 80
-			ping -q google.com >/dev/null &
-			echo "[+] Countermeasure against a disconnect when idle feature activated!"
-			sleep 5
-    elif [ $CHOICE = 10 ]; then
-			clear
-			echo "[+] Resetting wicd..."
-			echo " "
-			sudo service wicd stop
-			sudo rm /etc/wicd/wireless-settings.conf
-			sudo service wicd start
-			sleep 2
-		elif [ $CHOICE = 11 ]; then
-      clear
-      echo "[+] Resetting Tor statistics..."
-			echo " "
-			sudo service tor stop
-      sudo touch /var/log/tor/notices.log
-			sudo chown debian-tor /var/log/tor/notices.log
-			sudo service tor start
-      sleep 2
- 		elif [ $CHOICE = 12 ]; then
- 		  whiptail --title "TorBox - INFO" --textbox text/wrd-text 30 80
+    elif [ $CHOICE = 5 ]; then
+      whiptail --title "TorBox - INFO" --textbox text/wrd-text 30 80
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
       INPUT=$(whiptail --title "Setting the wifi regulatory domain" --inputbox "\n\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the wifi regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" 20 60 $TLC 3>&1 1>&2 2>&3)
@@ -241,15 +155,63 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
         fi
       fi
- 		elif [ $CHOICE = 13 ]; then
-      INPUT=$(cat text/bridged-mode-001-text)
-	    if (whiptail --title "TorBox - EXPERIMENTAL" --yesno "$INPUT" 30 80); then
-	      sudo sh set_bridged_mode
-  	  fi
+    elif [ $CHOICE = 6 ]; then
+			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" 20 60 3>&1 1>&2 2>&3)
+			if [ $INPUT != " " ]; then
+				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
+				INPUT=PASSWORD=$INPUT
+				if grep "^HashedControlPassword\ " ${TORRC}; then
+      	  sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
+				else
+        	sudo echo ${INPUTHASH} >> ${TORRC}
+				fi
+				sudo sed -i "s/^PASSWORD=.*/${INPUT}/" ${NEWIDENT}
+				sudo service tor restart
+			fi
+    elif [ $CHOICE = 7 ]; then
+			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
+				LOG_STATUS=$(sudo systemctl is-active rsyslog)
+				if [ $LOG_STATUS = inactive ]; then
+					sudo systemctl enable rsyslog
+					sudo service rsyslog start
+          if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" 20 60); then
+            sudo bash save_connection
+    				echo "[+] Rebooting TorBox..."
+            sleep 2
+    				sudo reboot
+    				exit 0
+    			fi
+				fi
+			else
+		  	clear
+				sudo bash erase_logs
+				sleep 2
+				echo "[+] Stopping logging now..."
+				sudo service rsyslog stop
+				echo "[+] Making it permanent..."
+	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
+				sudo systemctl disable rsyslog
+			fi
+    elif [ $CHOICE = 8 ]; then
+			clear
+			echo "[!] Erasing all log files..."
+			echo " "
+			sudo bash erase_logs
+			sleep 2
+    elif [ $CHOICE = 9 ]; then
+      whiptail --title "TorBox - INFO" --textbox text/update-text 30 80
+      clear
+ 			KERNEL_VERS=$(uname -s -r)
+      TOR_VERS=$(tor --version)
+    	WICD_VERS=$(wicd-curses --version)
+			INPUT="\n\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
+      if (whiptail --yesno "$INPUT" 20 60); then
+         screen bash update
+			fi
 		fi
 	fi
 else
   clear
   exit 0
 fi
-sh menu-a
+bash menu-config

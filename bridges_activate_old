@@ -1,0 +1,56 @@
+#!/bin/bash
+
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file activates already configured bridges in /etc/torrc.
+#
+# SYNTAX
+# ./bridges_activate_old <number configured bridges deactivated> <show when zero bridges>
+#
+# <number configured bridges deactivated> -> Total number of deactivated bridges in /etc/torrc.
+# <show when zero bridges> defines if a message is shown or not if no bridges are configured in /etc/torrc.
+#
+# Possible values for <show when zero bridges>:
+#
+# 0	->	No message is shown.
+# 1	->	Message is shown.
+#
+#
+###### SET VARIABLES ######
+#
+TORRC="/etc/tor/torrc"
+number_configured_bridges_deactivated=$1
+show_when_zero_bridges=$2
+
+##############################
+
+if [ $number_configured_bridges_deactivated = 0 ]; then
+  if [ $show_when_zero_bridges = 1 ]; then
+    clear
+    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO BRIDGES configured, yet!" 15 80); then
+        clear
+    fi
+  fi
+else
+    if (whiptail --title "TorBox - INFO" --yesno "\n\nThere are $number_configured_bridges_deactivated DEACTIVATED bridges in your configuration file (probably from you last session?)! Would you like to ACTIVATE these old bridges and restart Tor (check progress with menu entry 11 - this can take up to several minutes)?" 20 80); then
+        sudo sed -i "s/^#Bridge/Bridge/g" ${TORRC}
+        sudo service tor restart
+    fi
+fi

@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
@@ -28,7 +28,7 @@
 # during the established INSECURE CONNECTION.
 #
 # SYNTAX
-# sh set_captive <outgoing interface> <incoming interface>
+# ./set_captive <outgoing interface> <incoming interface>
 #
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:

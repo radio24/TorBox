@@ -18,18 +18,28 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file flushes all LOG-files in /var/log and ~/.bash_history.
+# This file add bridges to /etc/torrc. However, it is only suitable for 3-5 bridges, because the bridges have to entered one by one.
 #
 # SYNTAX
-# ./erase_log
+# ./bridges_add
 #
+###### SET VARIABLES ######
 #
+TORRC="/etc/tor/torrc"
+number_bridges=0
 
-echo "[+] Erasing ALL LOG-files..."
-for logs in `find /var/log -type f`; do
-	echo "[+] Erasing $logs"
-	sudo rm $logs
-	sleep 1
-done
-echo "[+] Erasing .bash_history"
-sudo rm ../.bash_history
+##############################
+
+number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" 20 60 3>&1 1>&2 2>&3)
+if [ $number_bridges > 0 ]; then
+    i=1
+    while [ $i -le $number_bridges ]
+    do
+        bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" 20 60 3>&1 1>&2 2>&3)
+        bridge_address="Bridge $bridge_address"
+        sudo echo $bridge_address >> $TORRC
+        i=$(( $i+1 ))
+    done
+else
+        exit 0
+fi
