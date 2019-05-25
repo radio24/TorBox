@@ -221,8 +221,6 @@ if [ $exitstatus = 0 ]; then
           fi
         done
       fi
-#OFF ========================================================================
-
     elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/delete-all-bridges-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" 35 80); then
