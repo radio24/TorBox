@@ -78,7 +78,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.24 - MAIN MENU" --menu "Choose 
 "===" "==============================[Tools                ]===" \
 "  1" "Tor statistics (press q twice to leave)" \
 "  2" "Enforce a new exit node with a new IP" \
-"  3" "Go to the countermeasures & troubleshouting menu..." \
+"  3" "Go to the countermeasures & troubleshooting menu..." \
 "  4" "Go to the configuration & update menu..." \
 "===" "==============================[Wireless-client "$TOGGLE01"   ]===" \
 "  5" "Cable-internet to wireless-clients" \
