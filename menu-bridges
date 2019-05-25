@@ -243,7 +243,7 @@ if [ $exitstatus = 0 ]; then
         echo "[+] Restarting Tor!"
         sudo service tor restart &
         echo "[+] DONE! Checking progress:"
-        trap "bash menu-bridges" SIGINT
+        trap "bash menu-bridges; exit 0" SIGINT
         sudo tail -f -n 0 /var/log/tor/notices.log
       fi
     elif [ $CHOICE = 10 ]; then
@@ -252,7 +252,7 @@ if [ $exitstatus = 0 ]; then
 			echo "[+] Countermeasure against a disconnect when idle feature activated!"
 			sleep 5
     elif [ $CHOICE = 11 ]; then
-      trap "bash menu-bridges" SIGINT
+      trap "bash menu-bridges; exit 0" SIGINT
       sudo tail -f -n 25 /var/log/tor/notices.log
     elif [ $CHOICE = 12 ]; then
 			clear
