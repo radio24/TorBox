@@ -33,7 +33,6 @@ sudo gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
 
 # This updates the packages
 sudo apt-get -y update
-# sudo apt-get -y upgrade -> not necessary
 sudo apt-get -y dist-upgrade
 
 # Intalling newest version of tor
