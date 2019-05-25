@@ -205,7 +205,7 @@ if [ $exitstatus = 0 ]; then
       TOR_VERS=$(tor --version)
     	WICD_VERS=$(wicd-curses --version)
 			INPUT="\n\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
-      if (whiptail --yesno "$INPUT" 20 60); then
+      if (whiptail --defaultno --yesno "$INPUT" 20 60); then
          screen bash update
 			fi
 		fi

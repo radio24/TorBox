@@ -48,6 +48,7 @@ dpkg -i tor_*.deb
 # Fixing and Cleaning
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove; rm -r ~/debian-packages
+sudo update-rc.d hostapd enable
 sudo update-rc.d dnsmasq disable
 if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" 20 80) ; then sudo reboot ; fi
 exit 0
