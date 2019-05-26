@@ -227,9 +227,9 @@ if [ $exitstatus = 0 ]; then
 				  echo "[+] Save connection settings..."
 				  sleep 2
           sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo "[+] Re-activating AP capibilities..."
+          echo "[+] Deactivating AP capibilities..."
           sleep 2
-          sudo update-rc.d hostapd enable
+          sudo update-rc.d hostapd disable
           echo "[+] Configuring wicd..."
           sleep 2
   				sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan0/" ${WICDCONFFILE}
@@ -254,9 +254,9 @@ if [ $exitstatus = 0 ]; then
           echo "[+] Saving connection settings..."
           sleep 2
           sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo "[+] Deactivating AP capibilities..."
+          echo "[+] Re-activating AP capibilities..."
           sleep 2
-          sudo update-rc.d hostapd disable
+          sudo update-rc.d hostapd enable
           echo "[+] Configuring wicd..."
           sleep 2
   			  sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan1/" ${WICDCONFFILE}
