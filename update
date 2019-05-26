@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
@@ -23,7 +23,7 @@
 # This file updates the base system of the TorBox and upgrades it to the latest stable tor release.
 #
 # SYNTAX
-# sh update 
+# ./update
 #
 #
 
@@ -33,7 +33,6 @@ sudo gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
 
 # This updates the packages
 sudo apt-get -y update
-# sudo apt-get -y upgrade -> not necessary
 sudo apt-get -y dist-upgrade
 
 # Intalling newest version of tor
@@ -48,6 +47,7 @@ dpkg -i tor_*.deb
 # Fixing and Cleaning
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove; rm -r ~/debian-packages
+sudo update-rc.d hostapd enable
 sudo update-rc.d dnsmasq disable
 if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" 20 80) ; then sudo reboot ; fi
 exit 0

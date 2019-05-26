@@ -1,0 +1,10 @@
+With this menu entry, you can DELETE SELECTED BRIDGES from the Tor configuration. However, bridges are necessary for TorBox to bypass Tor blocking in a country. After deleting all bridges, you should either add new bridges or deactivate BRIDGE MODE entirely.
+
+3-STEP PROCEDURE
+To delete selected bridges, you have to follow a 2-step procedure:
+1. List all bridges (menu entry 3) and make a not of all bridge numbers,
+   which you like to delete.
+2. Continue with this menu entry and to put in all bridge numbers separated
+   by a comma, which you like to delete (for example 1,2,3,10)
+
+Would you like to CONTINUE?

@@ -1,0 +1,3 @@
+This menu entry will restart Tor (this final step is necessary if it has not already been done) and show you the progress of building circuits. Depending on your network and the contacted bridge server, this could last for several minutes. At the end of that process, you should see "Bootstrapped 100%: Done". You can leave the progress report with CTRL-C.
+
+Are you ready to start Tor now?

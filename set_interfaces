@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
@@ -24,7 +24,7 @@
 # entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# sh set_interfaces <outgoing interface> <incoming interface> <captive portal>
+# ./set_interfaces <outgoing interface> <incoming interface> <captive portal>
 #
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
@@ -63,11 +63,11 @@ CAPTIVE=$3
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 if [ "$O_DEVICE" = "eth0" ]; then
 	if [ $CAPTIVE = 1 ]; then
-		sudo sh set_captive $O_DEVICE $I_DEVICE
+		sudo bash set_captive $O_DEVICE $I_DEVICE
 	fi
 elif [ "$O_DEVICE" = "eth1" ]; then
 	if [ $CAPTIVE = 1 ]; then
-        sudo sh set_captive $O_DEVICE $I_DEVICE
+    sudo bash set_captive $O_DEVICE $I_DEVICE
 	fi
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
@@ -78,7 +78,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	$WLAN_MANAGER
 	clear
 	if [ $CAPTIVE = 1 ]; then
-	   sudo sh set_captive $O_DEVICE $I_DEVICE
+	   sudo bash set_captive $O_DEVICE $I_DEVICE
 	fi
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
@@ -89,7 +89,7 @@ elif [ "$O_DEVICE" = "wlan1" ]; then
 	$WLAN_MANAGER
 	clear
 	if [ $CAPTIVE = 1 ]; then
-	   sudo sh set_captive $O_DEVICE $I_DEVICE
+	   sudo bash set_captive $O_DEVICE $I_DEVICE
 	fi
 fi
 

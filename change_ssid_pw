@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
@@ -23,7 +23,7 @@
 # This file changes the password of your wireles lan.
 #
 # SYNTAX
-# sudo sh change_ssid_pw <PASSWORD>
+# ./change_ssid_pw <PASSWORD>
 #
 #
 ###### SET VARIABLES ######
