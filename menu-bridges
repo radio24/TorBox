@@ -98,7 +98,7 @@ number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $nu
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.24 - COUNTERMEASURES & TROUBLESHOOTING MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.4 - COUNTERMEASURES & TROUBLESHOOTING MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
 " " " " \
 "===" "====================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \

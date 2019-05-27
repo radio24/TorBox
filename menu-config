@@ -75,7 +75,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.24 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.4 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) passwort"  \
