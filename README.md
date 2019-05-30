@@ -25,7 +25,7 @@ Do you have additional questions? Check out our [FAQ on the TorBox website](http
 * With the SSH-accessible menu, TorBox provides you with a user-friendly interface.
 * TorBox supports Internet access and client connections via WiFi or cable, which can easily be changed via the provided interface.
 * It easily overcomes captive portals and offers, if necessary, measures against “disconnect when idle features” (sometimes seen with WiFis in airports, hotels, coffee houses).
-* TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html) bridges, which help to overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=112#16)).
+* TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html) bridges, which help to overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=112#censorship)).
 * It provides [SOCKS v5 proxy functionality](https://en.wikipedia.org/wiki/SOCKS).
 * It allows easy access to .onion websites without client configuration (Chrome) or via SOCKS v5 proxy (Firefox).
 
