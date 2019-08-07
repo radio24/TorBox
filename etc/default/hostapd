@@ -2,6 +2,9 @@
 
 # Defaults for hostapd initscript
 #
+# WARNING: The DAEMON_CONF setting has been deprecated and will be removed
+#          in future package releases.
+#
 # See /usr/share/doc/hostapd/README.Debian for information about alternative
 # methods of managing hostapd.
 #
