@@ -2,8 +2,8 @@
 TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information visit the [TorBox website](https://www.torbox.ch)<br />
-TorBox Image (860 MB) : [v.0.2.4 (25.05.2019)](https://www.torbox.ch/data/torbox-20190525-v024.gz)<br />
-TorBox Menu only : [v.0.2.4 (25.05.2019)](https://www.torbox.ch/data/torbox024-20190525.zip)<br />
+TorBox Image (870 MB) : [v.0.2.4 (08.08.2019)](https://www.torbox.ch/data/torbox-20190808-v024-rpi4.gz)<br />
+TorBox Menu only : [v.0.2.4 (08.08.2019)](https://www.torbox.ch/data/torbox024-rpi4-20190808.zip)<br />
 
 ### Disclaimer
 **Use it at your own risk!**
@@ -16,7 +16,7 @@ TorBox is ideal for providing additional protection for the entire data stream u
 3. Put the SD Card into your Raspberry Pi, link it with an Internet router using an Ethernet cable or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
 4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox024” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the advanced menu).
 
-A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) or better a [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) is recommended. The [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) isn't supported, yet -- we working on it!
+A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) is recommended.
 
 Do you have additional questions? Check out our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112).
 
