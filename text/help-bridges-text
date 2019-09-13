@@ -17,5 +17,5 @@ You have two ways to obtain the necessary bridge-addresses:
 HOW DO I KNOW IF IT IS WORKING?
 PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network and the contacted bridge server! In the end, you should see "Bootstrapped 100%: Done" (menu entry 9 or 11).
 
-HOW CAN I CHECK THE VALIDITY OF A GUARD?
+HOW CAN I CHECK THE VALIDITY OF A BRIDGE?
 Go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number between the ip:port and cert=). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
