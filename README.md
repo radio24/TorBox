@@ -33,8 +33,8 @@ Do you have additional questions? Check out our [FAQ on the TorBox website](http
 All that you need to run TorBox on your Raspberry Pi is the image file. However, if you like to build it from scratch on your own, whether you like to implement it to an existing system, to another hardware, respectively another operating system or you don’t trust an image file, which you didn’t bundle of your own. Then [check out our detailed manual](https://www.torbox.ch/?page_id=205). It helps you to build a TorBox from scratch.
 
 ### I want to help...
-GREAT! There is a  lot to improve and to fix (security of the entire system, graphical menu, cool logos ...). We are searching for people, who want to help and we need especially your feedback to improve the system. 
-You can also make [a donation to the Tor Project](https://donate.torproject.org) -- without them TorBox would not exist.
+GREAT! There is a  lot to improve and to fix (security of the entire system, graphical menu, cool logos ...). We are searching for people who want to help, and we need especially your feedback to improve the system. 
+You can also [donate to the Tor Project](https://donate.torproject.org) -- without them, TorBox would not exist.
 
 ### Contact
 [TorBox website](https://www.torbox.ch)
