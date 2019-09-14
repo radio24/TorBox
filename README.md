@@ -37,5 +37,5 @@ GREAT! There is a  lot to improve and to fix (security of the entire system, gra
 You can also [donate to the Tor Project](https://donate.torproject.org) -- without them, TorBox would not exist.
 
 ### Contact
-[TorBox website](https://www.torbox.ch)
-[TorBox email](mailto:anonym@torbox.ch)
+* [TorBox website](https://www.torbox.ch)
+* [TorBox email](mailto:anonym@torbox.ch)
