@@ -1,0 +1,276 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file displays the Bridge Relay menu and executes all relevant scripts.
+#
+# SYNTAX
+# ./menu-server
+#
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=10
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=3
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+#
+#
+# OTHER VARIABLES
+TORRC="/etc/tor/torrc"
+BAK="/etc/tor/torrc.bak"
+
+##############################
+######## FUNCTIONS ########
+# This function import the configuration and make some preparations
+
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
+MODE=$(grep "BridgeRelay" ${TORRC})
+MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
+if [ "$MODE" = "BridgeRelay 1" ]; then
+    TOGGLE07="YES]==="
+    TOGGLE07b="ON"
+    TOGGLE08=" NO]==="
+    TOGGLE08b="OFF"
+    ACTIVATED="Bridge Relay Mode is ACTIVATED"
+    ORPORT=$(grep "^ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
+    CONTACT=$(grep "^ContactInfo" ${TORRC})
+    NICK=$(grep "^Nickname" ${TORRC})
+else
+    TOGGLE07=" NO]==="
+    TOGGLE07b="OFF"
+    TOGGLE08="YES]==="
+    TOGGLE08b="ON"
+    ACTIVATED="Bridge Relay Mode is DEACTIVATED"
+    ORPORT=$(grep "^#ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC})
+    CONTACT=$(grep "^#ContactInfo" ${TORRC})
+    NICK=$(grep "^#Nickname" ${TORRC})
+fi
+sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
+sNICK=$(cut -d ' ' -f2 <<< $NICK)
+}
+
+# This function changes the configuration an, if necessary, restarts tor
+change_config()
+{
+if [ "$MODE" != "BridgeRelay 1" ]; then
+  sudo sed -i "s/^$ORPORT/#ORPort $nORPORT/" ${TORRC}
+  sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+  sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
+  sudo sed -i "s/^$NICK/#Nickname $nNICK/" ${TORRC}
+else
+  sudo sed -i "s/^$ORPORT/ORPort $nORPORT/" ${TORRC}
+  sudo sed -i "s/^$OBFS4PORT/ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+  sudo sed -i "s/^$CONTACT/ContactInfo $nCONTACT/" ${TORRC}
+  sudo sed -i "s/^$NICK/Nickname $nNICK/" ${TORRC}
+  INPUT=$(cat text/restart-bridge_server-text)
+  if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    clear
+    echo "[+] Restarting Tor!"
+    sudo service tor restart &
+    echo "[+] DONE! Checking progress:"
+    trap "bash menu-server; exit 0" SIGINT
+    sudo tail -f -n 0 /var/log/tor/notices.log
+  fi
+fi
+}
+
+
+######## PREPARATIONS ########
+read_config
+
+###### DISPLAY THE MENU ######
+clear
+
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - DEFEND THE OPEN INTERNET" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+" " " " \
+"===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
+"  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
+"  2" "Toggle Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
+"  3" "Check and/or change configuration"  \
+"  4" "Reset configuration to default"  \
+"  5" "Show me my personal bridge address"  \
+"  6" "Enter the advanced configuration editor"  \
+"  7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+"  8" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
+"===" "====================================[How can I support?   ]===" \
+"  9" "PLEASE SUPPORT THE TOR PROJECT!" \
+" 10" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
+
+exitstatus=$?
+
+if [ $exitstatus = 0 ]; then
+  if [ "$CHOICE" != " " ]; then
+		if [ $CHOICE = 1 ]; then
+      INPUT=$(cat text/help-bridge_server-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+      fi
+    elif [ $CHOICE = 2 ]; then
+      if [ "$MODE" != "BridgeRelay 1" ]; then
+        if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+          INPUT=$(cat text/activate-bridge_server-text)
+          if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
+            sudo sed -i "s/^#ORPort/ORPort/g" ${TORRC}
+            sudo sed -i "s/^#ExtORPort/ExtORPort/g" ${TORRC}
+            #Currently, we support only OBFS4 bridges
+            sudo sed -i "s/^#ServerTransportPlugin/ServerTransportPlugin/g" ${TORRC}
+            sudo sed -i "s/^#ServerTransportListenAddr/ServerTransportListenAddr/g" ${TORRC}
+            sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
+            sudo sed -i "s/^#Nickname/Nickname/g" ${TORRC}
+          fi
+        else
+          INPUT="\n\nTo activate the Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. It makes no sense to use both at the same time!"
+          whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
+        fi
+      else
+        INPUT=$(cat text/deactivate-bridges-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
+          sudo bash deactivating_bridge_relay
+          sleep 2
+          echo "[+] Restarting Tor!"
+          sudo service tor restart
+        fi
+      fi
+      read_config
+		elif [ $CHOICE = 3 ]; then
+      if [ "$MODE" != "BridgeRelay 1" ]; then
+			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to change the configuration?"
+        if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
+          nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: 4235):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+  			  if [ "$nORPORT" = "" ]; then
+            nORPORT="4235"
+ 			    fi
+            nOBFS4PORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (default: 443):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          if [ "$nOBFS4PORT" = "" ]; then
+            nOBFS4PORT="443"
+          fi
+            nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge (optional).\n\nEnter your contact email address (default: <address@email.com>):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          if [ "$nCONTACT" = "" ]; then
+            nCONTACT="<address@email.com>"
+          fi
+          nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (default: TorBox025):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          change_config
+          read_config
+        fi
+      else
+        INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nTo change the configuration, you have first to DEACTIVATE the Bridge Relay Mode."
+        whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
+      fi
+    elif [ $CHOICE = 4 ]; then
+      INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to reset the configuration to the default values?"
+      if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
+        nORPORT="4235"
+        nOBFS4PORT="443"
+        nCONTACT="<address@email.com>"
+        nNICK="TorBox025"
+        change_config
+        read_config
+      fi
+    elif [ $CHOICE = 5 ]; then
+      if [ "$MODE" = "BridgeRelay 1" ]; then
+        read_config
+        PRIVATE_IP_SPACE=""
+        PRIVATE_IP_SPACE=$(ip route get 1.1.1.1 | grep -oP 'src \K\S+' | grep -E '^(192\.168|10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.)')
+        if [ "$PRIVATE_IP_SPACE" = "" ]; then
+          MYIP=$(ip route get 1.1.1.1 | grep -oP 'src \K\S+')
+        else
+          MYIP=$(ip route get 1.1.1.1 | grep -oP 'via \K\S+')
+        fi
+        FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
+        FINGERPRINT=$(cut -d ' ' -f2 <<< $FINGERPRINT)
+        CERT=$(sudo grep -oP "cert=.*" /var/lib/tor/pt_state/obfs4_bridgeline.txt)
+        BRIDGELINE="$MYIP:$sOBFS4PORT $FINGERPRINT $CERT"
+        echo "[+] ACTIVATED BRIDGE RELAY"
+        echo "[+] Below is your personal bridge address, which you can use with another TorBox or with the Tor Browser."
+        echo "[+] Format: <IP>:<Port> <Fingerprint> cert=<Certificate> iat-mode=0"
+        echo ""
+        echo "[!] $BRIDGELINE"
+        echo ""
+        echo "[+] Would you like to check the validity of the bridge?"
+        echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
+        echo "[+] Or go to for a https://bridges.torproject.org/scan/ TCP reachability test"
+        echo " "
+      else
+        echo "[+] DEACTIVATED BRIDGE RELAY!!"
+        echo "[+] There is no personal bridge address, yet. You have to activate the Bridge Relay first (menu entry 2)."
+        echo " "
+      fi
+      read -n 1 -s -r -p "Press any key to continue"
+    elif [ $CHOICE = 6 ]; then
+      INPUT=$(cat text/advanced-bridges-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        sudo cp ${TORRC} ${BAK}
+        sudo nano ${TORRC}
+      fi
+    elif [ $CHOICE = 7 ]; then
+      INPUT=$(cat text/restart-bridge_server-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        echo "[+] Reading configuration... "
+        read_config
+        sleep 2
+        echo "[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT"
+        sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
+        sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+        sleep 2
+        echo "[+] Restarting Tor!"
+        sudo service tor restart &
+        echo "[+] DONE! Checking progress:"
+        sleep 2
+        trap "bash menu-server; exit 0" SIGINT
+        sudo tail -f -n 0 /var/log/tor/notices.log
+      fi
+    elif [ $CHOICE = 8 ]; then
+      trap "bash menu-server; exit 0" SIGINT
+      sudo tail -f -n 25 /var/log/tor/notices.log
+    elif [ $CHOICE = 9 ]; then
+      INPUT=$(cat text/support-tor-text)
+      whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+    elif [ $CHOICE = 10 ]; then
+      INPUT=$(cat text/support-torbox-text)
+      whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+    fi
+ 	fi
+else
+  clear
+  exit 0
+fi
+bash menu-server

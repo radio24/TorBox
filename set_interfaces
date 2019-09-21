@@ -47,6 +47,10 @@
 #
 ###### SET VARIABLES ######
 #
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 WLAN_MANAGER="/usr/bin/wicd-curses"
@@ -59,6 +63,9 @@ CAPTIVE=$3
 
 ###########################
 
+###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
+clear
+sudo bash deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 if [ "$O_DEVICE" = "eth0" ]; then
@@ -71,7 +78,7 @@ elif [ "$O_DEVICE" = "eth1" ]; then
 	fi
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
-	whiptail --title "TorBox - INFO" --textbox text/wicd-text 35 90
+	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
 	service $WLAN_MANAGER_DAEMON_NAME restart
 	echo "[+] Waiting for WLan Manager..."
 	sleep 5
@@ -82,7 +89,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	fi
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
-	whiptail --title "TorBox - INFO" --textbox text/wicd-text 35 90
+	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
 	service $WLAN_MANAGER_DAEMON_NAME restart
 	echo "[+] Waiting for WLan Manager..."
 	sleep 5

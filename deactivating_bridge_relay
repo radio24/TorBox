@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file flushes all LOG-files in /var/log and ~/.bash_history.
+#
+# SYNTAX
+# ./deactivating_bridge_relay
+#
+#
+###### SET VARIABLES ######
+#
+TORRC="/etc/tor/torrc"
+
+##############################
+######## FUNCTIONS ########
+# This function import the configuration and make some preparations
+
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
+MODE=$(grep "BridgeRelay" ${TORRC})
+if [ "$MODE" = "BridgeRelay 1" ]; then
+    ORPORT=$(grep "^ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
+else
+    ORPORT=$(grep "^#ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC})
+fi
+sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+}
+
+read_config
+if [ "$MODE" = "BridgeRelay 1" ]; then
+	echo "[+] Deactivating Bridge Relay Mode... "
+	sudo sed -i "s/^BridgeRelay/#BridgeRelay/g" ${TORRC}
+	sudo sed -i "s/^ORPort/#ORPort/g" ${TORRC}
+	sudo sed -i "s/^ExtORPort/#ExtORPort/g" ${TORRC}
+	sudo sed -i "s/^ServerTransportPlugin/#ServerTransportPlugin/g" ${TORRC}
+	sudo sed -i "s/^ServerTransportListenAddr/#ServerTransportListenAddr/g" ${TORRC}
+	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
+	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
+	sleep 2
+	echo "[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT"
+	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
+	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+fi

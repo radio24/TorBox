@@ -47,6 +47,15 @@
 #
 ######## SET VARIABLES ########
 #
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_25=25
+#
+#
+# OTHER VARIABLES
+#
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 DNSPROG="dnsmasq"
@@ -61,7 +70,7 @@ I_DEVICE=$2
 sleep 2
 clear
 INPUT=$(cat text/is-it-captive-text)
-if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" 25 80); then
+if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
   CAPTIVE=1
 else
   sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}

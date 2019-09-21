@@ -35,6 +35,12 @@
 #
 ###### SET VARIABLES ######
 #
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_15=15
+#
+#
+# OTHER VARIABLES
 TORRC="/etc/tor/torrc"
 number_configured_bridges_deactivated=$1
 show_when_zero_bridges=$2
@@ -44,13 +50,12 @@ show_when_zero_bridges=$2
 if [ $number_configured_bridges_deactivated = 0 ]; then
   if [ $show_when_zero_bridges = 1 ]; then
     clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO BRIDGES configured, yet!" 15 80); then
+    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO BRIDGES configured, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
     fi
   fi
 else
-    if (whiptail --title "TorBox - INFO" --yesno "\n\nThere are $number_configured_bridges_deactivated DEACTIVATED bridges in your configuration file (probably from you last session?)! Would you like to ACTIVATE these old bridges and restart Tor (check progress with menu entry 11 - this can take up to several minutes)?" 20 80); then
+    if (whiptail --title "TorBox - INFO" --yesno "\n\nThere are $number_configured_bridges_deactivated DEACTIVATED bridges in your configuration file (probably from you last session?)! Would you like to ACTIVATE these old bridges ?" 20 $MENU_WIDTH); then
         sudo sed -i "s/^#Bridge/Bridge/g" ${TORRC}
-        sudo service tor restart
     fi
 fi

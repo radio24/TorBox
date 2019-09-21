@@ -45,6 +45,12 @@ if [ "$HOST" != "localhost" ]; then
   PORT="$LOCALPORT"
 fi
 
+#Added by TorBox
+clear
+echo "[+] Requesting new identity..."
+echo ""
+sleep 2
+
 (
 nc localhost "$PORT" <<EOF
 authenticate "${PASSWORD}"
@@ -52,5 +58,10 @@ signal newnym
 quit
 EOF
 ) || echo "Connection failed." >&2
+
+#Added by TorBox
+echo ""
+echo "[+] Done!"
+sleep 4
 
 sh menu
