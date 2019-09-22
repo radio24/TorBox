@@ -158,9 +158,9 @@ if [ $exitstatus = 0 ]; then
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
           echo "[+] DEACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Hashed Fingerprint> "
+          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
           echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the hashed fingerprint"
+          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
           echo "[+] Or go to for a https://bridges.torproject.org/scan/ TCP reachability test"
           echo " "
           while [ $i -lt $number_configured_bridges_deactivated ]
@@ -175,9 +175,9 @@ if [ $exitstatus = 0 ]; then
       fi
       if [ $number_configured_bridges_activated -gt 0 ]; then
           echo "[+] ACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Hashed Fingerprint> "
+          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
           echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the hashed fingerprint"
+          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
           echo "[+] Or go to for a https://bridges.torproject.org/scan/ TCP reachability test"
           echo " "
           while [ $j -lt $number_configured_bridges_activated ]
