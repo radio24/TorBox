@@ -4,7 +4,7 @@ WIRELESS means that TorBox acts as an access point with a wireless network named
 
 CABLE means that the client is directly connected with an Ethernet cable to the TorBox. In this mode, TorBox stops working as an access point until you change back to WIRELESS.
 
-IMPORTANT: In the CABLE mode, the internet has to be connected with an EXTERNAL ETHERNET INTERFACE (usually a USB ethernet adapter), and the client has, IN ANY CASE, to be connected to the internal ethernet interface, fix assembled on the board. In the CABLE, mode a client can't connect your TorBox wirelessly until you change back to WIRELESS.
+IMPORTANT: In the CABLE mode, the internet is accessed either via an EXTERNAL ETHERNET INTERFACE (usually a USB ethernet adapter), a wireless network or tethering with an iPhone. The client has, IN ANY CASE, to be connected to the internal ethernet interface, fix assembled on the board. In the CABLE, mode a client can't connect your TorBox wirelessly until you change back to WIRELESS.
 
 TorBox reboots at the end of the procedure.
 
