@@ -2,8 +2,8 @@
 TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information visit the [TorBox website](https://www.torbox.ch)<br />
-TorBox Image (870 MB) : [v.0.2.4 (08.08.2019)](https://www.torbox.ch/data/torbox-20190808-v024-rpi4.gz)<br />
-TorBox Menu only : [v.0.2.4 (08.08.2019)](https://www.torbox.ch/data/TorBox024-rpi4-20190808.zip)<br />
+TorBox Image (986 MB) : [v.0.2.5 (23.09.2019)](https://www.torbox.ch/data/torbox-20190923-v025.gz)<br />
+TorBox Menu only : [v.0.2.5 (23.0.2019)](https://www.torbox.ch/data/torbox025-pre-20190923)<br />
 
 ### Disclaimer
 **Use it at your own risk!**
@@ -26,6 +26,7 @@ Do you have additional questions? Check out our [FAQ on the TorBox website](http
 * TorBox supports internet access and client connections via WiFi (an additional USB WiFi adapter is necessary) or cable, which can easily be changed via the provided interface.
 * It easily overcomes captive portals and offers, if necessary, measures against “disconnect when idle features” (sometimes seen with WiFis in airports, hotels, coffee houses).
 * TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html) bridges, which help to overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=112#censorship)).
+* If you have a public IP address, 24/7 internet connectivity over a long time, and a bandwidth of at least 1 Mbps, TorBox can provide a bridge relay via a user-friendly interface [to allow censored users access to the open internet](https://blog.torproject.org/run-tor-bridges-defend-open-internet).
 * It provides [SOCKS v5 proxy functionality](https://en.wikipedia.org/wiki/SOCKS).
 * It allows easy access to .onion websites without client configuration (Chrome) or via SOCKS v5 proxy (Firefox).
 
