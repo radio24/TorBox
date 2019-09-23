@@ -3,7 +3,7 @@ TorBox is an easy to use, anonymizing router based on Raspberry Pi. TorBox creat
 
 For more information visit the [TorBox website](https://www.torbox.ch)<br />
 TorBox Image (about 985 MB) : [v.0.2.5 (23.09.2019)](https://www.torbox.ch/data/torbox-20190923-v025.gz)<br />
-TorBox Menu only : [v.0.2.5 (23.0.2019)](https://www.torbox.ch/data/torbox025-pre-20190923)<br />
+TorBox Menu only : [v.0.2.5 (23.0.2019)](https://www.torbox.ch/data/torbox025-20190923.zip)<br />
 
 ### Disclaimer
 **Use it at your own risk!**
