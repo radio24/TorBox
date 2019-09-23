@@ -1,0 +1,17 @@
+With this menu entry, you can restart Tor and check the log entries.
+
+To confirm your bridge is running, you should see something like this:
+[notice] Your Tor server's identity key fingerprint is
+         '<NICKNAME> <FINGERPRINT>'
+[notice] Your Tor bridge's hashed identity key fingerprint is
+         '<NICKNAME> <HASHED FINGERPRINT>'
+[notice] Registered server transport 'obfs4' at '[::]:46396'
+[notice] Now checking whether ORPort <redacted>:3818 is reachable...
+[notice] Self-testing indicates your ORPort is reachable from the outside.
+         Excellent. Publishing server descriptor.
+
+Finally, you can monitor your obfs4 bridge's usage on https://metrics.torproject.org/rs.html by searching for your fingerprint (this is the long number between the ip:port and cert=).
+Alternatively, you can perform a TCP reachability test with your IP and your OBFS4Port: https://bridges.torproject.org/scan/
+For the necessary values, check menu entry 5.
+
+PLEASE BE PATIENT! After having set up the bridge, it takes approximately three hours for the bridge to show up in Relay Search. Moreover, it can take several days or weeks until you see an advertised bandwidth and a consistent set of users. Don't get discouraged if you don't see user connections right away.

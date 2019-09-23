@@ -9,13 +9,14 @@ To get bridges working in TorBox, you have to follow a 3-step procedure:
 HOW TO OBTAIN BRIDGES?
 You have two ways to obtain the necessary bridge-addresses:
 1. Get them here https://bridges.torproject.org/
-   (chose "Advanced Options", "obfs4" and press "Get Bridges)
-2. Or send an email to bridges@torproject.org, using an address
-   from Riseup, Gmail or Yahoo with "get transport obfs4" in the
-   body of the mail.
+   (chose "Advanced Options", "obfs4" and press "Get Bridges).
+2. Alternatively, send an email to bridges@torproject.org, using an
+   address from Riseup, Gmail or Yahoo with "get transport obfs4" in
+   the body of the mail.
 
 HOW DO I KNOW IF IT IS WORKING?
-PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network and the contacted bridge server! In the end, you should see "Bootstrapped 100%: Done" (menu entry 9 or 11).
+PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network and the contacted bridge relay! In the end, you should see "Bootstrapped 100%: Done" (menu entry 9 or 11).
 
 HOW CAN I CHECK THE VALIDITY OF A BRIDGE?
 Go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number between the ip:port and cert=). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
+Alternatively, you can perform a TCP reachability test: https://bridges.torproject.org/scan/

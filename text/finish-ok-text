@@ -1,0 +1,13 @@
+CONGRATULATION !!
+
+According to our check, Tor should work now correctly! Nevertheless, to be sure, open on one of your client a web-browser and try to access the following address:
+
+                      https://check.torproject.org
+
+You should read: "Congratulations. This browser is configured to use Tor." ONLY IN THIS CASE IS YOUR CONNECTION PROTECTED !!
+
+However, BE PATIENT! Probably Tor needs UP TO ONE MINUTE to establish the necessary circuits -- check with menu entry "Tor statistics" in the main menu. You even may reboot TorBox. In this case, save the current connection settings first.
+
+"PROTECTED" means that all data from your devices, which are connected with TorBox is encrypted and tunneled through Tor. This may be sufficient to protect you from spying on your Internet traffic or to circumvent censorship measures. However, to stay anonymous is much harder. For example, in this case, you should exclusively use Tor Browser while browsing the web to withhold some information about your computer's configuration. You can download it here: https://goo.gl/2UwZmR
+
+You shouldn't use TorBox if your life or well-being is dependent on data security/anonymity. In this case, you should instead use Tails: https://tails.boum.org/

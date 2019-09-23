@@ -31,13 +31,16 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=9
+NO_ITEMS=10
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=5
 #
 #Set the the variables for the menu
-MENU_ROWS=80
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 #
@@ -75,7 +78,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.4 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_ROWS $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) passwort"  \
@@ -87,42 +90,46 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.4 - CONFIGURATION
 "===" "===========================================[Logging "$TOGGLE03 \
 "  7" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
 "  8" "Erase all log files" \
+"===" "===========================================[Features]========" \
+"  9" "Support for Adafruit's PiTFT displays (reboot required)" \
 "===" "===========================================[Update]==========" \
-"  9" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
+" 10" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
-  if [ "$CHOICE" != " " ]; then
+  if [ "$CHOICE" != "" ]; then
 		if [ $CHOICE = 1 ]; then
-			whiptail --msgbox "You will now be asked to enter a new admin password." 20 60 1
+			whiptail --msgbox "You will now be asked to enter a new admin password." $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 1
   		sudo passwd pi
 		elif [ $CHOICE = 2 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new name for your wireless lan:" 20 60 3>&1 1>&2 2>&3)
-			if [ $INPUT != " " ]; then
+			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new name for your wireless lan:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [ "$INPUT" != "" ]; then
 			  sudo bash change_ssid $INPUT
-				if (whiptail --yesno "The name of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
+				if (whiptail --yesno "The name of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 					sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
+          echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
         	sleep 2
 					sudo reboot
 					exit 0
 				fi
 			fi
 		elif [ $CHOICE = 3 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new password:" 20 60 3>&1 1>&2 2>&3)
-			if [ $INPUT != " " ]; then
+			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [ "$INPUT" != "" ]; then
 				sudo bash change_ssid_pw $INPUT
-				if (whiptail --yesno "The password of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
+				if (whiptail --yesno "The password of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
+          echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
         	sleep 2
 					sudo reboot
 					exit 0
 				fi
 			fi
 		elif [ $CHOICE = 4 ]; then
-			if (whiptail --title "Changing the configuration of the wireless lan" --yes-button "Unhide" --no-button "Hide" --yesno "\n\nWould you like to hide / unhide your wireless lan?" 20 60 3>&1 1>&2 2>&3); then
+			if (whiptail --title "Changing the configuration of the wireless lan" --yes-button "Unhide" --no-button "Hide" --yesno "\n\Would you like to hide / unhide your wireless lan?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 			  INPUT=ignore_broadcast_ssid=0
 			else
 				INPUT=ignore_broadcast_ssid=1
@@ -132,18 +139,19 @@ if [ $exitstatus = 0 ]; then
 			else
       	sudo echo ${INPUT} >> ${HOSTAPD}
 			fi
-			if (whiptail --yesno "\n\nWould you like to reboot TorBox now to put the changes into effect?" 20 60); then
+			if (whiptail --yesno "\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         sudo bash save_connection
 				echo "[+] Rebooting TorBox..."
+        echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
         sleep 2
 				sudo reboot
 				exit 0
 			fi
     elif [ $CHOICE = 5 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/wrd-text 30 80
+      whiptail --title "TorBox - INFO" --textbox text/wrd-text $MENU_HEIGHT_25 $MENU_WIDTH
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
-      INPUT=$(whiptail --title "Setting the wifi regulatory domain" --inputbox "\n\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the wifi regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" 20 60 $TLC 3>&1 1>&2 2>&3)
+      INPUT=$(whiptail --title "Setting the wifi regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the wifi regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
       if [ "$INPUT" != "$TLC" ]; then
         if [ -z "$INPUT" ]; then
           sudo iw reg set 00
@@ -156,8 +164,8 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
     elif [ $CHOICE = 6 ]; then
-			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" 20 60 3>&1 1>&2 2>&3)
-			if [ $INPUT != " " ]; then
+			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [ "$INPUT" != "" ]; then
 				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
 				INPUT=PASSWORD=$INPUT
 				if grep "^HashedControlPassword\ " ${TORRC}; then
@@ -169,14 +177,15 @@ if [ $exitstatus = 0 ]; then
 				sudo service tor restart
 			fi
     elif [ $CHOICE = 7 ]; then
-			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\n\nWould you like to change the extend of logging?" 20 60 3>&1 1>&2 2>&3); then
+			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
 					sudo systemctl enable rsyslog
 					sudo service rsyslog start
-          if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" 20 60); then
+          if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
             sudo bash save_connection
     				echo "[+] Rebooting TorBox..."
+            echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
             sleep 2
     				sudo reboot
     				exit 0
@@ -199,13 +208,21 @@ if [ $exitstatus = 0 ]; then
 			sudo bash erase_logs
 			sleep 2
     elif [ $CHOICE = 9 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/update-text 30 80
+      INPUT=$(cat text/pitft-text)
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo apt-get install python3-dev
+        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
+        chmod +x adafruit-pitft.sh
+        sudo ./adafruit-pitft.sh
+      fi
+    elif [ $CHOICE = 10 ]; then
+      whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
  			KERNEL_VERS=$(uname -s -r)
       TOR_VERS=$(tor --version)
     	WICD_VERS=$(wicd-curses --version)
-			INPUT="\n\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
-      if (whiptail --defaultno --yesno "$INPUT" 20 60); then
+			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
          screen bash update
 			fi
 		fi

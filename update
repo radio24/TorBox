@@ -49,5 +49,11 @@ sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove; rm -r ~/debian-packages
 sudo update-rc.d hostapd enable
 sudo update-rc.d dnsmasq disable
-if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" 20 80) ; then sudo reboot ; fi
+if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" 20 80) ; then
+  sudo bash save_connection
+  echo "[+] Rebooting TorBox..."
+  echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
+  sleep 2
+  sudo reboot
+fi
 exit 0

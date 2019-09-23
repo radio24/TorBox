@@ -26,8 +26,14 @@
 # ./save_connection
 #
 #
+###### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+
 clear
-if (whiptail --title "TorBox - INFO" --yesno "\n\nIf you save the current connection settings, TorBox will load them during next boot.\n\nWould you like to save the connection settings?" 15 60); then
+if (whiptail --title "TorBox - INFO" --yesno "\n\nIf you save the current connection settings, TorBox will load them during next boot.\n\nWould you like to save the connection settings?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 	echo "[+] Save connection setting..."
   sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
   sleep 2
