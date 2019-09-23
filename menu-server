@@ -61,7 +61,7 @@ MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
 if [ "$MODE" = "BridgeRelay 1" ]; then
     TOGGLE07="YES]==="
     TOGGLE07b="ON"
-    TOGGLE08=" NO]==="
+    TOGGLE08="NO!]==="
     TOGGLE08b="OFF"
     ACTIVATED="Bridge Relay Mode is ACTIVATED"
     ORPORT=$(grep "^ORPort" ${TORRC})
@@ -69,7 +69,7 @@ if [ "$MODE" = "BridgeRelay 1" ]; then
     CONTACT=$(grep "^ContactInfo" ${TORRC})
     NICK=$(grep "^Nickname" ${TORRC})
 else
-    TOGGLE07=" NO]==="
+    TOGGLE07="NO!]==="
     TOGGLE07b="OFF"
     TOGGLE08="YES]==="
     TOGGLE08b="ON"
