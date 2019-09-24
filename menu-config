@@ -81,7 +81,7 @@ clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
-"  1" "Change admin (user pi) passwort"  \
+"  1" "Change admin (user pi) password"  \
 "  2" "Change the name of your wireless lan (reboot required)"  \
 "  3" "Change the password of your wireless lan (reboot required)"  \
 "  4" "Hide / Unhide your wireless lan (reboot required)"  \
