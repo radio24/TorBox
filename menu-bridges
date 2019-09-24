@@ -128,7 +128,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - COUNTERMEASUR
 "===" "===========================================[Troubleshooting]==" \
 " 11" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 " 12" "Reset network manager (anti-crash)" \
-" 13" "Reset Tor and and force a change of the permanent entry node" 3>&1 1>&2 2>&3)
+" 13" "Reset Tor and force a change of the permanent entry node" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
