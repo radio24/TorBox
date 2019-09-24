@@ -85,7 +85,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 "  2" "Change the name of your wireless lan (reboot required)"  \
 "  3" "Change the password of your wireless lan (reboot required)"  \
 "  4" "Hide / Unhide your wireless lan (reboot required)"  \
-"  5" "Set the WLan regulatory domain" \
+"  5" "Set the wlan regulatory domain and enable the 5 GHz band" \
 "  6" "Change the password of your Tor control port"  \
 "===" "===========================================[Logging "$TOGGLE03 \
 "  7" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
@@ -151,7 +151,7 @@ if [ $exitstatus = 0 ]; then
       whiptail --title "TorBox - INFO" --textbox text/wrd-text $MENU_HEIGHT_25 $MENU_WIDTH
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
-      INPUT=$(whiptail --title "Setting the WLan regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the WLan regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
+      INPUT=$(whiptail --title "Setting the wlan regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the wlan regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
       if [ "$INPUT" != "$TLC" ]; then
         if [ -z "$INPUT" ]; then
           sudo iw reg set 00
