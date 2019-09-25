@@ -212,7 +212,7 @@ if [ $exitstatus = 0 ]; then
         if [ "$PRIVATE_IP_SPACE" = "" ]; then
           MYIP=$(ip route get 1.1.1.1 | grep -oP 'src \K\S+')
         else
-          MYIP=$(ip route get 1.1.1.1 | grep -oP 'via \K\S+')
+          MYIP=$(curl -s http://ifconfig.me)
         fi
         FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
         FINGERPRINT=$(cut -d ' ' -f2 <<< $FINGERPRINT)
