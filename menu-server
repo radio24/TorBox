@@ -248,8 +248,12 @@ if [ $exitstatus = 0 ]; then
         read_config
         sleep 2
         echo "[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT"
-        sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
-        sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+        sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT
+        RULE_CHECK=$?
+        if [ $RULE_CHECK = 1 ]; then
+          sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
+          sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+        fi
         sleep 2
         echo "[+] Restarting Tor!"
         sudo service tor restart &

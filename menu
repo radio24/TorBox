@@ -88,6 +88,28 @@ else
 fi
 }
 
+# This opens the ports, after a restart if bridge relay is on
+check_bridge_relay()
+{
+  MODE=$(grep "BridgeRelay" ${TORRC})
+  if [ "$MODE" = "BridgeRelay 1" ]; then
+    ORPORT=$(grep "^ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
+    CONTACT=$(grep "^ContactInfo" ${TORRC})
+    NICK=$(grep "^Nickname" ${TORRC})
+    sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+    sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+    sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
+    sNICK=$(cut -d ' ' -f2 <<< $NICK)
+    sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT
+    RULE_CHECK=$?
+    if [ $RULE_CHECK = 1 ]; then
+      sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
+      sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+    fi
+  fi
+}
+
 
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
@@ -106,6 +128,7 @@ else
     TOGGLE02="ON"
 fi
 
+check_bridge_relay
 check_tor
 
 ###### DISPLAY THE MENU ######
