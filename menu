@@ -50,6 +50,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 TORSTATS="sudo -u debian-tor nyx"
 NEWIDENT="new_ident"
 WICDCONFFILE="/etc/wicd/manager-settings.conf"
+TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
 TOGGLE01=" "
@@ -94,13 +95,7 @@ check_bridge_relay()
   MODE=$(grep "BridgeRelay" ${TORRC})
   if [ "$MODE" = "BridgeRelay 1" ]; then
     ORPORT=$(grep "^ORPort" ${TORRC})
-    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
-    CONTACT=$(grep "^ContactInfo" ${TORRC})
-    NICK=$(grep "^Nickname" ${TORRC})
     sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-    sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
-    sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
-    sNICK=$(cut -d ' ' -f2 <<< $NICK)
     sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT
     RULE_CHECK=$?
     if [ $RULE_CHECK = 1 ]; then
