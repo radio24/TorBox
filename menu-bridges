@@ -298,7 +298,7 @@ if [ $exitstatus = 0 ]; then
         sudo rm -r /var/lib/tor/cached-microdescs
         sudo rm -r /var/lib/tor/cached-microdescs.new
         sudo rm -r /var/lib/tor/diff-cache
-        #sudo rm -r /var/lib/tor/keys - das könnte auch einen bridge relay löschen
+        sudo rm -r /var/lib/tor/keys
         sudo rm -r /var/lib/tor/lock
         sudo rm -r /var/lib/tor/state
         sleep 2
