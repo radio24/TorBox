@@ -92,8 +92,8 @@ fi
 # This opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
 {
-  MODE=$(grep "BridgeRelay" ${TORRC})
-  if [ "$MODE" = "BridgeRelay 1" ]; then
+  MODE_BR=$(grep "BridgeRelay" ${TORRC})
+  if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     ORPORT=$(grep "^ORPort" ${TORRC})
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
     sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)

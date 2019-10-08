@@ -56,9 +56,9 @@ BAK="/etc/tor/torrc.bak"
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
 read_config()
 {
-MODE=$(grep "BridgeRelay" ${TORRC})
+MODE_BR=$(grep "BridgeRelay" ${TORRC})
 MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
-if [ "$MODE" = "BridgeRelay 1" ]; then
+if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     TOGGLE07="YES]==="
     TOGGLE07b="ON"
     TOGGLE08="NO!]==="
@@ -88,7 +88,7 @@ sNICK=$(cut -d ' ' -f2 <<< $NICK)
 # This function changes the configuration an, if necessary, restarts tor
 change_config()
 {
-if [ "$MODE" != "BridgeRelay 1" ]; then
+if [ "$MODE_BR" != "BridgeRelay 1" ]; then
   sudo sed -i "s/^$ORPORT/#ORPort $nORPORT/" ${TORRC}
   sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
   sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
@@ -142,7 +142,7 @@ if [ $exitstatus = 0 ]; then
         clear
       fi
     elif [ $CHOICE = 2 ]; then
-      if [ "$MODE" != "BridgeRelay 1" ]; then
+      if [ "$MODE_BR" != "BridgeRelay 1" ]; then
         if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
           INPUT=$(cat text/activate-bridge_server-text)
           if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -171,7 +171,7 @@ if [ $exitstatus = 0 ]; then
       fi
       read_config
 		elif [ $CHOICE = 3 ]; then
-      if [ "$MODE" != "BridgeRelay 1" ]; then
+      if [ "$MODE_BR" != "BridgeRelay 1" ]; then
 			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to change the configuration?"
         if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
           nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: 4235):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -205,7 +205,7 @@ if [ $exitstatus = 0 ]; then
         read_config
       fi
     elif [ $CHOICE = 5 ]; then
-      if [ "$MODE" = "BridgeRelay 1" ]; then
+      if [ "$MODE_BR" = "BridgeRelay 1" ]; then
         read_config
         PRIVATE_IP_SPACE=""
         PRIVATE_IP_SPACE=$(ip route get 1.1.1.1 | grep -oP 'src \K\S+' | grep -E '^(192\.168|10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.)')
@@ -248,7 +248,7 @@ if [ $exitstatus = 0 ]; then
         read_config
         sleep 2
         echo "[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT"
-        sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT
+        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
         RULE_CHECK=$?
         if [ $RULE_CHECK = 1 ]; then
           sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT

@@ -58,8 +58,8 @@ j=0
 # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
-MODE=$(grep "UseBridges" ${TORRC})
-if [ "$MODE" = "UseBridges 1" ]; then
+MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
+if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
     TOGGLE05="ON]==="
     TOGGLE05b="ON"
     TOGGLE06="OFF]=="
@@ -140,7 +140,7 @@ if [ $exitstatus = 0 ]; then
         clear
       fi
 		elif [ $CHOICE = 2 ]; then
-      if [ "$MODE" != "UseBridges 1" ]; then
+      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
         INPUT=$(cat text/activate-bridges-text)
         if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           sudo bash deactivating_bridge_relay
@@ -211,7 +211,7 @@ if [ $exitstatus = 0 ]; then
 		elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/add-bridges-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add $MODE
+        sudo bash bridges_add $MODE_BRIDGES
         read_config
       fi
     elif [ $CHOICE = 6 ]; then
@@ -282,7 +282,7 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         echo "[+] Deactivating Bridge mode or Bridge Relay..."
         sudo bash deactivating_bridge_relay
-        if [ "$MODE" = "UseBridges 1" ]; then
+        if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges

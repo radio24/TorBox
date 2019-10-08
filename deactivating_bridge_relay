@@ -35,8 +35,8 @@ TORRC="/etc/tor/torrc"
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
 read_config()
 {
-MODE=$(grep "BridgeRelay" ${TORRC})
-if [ "$MODE" = "BridgeRelay 1" ]; then
+MODE_BR=$(grep "BridgeRelay" ${TORRC})
+if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     ORPORT=$(grep "^ORPort" ${TORRC})
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
 else
@@ -48,7 +48,7 @@ sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 }
 
 read_config
-if [ "$MODE" = "BridgeRelay 1" ]; then
+if [ "$MODE_BR" = "BridgeRelay 1" ]; then
 	echo "[+] Deactivating Bridge Relay Mode... "
 	sudo sed -i "s/^BridgeRelay/#BridgeRelay/g" ${TORRC}
 	sudo sed -i "s/^ORPort/#ORPort/g" ${TORRC}

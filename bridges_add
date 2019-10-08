@@ -44,7 +44,7 @@ if [ $number_bridges > 0 ]; then
     while [ $i -le $number_bridges ]
     do
         bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-        if [ "$MODE" = "UseBridges 1" ]; then
+        if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           bridge_address="Bridge $bridge_address"
         else
           bridge_address="#Bridge $bridge_address"
