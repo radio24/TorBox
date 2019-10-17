@@ -80,7 +80,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
 	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
 	service $WLAN_MANAGER_DAEMON_NAME restart
-	echo "[+] Waiting for WLan Manager..."
+	echo "[+] Waiting for the WLAN Manager..."
 	sleep 5
 	$WLAN_MANAGER
 	clear
@@ -91,7 +91,7 @@ elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
 	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
 	service $WLAN_MANAGER_DAEMON_NAME restart
-	echo "[+] Waiting for WLan Manager..."
+	echo "[+] Waiting for the WLAN Manager..."
 	sleep 5
 	$WLAN_MANAGER
 	clear

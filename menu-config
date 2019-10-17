@@ -151,7 +151,7 @@ if [ $exitstatus = 0 ]; then
       whiptail --title "TorBox - INFO" --textbox text/wrd-text $MENU_HEIGHT_25 $MENU_WIDTH
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
-      INPUT=$(whiptail --title "Setting the wlan regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the wlan regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
+      INPUT=$(whiptail --title "Setting the WLAN regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the WLAN regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
       if [ "$INPUT" != "$TLC" ]; then
         if [ -z "$INPUT" ]; then
           sudo iw reg set 00
