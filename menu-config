@@ -82,9 +82,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
-"  2" "Change the name of your wireless lan (reboot required)"  \
-"  3" "Change the password of your wireless lan (reboot required)"  \
-"  4" "Hide / Unhide your wireless lan (reboot required)"  \
+"  2" "Change the name of your WLAN (reboot required)"  \
+"  3" "Change the password of your WLAN (reboot required)"  \
+"  4" "Hide / Unhide your WLAN(reboot required)"  \
 "  5" "Set the WLAN regulatory domain and enable the 5 GHz band" \
 "  6" "Change the password of your Tor control port"  \
 "===" "===========================================[Logging "$TOGGLE03 \
@@ -103,10 +103,10 @@ if [ $exitstatus = 0 ]; then
 			whiptail --msgbox "You will now be asked to enter a new admin password." $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 1
   		sudo passwd pi
 		elif [ $CHOICE = 2 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new name for your wireless lan:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter you new name for your WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
 			  sudo bash change_ssid $INPUT
-				if (whiptail --yesno "The name of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				if (whiptail --yesno "The name of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 					sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
           echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
@@ -116,10 +116,10 @@ if [ $exitstatus = 0 ]; then
 				fi
 			fi
 		elif [ $CHOICE = 3 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the wireless lan" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
 				sudo bash change_ssid_pw $INPUT
-				if (whiptail --yesno "The password of your wireless lan is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo bash save_connection
 					echo "[+] Rebooting TorBox..."
           echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
@@ -129,7 +129,7 @@ if [ $exitstatus = 0 ]; then
 				fi
 			fi
 		elif [ $CHOICE = 4 ]; then
-			if (whiptail --title "Changing the configuration of the wireless lan" --yes-button "Unhide" --no-button "Hide" --yesno "\n\Would you like to hide / unhide your wireless lan?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
+			if (whiptail --title "Changing the configuration of the WLAN" --yes-button "Unhide" --no-button "Hide" --yesno "\n\Would you like to hide / unhide your WLAN?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 			  INPUT=ignore_broadcast_ssid=0
 			else
 				INPUT=ignore_broadcast_ssid=1
