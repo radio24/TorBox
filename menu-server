@@ -160,7 +160,7 @@ if [ $exitstatus = 0 ]; then
           whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
         fi
       else
-        INPUT=$(cat text/deactivate-bridges-text)
+        INPUT=$(cat text/deactivate-bridge_server-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
           sudo bash deactivating_bridge_relay
