@@ -226,7 +226,7 @@ if [ $exitstatus = 0 ]; then
         echo ""
         echo "[+] Would you like to check the validity of the bridge?"
         echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-        echo "[+] Or go to for a https://bridges.torproject.org/scan/ TCP reachability test"
+        echo "[+] Or go to https://bridges.torproject.org/scan/ TCP for a reachability test"
         echo " "
       else
         echo "[+] DEACTIVATED BRIDGE RELAY!!"
