@@ -122,7 +122,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - DEFEND THE OP
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
 "  2" "Toggle Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
-"  3" "Check and/or change configuration"  \
+"  3" "Check and/or change the configuration"  \
 "  4" "Reset configuration to default"  \
 "  5" "Show me my personal bridge address"  \
 "  6" "Enter the advanced configuration editor"  \
@@ -172,7 +172,7 @@ if [ $exitstatus = 0 ]; then
       read_config
 		elif [ $CHOICE = 3 ]; then
       if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to change the configuration?"
+			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to change the configuration?"
         if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
           nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: 4235):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
   			  if [ "$nORPORT" = "" ]; then
@@ -186,16 +186,16 @@ if [ $exitstatus = 0 ]; then
           if [ "$nCONTACT" = "" ]; then
             nCONTACT="<address@email.com>"
           fi
-          nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (default: TorBox025):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           change_config
           read_config
         fi
       else
-        INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nTo change the configuration, you have first to DEACTIVATE the Bridge Relay Mode."
+        INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nTo change the configuration, you have first to DEACTIVATE the Bridge Relay Mode."
         whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
       fi
     elif [ $CHOICE = 4 ]; then
-      INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBS4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to reset the configuration to the default values?"
+      INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to reset the configuration to the default values?"
       if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
         nORPORT="4235"
         nOBFS4PORT="443"
@@ -226,7 +226,7 @@ if [ $exitstatus = 0 ]; then
         echo ""
         echo "[+] Would you like to check the validity of the bridge?"
         echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-        echo "[+] Or go to https://bridges.torproject.org/scan/ TCP for a reachability test"
+        echo "[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test"
         echo " "
       else
         echo "[+] DEACTIVATED BRIDGE RELAY!!"
