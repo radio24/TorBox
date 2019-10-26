@@ -103,7 +103,7 @@ else
     clear
     echo "[+] Restarting Tor!"
     sudo service tor restart &
-    echo "[+] DONE! Checking progress:"
+    echo "[+] DONE! Checking progress - please be patient:"
     trap "bash menu-server; exit 0" SIGINT
     sudo tail -f -n 0 /var/log/tor/notices.log
   fi
@@ -166,6 +166,7 @@ if [ $exitstatus = 0 ]; then
           sudo bash deactivating_bridge_relay
           sleep 2
           echo "[+] Restarting Tor!"
+          sleep 2
           sudo service tor restart
         fi
       fi
@@ -257,7 +258,7 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         echo "[+] Restarting Tor!"
         sudo service tor restart &
-        echo "[+] DONE! Checking progress:"
+        echo "[+] DONE! Checking progress - please be patient:"
         sleep 2
         trap "bash menu-server; exit 0" SIGINT
         sudo tail -f -n 0 /var/log/tor/notices.log

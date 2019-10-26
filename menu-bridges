@@ -99,7 +99,7 @@ restart_tor()
     clear
     echo "[+] Restarting Tor!"
     sudo service tor restart &
-    echo "[+] DONE! Checking progress:"
+    echo "[+] DONE! Checking progress - please be patient:"
     trap "bash menu-bridges; exit 0" SIGINT
     sudo tail -f -n 0 /var/log/tor/notices.log
   fi
