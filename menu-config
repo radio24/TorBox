@@ -124,7 +124,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 "  8" "Erase all log files" \
 "===" "===========================================[Features]========" \
 "  9" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 10" "Support for Cellular 3G/4G/LTE (ppp0) (EXPERIMANTEL)"
+" 10" "Support for Cellular 3G/4G/LTE (ppp0) (EXPERIMENTAL)" \
 "===" "===========================================[Update]==========" \
 " 11" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
 
