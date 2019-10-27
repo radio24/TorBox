@@ -48,7 +48,6 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 # OTHER VARIABLES
 #
 TORSTATS="sudo -u debian-tor nyx"
-NEWIDENT="new_ident"
 WICDCONFFILE="/etc/wicd/manager-settings.conf"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
@@ -160,7 +159,7 @@ if [ $exitstatus = 0 ]; then
 			clear
 			$TORSTATS
 		elif [ $CHOICE = 2 ]; then
-			sudo bash $NEWIDENT
+			sudo bash new_ident
     elif [ $CHOICE = 3 ]; then
       bash menu-bridges
     elif [ $CHOICE = 4 ]; then
