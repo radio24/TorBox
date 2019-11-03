@@ -209,7 +209,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo apt-get install python3-dev
+        sudo apt-get -y install python3-dev
         wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
         chmod +x adafruit-pitft.sh
         sudo ./adafruit-pitft.sh
