@@ -33,3 +33,4 @@ for logs in `find /var/log -type f`; do
 done
 echo "[+] Erasing .bash_history"
 sudo rm ../.bash_history
+sudo history -c
