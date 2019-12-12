@@ -1,0 +1,10 @@
+Would you really like to update the firmware of your Raspberry Pi 4?
+
+IMPORTANT
+- This update is only for the Raspberry Pi 4.
+- Use a reliable power supply.
+- Don't remove power from your TorBox during the update.
+- If something goes wrong, your EEPROM could be left corrupted, and the RPI4
+  doesn't boot again. In such case download and apply the recovery package:
+  https://www.raspberrypi.org/downloads/
+- You have to reboot the system at the end.

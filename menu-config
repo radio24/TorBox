@@ -109,14 +109,14 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION, UPDATE & RESET MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
 "  2" "Change the name of your WLAN (reboot required)"  \
 "  3" "Change the password of your WLAN (reboot required)"  \
 "  4" "Hide / Unhide your WLAN(reboot required)"  \
-"  5" "Set the WLAN regulatory domain and enable the 5 GHz band" \
+"  5" "Set the WLAN regulatory domain. This may enable the 5 GHz band" \
 "  6" "Change the password of your Tor control port"  \
 "===" "===========================================[Logging "$TOGGLE03 \
 "  7" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
@@ -124,8 +124,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 "===" "===========================================[Features]========" \
 "  9" "Support for Adafruit's PiTFT displays (reboot required)" \
 " 10" "Support for Cellular 3G/4G/LTE (ppp0) (EXPERIMENTAL)" \
-"===" "===========================================[Update]==========" \
-" 11" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
+"===" "===========================================[Update & Reset]==" \
+" 11" "Go to the Update and Reset menu"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -148,16 +148,22 @@ if [ $exitstatus = 0 ]; then
 				fi
 			fi
 		elif [ $CHOICE = 3 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
-				sudo bash change_ssid_pw $INPUT
-				if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          sudo bash save_connection
-					echo "[+] Rebooting TorBox..."
-          echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
-        	sleep 2
-					sudo reboot
-					exit 0
+        if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+          clear
+          echo "[!] Only letters (upper and lower case) and numbers are allowed."
+          sleep 5
+        else
+          sudo bash change_ssid_pw $INPUT
+				  if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes into effect?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+            sudo bash save_connection
+					  echo "[+] Rebooting TorBox..."
+            echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
+        	  sleep 2
+					  sudo reboot
+					  exit 0
+          fi
 				fi
 			fi
 		elif [ $CHOICE = 4 ]; then
@@ -184,16 +190,14 @@ if [ $exitstatus = 0 ]; then
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
       INPUT=$(whiptail --title "Setting the WLAN regulatory domain" --inputbox "\nEnter the prefered two letter country code (for a list see: https://wikipedia.org/wiki/ISO_3166-1_alpha-2).\n\nLeave the input field blank to unset the WLAN regulatory dopmain (that's the default) or just press enter to abstain from making any changes:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $TLC 3>&1 1>&2 2>&3)
-      if [ "$INPUT" != "$TLC" ]; then
-        if [ -z "$INPUT" ]; then
-          sudo iw reg set 00
-          INPUT="REGDOMAIN="
-          sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
-        else
-          sudo iw reg set $INPUT
-          INPUT="REGDOMAIN=$INPUT"
-          sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
-        fi
+      if [ -z "$INPUT" ]; then
+        sudo iw reg set 00
+        INPUT="REGDOMAIN="
+        sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
+      else
+        sudo iw reg set $INPUT
+        INPUT="REGDOMAIN=$INPUT"
+        sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
       fi
     elif [ $CHOICE = 6 ]; then
 			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -242,7 +246,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo apt-get install python3-dev
+        sudo apt-get -y install python3-dev
         wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
         chmod +x adafruit-pitft.sh
         sudo ./adafruit-pitft.sh
@@ -252,15 +256,7 @@ if [ $exitstatus = 0 ]; then
 	    sudo bash set_interfaces ppp0 wlan0 0
       finish
     elif [ $CHOICE = 11 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
-      clear
- 			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version)
-    	WICD_VERS=$(wicd-curses --version)
-			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-         screen bash update
-			fi
+      screen bash update
 		fi
 	fi
 else

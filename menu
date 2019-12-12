@@ -128,12 +128,12 @@ check_bridge_relay
 check_tor
 
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - MAIN MENU" --menu "Choose an Option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
-"  3" "Go to the countermeasures & troubleshooting menu..." \
-"  4" "Go to the configuration & update menu..." \
+"  3" "Go to the countermeasure menu..." \
+"  4" "Go to the configuration, update & reset menu..." \
 "  5" "Go to defend the open internet..." \
 "===" "===================================[Wireless-client "$TOGGLE01"   ]===" \
 "  6" "Cable-internet to wireless-clients" \
