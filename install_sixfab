@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2019 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file installs PPP for Sixfab Shield. Folowwing Sixfab Shields are supportet:
+# - Raspberry Pi GSM/GPRS Shield
+# - Raspberry Pi 3G-4G/LTE Base Shield V2
+# - Raspberry Pi Cellular IoT Application Shield
+# - Raspberry Pi Cellular IoT HAT
+# - Raspberry Pi Tracker HAT
+#
+# SYNTAX
+# ./install_sixfab
+#
+# ATTENTION
+# This file is not part of the TorBox menu, yet
+#
+
+cd ..
+wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
+chmod +x install.sh
+sudo ./install.sh
+trap "cd torbox; exit 0" SIGINT

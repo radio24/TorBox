@@ -325,6 +325,12 @@ if [ $exitstatus = 0 ]; then
     fi
   done
 
+# Additional configuration for obfs4 (bridge relay functionality)
+sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+sudo systemctl daemon-reload
+
 # Fixing and Cleaning
   clear
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"

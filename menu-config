@@ -50,6 +50,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 KERNEL_VERS=" "
 LOG_STATUS=" "
 REGDOMAIN=" "
@@ -58,6 +59,37 @@ TOR_VERS=" "
 WICD_VERS=" "
 
 ##############################
+######## FUNCTIONS ########
+# This checks the status on https://check.torproject.org/
+# EXPERIMENTAL !!! The same as in menu --> should we outsource it in a seperate file
+check_tor()
+{
+TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
+TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
+
+if [ "$TOR_SERVICE" = "Congratulations" ]; then
+  TOR_STATUS="TOR is working"
+else
+  TOR_STATUS=""
+fi
+}
+
+finish()
+{
+EXITID=$(grep "^EXITID=" ${RUNFILE})
+if [ $EXITID = "EXITID=0" ]; then
+  check_tor
+  sleep 2
+  if [ "$TOR_STATUS" = "TOR is working" ]; then
+    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
+  else
+    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
+  fi
+else
+  EXITID="EXITID=0"
+  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+fi
+}
 
 ######## PREPARATIONS ########
 # TOGGLE03 / TOGGLE04 represents the extent of logging
@@ -91,8 +123,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 "  8" "Erase all log files" \
 "===" "===========================================[Features]========" \
 "  9" "Support for Adafruit's PiTFT displays (reboot required)" \
+" 10" "Support for Cellular 3G/4G/LTE (ppp0) (EXPERIMENTAL)" \
 "===" "===========================================[Update & Reset]==" \
-" 10" "Go to the Update and Reset menu"  3>&1 1>&2 2>&3)
+" 11" "Go to the Update and Reset menu"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -219,7 +252,11 @@ if [ $exitstatus = 0 ]; then
         sudo ./adafruit-pitft.sh
       fi
     elif [ $CHOICE = 10 ]; then
-     screen bash update
+      sudo pon
+	    sudo bash set_interfaces ppp0 wlan0 0
+      finish
+    elif [ $CHOICE = 11 ]; then
+      screen bash update
 		fi
 	fi
 else
