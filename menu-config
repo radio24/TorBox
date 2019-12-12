@@ -77,7 +77,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION & UPDATE MENU" --menu "Choose an Option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION, UPDATE & RESET MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
@@ -91,8 +91,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 "  8" "Erase all log files" \
 "===" "===========================================[Features]========" \
 "  9" "Support for Adafruit's PiTFT displays (reboot required)" \
-"===" "===========================================[Update]==========" \
-" 10" "Update the base system to the newest version (reboot required)"  3>&1 1>&2 2>&3)
+"===" "===========================================[Update & Reset]==" \
+" 10" "Go to the Update and Reset menu"  3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -219,15 +219,7 @@ if [ $exitstatus = 0 ]; then
         sudo ./adafruit-pitft.sh
       fi
     elif [ $CHOICE = 10 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
-      clear
- 			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version)
-    	WICD_VERS=$(wicd-curses --version)
-			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version (the system will reboot at the end)?"
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-         screen bash update
-			fi
+     screen bash update
 		fi
 	fi
 else
