@@ -43,12 +43,12 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
-#
-#
-# OTHER VARIABLES
-#
+
+#Colors
 RED='\033[1;31m'
 NOCOLOR='\033[0m'
+
+#Other variables
 LOOP_NUMBER=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
@@ -56,12 +56,16 @@ BOOTMSG=0
 
 ##############################
 ######## FUNCTIONS ###########
-#This checks the internet connection (don't source it out to a seperate shell script file)
-online_check()
+
+# include lib
+.  lib/torbox.lib
+
+#This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
+online_check_update()
 {
   OCHECK=$(curl -m 5 -s http://google.com)
   if [ $? -gt 0 ]; then
-    INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, you have to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
+    INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=0
     else
@@ -74,7 +78,7 @@ online_check()
 # This function updates TOR
 update_tor()
 {
-  online_check
+  online_check_update
   clear
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import
   sudo gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
@@ -93,7 +97,7 @@ update_tor()
   sudo systemctl daemon-reload
 }
 
-#This updates / resets TorBox's configuration files
+#This function updates / resets TorBox's configuration files
 update_torcfg()
 {
   clear
@@ -153,7 +157,7 @@ update_torcfg()
 ###### DISPLAY THE AVAILABLE OPTIONS ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
-"2" "Update the firmware of the RPI 4 (dangerous! reboot required!)" OFF \
+"2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
 "3" "Update to the newest stable version of TOR" OFF \
 "4" "Update to the newest stable version of TorBox" OFF \
 "5" "Erase all log files" OFF \
@@ -163,7 +167,6 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - UPDATE & RESET OPTIONS" -
 "9" "Remove permanently Bridge Relay data" OFF 3>&1 1>&2 2>&3)
 
 exitstatus=$?
-
 
 if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
@@ -179,7 +182,7 @@ if [ $exitstatus = 0 ]; then
     	WICD_VERS=$(wicd-curses --version)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        online_check
+        online_check_update
         clear
         sudo apt-get -y update
         sudo apt-get -y dist-upgrade
@@ -194,7 +197,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $ARGUMENT = 2 ]; then
       INPUT=$(cat text/firmware_update-text)
       if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
-        online_check
+        online_check_update
         clear
         sudo apt-get install rpi-eeprom
         sleep 2
@@ -231,7 +234,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $ARGUMENT = 4 ]; then
       INPUT=$(cat text/torbox_update-text)
       if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-        online_check
+        online_check_update
         TORBOX_UPDATE=1
         clear
         cd ..
@@ -245,7 +248,7 @@ if [ $exitstatus = 0 ]; then
 #This erases all log files
     elif [ $ARGUMENT = 5 ]; then
       clear
-      sudo bash erase_logs
+      erase_logs
       sleep 2
 
 #This updates / resets TorBox's configuration files
@@ -340,7 +343,7 @@ sudo systemctl daemon-reload
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-      sudo bash save_connection
+      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
       clear
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       sleep 2

@@ -3,8 +3,6 @@
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2019 Patrick Truffer
 # Contact: anonym@torbox.ch
-# Website: https://www.torbox.ch
-# Github:  https://github.com/radio24/TorBox
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,21 +18,26 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file saves the the current connection setting.
+# This file restarts hostapd, check if the daemon is working and if not rests
+# the configuration with the last working version and restarts the daemon again.
+# Before hostapd is changed, you have to add the following line in the code:
+# sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+# This creates the backup file, which is needed by HOSTAPD="/etc/hostapd/hostapd.conf"
 #
 # SYNTAX
-# ./save_connection
+# nohup ./hostapd_fallback
 #
 #
-###### SET VARIABLES ######
+##### SET VARIABLES ######
 #
-#Set the the variables for the menu
-MENU_WIDTH_REDUX=60
-MENU_HEIGHT_15=15
+HOSTAPD="/etc/hostapd/hostapd.conf"
+HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 
-clear
-if (whiptail --title "TorBox - INFO" --yesno "\n\nIf you save the current connection settings, TorBox will load them during next boot.\n\nWould you like to save the connection settings?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-	echo "[+] Save connection setting..."
-  sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-  sleep 2
+
+sudo service hostapd restart
+sleep 5
+LOG_STATUS=$(sudo systemctl is-active hostapd)
+if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+	sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+	sudo service hostapd restart
 fi

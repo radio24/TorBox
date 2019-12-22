@@ -1,0 +1,10 @@
+With this menu entry, we switch the access point (Torbox's WLAN) to 5 GHz.
+Theoretically, this gives you a bigger bandwidth between your clients and
+the TorBox. However, usually, the bottle-neck lies in the Tor network.
+
+ATTENTION: The use of the 5 GHz band has also disadvantages. Not all
+devices support 5 GHz, consequently, and don't see the TorBox access
+point. More critical: 5 GHz needs more power and is not recommended if you
+use your TorBox on a weak power adapter or even with a Power Bank.
+
+Do you want to switch to 5 GHz?

@@ -47,6 +47,9 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 #
 # OTHER VARIABLES
 #
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
 TORSTATS="sudo -u debian-tor nyx"
 WICDCONFFILE="/etc/wicd/manager-settings.conf"
 TORRC="/etc/tor/torrc"
@@ -57,36 +60,9 @@ TOGGLE02=" "
 
 
 ##############################
-######## FUNCTIONS ########
-# This checks the status on https://check.torproject.org/
-check_tor()
-{
-TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
-TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
-
-if [ "$TOR_SERVICE" = "Congratulations" ]; then
-  TOR_STATUS="TOR is working"
-else
-  TOR_STATUS=""
-fi
-}
-
-finish()
-{
-EXITID=$(grep "^EXITID=" ${RUNFILE})
-if [ $EXITID = "EXITID=0" ]; then
-  check_tor
-  sleep 2
-  if [ "$TOR_STATUS" = "TOR is working" ]; then
-    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
-  else
-    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
-  fi
-else
-  EXITID="EXITID=0"
-  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-fi
-}
+######## FUNCTIONS ###########
+#include lib
+.  lib/torbox.lib
 
 # This opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
@@ -133,7 +109,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - MAIN MENU" --menu "Choose
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
 "  3" "Go to the countermeasure menu..." \
-"  4" "Go to the configuration, update & reset menu..." \
+"  4" "Go to the configuration menu..." \
 "  5" "Go to defend the open internet..." \
 "===" "===================================[Wireless-client "$TOGGLE01"   ]===" \
 "  6" "Cable-internet to wireless-clients" \
@@ -143,9 +119,9 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - MAIN MENU" --menu "Choose
 "  9" "Cable-internet to cable-clients" \
 " 10" "Wireless-internet to cable-clients" \
 " 11" "Tethering-internet to cable-clients" \
-"===" "===================================[Change mode & Save   ]===" \
+"===" "===================================[Change mode & Update ]===" \
 " 12" "Change wireless <-> cable client" \
-" 13" "Save the current connection setting" \
+" 13" "Go to the Update and Reset menu" \
 "===" "===================================[Reboot & Shutdown    ]===" \
 " 14" "Reboot TorBox" \
 " 15" "Shutdown TorBox" 3>&1 1>&2 2>&3)
@@ -236,75 +212,77 @@ if [ $exitstatus = 0 ]; then
       if [ $MODE = "MODE=WLAN" ]; then
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO CABLE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           clear
-				  echo "[+] Configuring the interfaces..."
+				  echo -e "${RED}[+] Configuring the interfaces...${NOCOLOR}"
 				  if [ ! -f /etc/network/interfaces.ORIG ]; then
 				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
 				  fi
 				  sudo cp etc/network/interfaces.cable /etc/network/interfaces
 				  sudo sed -i "s/^MODE=.*/MODE=CABLE/" ${RUNFILE}
-          echo "[+] Preparing connection settings..."
+          echo -e "${RED}[+] Preparing connection settings...${NOCOLOR}"
           sleep 2
 				  sudo bash set_interfaces eth1 eth0 0
-				  echo "[+] Save connection settings..."
+				  echo -e "${RED}[+] Save connection settings...${NOCOLOR}"
 				  sleep 2
           sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo "[+] Deactivating AP capibilities..."
+          echo -e "${RED}[+] Deactivating AP capibilities...${NOCOLOR}"
           sleep 2
           sudo update-rc.d hostapd disable
-          echo "[+] Configuring wicd..."
+          echo -e "${RED}[+] Configuring wicd...${NOCOLOR}"
           sleep 2
   				sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan0/" ${WICDCONFFILE}
   				sudo sed -i "s/^wired_interface.*/wired_interface = eth1/" ${WICDCONFFILE}
-          echo "[+] Rebooting TorBox..."
+          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           sleep 2
-          sudo reboot -h now
+          sudo reboot
           exit 0
 	      fi
       else
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO WIRELESS" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           clear
-				  echo "[+] Configuring the interfaces..."
+				  echo -e "${RED}[+] Configuring the interfaces...${NOCOLOR}"
 				  if [ ! -f /etc/network/interfaces.ORIG ]; then
 				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
 				  fi
 				  sudo cp etc/network/interfaces.wlan /etc/network/interfaces
 				  sudo sed -i "s/^MODE=.*/MODE=WLAN/" ${RUNFILE}
-          echo "[+] Preparing connection settings..."
+          echo -e "${RED}[+] Preparing connection settings...${NOCOLOR}"
           sleep 2
 				  sudo bash set_interfaces eth0 wlan0 0
-          echo "[+] Saving connection settings..."
+          echo -e "${RED}[+] Saving connection settings...${NOCOLOR}"
           sleep 2
           sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo "[+] Re-activating AP capibilities..."
+          echo -e "${RED}[+] Re-activating AP capibilities...${NOCOLOR}"
           sleep 2
           sudo update-rc.d hostapd enable
-          echo "[+] Configuring wicd..."
+          echo -e "${RED}[+] Configuring wicd...${NOCOLOR}"
           sleep 2
   			  sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan1/" ${WICDCONFFILE}
   			  sudo sed -i "s/^wired_interface.*/wired_interface = eth0/" ${WICDCONFFILE}
-          echo "[+] Rebooting TorBox..."
+          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           sleep 2
-          sudo reboot -h now
+          sudo reboot
           exit 0
         fi
       fi
-		elif [ $CHOICE = 13 ]; then
-      sudo bash save_connection
-      sleep 2
+
+#This starts the update / reset submenu
+    elif [ $CHOICE = 13 ]; then
+      screen bash update
+
 		elif [ $CHOICE = 14 ]; then
-      sudo bash save_connection
-      echo "[+] Rebooting TorBox..."
-      echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
+      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+      echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+      echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
       echo ""
       sleep 2
       sudo reboot
       exit 0
 		elif [ $CHOICE = 15 ]; then
-      sudo bash save_connection
-      echo "[+] Shutting down TorBox..."
+      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+      echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
       sleep 2
-      echo "[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart."
-      echo "[!] You can disconnect TorBox from the power source in about 30 second..."
+      echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+      echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
       echo ""
       sleep 2
       sudo shutdown -h now
@@ -314,7 +292,7 @@ if [ $exitstatus = 0 ]; then
 else
 	clear
 	PROMPTTEXT=$(cat text/prompt-text)
-	echo "$PROMPTTEXT"
+	echo -e "$PROMPTTEXT"
 	echo " "
 	exit 0
 fi

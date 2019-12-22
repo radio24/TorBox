@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2020 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file is a library for the TorBox menu.
+# It contains functions which are used in several scripts.
+# Hopefully, this way the scripts stay short and clear.
+#
+# SYNTAX
+# source lib/torbox.lib
+#
+#
+##### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+
+#Colors
+RED='\033[1;31m'
+NOCOLOR='\033[0m'
+
+#Other variables
+RUNFILE="run/torbox.run"
+
+##############################
+######## FUNCTIONS ###########
+
+# check_tor()
+# This function checks the status on https://check.torproject.org/
+check_tor()
+{
+TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
+TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
+
+if [ "$TOR_SERVICE" = "Congratulations" ]; then
+  TOR_STATUS="TOR is working"
+else
+  TOR_STATUS=""
+fi
+}
+
+# finish()
+# Used predefined variables: RUNFILE, MENU_HEIGHT_25 MENU_WIDTH
+# This function displays, if we have a working connection to the Tor network
+finish()
+{
+EXITID=$(grep "^EXITID=" ${RUNFILE})
+if [ $EXITID = "EXITID=0" ]; then
+  sleep 4
+  check_tor
+  if [ "$TOR_STATUS" = "TOR is working" ]; then
+    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
+  else
+    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
+  fi
+else
+  EXITID="EXITID=0"
+  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+fi
+}
+
+# online_check()
+# Syntax online_check <source_script>
+# This function checks the internet connection and exits to <source_script> if none.
+online_check()
+{
+  JUMPTO=$1
+  OCHECK=$(curl -m 5 -s http://google.com)
+  if [ $? -gt 0 ]; then
+    whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
+    trap "bash $JUMPTO; exit 0" EXIT
+    exit 0
+  fi
+}
+
+# erase_logs()
+# This function flushes all LOG-files in /var/log and ~/.bash_history.
+erase_logs()
+{
+  echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
+  echo " "
+  for logs in `sudo find /var/log -type f`; do
+  	echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
+  	sudo rm $logs
+  	sleep 1
+  done
+  echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
+  sudo rm ../.bash_history
+  sudo history -c
+}
