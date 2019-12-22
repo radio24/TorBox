@@ -1,9 +1,9 @@
-You choose to update the base system of your TorBox and to upgrade to the latest stable tor release.
+You choose to update the base system of your TorBox and/or to upgrade to the latest stable tor release.
 
 IMPORTANT
 - Don't remove power from your TorBox during the update.
 - If you close your terminal or if you lose network connectivity to
-  your TorBox during the update process then stay cool. The update
+  your TorBox during the update process, then stay calm. The update
   runs within a "screen" session, meaning that the update is completed
   even if the terminal is closed.
 - After waiting several minutes, you can re-attach your terminal with
@@ -11,6 +11,8 @@ IMPORTANT
   - Log into your TorBox
   - Leave the menu with the ESC key
   - At the command line execute the following command: screen -x
-- You have to reboot the system to load the new kernel
+- It is highly recommended to also to activate menu entry 3 and 4 to ensure
+  that you run the newest stable version of Tor and TorBox.
+- You have to reboot the system to load a new kernel
 
 Duration: up to 60 minutes

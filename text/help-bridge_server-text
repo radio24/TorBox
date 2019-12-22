@@ -5,15 +5,15 @@ By setting up a bridge relay, you can help censored users connect to the open in
 REQUIREMENTS
 - At least 1 Mbit/s down-/upload bandwidth
   (check here http://beta.speedtest.net)
-- 24/7 Internet connectivity for a longer time (weeks or months)
+- 24/7 internet connectivity for a longer time (weeks or months)
 - The ability to expose TCP ports to the internet (public IP, Port
   forwarding; make sure that NAT doesn't get in the way)
 
 3-STEP PROCEDURE
 To get your bridge relay working in TorBox, you have to follow a 3-step procedure:
 1. Check and/or change the configuration (menu entry 3).
-2. Activate the BRIDGE MODE (menu entry 2).
+2. Activate the BRIDGE RELAY MODE (menu entry 2).
 3. Restart Tor (menu entry 7) or check Tor log (menu entry 8).
 
 IMPORTANT
-Changing your connection settings in the main menu, updating, rebooting, and shutting down TorBox deactivates the Bridge Relay Mode automatically.
+Changing your connection settings in the main menu, activating bridge mode or resetting Tor deactivates the Bridge Relay Mode automatically. However, all the configurations are saved so that it is easy to restart the Bridge Relay Mode again.

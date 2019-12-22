@@ -4,9 +4,8 @@ This resets Tor, meaning:
 - delete the Tor statistics.
 
 We will NOT...
-...delete or reset the configuration files (if necessary, the default is
-   in ~/torbox/etc/tor/),
-...delete your bridges or your configuration,
+...delete or reset the configuration files,
+...delete your bridges,
 ...delete your bridge relay, (hashed) fingerprints etc.
 
 Are you sure to reset Tor?

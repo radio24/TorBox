@@ -1,14 +1,5 @@
-By default, the regulatory domain of the internal wifi chip and the connected wifi adapters are set to "unset" (or "world"), which usually should work. However, in certain countries and environments, it cannot be ruled out that interference may occur or that WiFi doesn't work at all, so this menu entry can be used to set the wifi regulatory domain.
+By default, the WLAN regulatory domain of the internal wifi chip and the connected wifi adapters are set to "global". To enable the 5 GHz band, you have to set the correct WLAN regulatory domain of the country in which you are operating TorBox.
 
-IMPORTANT
-- Usually, no change is necessary. 
-- The change is active immediately and remains active even after a reboot.
-- The two-letter country code has to be chosen from this list:
-  https://wikipedia.org/wiki/ISO_3166-1_alpha-2
-- To return to the default setting "unset", leave the input field empty.
+The change is active immediately and remains active even after a reboot.
 
-
-
-
-
-
+Would you like to continue?

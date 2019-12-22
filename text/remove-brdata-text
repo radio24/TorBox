@@ -1,0 +1,11 @@
+This permanently removes Bridge Relay data, meaning:
+- deactivate the use of the bridge relay,
+- delete your bridge relay, (hashed) fingerprints etc.
+
+We will NOT...
+...delete or reset the configuration files,
+...deactivate the use of bridges and delete your bridges,
+...delete all circuits and force a change of the permanent entry node,
+...delete the Tor statistics.
+
+Are you sure to permanently removes Bridge Relay data?

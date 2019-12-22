@@ -18,18 +18,31 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file flushes all LOG-files in /var/log and ~/.bash_history.
+# This file will restart tor in verbose mode.
 #
 # SYNTAX
-# ./erase_log
+# ./restart_tor <source script>
 #
 #
+##### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+#
+#
+# OTHER VARIABLES
+#
+SOURCE_SCRIPT=$1
 
-echo "[+] Erasing ALL LOG-files..."
-for logs in `find /var/log -type f`; do
-	echo "[+] Erasing $logs"
-	sudo rm $logs
-	sleep 1
-done
-echo "[+] Erasing .bash_history"
-sudo rm ../.bash_history
+INPUT=$(cat text/restart-tor-text)
+if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+	clear
+	echo "[+] Restarting Tor!"
+	sudo service tor restart &
+	echo "[+] DONE! Checking progress - please be patient:"
+	trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
+	sudo tail -f -n 0 /var/log/tor/notices.log
+fi
