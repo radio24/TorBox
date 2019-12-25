@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=10
+NO_ITEMS=9
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=3
@@ -117,7 +117,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
@@ -127,10 +127,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - DEFEND THE OP
 "  5" "Show me my personal bridge address"  \
 "  6" "Enter the advanced configuration editor"  \
 "  7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"  8" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "====================================[How can I support?   ]===" \
-"  9" "PLEASE SUPPORT THE TOR PROJECT!" \
-" 10" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
+"  8" "PLEASE SUPPORT THE TOR PROJECT!" \
+"  9" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -201,7 +200,7 @@ if [ $exitstatus = 0 ]; then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
-        nNICK="TorBox025"
+        nNICK="TorBox030"
         change_config
         read_config
       fi
@@ -264,12 +263,9 @@ if [ $exitstatus = 0 ]; then
         sudo tail -f -n 0 /var/log/tor/notices.log
       fi
     elif [ $CHOICE = 8 ]; then
-      trap "bash menu-server; exit 0" SIGINT
-      sudo tail -f -n 25 /var/log/tor/notices.log
-    elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/support-tor-text)
       whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/support-torbox-text)
       whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
     fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=15
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=5
+NO_SPACER=4
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -43,24 +43,26 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
-#
-#
-# OTHER VARIABLES
-#
+
+#Colors
 RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
+
+#Other variables
 TORSTATS="sudo -u debian-tor nyx"
-WICDCONFFILE="/etc/wicd/manager-settings.conf"
+HOSTAPD="/etc/hostapd/hostapd.conf"
+HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
+WLANMANGERCONF="/etc/wicd/manager-settting.conf"
+INTERFACESCONF="/etc/network/interfaces"
+ISCDHCPSERVER="/etc/default/isc-dhcp-server"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
-TOGGLE01=" "
-TOGGLE02=" "
-
 
 ##############################
 ######## FUNCTIONS ###########
+
 #include lib
 .  lib/torbox.lib
 
@@ -82,203 +84,295 @@ check_bridge_relay()
   fi
 }
 
-
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 
-# Reading from run-file
-# TOGGLE01 represents the state of the WiFi mode
-# TOGGLE02 represents the state of the CABLE mode
-MODE=$(grep "^MODE=" ${RUNFILE})
-if [ $MODE = "MODE=WLAN" ]; then
-    TOGGLE01="ON"
-    TOGGLE02="OFF"
-else
-    TOGGLE01="OFF"
-    TOGGLE02="ON"
-fi
-
 check_bridge_relay
 check_tor
 
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
-"  3" "Go to the countermeasure menu..." \
-"  4" "Go to the configuration menu..." \
-"  5" "Go to defend the open internet..." \
-"===" "===================================[Wireless-client "$TOGGLE01"   ]===" \
-"  6" "Cable-internet to wireless-clients" \
-"  7" "Wireless-internet to wireless-clients" \
-"  8" "Tethering-internet to wireless-clients" \
-"===" "===================================[Cable-client    "$TOGGLE02"  ]===" \
-"  9" "Cable-internet to cable-clients" \
-" 10" "Wireless-internet to cable-clients" \
-" 11" "Tethering-internet to cable-clients" \
-"===" "===================================[Change mode & Update ]===" \
-" 12" "Change wireless <-> cable client" \
-" 13" "Go to the Update and Reset menu" \
-"===" "===================================[Reboot & Shutdown    ]===" \
-" 14" "Reboot TorBox" \
-" 15" "Shutdown TorBox" 3>&1 1>&2 2>&3)
+"  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
+"===" "===================================[Where is the Internet?]===" \
+"  4" "Ethernet Cable (eth0)" \
+"  5" "Wireless network (through a USB adapter; wlan1)" \
+"  6" "Wireless network (through the onboard chip; wlan0)" \
+"  7" "Cellular link or USB dongle (ppp0; usb0)" \
+"  8" "Tethering or USB ethernet adapter (eth1)" \
+"===" "===============================================[Sub-Menues]===" \
+"  9" "Go to the countermeasure sub-menu..." \
+" 10" "Go to the configuration sub-menu..." \
+" 11" "Go to defend the open internet..." \
+" 12" "Go to the update and reset sub-menu..." \
+"===" "========================================[Reboot & Shutdown]===" \
+" 13" "Reboot TorBox" \
+" 14" "Shutdown TorBox" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
 
 if [ $exitstatus = 0 ]; then
 	if [ "$CHOICE" != " " ]; then
+
+# This starts nyx (Tor statistics)
 		if [ $CHOICE = 1 ]; then
 			clear
 			$TORSTATS
-		elif [ $CHOICE = 2 ]; then
-			sudo bash new_ident
+
+# This enforces a new exit node
+    elif [ $CHOICE = 2 ]; then
+      sudo bash new_ident
+
+# This displays the Tor LOG file (quick and dirty)
     elif [ $CHOICE = 3 ]; then
-      bash menu-bridges
+      trap "bash menu; exit 0" SIGINT
+      sudo tail -f -n 25 /var/log/tor/notices.log
+
+# Ethernet cable internet eth0 --> wlan0 / eth1
     elif [ $CHOICE = 4 ]; then
-      bash menu-config
-    elif [ $CHOICE = 5 ]; then
-      bash menu-server
-
-# Here begins the WIRELESS mode
-    elif [ $CHOICE = 6 ]; then
-      if [ $MODE = "MODE=WLAN" ]; then
-	      INPUT=$(cat text/captive_or_not-text)
-	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-	         CAPTIVE=1
-	      else
-	         CAPTIVE=0
-	      fi
-	      sudo bash set_interfaces eth0 wlan0 $CAPTIVE
-        finish
-      fi
-		elif [ $CHOICE = 7 ]; then
-      if [ $MODE = "MODE=WLAN" ]; then
-		    INPUT=$(cat text/captive_or_not-text)
-	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-	         CAPTIVE=1
-	      else
-	         CAPTIVE=0
-	      fi
-	      sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
-        finish
-      fi
-		elif [ $CHOICE = 8 ]; then
-      if [ $MODE = "MODE=WLAN" ]; then
-        whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/tethering-text $MENU_HEIGHT_25 $MENU_WIDTH
-        sudo bash set_interfaces eth1 wlan0 0
-        finish
-      fi
-
-# Here begis the CABLE mode. Important:
-# The Internet have to be connected with an external ethernet interface (usually a USB-ethernet adapter)
-# The client has always to be connected to the internal ethernet interface, fix assembled on the board!!
-    elif [ $CHOICE = 9 ]; then
-      if [ $MODE = "MODE=CABLE" ]; then
-        whiptail --title "TorBox - INFO" --textbox text/cable-cable-text $MENU_HEIGHT_15 $MENU_WIDTH
+      INPUT=$(cat text/cable-text)
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
         INPUT=$(cat text/captive_or_not-text)
-	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 $MENU_WIDTH); then
-	         CAPTIVE=1
-	      else
-	         CAPTIVE=0
-	      fi
-	      sudo bash set_interfaces eth1 eth0 $CAPTIVE
-        finish
-	    fi
-    elif [ $CHOICE = 10 ]; then
-      if [ $MODE = "MODE=CABLE" ]; then
-        whiptail --title "TorBox - INFO" --textbox text/wlan-cable-text $MENU_HEIGHT_15 $MENU_WIDTH
-        INPUT=$(cat text/captive_or_not-text)
-	      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" 20 $MENU_WIDTH); then
-	         CAPTIVE=1
-	      else
-	         CAPTIVE=0
-	      fi
-	      sudo bash set_interfaces wlan0 eth0 $CAPTIVE
-        finish
-	    fi
-		elif [ $CHOICE = 11 ]; then
-      if [ $MODE = "MODE=CABLE" ]; then
-        whiptail --title "TorBox - INFO" --textbox text/wlan-cable-text $MENU_HEIGHT_15 $MENU_WIDTH
-        whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/tethering-text $MENU_HEIGHT_25 $MENU_WIDTH
-        sudo bash set_interfaces eth1 eth0 0
-        finish
-      fi
-		elif [ $CHOICE = 12 ]; then
-	    INPUT=$(cat text/change-mode-text)
-      if [ $MODE = "MODE=WLAN" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO CABLE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          clear
-				  echo -e "${RED}[+] Configuring the interfaces...${NOCOLOR}"
-				  if [ ! -f /etc/network/interfaces.ORIG ]; then
-				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
-				  fi
-				  sudo cp etc/network/interfaces.cable /etc/network/interfaces
-				  sudo sed -i "s/^MODE=.*/MODE=CABLE/" ${RUNFILE}
-          echo -e "${RED}[+] Preparing connection settings...${NOCOLOR}"
-          sleep 2
-				  sudo bash set_interfaces eth1 eth0 0
-				  echo -e "${RED}[+] Save connection settings...${NOCOLOR}"
-				  sleep 2
-          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo -e "${RED}[+] Deactivating AP capibilities...${NOCOLOR}"
-          sleep 2
-          sudo update-rc.d hostapd disable
-          echo -e "${RED}[+] Configuring wicd...${NOCOLOR}"
-          sleep 2
-  				sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan0/" ${WICDCONFFILE}
-  				sudo sed -i "s/^wired_interface.*/wired_interface = eth1/" ${WICDCONFFILE}
-          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-          sleep 2
-          sudo reboot
-          exit 0
-	      fi
-      else
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE TO WIRELESS" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          clear
-				  echo -e "${RED}[+] Configuring the interfaces...${NOCOLOR}"
-				  if [ ! -f /etc/network/interfaces.ORIG ]; then
-				    sudo cp /etc/network/interfaces /etc/network/interfaces.ORIG
-				  fi
-				  sudo cp etc/network/interfaces.wlan /etc/network/interfaces
-				  sudo sed -i "s/^MODE=.*/MODE=WLAN/" ${RUNFILE}
-          echo -e "${RED}[+] Preparing connection settings...${NOCOLOR}"
-          sleep 2
-				  sudo bash set_interfaces eth0 wlan0 0
-          echo -e "${RED}[+] Saving connection settings...${NOCOLOR}"
-          sleep 2
-          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          echo -e "${RED}[+] Re-activating AP capibilities...${NOCOLOR}"
-          sleep 2
-          sudo update-rc.d hostapd enable
-          echo -e "${RED}[+] Configuring wicd...${NOCOLOR}"
-          sleep 2
-  			  sudo sed -i "s/^wireless_interface.*/wireless_interface = wlan1/" ${WICDCONFFILE}
-  			  sudo sed -i "s/^wired_interface.*/wired_interface = eth0/" ${WICDCONFFILE}
-          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-          sleep 2
-          sudo reboot
-          exit 0
+        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          CAPTIVE=1
+        else
+          CAPTIVE=0
+        fi
+        if ip link | grep eth1 | grep "state UP"; then
+          sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+          sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
+          finish
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        else
+          sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+          sudo bash set_interfaces eth0 wlan0 $CAPTIVE
+          finish
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         fi
       fi
 
-#This starts the update / reset submenu
-    elif [ $CHOICE = 13 ]; then
+# Wireless network (through a USB adapter; wlan1 --> wlan0 / eth0)
+    elif [ $CHOICE = 5 ]; then
+      INPUT=$(cat text/wlan1-text)
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        if ip link | grep wlan1; then
+          (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+          INPUT=$(cat text/captive_or_not-text)
+          if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            CAPTIVE=1
+          else
+            CAPTIVE=0
+          fi
+          if ip link | grep eth0 | grep "state UP"; then
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          else
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          fi
+        else
+          whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+        fi
+      fi
+
+# Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0)
+    elif [ $CHOICE = 6 ]; then
+      INPUT=$(cat text/wlan0-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
+        INPUT=$(cat text/captive_or_not-text)
+        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          CAPTIVE=1
+        else
+          CAPTIVE=0
+        fi
+        eth0_up=$(ip link | grep eth0 | grep "state UP")
+        wlan1_up=$(ip link | grep wlan1 | grep "state UP")
+        if [ -n "$eth0_up" ] && [ -n "$wlan1_up" ] ; then
+          sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+          sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
+          finish
+        elif [ -n "$eth0_up" ] && [ -z "$wlan1_up" ] ; then
+          sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+          sudo bash set_interfaces wlan0 eth0 $CAPTIVE
+          finish
+        else
+          sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+          sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
+          finish
+        fi
+      fi
+
+# Cellular or other connections (ppp0; usb0 --> wlan0 / eth0)
+    elif [ $CHOICE = 7 ]; then
+      INPUT=$(cat text/ppp0-text)
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+        INPUT=$(cat text/captive_or_not-text)
+        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          CAPTIVE=1
+        else
+          CAPTIVE=0
+        fi
+        if ip link | grep usb0 ; then
+          if ip link | grep eth0 | grep "state UP"; then
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          else
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces usb0 wlan0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          fi
+        else
+          sudo pon
+          sleep 5
+          if ip link | grep ppp0 ; then
+            if ip link | grep eth0 | grep "state UP"; then
+              sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+              sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+              sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+              sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+              sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+              sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+              sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
+              finish
+              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+            else
+              sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+              sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+              sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+              sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+              sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+              sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+              sudo bash set_interfaces ppp0 wlan0 $CAPTIVE
+              finish
+              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+            fi
+          else
+            whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+          fi
+        fi
+      fi
+
+# Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0)
+    elif [ $CHOICE = 8 ]; then
+      INPUT=$(cat text/ppp0-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        if ip link | grep eth1 ; then
+          (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+          INPUT=$(cat text/captive_or_not-text)
+          if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            CAPTIVE=1
+          else
+            CAPTIVE=0
+          fi
+          if ip link | grep eth0 | grep "state UP"; then
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          else
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo bash set_interfaces eth1 wlan0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          fi
+        else
+          whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+        fi
+      fi
+
+# Sub-menues
+    elif [ $CHOICE = 9 ]; then
+      bash menu-bridges
+    elif [ $CHOICE = 10 ]; then
+      bash menu-config
+    elif [ $CHOICE = 11 ]; then
+      bash menu-server
+    elif [ $CHOICE = 12 ]; then
       screen bash update
 
-		elif [ $CHOICE = 14 ]; then
-      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+# Reboot
+    elif [ $CHOICE = 13 ]; then
+      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
       echo ""
       sleep 2
       sudo reboot
       exit 0
-		elif [ $CHOICE = 15 ]; then
-      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+
+# Shutdown
+    elif [ $CHOICE = 14 ]; then
+      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
       sleep 2
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"

@@ -1,0 +1,20 @@
+This menu entry supposes that TorBox is connected with the internet through
+the onboard wireless chip, which also supports the 5 GHz band. Because
+most USB WiFi adapters don't support the 5 GHz band, we may reduce TorBox's
+wireless network to 2.5 GHz 20 MHz. However, you can always increase the
+values at any time afterward using the configuration sub-menu.
+
+The settings are automatically reset to the default values with the next
+reboot to ensure that you can access the TorBox even without a USB WiFi
+adapter.
+
+The next step is to setup TorBox so that your client devices have access
+through TorBox's wireless network. However, if you also like to access
+through the onboard ethernet interface (cable), then please plug in the
+cable with your client device, NOW.
+
+If we have to restart TorBox's wireless network, then please reconnect your
+client without closing the ssh session. Usually, the configuration
+continuous -- if not, then please repeat the process.
+
+Would you like to CONTINUE?

@@ -29,6 +29,14 @@
 #                  http://kir.elagin.me/
 ###
 
+###### SET VARIABLES ######
+#
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
 HOST="localhost"
 PORT=9051
 LOCALPORT=9051  # Matters only if HOST is not `localhost`
@@ -47,7 +55,7 @@ fi
 
 #Added by TorBox
 clear
-echo "[+] Requesting new identity..."
+echo -e "${RED}[+] Requesting new identity...${WHITE}"
 echo ""
 sleep 2
 
@@ -61,5 +69,5 @@ EOF
 
 #Added by TorBox
 echo ""
-echo "[+] Done!"
+echo -e "${RED}[+] Done!${NOCOLOR}"
 sleep 4

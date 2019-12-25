@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -25,28 +25,30 @@
 # such a portal, it is necessary to establish a direct connection to the wireless
 # network provider. This procedure temporarily uses an INSECURE CONNECTION. The user
 # may CLOSE ALL HIS APPLICATIONS ON HIS CLIENT DEVICES to prevent the leakage of information
-# during the established INSECURE CONNECTION.
+# during the established INSECURE CONNECTION. This version of set_captive supports
+# two different interfaces.
 #
 # SYNTAX
-# ./set_captive <outgoing interface> <incoming interface>
-#
+# ./set_captive_2 <outgoing interface> <incoming interface> <incoming interface>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
-#
-# eth0  -> 	TorBox is connected to the internet with a cable (WIRELESS MODUS).
-# eth1  -> 	TorBox is connected to the internet with a cable (CABLE MODUS) or with a tethering device.
-# wlan0 ->  TorBox is connected to the Internet through a wireless network (CABLE MODUS).
-# wlan1 -> 	TorBox is connected to the Internet through a wireless network (WIRELESS MODUS).
+# eth0  -> 	TorBox is connected to the internet with a cable (onboard ethernet interface).
+# eth1  -> 	TorBox is connected to the internet with a tethering device.
+# wlan0 ->  TorBox is connected to the internet through a wireless network (onboard WLAN chip).
+# wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
+#	ppp0	->	TorBox is connected to the internet through a cellular adapter.
+# usb0	->  TorBox is connected to the internet through a USB adapter.
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
-#
-# eth0  -> 	The device is connected with a cable.        -> CABLE MODUS
-# wlan0 -> 	The device is connected via wireless network -> WIRELESS MODUS
+# eth0  -> 	The device is connected with a cable (onboard ethernet interface).
+# eth1	-> 	The device is connected with a cable (USB ethernet adapter).
+# wlan0 -> 	The device is connected via wireless network (onboard WLAN chip).
+# wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
 #
 #
 #
 ######## SET VARIABLES ########
-
+#
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
@@ -65,7 +67,8 @@ DNSPROG="dnsmasq"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=1"
 O_DEVICE=$1
-I_DEVICE=$2
+I_DEVICE1=$2
+I_DEVICE1=$3
 
 ###############################
 
@@ -100,8 +103,10 @@ $MODPROBE ip_nat_ftp
 #We will forward all the network traffic to the captive portal in order to log in
 echo "[!] WARNING: Tor is not running - all data are directly forwarded to the Internet..."
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE  -j MASQUERADE
-$IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE -m state --state RELATED,ESTABLISHED -j ACCEPT
-$IPTABLES -A FORWARD -i $I_DEVICE -o $O_DEVICE -j ACCEPT
+$IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -j ACCEPT
+$IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT
 
 ########## DIALOG BOX #########
 clear

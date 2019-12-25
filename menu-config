@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=12
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -92,15 +92,18 @@ change_ssid_pw()
   fi
 }
 
-# This function changes the WLAN regulatory domain
+# This function changes the WLAN regulatory domain.
 change_crda()
 {
   # The list below was created by following command: cat /usr/share/zoneinfo/iso3166.tab | tail -n +26 | tr '\t' '!' | sed 's/!/\" \"/' | sed 's/^/\"/' | sed 's/$/\"/' | tr '\n' ' '
   COUNTRY=$(whiptail --menu "Select the country in which the Pi is to be used" $MENU_HEIGHT_25 $MENU_WIDTH 17 "00" "Global" "AD" "Andorra" "AE" "United Arab Emirates" "AF" "Afghanistan" "AG" "Antigua & Barbuda" "AI" "Anguilla" "AL" "Albania" "AM" "Armenia" "AO" "Angola" "AQ" "Antarctica" "AR" "Argentina" "AS" "Samoa (American)" "AT" "Austria" "AU" "Australia" "AW" "Aruba" "AX" "Åland Islands" "AZ" "Azerbaijan" "BA" "Bosnia & Herzegovina" "BB" "Barbados" "BD" "Bangladesh" "BE" "Belgium" "BF" "Burkina Faso" "BG" "Bulgaria" "BH" "Bahrain" "BI" "Burundi" "BJ" "Benin" "BL" "St Barthelemy" "BM" "Bermuda" "BN" "Brunei" "BO" "Bolivia" "BQ" "Caribbean NL" "BR" "Brazil" "BS" "Bahamas" "BT" "Bhutan" "BV" "Bouvet Island" "BW" "Botswana" "BY" "Belarus" "BZ" "Belize" "CA" "Canada" "CC" "Cocos (Keeling) Islands" "CD" "Congo (Dem. Rep.)" "CF" "Central African Rep." "CG" "Congo (Rep.)" "CH" "Switzerland" "CI" "Côte d'Ivoire" "CK" "Cook Islands" "CL" "Chile" "CM" "Cameroon" "CN" "China" "CO" "Colombia" "CR" "Costa Rica" "CU" "Cuba" "CV" "Cape Verde" "CW" "Curaçao" "CX" "Christmas Island" "CY" "Cyprus" "CZ" "Czech Republic" "DE" "Germany" "DJ" "Djibouti" "DK" "Denmark" "DM" "Dominica" "DO" "Dominican Republic" "DZ" "Algeria" "EC" "Ecuador" "EE" "Estonia" "EG" "Egypt" "EH" "Western Sahara" "ER" "Eritrea" "ES" "Spain" "ET" "Ethiopia" "FI" "Finland" "FJ" "Fiji" "FK" "Falkland Islands" "FM" "Micronesia" "FO" "Faroe Islands" "FR" "France" "GA" "Gabon" "GB" "Britain (UK)" "GD" "Grenada" "GE" "Georgia" "GF" "French Guiana" "GG" "Guernsey" "GH" "Ghana" "GI" "Gibraltar" "GL" "Greenland" "GM" "Gambia" "GN" "Guinea" "GP" "Guadeloupe" "GQ" "Equatorial Guinea" "GR" "Greece" "GS" "South Georgia & the South Sandwich Islands" "GT" "Guatemala" "GU" "Guam" "GW" "Guinea-Bissau" "GY" "Guyana" "HK" "Hong Kong" "HM" "Heard Island & McDonald Islands" "HN" "Honduras" "HR" "Croatia" "HT" "Haiti" "HU" "Hungary" "ID" "Indonesia" "IE" "Ireland" "IL" "Israel" "IM" "Isle of Man" "IN" "India" "IO" "British Indian Ocean Territory" "IQ" "Iraq" "IR" "Iran" "IS" "Iceland" "IT" "Italy" "JE" "Jersey" "JM" "Jamaica" "JO" "Jordan" "JP" "Japan" "KE" "Kenya" "KG" "Kyrgyzstan" "KH" "Cambodia" "KI" "Kiribati" "KM" "Comoros" "KN" "St Kitts & Nevis" "KP" "Korea (North)" "KR" "Korea (South)" "KW" "Kuwait" "KY" "Cayman Islands" "KZ" "Kazakhstan" "LA" "Laos" "LB" "Lebanon" "LC" "St Lucia" "LI" "Liechtenstein" "LK" "Sri Lanka" "LR" "Liberia" "LS" "Lesotho" "LT" "Lithuania" "LU" "Luxembourg" "LV" "Latvia" "LY" "Libya" "MA" "Morocco" "MC" "Monaco" "MD" "Moldova" "ME" "Montenegro" "MF" "St Martin (French)" "MG" "Madagascar" "MH" "Marshall Islands" "MK" "North Macedonia" "ML" "Mali" "MM" "Myanmar (Burma)" "MN" "Mongolia" "MO" "Macau" "MP" "Northern Mariana Islands" "MQ" "Martinique" "MR" "Mauritania" "MS" "Montserrat" "MT" "Malta" "MU" "Mauritius" "MV" "Maldives" "MW" "Malawi" "MX" "Mexico" "MY" "Malaysia" "MZ" "Mozambique" "NA" "Namibia" "NC" "New Caledonia" "NE" "Niger" "NF" "Norfolk Island" "NG" "Nigeria" "NI" "Nicaragua" "NL" "Netherlands" "NO" "Norway" "NP" "Nepal" "NR" "Nauru" "NU" "Niue" "NZ" "New Zealand" "OM" "Oman" "PA" "Panama" "PE" "Peru" "PF" "French Polynesia" "PG" "Papua New Guinea" "PH" "Philippines" "PK" "Pakistan" "PL" "Poland" "PM" "St Pierre & Miquelon" "PN" "Pitcairn" "PR" "Puerto Rico" "PS" "Palestine" "PT" "Portugal" "PW" "Palau" "PY" "Paraguay" "QA" "Qatar" "RE" "Réunion" "RO" "Romania" "RS" "Serbia" "RU" "Russia" "RW" "Rwanda" "SA" "Saudi Arabia" "SB" "Solomon Islands" "SC" "Seychelles" "SD" "Sudan" "SE" "Sweden" "SG" "Singapore" "SH" "St Helena" "SI" "Slovenia" "SJ" "Svalbard & Jan Mayen" "SK" "Slovakia" "SL" "Sierra Leone" "SM" "San Marino" "SN" "Senegal" "SO" "Somalia" "SR" "Suriname" "SS" "South Sudan" "ST" "Sao Tome & Principe" "SV" "El Salvador" "SX" "St Maarten (Dutch)" "SY" "Syria" "SZ" "Eswatini (Swaziland)" "TC" "Turks & Caicos Is" "TD" "Chad" "TF" "French Southern & Antarctic Lands" "TG" "Togo" "TH" "Thailand" "TJ" "Tajikistan" "TK" "Tokelau" "TL" "East Timor" "TM" "Turkmenistan" "TN" "Tunisia" "TO" "Tonga" "TR" "Turkey" "TT" "Trinidad & Tobago" "TV" "Tuvalu" "TW" "Taiwan" "TZ" "Tanzania" "UA" "Ukraine" "UG" "Uganda" "UM" "US minor outlying islands" "US" "United States" "UY" "Uruguay" "UZ" "Uzbekistan" "VA" "Vatican City" "VC" "St Vincent" "VE" "Venezuela" "VG" "Virgin Islands (UK)" "VI" "Virgin Islands (US)" "VN" "Vietnam" "VU" "Vanuatu" "WF" "Wallis & Futuna" "WS" "Samoa (western)" "YE" "Yemen" "YT" "Mayotte" "ZA" "South Africa" "ZM" "Zambia" "ZW" "Zimbabwe" 3>&1 1>&2 2>&3)
+  exitstatus=$?
 
-  sudo iw reg set $COUNTRY
-  INPUT="REGDOMAIN=$COUNTRY"
-  sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
+  if [ $exitstatus = 0 ]; then
+    sudo iw reg set $COUNTRY
+    INPUT="REGDOMAIN=$COUNTRY"
+    sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
+  fi
 
 # Theoreticall the lines below should set the country_code value in /etc/hostapd/hostapd.conf . However, if country_code=US is changed to anything else, the 5 GHz 80 MHz setting will crash hostapd -> don't change country_code=US in /etc/hostapd/hostapd.conf until the bug is fixed.
 #  if [ $COUNTRY = 00 ]; then
@@ -154,7 +157,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
@@ -170,8 +173,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 " 10" "Erase all log files" \
 "===" "===========================================[Features]========" \
 " 11" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 12" "Support for Sixfab Shields/HATs for cellular connections" \
-" 13" "Activating Cellular 3G/4G/LTE (ppp0) (EXPERIMENTAL)" 3>&1 1>&2 2>&3)
+" 12" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -612,12 +614,6 @@ if [ $exitstatus = 0 ]; then
         sudo ./install.sh
         trap "cd torbox; bash menu-config; exit 0" SIGINT
       fi
-
-#This activates Cellular 3G/4G/LTE (ppp0) - ACHTUNG: MUSS IN DER NEUEN MULTIINTERFACE FUNCTIONALITAET INTEGRIERT WERDEN!!
-    elif [ $CHOICE = 13 ]; then
-      sudo pon
-	    sudo bash set_interfaces ppp0 wlan0 0
-      finish
 
 #Finish
     fi

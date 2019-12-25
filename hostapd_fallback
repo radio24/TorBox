@@ -33,6 +33,15 @@
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 
+# ACHTUNG TODO
+# WLAN1 muss berücksichtigt werden!! Die Änderungen werden immer auf wlan0 gemacht
+# Es muss getestet werden ob wlan1 aktiv ist.
+# Dann wlan0 durch wlan1 testen
+# Wenn nicht in Ordnung wlan0 abändern, dann aber als wlan1 starten.
+
+STATICIP_WLAN1=$(ip addr show wlan1 | grep 192.168.42.1)
+# STATICIP_WLAN1 zeigt an, ob der AP auf wlan1 läuft.
+
 
 sudo service hostapd restart
 sleep 5

@@ -46,6 +46,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
+WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -63,7 +64,10 @@ BOOTMSG=0
 #This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
 online_check_update()
 {
+  clear
+  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s http://google.com)
+  clear
   if [ $? -gt 0 ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -155,7 +159,7 @@ update_torcfg()
 
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
 "3" "Update to the newest stable version of TOR" OFF \
@@ -173,7 +177,7 @@ if [ $exitstatus = 0 ]; then
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
 
-  #This updates the base system
+#This updates the base system
     if [ $ARGUMENT = 1 ]; then
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
@@ -189,6 +193,10 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl unmask hostapd
         sudo systemctl enable hostapd
         sudo systemctl enable isc-dhcp-server
+        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+        sudo systemctl enable tor
         sudo systemctl daemon-reload
         BOOTMSG=1
       fi
