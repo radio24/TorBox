@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,13 @@
 #
 #
 ###### SET VARIABLES ######
-#
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
 TORRC="/etc/tor/torrc"
 
 ##############################
@@ -49,7 +55,7 @@ sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 
 read_config
 if [ "$MODE_BR" = "BridgeRelay 1" ]; then
-	echo "[+] Deactivating Bridge Relay Mode... "
+	echo -e "${RED}[+] Deactivating Bridge Relay Mode...${NOCOLOR}"
 	sudo sed -i "s/^BridgeRelay/#BridgeRelay/g" ${TORRC}
 	sudo sed -i "s/^ORPort/#ORPort/g" ${TORRC}
 	sudo sed -i "s/^ExtORPort/#ExtORPort/g" ${TORRC}
@@ -58,7 +64,7 @@ if [ "$MODE_BR" = "BridgeRelay 1" ]; then
 	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
 	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
 	sleep 2
-	echo "[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT"
+	echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
 	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
 	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
 fi

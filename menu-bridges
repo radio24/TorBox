@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -43,9 +43,13 @@ MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
-#
-#
-# OTHER VARIABLES
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
@@ -153,11 +157,11 @@ if [ $exitstatus = 0 ]; then
 		elif [ $CHOICE = 3 ]; then
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
-          echo "[+] DEACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
-          echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-          echo "[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test"
+          echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
@@ -170,11 +174,11 @@ if [ $exitstatus = 0 ]; then
           echo " "
       fi
       if [ $number_configured_bridges_activated -gt 0 ]; then
-          echo "[+] ACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
-          echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-          echo "[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test"
+          echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $j -lt $number_configured_bridges_activated ]
           do
@@ -182,7 +186,7 @@ if [ $exitstatus = 0 ]; then
               j=$(( $j + 1 ))
               n=$(( $i + $j ))
               bridge_address=$n": "$bridge_address
-              echo $bridge_address
+              echo -e "${WHITE}$bridge_address${NOCOLOR}"
           done
       fi
       echo " "
@@ -241,7 +245,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 10 ]; then
       whiptail --title "TorBox - INFO" --textbox text/ping-text $MENU_HEIGHT_25 $MENU_WIDTH
 			ping -q google.com >/dev/null &
-			echo "[+] Countermeasure against a disconnect when idle feature activated!"
+			echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
 			sleep 5
     fi
  	fi

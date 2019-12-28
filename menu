@@ -99,7 +99,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - MAIN MENU" --menu "Choose
 "  2" "Enforce a new exit node with a new IP" \
 "  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
-"  4" "Ethernet Cable (eth0)" \
+"  4" "Ethernet cable (eth0)" \
 "  5" "Wireless network (through a USB adapter; wlan1)" \
 "  6" "Wireless network (through the onboard chip; wlan0)" \
 "  7" "Cellular link or USB dongle (ppp0; usb0)" \
@@ -112,9 +112,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - MAIN MENU" --menu "Choose
 "===" "========================================[Reboot & Shutdown]===" \
 " 13" "Reboot TorBox" \
 " 14" "Shutdown TorBox" 3>&1 1>&2 2>&3)
-
 exitstatus=$?
-
 
 if [ $exitstatus = 0 ]; then
 	if [ "$CHOICE" != " " ]; then
@@ -137,13 +135,26 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 4 ]; then
       INPUT=$(cat text/cable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        echo ""
+	      echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+	      echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+	      echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${RED}    this can take up to one minute.${NOCOLOR}"
+	      echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
+        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+	      echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+        echo -e "${RED}    load the default values.${NOCOLOR}"
+	      echo ""
         (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
+        clear
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
         else
           CAPTIVE=0
         fi
+        sleep 2
         if ip link | grep eth1 | grep "state UP"; then
           sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
@@ -172,13 +183,26 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         if ip link | grep wlan1; then
+          clear
+          echo ""
+          echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+          echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+          echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+          echo -e "${RED}    this can take up to one minute.${NOCOLOR}"
+          echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
+          echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+          echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+          echo -e "${RED}    load the default values.${NOCOLOR}"
+          echo ""
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+          clear
           INPUT=$(cat text/captive_or_not-text)
           if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
             CAPTIVE=1
           else
             CAPTIVE=0
           fi
+          sleep 2
           if ip link | grep eth0 | grep "state UP"; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
@@ -209,13 +233,26 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        echo ""
+        echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+        echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${RED}    this can take up to one minute.${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
+        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+        echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+        echo -e "${RED}    load the default values.${NOCOLOR}"
+        echo ""
         (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
+        clear
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
         else
           CAPTIVE=0
         fi
+        sleep 2
         eth0_up=$(ip link | grep eth0 | grep "state UP")
         wlan1_up=$(ip link | grep wlan1 | grep "state UP")
         if [ -n "$eth0_up" ] && [ -n "$wlan1_up" ] ; then
@@ -252,13 +289,26 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        echo ""
+        echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+        echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${RED}    this can take up to one minute.${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
+        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+        echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+        echo -e "${RED}    load the default values.${NOCOLOR}"
+        echo ""
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+        clear
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
         else
           CAPTIVE=0
         fi
+        sleep 2
         if ip link | grep usb0 ; then
           if ip link | grep eth0 | grep "state UP"; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
@@ -282,9 +332,9 @@ if [ $exitstatus = 0 ]; then
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
         else
-          sudo pon
+          sudo pon > /dev/null
           sleep 5
-          if ip link | grep ppp0 ; then
+          if ip link | grep ppp0 > /dev/null; then
             if ip link | grep eth0 | grep "state UP"; then
               sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
               sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
@@ -315,15 +365,28 @@ if [ $exitstatus = 0 ]; then
 # Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0)
     elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/ppp0-text)
-      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         if ip link | grep eth1 ; then
+          clear
+          echo ""
+          echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+          echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+          echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+          echo -e "${RED}    this can take up to one minute.${NOCOLOR}"
+          echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
+          echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+          echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+          echo -e "${RED}    load the default values.${NOCOLOR}"
+          echo ""
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+          clear
           INPUT=$(cat text/captive_or_not-text)
           if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
             CAPTIVE=1
           else
             CAPTIVE=0
           fi
+          sleep 2
           if ip link | grep eth0 | grep "state UP"; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
@@ -362,7 +425,11 @@ if [ $exitstatus = 0 ]; then
 
 # Reboot
     elif [ $CHOICE = 13 ]; then
-      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+      wlan1_up=$(ip addr show wlan1 | grep 192.168.42.1)
+      clear
+      if [ -z wlan1_up ]; then
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+      fi
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
       echo ""
@@ -372,7 +439,11 @@ if [ $exitstatus = 0 ]; then
 
 # Shutdown
     elif [ $CHOICE = 14 ]; then
-      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+      wlan1_up=$(ip addr show wlan1 | grep 192.168.42.1)
+      clear
+      if [ -z wlan1_up ]; then
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+      fi
       echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
       sleep 2
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"

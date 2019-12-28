@@ -62,9 +62,9 @@ MODPROBE="/sbin/modprobe"
 WLAN_MANAGER="/usr/bin/wicd-curses"
 WLAN_MANAGER_DAEMON_NAME="wicd"
 MY_OWN_IP1="192.168.42.1"
-MI_OWN_IP2="192.168.43.1"
-INT_NET1=$MY_OWN_IP1/8
-INT_NET2=$MY_OWN_IP2/8
+MY_OWN_IP2="192.168.43.1"
+INT_NET1="$MY_OWN_IP1/8"
+INT_NET2="$MY_OWN_IP2/8"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
@@ -94,7 +94,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	service $WLAN_MANAGER_DAEMON_NAME restart
 	sleep 5
 	$WLAN_MANAGER
-	sudo sed -i "s/^wireless_interface = wlan1/wireless_interface = wlan0/" /etc/wicd/manager-settings.conf
+	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
 	clear
 	if [ $CAPTIVE = 1 ]; then
 	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2

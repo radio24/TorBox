@@ -112,31 +112,32 @@ update_torcfg()
     echo -e "${RED}[+] Changed /etc/apt/sources.list -- backup done${NOCOLOR}"
   fi
   sudo cp /etc/default/hostapd /etc/default/hostapd.bak
-  sudo etc/default/hostapd /etc/default/
+  sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
   sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
-  sudo etc/default/isc-dhcp-server /etc/default/
+  sudo cp etc/default/isc-dhcp-server /etc/default/
   echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
   sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
-  sudo etc/dhcp/dhclient.conf /etc/dhcp/
+  sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
   sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
-  sudo etc/dhcp/dhcpd.conf /etc/dhcp/
+  sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
   sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
-  sudo etc/hostapd/hostapd.conf /etc/hostapd/
+  sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo etc/hostname /etc/
+  sudo cp etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
+  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
+  sudo cp etc/iptables.ipv4.nat /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   sudo cp /etc/motd /etc/motd.bak
   sudo cp etc/motd /etc/
-  echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
-  sudo cp /etc/network/interfaces /etc/network/interfaces.bak
-  sudo cp etc/network/* /etc/network/
+  echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+  sudo cp etc/network/interfaces /etc/network/
   echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
   sudo cp /etc/rc.local /etc/rc.local.bak
   sudo cp etc/rc.local /etc/
@@ -351,7 +352,7 @@ sudo systemctl daemon-reload
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       clear
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       sleep 2
