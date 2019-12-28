@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=11
+NO_ITEMS=10
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -43,9 +43,13 @@ MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
-#
-#
-# OTHER VARIABLES
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
@@ -97,7 +101,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
@@ -109,9 +113,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - COUNTERMEASUR
 "  7" "Remove all configured bridges"  \
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-" 10" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "=====================================[More Countermeasures]===" \
-" 11" "Countermeasure against a disconnection when idle feature" 3>&1 1>&2 2>&3)
+" 10" "Countermeasure against a disconnection when idle feature" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -154,11 +157,11 @@ if [ $exitstatus = 0 ]; then
 		elif [ $CHOICE = 3 ]; then
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
-          echo "[+] DEACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
-          echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-          echo "[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test"
+          echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
@@ -171,11 +174,11 @@ if [ $exitstatus = 0 ]; then
           echo " "
       fi
       if [ $number_configured_bridges_activated -gt 0 ]; then
-          echo "[+] ACTIVATED BRIDGES"
-          echo "[+] Format: <Number>: <IP>:<Port> <Fingerprint> "
-          echo "[+] Would you like to check the validity of the bridge?"
-          echo "[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint"
-          echo "[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test"
+          echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $j -lt $number_configured_bridges_activated ]
           do
@@ -183,7 +186,7 @@ if [ $exitstatus = 0 ]; then
               j=$(( $j + 1 ))
               n=$(( $i + $j ))
               bridge_address=$n": "$bridge_address
-              echo $bridge_address
+              echo -e "${WHITE}$bridge_address${NOCOLOR}"
           done
       fi
       echo " "
@@ -240,12 +243,9 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 9 ]; then
       sudo bash restart_tor menu-bridges
     elif [ $CHOICE = 10 ]; then
-      trap "bash menu-bridges; exit 0" SIGINT
-      sudo tail -f -n 25 /var/log/tor/notices.log
-    elif [ $CHOICE = 11 ]; then
       whiptail --title "TorBox - INFO" --textbox text/ping-text $MENU_HEIGHT_25 $MENU_WIDTH
 			ping -q google.com >/dev/null &
-			echo "[+] Countermeasure against a disconnect when idle feature activated!"
+			echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
 			sleep 5
     fi
  	fi

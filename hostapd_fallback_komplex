@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2020 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+#	This file prepars the network ans restart all necessary services. It also
+# restarts TorBox's wireless network (AP, hostapd), check if the daemon is working
+# and if not resets the configuration with the last working version and
+# restarts the daemon again. If nothhing works, the configuration is that way in place
+# that after a restart TorBox's wireless network can be found on wlan0.
+#
+# SYNTAX
+# nohup ./hostapd_fallback_komplex <interface 1> <interface 2>
+#
+# <interface 1>: Is the interface with the AP: wlan0 or wlan1.
+# <interface 2>: Is the interface with the connected cable: eth0 or ethh1
+#
+#
+##### SET VARIABLES ######
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+HOSTAPD="/etc/hostapd/hostapd.conf"
+HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
+INTERFACESCONF="/etc/network/interfaces"
+INTERFACE1=$1
+INTERFACE2=$2
+
+if [ $INTERFACE1 = wlan1 ]; then
+	INTERFACE3="wlan0"
+else
+	INTERFACE3="wlan1"
+fi
+
+if [ $INTERFACE2 = eth1 ]; then
+	INTERFACE4="eth0"
+else
+	INTERFACE4="eth1"
+fi
+
+STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
+if [ -z "$STATICIP1" ] ; then
+	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
+	if [ $INTERFACE1 = wlan1 ]; then
+		sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+	fi
+	sudo sed -i "s/^interface=$INTERFACE3/interface=$INTERFACE1/" ${HOSTAPD}
+	sudo service isc-dhcp-server stop
+	sudo dhclient -r
+	sudo service wicd stop
+	sudo ifdown $INTERFACE1
+	sudo ifdown $INTERFACE3
+	sudo ifup $INTERFACE1
+	sudo service hostapd restart
+	sudo service isc-dhcp-server start
+	sudo ifup $INTERFACE3 &>/dev/null &
+	sudo /sbin/iptables -F
+	sudo /sbin/iptables -t nat -F
+	sudo /sbin/iptables -P FORWARD DROP
+	sudo /sbin/iptables -P INPUT ACCEPT
+	sudo /sbin/iptables -P OUTPUT ACCEPT
+	if [ $INTERFACE1 = wlan1 ]; then
+		sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
+	fi
+	sleep 5
+	LOG_STATUS=$(sudo systemctl is-active hostapd)
+	if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
+		sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
+		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
+		sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
+		sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+		sudo service hostapd restart
+		sleep 5
+	fi
+	if [ $INTERFACE1 = wlan1 ]; then
+		LOG_STATUS=$(sudo systemctl is-active hostapd)
+		if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+			sudo service hostapd restart
+		fi
+	fi
+		if [ $INTERFACE1 = wlan1 ]; then
+			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+		fi
+fi
+if ip link | grep $INTERFACE2 | grep "state UP"; then
+	STATICIP2=$(ip addr show $INTERFACE2 | grep 192.168.43.1)
+	if [ -z "$STATICIP2" ] || ; then
+		sudo cp etc/network/interfaces.wlan0$INTERFACE2 /etc/network/interfaces
+		if [ $INTERFACE2 = eth1 ]; then
+			if ip addr show $INTERFACE1 | grep 192.168.43.1; then
+				sudo ifdown $INTERFACE3
+			fi
+		fi
+		sudo ifdown $INTERFACE2
+		sudo ifdown $INTERFACE4
+		sudo ifup $INTERFACE2
+		sudo service isc-dhcp-server restart
+		sudo ifup $INTERFACE4  &>/dev/null &
+	fi
+fi

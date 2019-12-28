@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2019 Patrick Truffer
+# Copyright (C) 2020 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -33,11 +33,27 @@
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 
-
+STATICIP_WLAN1=$(ip addr show wlan1 | grep 192.168.42.1)
+if [ -n "$STATICIP_WLAN1" ]; then
+	sudo sed -i "s/^interface=wlan0/interface=wlan1/" ${HOSTAPD}
+fi
 sudo service hostapd restart
+if [ -n "$STATICIP_WLAN1" ]; then
+	sleep 10
+	sudo sed -i "s/^interface=wlan1/interface=wlan0/" ${HOSTAPD}
+fi
 sleep 5
 LOG_STATUS=$(sudo systemctl is-active hostapd)
-if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+sleep 5
+echo $LOG_STATUS
+if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ]; then
+	echo "Zweiter Loop"
 	sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+	if [ -n "$STATICIP_WLAN1" ]; then
+		sudo sed -i "s/^interface=wlan0/interface=wlan1/" ${HOSTAPD}
+	fi
 	sudo service hostapd restart
+	if [ -n "$STATICIP_WLAN1" ]; then
+		sudo sed -i "s/^interface=wlan1/interface=wlan0/" ${HOSTAPD}
+	fi
 fi

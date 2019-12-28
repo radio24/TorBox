@@ -48,6 +48,8 @@ RUNFILE="run/torbox.run"
 # This function checks the status on https://check.torproject.org/
 check_tor()
 {
+clear
+echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
 TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
 TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
 
@@ -56,6 +58,7 @@ if [ "$TOR_SERVICE" = "Congratulations" ]; then
 else
   TOR_STATUS=""
 fi
+clear
 }
 
 # finish()
@@ -83,8 +86,11 @@ fi
 # This function checks the internet connection and exits to <source_script> if none.
 online_check()
 {
+  clear
+  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   JUMPTO=$1
   OCHECK=$(curl -m 5 -s http://google.com)
+  clear
   if [ $? -gt 0 ]; then
     whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
     trap "bash $JUMPTO; exit 0" EXIT

@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=12
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -62,45 +62,18 @@ TORRC="/etc/tor/torrc"
 # include lib
 .  lib/torbox.lib
 
-# This function changes the SSID of the wireles LAN to <SSID>.
-# Syntax change_ssid <SSID>
-change_ssid()
-{
-  SSID=$1
-  echo -e "${RED}[+] Changing SSID...${NOCOLOR}"
-  SSID="ssid=$SSID"
-  if grep "^ssid=" ${HOSTAPD}; then
-    clear
-    sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
-  else
-    clear
-    sudo echo ${SSID} >> ${HOSTAPD}
-  fi
-}
-
-# This function changes the password of your wireles LAN to <PASSWORD>
-# Syntax change_ssid_pw <PASSWORD>
-change_ssid_pw()
-{
-  SSIDPW=$1
-  echo -e "${RED}[+] Changing password...${NOCOLOR}"
-  SSIDPW=wpa_passphrase=$SSIDPW
-  if grep "^wpa_passphrase=" ${HOSTAPD}; then
-    sudo sed -i "s/^wpa_passphrase=.*/${SSIDPW}/" ${HOSTAPD}
-  else
-    sudo echo ${SSIDPW} >> ${HOSTAPD}
-  fi
-}
-
-# This function changes the WLAN regulatory domain
+# This function changes the WLAN regulatory domain.
 change_crda()
 {
   # The list below was created by following command: cat /usr/share/zoneinfo/iso3166.tab | tail -n +26 | tr '\t' '!' | sed 's/!/\" \"/' | sed 's/^/\"/' | sed 's/$/\"/' | tr '\n' ' '
   COUNTRY=$(whiptail --menu "Select the country in which the Pi is to be used" $MENU_HEIGHT_25 $MENU_WIDTH 17 "00" "Global" "AD" "Andorra" "AE" "United Arab Emirates" "AF" "Afghanistan" "AG" "Antigua & Barbuda" "AI" "Anguilla" "AL" "Albania" "AM" "Armenia" "AO" "Angola" "AQ" "Antarctica" "AR" "Argentina" "AS" "Samoa (American)" "AT" "Austria" "AU" "Australia" "AW" "Aruba" "AX" "Åland Islands" "AZ" "Azerbaijan" "BA" "Bosnia & Herzegovina" "BB" "Barbados" "BD" "Bangladesh" "BE" "Belgium" "BF" "Burkina Faso" "BG" "Bulgaria" "BH" "Bahrain" "BI" "Burundi" "BJ" "Benin" "BL" "St Barthelemy" "BM" "Bermuda" "BN" "Brunei" "BO" "Bolivia" "BQ" "Caribbean NL" "BR" "Brazil" "BS" "Bahamas" "BT" "Bhutan" "BV" "Bouvet Island" "BW" "Botswana" "BY" "Belarus" "BZ" "Belize" "CA" "Canada" "CC" "Cocos (Keeling) Islands" "CD" "Congo (Dem. Rep.)" "CF" "Central African Rep." "CG" "Congo (Rep.)" "CH" "Switzerland" "CI" "Côte d'Ivoire" "CK" "Cook Islands" "CL" "Chile" "CM" "Cameroon" "CN" "China" "CO" "Colombia" "CR" "Costa Rica" "CU" "Cuba" "CV" "Cape Verde" "CW" "Curaçao" "CX" "Christmas Island" "CY" "Cyprus" "CZ" "Czech Republic" "DE" "Germany" "DJ" "Djibouti" "DK" "Denmark" "DM" "Dominica" "DO" "Dominican Republic" "DZ" "Algeria" "EC" "Ecuador" "EE" "Estonia" "EG" "Egypt" "EH" "Western Sahara" "ER" "Eritrea" "ES" "Spain" "ET" "Ethiopia" "FI" "Finland" "FJ" "Fiji" "FK" "Falkland Islands" "FM" "Micronesia" "FO" "Faroe Islands" "FR" "France" "GA" "Gabon" "GB" "Britain (UK)" "GD" "Grenada" "GE" "Georgia" "GF" "French Guiana" "GG" "Guernsey" "GH" "Ghana" "GI" "Gibraltar" "GL" "Greenland" "GM" "Gambia" "GN" "Guinea" "GP" "Guadeloupe" "GQ" "Equatorial Guinea" "GR" "Greece" "GS" "South Georgia & the South Sandwich Islands" "GT" "Guatemala" "GU" "Guam" "GW" "Guinea-Bissau" "GY" "Guyana" "HK" "Hong Kong" "HM" "Heard Island & McDonald Islands" "HN" "Honduras" "HR" "Croatia" "HT" "Haiti" "HU" "Hungary" "ID" "Indonesia" "IE" "Ireland" "IL" "Israel" "IM" "Isle of Man" "IN" "India" "IO" "British Indian Ocean Territory" "IQ" "Iraq" "IR" "Iran" "IS" "Iceland" "IT" "Italy" "JE" "Jersey" "JM" "Jamaica" "JO" "Jordan" "JP" "Japan" "KE" "Kenya" "KG" "Kyrgyzstan" "KH" "Cambodia" "KI" "Kiribati" "KM" "Comoros" "KN" "St Kitts & Nevis" "KP" "Korea (North)" "KR" "Korea (South)" "KW" "Kuwait" "KY" "Cayman Islands" "KZ" "Kazakhstan" "LA" "Laos" "LB" "Lebanon" "LC" "St Lucia" "LI" "Liechtenstein" "LK" "Sri Lanka" "LR" "Liberia" "LS" "Lesotho" "LT" "Lithuania" "LU" "Luxembourg" "LV" "Latvia" "LY" "Libya" "MA" "Morocco" "MC" "Monaco" "MD" "Moldova" "ME" "Montenegro" "MF" "St Martin (French)" "MG" "Madagascar" "MH" "Marshall Islands" "MK" "North Macedonia" "ML" "Mali" "MM" "Myanmar (Burma)" "MN" "Mongolia" "MO" "Macau" "MP" "Northern Mariana Islands" "MQ" "Martinique" "MR" "Mauritania" "MS" "Montserrat" "MT" "Malta" "MU" "Mauritius" "MV" "Maldives" "MW" "Malawi" "MX" "Mexico" "MY" "Malaysia" "MZ" "Mozambique" "NA" "Namibia" "NC" "New Caledonia" "NE" "Niger" "NF" "Norfolk Island" "NG" "Nigeria" "NI" "Nicaragua" "NL" "Netherlands" "NO" "Norway" "NP" "Nepal" "NR" "Nauru" "NU" "Niue" "NZ" "New Zealand" "OM" "Oman" "PA" "Panama" "PE" "Peru" "PF" "French Polynesia" "PG" "Papua New Guinea" "PH" "Philippines" "PK" "Pakistan" "PL" "Poland" "PM" "St Pierre & Miquelon" "PN" "Pitcairn" "PR" "Puerto Rico" "PS" "Palestine" "PT" "Portugal" "PW" "Palau" "PY" "Paraguay" "QA" "Qatar" "RE" "Réunion" "RO" "Romania" "RS" "Serbia" "RU" "Russia" "RW" "Rwanda" "SA" "Saudi Arabia" "SB" "Solomon Islands" "SC" "Seychelles" "SD" "Sudan" "SE" "Sweden" "SG" "Singapore" "SH" "St Helena" "SI" "Slovenia" "SJ" "Svalbard & Jan Mayen" "SK" "Slovakia" "SL" "Sierra Leone" "SM" "San Marino" "SN" "Senegal" "SO" "Somalia" "SR" "Suriname" "SS" "South Sudan" "ST" "Sao Tome & Principe" "SV" "El Salvador" "SX" "St Maarten (Dutch)" "SY" "Syria" "SZ" "Eswatini (Swaziland)" "TC" "Turks & Caicos Is" "TD" "Chad" "TF" "French Southern & Antarctic Lands" "TG" "Togo" "TH" "Thailand" "TJ" "Tajikistan" "TK" "Tokelau" "TL" "East Timor" "TM" "Turkmenistan" "TN" "Tunisia" "TO" "Tonga" "TR" "Turkey" "TT" "Trinidad & Tobago" "TV" "Tuvalu" "TW" "Taiwan" "TZ" "Tanzania" "UA" "Ukraine" "UG" "Uganda" "UM" "US minor outlying islands" "US" "United States" "UY" "Uruguay" "UZ" "Uzbekistan" "VA" "Vatican City" "VC" "St Vincent" "VE" "Venezuela" "VG" "Virgin Islands (UK)" "VI" "Virgin Islands (US)" "VN" "Vietnam" "VU" "Vanuatu" "WF" "Wallis & Futuna" "WS" "Samoa (western)" "YE" "Yemen" "YT" "Mayotte" "ZA" "South Africa" "ZM" "Zambia" "ZW" "Zimbabwe" 3>&1 1>&2 2>&3)
+  exitstatus=$?
 
-  sudo iw reg set $COUNTRY
-  INPUT="REGDOMAIN=$COUNTRY"
-  sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
+  if [ $exitstatus = 0 ]; then
+    sudo iw reg set $COUNTRY
+    INPUT="REGDOMAIN=$COUNTRY"
+    sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
+  fi
 
 # Theoreticall the lines below should set the country_code value in /etc/hostapd/hostapd.conf . However, if country_code=US is changed to anything else, the 5 GHz 80 MHz setting will crash hostapd -> don't change country_code=US in /etc/hostapd/hostapd.conf until the bug is fixed.
 #  if [ $COUNTRY = 00 ]; then
@@ -154,7 +127,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
@@ -170,8 +143,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.2.5 - CONFIGURATION
 " 10" "Erase all log files" \
 "===" "===========================================[Features]========" \
 " 11" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 12" "Support for Sixfab Shields/HATs for cellular connections" \
-" 13" "Activating Cellular 3G/4G/LTE (ppp0) (EXPERIMENTAL)" 3>&1 1>&2 2>&3)
+" 12" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -187,15 +159,16 @@ if [ $exitstatus = 0 ]; then
 			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter the new name for TorBox's WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
         clear
-			  change_ssid $INPUT
+        sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+        echo -e "${RED}[+] Changing SSID...${NOCOLOR}"
+        SSID="ssid=$INPUT"
+        sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
         sleep 2
 				if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 	        clear
 					echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
           echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
-          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-          sudo service hostapd restart
-					exit 0
+          (nohup ./hostapd_fallback) 2>/dev/null
 				fi
 			fi
 
@@ -210,13 +183,14 @@ if [ $exitstatus = 0 ]; then
           sleep 5
         else
           clear
-          change_ssid_pw $INPUT
+          echo -e "${RED}[+] Changing password...${NOCOLOR}"
+          SSID_PW=wpa_passphrase=$INPUT
+          sudo sed -i "s/^wpa_passphrase=.*/${SSID_PW}/" ${HOSTAPD}
           speed 2
-				  if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				  if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox and use the onboard wireless chip as AP)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 	          clear
 					  echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
             echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-            sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
             sudo reboot
 					  exit 0
           fi
@@ -262,30 +236,26 @@ if [ $exitstatus = 0 ]; then
   	      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
             sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
             sudo sed -i "s/^hw_mode=g/hw_mode=a/" ${HOSTAPD}
-            sudo sed -i "s/^channel=.*/channel=36/" ${HOSTAPD}
+            sudo sed -i "s/^channel.*/channel=36/" ${HOSTAPD}
             sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/" ${HOSTAPD}
             if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
               clear
               echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-              sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
-              exit 0
             fi
           fi
         fi
       else
         sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
-        sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
+        sudo sed -i "s/^channel.*/channel=6/" ${HOSTAPD}
         sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
         sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
         if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 2.5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Activating the 2.5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-          echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-          sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+          echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
           sudo service hostapd restart
-          exit 0
         fi
       fi
 
@@ -294,217 +264,212 @@ if [ $exitstatus = 0 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
         if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
-          " 1" "Channel  1 at 20 MHz" OFF \
-          " 3" "Channel  2 at 20 MHz" OFF \
-          " 5" "Channel  3 at 20 MHz" OFF \
-          " 7" "Channel  4 at 20 MHz" OFF \
-          " 9" "Channel  5 at 20 MHz" OFF \
-          "11" "Channel  6 at 20 MHz  (default)          " ON \
-          "13" "Channel  7 at 20 MHz" OFF \
-          "15" "Channel  8 at 20 MHz" OFF \
-          "17" "Channel  9 at 20 MHz" OFF \
-          "19" "Channel 10 at 20 MHz" OFF \
-          "21" "Channel 11 at 20 MHz" OFF 3>&1 1>&2 2>&3)
+          "A" "Channel  1 at 20 MHz" OFF \
+          "C" "Channel  2 at 20 MHz" OFF \
+          "E" "Channel  3 at 20 MHz" OFF \
+          "G" "Channel  4 at 20 MHz" OFF \
+          "I" "Channel  5 at 20 MHz" OFF \
+          "K" "Channel  6 at 20 MHz  (default)          " ON \
+          "M" "Channel  7 at 20 MHz" OFF \
+          "O" "Channel  8 at 20 MHz" OFF \
+          "Q" "Channel  9 at 20 MHz" OFF \
+          "S" "Channel 10 at 20 MHz" OFF \
+          "U" "Channel 11 at 20 MHz" OFF 3>&1 1>&2 2>&3)
           exitstatus=$?
         else
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nChoose a channel (default is 6)" 18 60 8 \
-          " 1" "Channel  1 at 20 MHz" OFF \
-          " 2" "Channel  1 at 40 MHz" OFF \
-          " 3" "Channel  2 at 20 MHz" OFF \
-          " 4" "Channel  2 at 40 MHz" OFF \
-          " 5" "Channel  3 at 20 MHz" OFF \
-          " 6" "Channel  3 at 40 MHz" OFF \
-          " 7" "Channel  4 at 20 MHz" OFF \
-          " 8" "Channel  4 at 40 MHz" OFF \
-          " 9" "Channel  5 at 20 MHz" OFF \
-          "10" "Channel  5 at 40 MHz" OFF \
-          "11" "Channel  6 at 20 MHz  (default)          " ON \
-          "12" "Channel  6 at 40 MHz" OFF \
-          "13" "Channel  7 at 20 MHz" OFF \
-          "14" "Channel  7 at 40 MHz" OFF \
-          "15" "Channel  8 at 20 MHz" OFF \
-          "16" "Channel  8 at 40 MHz" OFF \
-          "17" "Channel  9 at 20 MHz" OFF \
-          "18" "Channel  9 at 40 MHz" OFF \
-          "19" "Channel 10 at 20 MHz" OFF \
-          "20" "Channel 10 at 40 MHz" OFF \
-          "21" "Channel 11 at 20 MHz" OFF \
-          "22" "Channel 11 at 40 MHz" OFF  3>&1 1>&2 2>&3)
+          "A" "Channel  1 at 20 MHz" OFF \
+          "B" "Channel  1 at 40 MHz" OFF \
+          "C" "Channel  2 at 20 MHz" OFF \
+          "D" "Channel  2 at 40 MHz" OFF \
+          "E" "Channel  3 at 20 MHz" OFF \
+          "F" "Channel  3 at 40 MHz" OFF \
+          "G" "Channel  4 at 20 MHz" OFF \
+          "H" "Channel  4 at 40 MHz" OFF \
+          "I" "Channel  5 at 20 MHz" OFF \
+          "J" "Channel  5 at 40 MHz" OFF \
+          "K" "Channel  6 at 20 MHz  (default)          " ON \
+          "L" "Channel  6 at 40 MHz" OFF \
+          "M" "Channel  7 at 20 MHz" OFF \
+          "N" "Channel  7 at 40 MHz" OFF \
+          "O" "Channel  8 at 20 MHz" OFF \
+          "P" "Channel  8 at 40 MHz" OFF \
+          "Q" "Channel  9 at 20 MHz" OFF \
+          "R" "Channel  9 at 40 MHz" OFF \
+          "S" "Channel 10 at 20 MHz" OFF \
+          "T" "Channel 10 at 40 MHz" OFF \
+          "U" "Channel 11 at 20 MHz" OFF \
+          "V" "Channel 11 at 40 MHz" OFF  3>&1 1>&2 2>&3)
           exitstatus=$?
         fi
         if [ $exitstatus = 0 ]; then
           case $CHOICE in
-            1)
+            A)
                 CHANNEL=1
                 HF=0
                 ;;
-            2)
+            B)
                 CHANNEL=1
                 HF=1
                 ;;
-            3)
+            C)
                 CHANNEL=2
                 HF=0
                 ;;
-            4)
+            D)
                 CHANNEL=2
                 HF=1
                 ;;
-            5)
+            E)
                 CHANNEL=3
                 HF=0
                 ;;
-            6)
+            F)
                 CHANNEL=3
                 HF=1
                 ;;
-            7)
+            G)
                 CHANNEL=4
                 HF=0
                 ;;
-            8)
+            H)
                 CHANNEL=4
                 HF=1
                 ;;
-            9)
+            I)
                 CHANNEL=5
                 HF=0
                 ;;
-            10)
+            J)
                 CHANNEL=5
                 HF=1
                 ;;
-            11)
+            K)
                 CHANNEL=6
                 HF=0
                 ;;
-            12)
+            L)
                 CHANNEL=6
                 HF=1
                 ;;
-            13)
+            M)
                 CHANNEL=7
                 HF=0
                 ;;
-            14)
+            N)
                 CHANNEL=7
                 HF=1
                 ;;
-            15)
+            O)
                 CHANNEL=8
                 HF=0
                 ;;
-            16)
+            P)
                 CHANNEL=8
                 HF=1
                 ;;
-            17)
+            Q)
                 CHANNEL=9
                 HF=0
                 ;;
-            18)
+            R)
                 CHANNEL=9
                 HF=1
                 ;;
-            19)
+            S)
                 CHANNEL=10
                 HF=0
                 ;;
-            20)
+            T)
                 CHANNEL=10
                 HF=1
                 ;;
-            21)
+            U)
                 CHANNEL=11
                 HF=0
                 ;;
-            22)
+            V)
                 CHANNEL=11
                 HF=1
                 ;;
           esac
           sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-          sudo sed -i "s/^channel=.*/channel=$CHANNEL/" ${HOSTAPD}
+          sudo sed -i "s/^channel.*/channel=$CHANNEL/" ${HOSTAPD}
           if [ $HF = 0 ]; then
             sudo sed -i "s/^ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/" ${HOSTAPD}
             if (whiptail --yesno "The WLAN channel is now changed to $CHANNEL at 20 MHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
               clear
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-              sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-              sudo service hostapd restart
+              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+              (nohup ./hostapd_fallback) 2>/dev/null
             fi
           else
-            sudo sed -i "s/^#vht_oper_chwidth=1/vht_oper_chwidth=1/" ${HOSTAPD}
-            sudo sed -i "s/^#vht_oper_centr_freq_seg0_idx=42/vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
             sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]" ${HOSTAPD}
-            if (whiptail --yesno "The WLAN channel is now changed to $CHANNEL at 40 MHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+            if (whiptail --yesno "The WLAN channel is now changed to $CHANNEL at 40 MHz.\n\nHowever, the creation of a 40 MHz channel is maybe rejected based on overlapping BSSes.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
               clear
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-              sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
             fi
           fi
         fi
       else
         CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nChoose a channel (default is 36)" 18 60 8 \
-        "1" "Channel 36 at 40 MHz (default)         " ON \
-        "2" "Channel 36 at 80 MHz" OFF \
-        "3" "Channel 40 at 40 MHz" OFF \
-        "4" "Channel 40 at 80 MHz" OFF \
-        "5" "Channel 44 at 40 MHz" OFF \
-        "6" "Channel 44 at 80 MHz" OFF \
-        "7" "Channel 48 at 40 MHz" OFF \
-        "8" "Channel 48 at 80 MHz" OFF 3>&1 1>&2 2>&3)
+        "A" "Channel 36 at 40 MHz (default)         " ON \
+        "B" "Channel 36 at 80 MHz" OFF \
+        "C" "Channel 40 at 40 MHz" OFF \
+        "D" "Channel 40 at 80 MHz" OFF \
+        "E" "Channel 44 at 40 MHz" OFF \
+        "F" "Channel 44 at 80 MHz" OFF \
+        "G" "Channel 48 at 40 MHz" OFF \
+        "H" "Channel 48 at 80 MHz" OFF 3>&1 1>&2 2>&3)
         exitstatus=$?
 
         if [ $exitstatus = 0 ]; then
           case $CHOICE in
-            1)
+            A)
                 CHANNEL=36
                 HF=0
                 ;;
-            2)
+            B)
                 CHANNEL=36
                 HF=1
                 ;;
-            3)
+            C)
                 CHANNEL=40
                 HF=0
                 ;;
-            4)
+            D)
                 CHANNEL=40
                 HF=1
                 ;;
-            5)
+            E)
                 CHANNEL=44
                 HF=0
                 ;;
-            6)
+            F)
                 CHANNEL=44
                 HF=1
                 ;;
-            7)
+            G)
                 CHANNEL=48
                 HF=0
                 ;;
-            8)
+            H)
                 CHANNEL=48
                 HF=1
                 ;;
           esac
           sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-          sudo sed -i "s/^channel=.*/channel=$CHANNEL/" ${HOSTAPD}
+          sudo sed -i "s/^channel.*/channel=$CHANNEL/" ${HOSTAPD}
           if [ $HF = 0 ]; then
             sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
             sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
             if (whiptail --yesno "The WLAN channel is now changed to $CHANNEL at 40 MHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
               clear
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-              sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-              sudo service hostapd restart
+              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+              (nohup ./hostapd_fallback) 2>/dev/null
             fi
           else
             sudo sed -i "s/^#vht_oper_chwidth=1/vht_oper_chwidth=1/" ${HOSTAPD}
@@ -512,8 +477,7 @@ if [ $exitstatus = 0 ]; then
             if (whiptail --yesno "The WLAN channel is now changed to $CHANNEL at 80 MHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
               clear
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-              sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+              echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
             fi
           fi
@@ -529,6 +493,7 @@ if [ $exitstatus = 0 ]; then
 				INPUT=ignore_broadcast_ssid=0
         TOGGLE08="visible"
       fi
+      sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
 			if grep "^ignore_broadcast_ssid=" ${HOSTAPD}; then
       	sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
 			else
@@ -537,9 +502,8 @@ if [ $exitstatus = 0 ]; then
       if (whiptail --yesno "TorBox's WLAN (SSID) is now $TOGGLE08.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         clear
         echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
-        echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-        sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-        sudo service hostapd restart
+        echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+        (nohup ./hostapd_fallback) 2>/dev/null
       fi
 
 #This changes the password of the Tor control port
@@ -565,7 +529,6 @@ if [ $exitstatus = 0 ]; then
 					sudo systemctl enable rsyslog
 					sudo service rsyslog start
           if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-            sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
     				echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
             echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
             sleep 2
@@ -612,12 +575,6 @@ if [ $exitstatus = 0 ]; then
         sudo ./install.sh
         trap "cd torbox; bash menu-config; exit 0" SIGINT
       fi
-
-#This activates Cellular 3G/4G/LTE (ppp0) - ACHTUNG: MUSS IN DER NEUEN MULTIINTERFACE FUNCTIONALITAET INTEGRIERT WERDEN!!
-    elif [ $CHOICE = 13 ]; then
-      sudo pon
-	    sudo bash set_interfaces ppp0 wlan0 0
-      finish
 
 #Finish
     fi

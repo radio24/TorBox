@@ -21,26 +21,26 @@
 #
 # DESCRIPTION
 # This file sets all preconditions and defines all iptables rules to route the
-# entire data stream from the connected clients through the Tor network.
+# entire data stream from the connected clients (from two different interfaces) through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces <outgoing interface> <incoming interface> <captive portal>
-#
+# ./set_interfaces_2 <outgoing interface> <incoming interface> <incoming interface> <captive portal>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
-#
-# eth0  -> 	TorBox is connected to the internet with a cable (WIRELESS MODE).
-# eth1  -> 	TorBox is connected to the internet with a cable (CABLE MODE) or with a tethering device.
-# wlan0 ->  TorBox is connected to the Internet through a wireless network (CABLE MODE).
-# wlan1 -> 	TorBox is connected to the Internet through a wireless network (WIRELESS MODE).
+# eth0  -> 	TorBox is connected to the internet with a cable (onboard ethernet interface).
+# eth1  -> 	TorBox is connected to the internet with a tethering device.
+# wlan0 ->  TorBox is connected to the internet through a wireless network (onboard WLAN chip).
+# wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
+#	ppp0	->	TorBox is connected to the internet through a cellular adapter.
+# usb0	->  TorBox is connected to the internet through a USB adapter.
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
-#
-# eth0  -> 	The device is connected with a cable.        -> CABLE MODE
-# wlan0 -> 	The device is connected via wireless network -> WIRELESS MODE
+# eth0  -> 	The device is connected with a cable (onboard ethernet interface).
+# eth1	-> 	The device is connected with a cable (USB ethernet adapter).
+# wlan0 -> 	The device is connected via wireless network (onboard WLAN chip).
+# wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
 #
 # Possible values for <captive portal>:
-#
 # 0	->	The network connection is open -- no login/password/phone number etc. is required.
 # 1	->	For a sucessful connection to the Internet login/password/phone number etc. is required (this is usually the case
 #       with provider of free wireless network access in hotels, airports, Internet cafées etc.).
@@ -61,11 +61,14 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 WLAN_MANAGER="/usr/bin/wicd-curses"
 WLAN_MANAGER_DAEMON_NAME="wicd"
-MY_OWN_IP="192.168.42.1"
-INT_NET="$MY_OWN_IP/8"
+MY_OWN_IP1="192.168.42.1"
+MY_OWN_IP2="192.168.43.1"
+INT_NET1="$MY_OWN_IP1/8"
+INT_NET2="$MY_OWN_IP2/8"
 O_DEVICE=$1
-I_DEVICE=$2
-CAPTIVE=$3
+I_DEVICE1=$2
+I_DEVICE2=$3
+CAPTIVE=$4
 
 ###########################
 
@@ -76,11 +79,11 @@ sudo bash deactivating_bridge_relay
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 if [ "$O_DEVICE" = "eth0" ]; then
 	if [ $CAPTIVE = 1 ]; then
-		sudo bash set_captive $O_DEVICE $I_DEVICE
+		sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	fi
 elif [ "$O_DEVICE" = "eth1" ]; then
 	if [ $CAPTIVE = 1 ]; then
-    sudo bash set_captive $O_DEVICE $I_DEVICE
+    sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	fi
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
@@ -94,7 +97,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
 	clear
 	if [ $CAPTIVE = 1 ]; then
-	   sudo bash set_captive $O_DEVICE $I_DEVICE
+	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	fi
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
@@ -107,7 +110,7 @@ elif [ "$O_DEVICE" = "wlan1" ]; then
 	$WLAN_MANAGER
 	clear
 	if [ $CAPTIVE = 1 ]; then
-	   sudo bash set_captive $O_DEVICE $I_DEVICE
+	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	fi
 fi
 
@@ -131,12 +134,15 @@ echo -e "${RED}[+] Setting up INPUT chain...${NOCOLOR}"
 $IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 $IPTABLES -A INPUT -m state --state INVALID -j DROP
 # Anti-spoofing rules
-$IPTABLES -A INPUT -i $I_DEVICE ! -s $INT_NET -j LOG --log-prefix "SPOOFED PKT "
-$IPTABLES -A INPUT -i $I_DEVICE ! -s $INT_NET -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j DROP
 # Let packages to the localhost
 $IPTABLES -A INPUT -i lo -j ACCEPT
 # Open access from the internal network (usually my own devices)
-$IPTABLES -A INPUT -i $I_DEVICE -j ACCEPT
+$IPTABLES -A INPUT -i $I_DEVICE1 -j ACCEPT
+$IPTABLES -A INPUT -i $I_DEVICE2 -j ACCEPT
 # Allow ICMP Ping
 $IPTABLES -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
@@ -163,11 +169,15 @@ $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 
 ###### NAT rules ######
 # Access on the box's own IP should be granted (only TCP)
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE -d $MY_OWN_IP -p tcp -j REDIRECT
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
 # TCP/UDP/DNS over Tor
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE -p tcp -j REDIRECT --to-ports 9040
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE -p udp --dport 53 -j REDIRECT --to-ports 9053
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE -p udp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp --dport 53 -j REDIRECT --to-ports 9053
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp --dport 53 -j REDIRECT --to-ports 9053
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
 ## Masquerading
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 

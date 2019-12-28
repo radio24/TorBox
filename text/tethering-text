@@ -1,10 +1,23 @@
-!!! ATTENTION !!! READ IT CAREFULLY !!!
+This menu entry supposes that TorBox is connected with the internet
+through tethering or a USB ethernet adapter. These interfaces have to be
+configured BEFOREHAND. For example, with an iPhone: Unlock your iPhone,
+but let the personal hotspot disabled for the time being and connect it
+with the TorBox. Choose to trust your iPhone (necessary!). Enable personal
+hotspot on your iPhone (USB only) and continue with the configuration.
 
-If you use tethering via USB, your smartphone is probably charging its battery. This could be problematic: If the Raspberry Pi doesn’t receive enough power (indicated by a flashing red LED), you are eventually unable to connect to the AP of an internet provider or experience all sorts of other strange behaviors. 
+IMPORTANT
+Usually, the tethering device (Smartphone) is charging its battery while
+connected with the USB port. This can lead to a unstable system. A better
+solution may be to create a personal hotspot with your smartphone instead
+of using tethering.
 
-A better solution may be to create a personal hotspot with your smartphone instead of using tethering. However, if you are using the tethering option, you should remove other power consumption devices and make sure that your Raspberry Pi has the best power source as you can get. For example the RS Pro PB-10400 Power Bank, 5V / 10,4Ah worked well with us.
+The next step is to setup TorBox so that your client devices have access
+through TorBox's wireless network. However, if you also like to access
+through the onboard ethernet interface (cable), then please plug in the
+cable with your client device, NOW.
 
-Using tethering is simple. For example in case of an iPhone: Unlock your iPhone, but let the personal hotspot disabled for the time being and connect it with your Raspberry Pi’s USB port. Choose to trust your iPhone (necessary!). Enable personal hotspot on your iPhone (USB only) and continue with the configuration.
+If we have to restart TorBox's wireless network, then please reconnect your
+client without closing the ssh session. Usually, the configuration
+continuous -- if not, then please repeat the process.
 
-
-  
+Would you like to CONTINUE?

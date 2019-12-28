@@ -1,0 +1,41 @@
+*filter
+:INPUT DROP [2785:306676]
+:FORWARD DROP [71:4544]
+:OUTPUT ACCEPT [1011779:1380260141]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -m state --state INVALID -j DROP
+-A INPUT ! -s 192.0.0.0/8 -i wlan0 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.0.0.0/8 -i eth0 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.0.0.0/8 -i wlan0 -j DROP
+-A INPUT ! -s 192.0.0.0/8 -i eth0 -j DROP
+-A INPUT -i lo -j ACCEPT
+-A INPUT -i wlan0 -j ACCEPT
+-A INPUT -i eth0 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
+-A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+-A FORWARD -m state --state INVALID -j DROP
+-A FORWARD -p icmp -m icmp --icmp-type 8 -j ACCEPT
+-A FORWARD -p icmp -m icmp --icmp-type 0 -j ACCEPT
+-A OUTPUT -m conntrack --ctstate INVALID -j DROP
+-A OUTPUT -m state --state INVALID -j DROP
+-A OUTPUT ! -s 127.0.0.1/32 ! -d 127.0.0.1/32 ! -o lo -p tcp -m tcp --tcp-flags RST,ACK RST,ACK -j DROP
+-A OUTPUT -o wlan1 -p tcp -m tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-tcp-options --log-ip-options
+-A OUTPUT -o wlan1 -p udp -m udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
+COMMIT
+#
+#
+*nat
+:PREROUTING ACCEPT [4956:869847]
+:INPUT ACCEPT [4496:607791]
+:POSTROUTING ACCEPT [200:15526]
+:OUTPUT ACCEPT [370:37403]
+-A PREROUTING -d 192.168.42.1/32 -i wlan0 -p tcp -j REDIRECT
+-A PREROUTING -d 192.168.43.1/32 -i eth0 -p tcp -j REDIRECT
+-A PREROUTING -i wlan0 -p tcp -j REDIRECT --to-ports 9040
+-A PREROUTING -i eth0 -p tcp -j REDIRECT --to-ports 9040
+-A PREROUTING -i wlan0 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
+-A PREROUTING -i eth0 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
+-A PREROUTING -i wlan0 -p udp -j REDIRECT --to-ports 9040
+-A PREROUTING -i eth0 -p udp -j REDIRECT --to-ports 9040
+-A POSTROUTING -o wlan1 -j MASQUERADE
+COMMIT

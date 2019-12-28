@@ -46,6 +46,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
+WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -63,7 +64,10 @@ BOOTMSG=0
 #This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
 online_check_update()
 {
+  clear
+  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s http://google.com)
+  clear
   if [ $? -gt 0 ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -108,31 +112,32 @@ update_torcfg()
     echo -e "${RED}[+] Changed /etc/apt/sources.list -- backup done${NOCOLOR}"
   fi
   sudo cp /etc/default/hostapd /etc/default/hostapd.bak
-  sudo etc/default/hostapd /etc/default/
+  sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
   sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
-  sudo etc/default/isc-dhcp-server /etc/default/
+  sudo cp etc/default/isc-dhcp-server /etc/default/
   echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
   sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
-  sudo etc/dhcp/dhclient.conf /etc/dhcp/
+  sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
   sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
-  sudo etc/dhcp/dhcpd.conf /etc/dhcp/
+  sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
   sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
-  sudo etc/hostapd/hostapd.conf /etc/hostapd/
+  sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo etc/hostname /etc/
+  sudo cp etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
+  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
+  sudo cp etc/iptables.ipv4.nat /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   sudo cp /etc/motd /etc/motd.bak
   sudo cp etc/motd /etc/
-  echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
-  sudo cp /etc/network/interfaces /etc/network/interfaces.bak
-  sudo cp etc/network/* /etc/network/
+  echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+  sudo cp etc/network/interfaces /etc/network/
   echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
   sudo cp /etc/rc.local /etc/rc.local.bak
   sudo cp etc/rc.local /etc/
@@ -155,7 +160,7 @@ update_torcfg()
 
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.2.5 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
 "3" "Update to the newest stable version of TOR" OFF \
@@ -173,7 +178,7 @@ if [ $exitstatus = 0 ]; then
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
 
-  #This updates the base system
+#This updates the base system
     if [ $ARGUMENT = 1 ]; then
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
@@ -189,6 +194,10 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl unmask hostapd
         sudo systemctl enable hostapd
         sudo systemctl enable isc-dhcp-server
+        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+        sudo systemctl enable tor
         sudo systemctl daemon-reload
         BOOTMSG=1
       fi
@@ -343,7 +352,7 @@ sudo systemctl daemon-reload
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-      sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       clear
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       sleep 2
