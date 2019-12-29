@@ -2,8 +2,8 @@
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information visit the [TorBox website](https://www.torbox.ch)<br />
-TorBox Image (about 970 MB) : [v.0.2.5 (24.09.2019)](https://www.torbox.ch/data/torbox-20190924-v025.gz)<br />
-TorBox Menu only : [v.0.2.5 (24.0.2019)](https://www.torbox.ch/data/torbox025-20190924.zip)<br />
+TorBox Image (about 970 MB) : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox-20200101-v030.gz)<br />
+TorBox Menu only : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox030-20200101.zip)<br />
 
 ### Disclaimer
 **Use it at your own risk!**
@@ -14,21 +14,22 @@ TorBox is ideal for providing additional protection for the entire data stream u
 1. Download the latest TorBox image file.
 2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 Gbyte SD Card, but 8 Gbyte is recommended.
 3. Put the SD Card into your Raspberry Pi, link it with an internet router using an Ethernet cable or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
-4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox030” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the advanced menu).
+4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox030” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875)).
 
 A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) is recommended.
 
-Do you have additional questions? Check out our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112).
+Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
 ### Features
 * TorBox routes all your network data through the Tor network.
 * With the SSH-accessible menu, TorBox provides you with a user-friendly interface.
-* TorBox supports internet access and client connections via WiFi (an additional USB WiFi adapter is necessary) or cable, which can easily be changed via the provided interface.
+* TorBox supports internet access via cable (ethernet), WiFi, tethering devices, cellular links and USB dongles (eth1/ppp0/usb0).
+* Clients can connect TorBox via WiFi (depending on your settings, an additional USB WiFi adapter is necessary) and cable (simultaneously).
 * It easily overcomes captive portals and offers, if necessary, measures against “disconnect when idle features” (sometimes seen with WiFis in airports, hotels, coffee houses).
 * TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html) bridges, which help to overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=797)).
-* If you have a public IP address, 24/7 internet connectivity over a long time, and a bandwidth of at least 1 Mbps, TorBox can provide a bridge relay via a user-friendly interface [to allow censored users access to the open internet](https://blog.torproject.org/run-tor-bridges-defend-open-internet).
+* If you have a public IP address, 24/7 internet connectivity over a long time, and a bandwidth of at least 1 Mbps, TorBox can provide a bridge relay, esaly configurable via a user-friendly interface [to allow censored users access to the open internet](https://blog.torproject.org/run-tor-bridges-defend-open-internet).
 * It provides [SOCKS v5 proxy functionality](https://en.wikipedia.org/wiki/SOCKS).
-* It allows easy access to .onion websites without client configuration (Chrome) or via SOCKS v5 proxy (Firefox).
+* It allows easy access to .onion websites without client configuration (Chrome) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
 
 ### Building From Scratch
 All that you need to run TorBox on your Raspberry Pi is the image file. However, if you like to build it from scratch on your own, whether you like to implement it to an existing system, to another hardware, respectively another operating system or you don’t trust an image file, which you didn’t bundle of your own. Then [check out our detailed manual](https://www.torbox.ch/?page_id=205). It helps you to build a TorBox from scratch.
