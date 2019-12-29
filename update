@@ -333,7 +333,7 @@ if [ $exitstatus = 0 ]; then
         sudo rm -r /var/lib/tor/keys
         sudo rm /var/lib/tor/fingerprint
         sudo rm /var/lib/tor/hashed-fingerprint
-        sudo rm /var/lib/tor/pt_state
+        sudo rm -r /var/lib/tor/pt_state
         sleep 2
         sudo bash restart_tor update
       fi
