@@ -5,6 +5,8 @@ For more information visit the [TorBox website](https://www.torbox.ch)<br />
 TorBox Image (about 970 MB) : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox-20200101-v030.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 TorBox Menu only : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox030-20200101.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
+![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
+
 ### Disclaimer
 **Use it at your own risk!**
 
@@ -18,7 +20,9 @@ TorBox is ideal for providing additional protection for the entire data stream u
 
 A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) is recommended.
 
-Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
+Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
+
+![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2019/12/TorBox-A5-RPI4-030.png)
 
 ### Features
 * TorBox routes all your network data through the Tor network.
