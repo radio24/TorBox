@@ -571,8 +571,9 @@ if [ $exitstatus = 0 ]; then
         online_check menu-config
         cd ..
         wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
-        chmod +x install.sh
-        sudo ./install.sh
+        mv install.sh sixlab_install.sh
+        chmod +x sixlab_install.sh
+        sudo ./sixlab_install.sh
         trap "cd torbox; bash menu-config; exit 0" SIGINT
       fi
 

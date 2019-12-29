@@ -89,8 +89,8 @@ online_check()
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   JUMPTO=$1
-  OCHECK=$(curl -m 5 -s http://google.com)
   clear
+  OCHECK=$(curl -m 5 -s http://google.com)
   if [ $? -gt 0 ]; then
     whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
     read -n 1 -s -r -p "Press any key to continue"
