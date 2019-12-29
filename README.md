@@ -5,7 +5,7 @@ For more information visit the [TorBox website](https://www.torbox.ch)<br />
 TorBox Image (about 970 MB) : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox-20200101-v030.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 TorBox Menu only : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox030-20200101.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
-![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-1200x762)
+![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
 
 ### Disclaimer
 **Use it at your own risk!**
