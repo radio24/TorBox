@@ -43,9 +43,10 @@ SOURCE_SCRIPT=$1
 INPUT=$(cat text/restart-tor-text)
 if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 	clear
-	echo "${RED}[+] Restarting Tor!${NOCOLOR}"
+	echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
 	sudo service tor restart &
-	echo "${RED}[+] DONE! Checking progress - please be patient:${NOCOLOR}"
+	echo -e "${RED}[+] DONE! Checking progress - please be patient:${NOCOLOR}"
+	echo ""
 	trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
 	sudo tail -f -n 0 /var/log/tor/notices.log
 fi

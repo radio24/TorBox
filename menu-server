@@ -226,7 +226,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}[+] Below is your personal bridge address, which you can use with another TorBox or with the Tor Browser.${NOCOLOR}"
         echo -e "${RED}[+] Format: obfs4 <IP>:<Port> <Fingerprint> cert=<Certificate> iat-mode=0${NOCOLOR}"
         echo ""
-        echo "${WHITE}[!] obfs4 $BRIDGELINE"
+        echo -e "${WHITE}[!] obfs4 $BRIDGELINE"
         echo ""
         echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
         echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
@@ -261,7 +261,8 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo service tor restart &
-        echo "[${RED}+] DONE! Checking progress - please be patient:${NOCOLOR}"
+        echo -e "[${RED}+] DONE! Checking progress - please be patient:${NOCOLOR}"
+        echo ""
         sleep 2
         trap "bash menu-server; exit 0" SIGINT
         sudo tail -f -n 0 /var/log/tor/notices.log

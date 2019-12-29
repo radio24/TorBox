@@ -86,7 +86,7 @@ else
   echo -e "${RED}[+] Hmmm, no we don't have... :-(${NOCOLOR}"
   echo -e "${RED}[+] We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
-  echo "${RED}[+] Trying again...${NOCOLOR}"
+  echo -e "${RED}[+] Trying again...${NOCOLOR}"
   wget -q --spider https://google.com
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+] Yes, now, we have an internet connection! :-)${NOCOLOR}"
