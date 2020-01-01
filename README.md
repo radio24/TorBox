@@ -2,7 +2,7 @@
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information visit the [TorBox website](https://www.torbox.ch)<br />
-TorBox Image (about 970 MB) : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox-20200101-v030.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+TorBox Image (about 1 GB) : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox-20200101-v030.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 TorBox Menu only : [v.0.3.0 (01.01.2020)](https://www.torbox.ch/data/torbox030-20200101.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 ![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
@@ -14,9 +14,9 @@ TorBox is ideal for providing additional protection for the entire data stream u
 
 ### Quick Installation Guide
 1. Download the latest TorBox image file and [verify the integrity of the downloaded file](https://www.torbox.ch/?page_id=1128).
-2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 Gbyte SD Card, but 8 Gbyte is recommended.
-3. Put the SD Card into your Raspberry Pi, link it with an internet router using an Ethernet cable or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
-4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox030” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the TorBox menu. Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875)).
+2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example, with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 Gbyte SD Card, but 8 Gbyte is recommended.
+3. Put the SD Card into your Raspberry Pi, link it with an internet router using an Ethernet cable, or place a USB WiFi adapter in one of the USB ports to use an already existing WiFi. Afterward, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
+4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox030” (password: CHANGE-IT). Then use an [SSH-client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: pi / password: CHANGE-IT). Now, you should see the [TorBox main menu](https://www.torbox.ch/?page_id=775). Choose the preferred connection setup and **change the default passwords as soon as possible** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875)).
 
 A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) is recommended.
 
