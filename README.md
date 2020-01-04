@@ -25,7 +25,7 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 ![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2019/12/TorBox-A5-RPI4-030.png)
 
 ### Features
-* TorBox routes all your network data through the Tor network.
+* TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage.
 * With the SSH-accessible menu, TorBox provides you with a user-friendly interface.
 * TorBox supports internet access via cable (ethernet), WiFi, tethering devices, cellular links and USB dongles (eth1/ppp0/usb0).
 * Clients can connect TorBox via WiFi (depending on your settings, an additional USB WiFi adapter is necessary) and cable (simultaneously).
