@@ -14,14 +14,14 @@ clear
 echo ""
 echo "This script will start the Tor Browser without Tor and link to your TorBox"
 echo "Without TorBox the Tor Browser will not work !!"
-echo "After closing the Tor Browser the script restores the old settings.
+echo "After closing the Tor Browser the script restores the old settings."
 read -n 1 -s -r -p "Press any key to continue"
 
 export TOR_NO_DISPLAY_NETWORK_SETTINGS=1
 export TOR_SKIP_CONTROLPORTTEST=1
 export TOR_SKIP_LAUNCH=1
 FIREFOX_PROF_PATH=$(grep "^Path" ~/Library/Application\ Support/TorBrowser-Data/Browser/profiles.ini)
-DEFAULT=$(echo "$FIREFOX_PROF_PATH"|cut -c6-)
+DEFAULT=$(echo $FIREFOX_PROF_PATH |cut -c6-)
 echo "user_pref(\"extensions.torbutton.use_privoxy\", false);
 user_pref(\"extensions.torbutton.settings_method\", \"custom\");
 user_pref(\"extensions.torbutton.socks_host\", \"192.168.42.1\");
