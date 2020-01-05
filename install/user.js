@@ -1,0 +1,10 @@
+user_pref("extensions.torbutton.use_privoxy", false);
+user_pref("extensions.torbutton.settings_method", "custom");
+user_pref("extensions.torbutton.socks_host", "192.168.42.1");
+user_pref("extensions.torbutton.socks_port", 9050);
+user_pref("network.proxy.socks", "192.168.42.1");
+user_pref("network.proxy.socks_port", 9050);
+user_pref("extensions.torbutton.custom.socks_host", "192.168.42.1");
+user_pref("extensions.torbutton.custom.socks_port", 9050);
+user_pref("extensions.torlauncher.control_host", "192.168.42.1");
+user_pref("extensions.torlauncher.control_port", 9051);
