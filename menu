@@ -422,6 +422,9 @@ if [ $exitstatus = 0 ]; then
       bash menu-server
     elif [ $CHOICE = 12 ]; then
       screen bash update
+      clear
+      cd
+      cd torbox
 
 # Reboot
     elif [ $CHOICE = 13 ]; then

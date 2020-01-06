@@ -247,11 +247,12 @@ if [ $exitstatus = 0 ]; then
         TORBOX_UPDATE=1
         clear
         cd ..
-        curl https://github.com/radio24/TorBox/archive/master.zip --output master.zip
+        wget https://github.com/radio24/TorBox/archive/master.zip
         unzip master.zip
+        rm -r torbox
         mv TorBox-master torbox
         rm -r master.zip
-        cd torbox
+        exit 0
       fi
 
 #This erases all log files
