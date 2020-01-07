@@ -42,9 +42,9 @@ All that you need to run TorBox on your Raspberry Pi is the image file. However,
 Alternatively, you can download the latest version of [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/), and after you configured network connectivity, the localization settings, go in your home directory, download and execute our installation script:
 ```Bash
 cd
-curl https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh --output run_install.zip
-chmod a+x run_install
-./run_install
+wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
+chmod a+x run_install.sh
+./run_install.sh
 ```
 ### I want to help...
 GREAT! There is a lot to improve and to fix (security of the entire system, graphical menu, cool logos ...). We are searching for people who want to help, and **we need especially your feedback** to improve the system.

@@ -84,8 +84,7 @@ update_tor()
 {
   online_check_update
   clear
-  sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import
-  sudo gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
+  sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   sudo apt-get -y install build-essential fakeroot devscripts
   sudo apt build-dep tor deb.torproject.org-keyring
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi

@@ -142,15 +142,6 @@ sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/t
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
 sudo apt-get update
 
-# Old version -- is still active in update
-# sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import
-#sudo gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | sudo apt-key add -
-# sudo apt-get -y install build-essential fakeroot devscripts
-# sudo apt build-dep tor deb.torproject.org-keyring
-# sudo mkdir /var/log/tor
-# sudo touch /var/log/tor/notices.log
-# sudo chown debian-tor /var/log/tor/notices.log
-
 # 4. Installing all necessary packages
 sleep 10
 clear
@@ -169,8 +160,9 @@ sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/to
 # 6. Downloading and installing the latest version of TorBox
 echo -e "${RED}[+] Step 6.: Download and install the latest version of TorBox....${NOCOLOR}"
 cd
-curl -L https://github.com/radio24/TorBox/archive/master.zip --output master.zip
+wget -L https://github.com/radio24/TorBox/archive/master.zip
 unzip master.zip
+rm -r torbox
 mv TorBox-master torbox
 rm -r master.zip
 
