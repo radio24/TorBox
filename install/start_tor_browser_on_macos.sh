@@ -16,6 +16,7 @@ echo "This script starts the Tor Browser without Tor and link to your TorBox"
 echo "Without TorBox, the Tor Browser will not work !!"
 echo "After closing the Tor Browser, the script restores the old settings."
 read -n 1 -s -r -p "Press any key to continue"
+clear
 
 export TOR_NO_DISPLAY_NETWORK_SETTINGS=1
 export TOR_SKIP_CONTROLPORTTEST=1
@@ -54,4 +55,9 @@ sed -i -e "s/^user_pref(\"extensions.torbutton.custom.socks_host\".*//g" ~/Libra
 sed -i -e "s/^user_pref(\"extensions.torbutton.custom.socks_port\".*//g" ~/Library/Application\ Support/TorBrowser-Data/Browser/$DEFAULT/prefs.js
 sed -i -e "s/^user_pref(\"extensions.torlauncher.control_host\".*//g" ~/Library/Application\ Support/TorBrowser-Data/Browser/$DEFAULT/prefs.js
 sed -i -e "s/^user_pref(\"extensions.torlauncher.control_port\".*//g" ~/Library/Application\ Support/TorBrowser-Data/Browser/$DEFAULT/prefs.js
+sleep 2
+clear
+echo " "
+echo "You can close this window now."
+sleep 10
 exit
