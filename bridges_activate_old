@@ -56,6 +56,6 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
   fi
 else
     if (whiptail --title "TorBox - INFO" --yesno "\n\nThere are $number_configured_bridges_deactivated DEACTIVATED bridges in your configuration file (probably from you last session?)! Would you like to ACTIVATE these old bridges ?" 20 $MENU_WIDTH); then
-        sudo sed -i "s/^#Bridge/Bridge/g" ${TORRC}
+        sudo sed -i "s/^#Bridge /Bridge /g" ${TORRC}
     fi
 fi

@@ -149,7 +149,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-          sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
+          sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
           sudo service tor restart
         fi
       fi
