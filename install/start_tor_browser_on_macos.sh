@@ -12,7 +12,7 @@
 
 clear
 echo " "
-echo "This script starts the Tor Browser without Tor and link to your TorBox"
+echo "This script starts the Tor Browser without Tor and link to your TorBox."
 echo "Without TorBox, the Tor Browser will not work !!"
 echo "After closing the Tor Browser, the script restores the old settings."
 read -n 1 -s -r -p "Press any key to continue"
