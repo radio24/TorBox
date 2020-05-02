@@ -133,9 +133,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - CONFIGURATION
 "  1" "Change admin (user pi) password"  \
 "  2" "Change the name of TorBox's WLAN"  \
 "  3" "Change the password of TorBox's WLAN (reboot required)"  \
-"  4" "Set the WLAN regulatory domain for the 5 GHz band" \
-"  5" "Change from the $TOGGLE05 to the $TOGGLE06" \
-"  6" "Change the WLAN channel and the MHz (currently: $TOGGLE07)"  \
+"  4" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
+"  5" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
+"  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
 "  7" "$TOGGLE08 TorBox's WLAN (SSID)"  \
 "  8" "Change the password of your Tor control port"  \
 "===" "===========================================[Logging "$TOGGLE03 \
