@@ -35,27 +35,12 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 
 ##############################
-######## FUNCTIONS ########
-# This function import the configuration and make some preparations
 
-# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
-read_config()
-{
 MODE_BR=$(grep "BridgeRelay" ${TORRC})
-if [ "$MODE_BR" = "BridgeRelay 1" ]; then
-    ORPORT=$(grep "^ORPort" ${TORRC})
-    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
-else
-    ORPORT=$(grep "^#ORPort" ${TORRC})
-    OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC})
-fi
-sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
-}
 
-read_config
+#The if clause below is necessary
 if [ "$MODE_BR" = "BridgeRelay 1" ]; then
-	echo -e "${RED}[+] Deactivating Bridge Relay Mode...${NOCOLOR}"
+  echo -e "${RED}[+] Deactivating Bridge Relay Mode...${NOCOLOR}"
 	sudo sed -i "s/^BridgeRelay/#BridgeRelay/g" ${TORRC}
 	sudo sed -i "s/^ORPort/#ORPort/g" ${TORRC}
 	sudo sed -i "s/^ExtORPort/#ExtORPort/g" ${TORRC}
@@ -64,6 +49,10 @@ if [ "$MODE_BR" = "BridgeRelay 1" ]; then
 	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
 	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
 	sleep 2
+  ORPORT=$(grep "^ORPort" ${TORRC})
+  OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
+  sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+  sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 	echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
 	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
 	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
