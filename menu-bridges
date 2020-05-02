@@ -106,10 +106,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - COUNTERMEASUR
 "===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
 "  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
-"  3" "List all "$number_configured_bridges_total" bridge(s)"  \
-"  4" "Activate all configured bridge(s)"  \
-"  5" "Add additional bridge(s) - keep the old ones"  \
-"  6" "Remove selected bridge(s)"  \
+"  3" "List all "$number_configured_bridges_total" bridges"  \
+"  4" "Activate all configured bridges"  \
+"  5" "Add additional bridges - keep the old ones"  \
+"  6" "Remove selected bridges"  \
 "  7" "Remove all configured bridges"  \
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
