@@ -251,12 +251,14 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}[+] Reading configuration...${NOCOLOR}"
         read_config
         sleep 2
-        echo -e "${RED}[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
-        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
-        RULE_CHECK=$?
-        if [ $RULE_CHECK = 1 ]; then
-          sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
-          sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+        if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+          echo -e "${RED}[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
+          (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+          RULE_CHECK=$?
+          if [ $RULE_CHECK = 1 ]; then
+            sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
+            sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+          fi
         fi
         sleep 2
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
