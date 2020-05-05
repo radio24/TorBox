@@ -1,4 +1,7 @@
-You choose to update the base system of your TorBox and/or to upgrade to the latest stable tor release.
+This updates the base system of your TorBox including the firmware, the
+kernel and Tor. You don't have additionally to select menu entries 2
+and 3. However, without selecting menu entry 4, the TorBox menu will not be
+actualized.
 
 IMPORTANT
 - Don't remove power from your TorBox during the update.
@@ -12,6 +15,5 @@ IMPORTANT
   - Leave the menu with the ESC key
   - At the command line execute the following command: screen -x
 - You have to reboot the system to load a new kernel.
-- TorBox have to be updated separately.
 
-Duration: up to 45 minutes
+Duration: up to 30 minutes

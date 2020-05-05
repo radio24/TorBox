@@ -162,7 +162,7 @@ update_torcfg()
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
-"3" "Update to the newest stable version of Tor" OFF \
+"3" "Update to the newest stable version of Tor (try entry 1 first!)" OFF \
 "4" "Update to the newest stable version of TorBox" OFF \
 "5" "Erase all log files" OFF \
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
@@ -176,6 +176,10 @@ if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+
+    if [ "$ARGUMENT" = "" ]; then
+      exit 0
+    fi
 
 #This updates the base system
     if [ $ARGUMENT = 1 ]; then
@@ -223,7 +227,7 @@ if [ $exitstatus = 0 ]; then
 #This updates TOR
     elif [ $ARGUMENT = 3 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
-        whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
+        whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
         clear
    			KERNEL_VERS=$(uname -s -r)
         TOR_VERS=$(tor --version)
