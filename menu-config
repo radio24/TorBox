@@ -137,7 +137,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - CONFIGURATION
 "  5" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 "  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
 "  7" "$TOGGLE08 TorBox's WLAN (SSID)"  \
-"  8" "Change the password of your Tor control port"  \
+"  8" "Change the password of your Tor control port (restarts Tor!)"  \
 "===" "===========================================[Logging "$TOGGLE03 \
 "  9" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
 " 10" "Erase all log files" \
@@ -511,7 +511,7 @@ if [ $exitstatus = 0 ]; then
 			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
 				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
-				INPUT=PASSWORD=$INPUT
+				INPUT=PASSWORD=\"$INPUT\"
 				if grep "^HashedControlPassword\ " ${TORRC}; then
       	  sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
 				else

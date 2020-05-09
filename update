@@ -85,19 +85,36 @@ update_tor()
   online_check_update
   clear
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-  sudo apt-get -y install build-essential fakeroot devscripts
-  sudo apt build-dep tor deb.torproject.org-keyring
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   sudo mkdir ~/debian-packages; cd ~/debian-packages
-  sudo apt source tor; cd tor-*
-  sudo debuild -rfakeroot -uc -us; cd ..
-  sudo dpkg -i tor_*.deb
-  sudo rm -r ~/debian-packages
-  sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-  sudo systemctl enable tor
-  sudo systemctl daemon-reload
+  sudo apt source tor
+  SOURCE_VERS=$(ls -l|grep ^d|grep -o tor.*|cut -c5-)
+  TOR_VERS=$(tor --version | grep -o tor.*)
+  if grep $SOURCE_VERS $TOR_VERS ; then
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      RECOMPILE=1
+    fi
+   else
+     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
+     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+       RECOMPILE=1
+     fi
+  fi
+  if [ $RECOMPILE = 1 ]; then
+    sudo apt-get -y install build-essential fakeroot devscripts
+    sudo apt build-dep tor deb.torproject.org-keyring
+    sudo cd tor-*
+    sudo debuild -rfakeroot -uc -us
+    sudo cd ..
+    sudo dpkg -i tor_*.deb
+    sudo rm -r ~/debian-packages
+    sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+    sudo systemctl enable tor
+    sudo systemctl daemon-reload
+  fi
 }
 
 #This function updates / resets TorBox's configuration files
