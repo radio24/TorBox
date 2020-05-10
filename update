@@ -51,6 +51,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 LOOP_NUMBER=0
+RECOMPILE=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
 BOOTMSG=0
@@ -79,6 +80,23 @@ online_check_update()
   fi
 }
 
+# This function updates the firmware on a RPI4
+update_firmware()
+{
+  online_check_update
+  clear
+  sudo apt-get install rpi-eeprom
+  sleep 2
+  clear
+  echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
+  echo " "
+  sudo rpi-eeprom-update
+  echo " "
+  read -n 1 -s -r -p "Press any key to continue"
+  echo " "
+  sudo rpi-eeprom-update -a
+}
+
 # This function updates TOR
 update_tor()
 {
@@ -88,18 +106,24 @@ update_tor()
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   sudo mkdir ~/debian-packages; cd ~/debian-packages
   sudo apt source tor
-  SOURCE_VERS=$(ls -l|grep ^d|grep -o tor.*|cut -c5-)
+  KERNEL_VERS=$(uname -s -r)
   TOR_VERS=$(tor --version | grep -o tor.*)
+  WICD_VERS=$(wicd-curses --version)
+  SOURCE_VERS=$(ls -l|grep ^d|grep -o tor.*|cut -c5-)
   if grep $SOURCE_VERS $TOR_VERS ; then
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     fi
    else
-     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
-     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-       RECOMPILE=1
-     fi
+    if [ $LOOP_NUMBER = 1 ]; then
+      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        RECOMPILE=1
+      fi
+    else
+      RECOMPILE=1
+    fi
   fi
   if [ $RECOMPILE = 1 ]; then
     sudo apt-get -y install build-essential fakeroot devscripts
@@ -114,6 +138,7 @@ update_tor()
     sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
     sudo systemctl enable tor
     sudo systemctl daemon-reload
+    sudo bash restart_tor update
   fi
 }
 
@@ -172,6 +197,8 @@ update_torcfg()
   sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
   sudo cp etc/wicd/wired-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+] Restarting Tor...${NOCOLOR}"
+  sudo bash restart_tor update
 }
 
 
@@ -219,44 +246,38 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
         sudo systemctl enable tor
         sudo systemctl daemon-reload
+        sudo bash restart_tor update
         BOOTMSG=1
+        sleep 2
       fi
 
 #This updates the firmware on a RPI4
     elif [ $ARGUMENT = 2 ]; then
-      INPUT=$(cat text/firmware_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
-        online_check_update
-        clear
-        sudo apt-get install rpi-eeprom
-        sleep 2
-        clear
-        echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
-        echo " "
-        sudo rpi-eeprom-update
-        echo " "
-        read -n 1 -s -r -p "Press any key to continue"
-        echo " "
-        sudo rpi-eeprom-update -a
+      if [ $LOOP_NUMBER = 1 ]; then
+        INPUT=$(cat text/firmware_update-text)
+        if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
+          update_firmware
+          BOOTMSG=1
+          LOOP_NUMBER=0
+          sleep 2
+        fi
+      else
+        update_firmware
         BOOTMSG=1
+        LOOP_NUMBER=0
+        sleep 2
       fi
 
 #This updates TOR
     elif [ $ARGUMENT = 3 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
-        clear
-   			KERNEL_VERS=$(uname -s -r)
-        TOR_VERS=$(tor --version)
-      	WICD_VERS=$(wicd-curses --version)
-  			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
-        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          update_tor
-          BOOTMSG=1
-        fi
+        update_tor
+        sleep 2
+      fi
       else
         update_tor
-        BOOTMSG=1
+        sleep 2
       fi
 
 #This updates the newest stable version of TorBox's menu
@@ -272,6 +293,7 @@ if [ $exitstatus = 0 ]; then
         rm -r torbox
         mv TorBox-master torbox
         rm -r master.zip
+        sleep 2
         exit 0
       fi
 
@@ -292,7 +314,7 @@ if [ $exitstatus = 0 ]; then
         fi
       else
         update_torcfg
-        BOOTMSG=0
+        BOOTMSG=1
         sleep 2
       fi
 
@@ -361,11 +383,11 @@ if [ $exitstatus = 0 ]; then
     fi
   done
 
-# Additional configuration for obfs4 (bridge relay functionality)
-sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-sudo systemctl daemon-reload
+# Additional configuration for obfs4 (bridge relay functionality) - THIS SHOULDNT BE NECESSARY !!!
+#sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+#sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+#sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+#sudo systemctl daemon-reload
 
 # Fixing and Cleaning
   clear
