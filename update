@@ -104,13 +104,14 @@ update_tor()
   clear
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
-  sudo mkdir ~/debian-packages; cd ~/debian-packages
-  sudo apt source tor
+  mkdir ~/debian-packages; cd ~/debian-packages
+  apt source tor
   KERNEL_VERS=$(uname -s -r)
-  TOR_VERS=$(tor --version | grep -o tor.*)
+  TOR_VERS=$(tor --version|rev|cut -c2-|rev)
+  TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
   WICD_VERS=$(wicd-curses --version)
-  SOURCE_VERS=$(ls -l|grep ^d|grep -o tor.*|cut -c5-)
-  if grep $SOURCE_VERS $TOR_VERS ; then
+  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -c5-)
+  if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
@@ -127,10 +128,10 @@ update_tor()
   fi
   if [ $RECOMPILE = 1 ]; then
     sudo apt-get -y install build-essential fakeroot devscripts
-    sudo apt build-dep tor deb.torproject.org-keyring
-    sudo cd tor-*
+    sudo apt-get -y build-dep tor deb.torproject.org-keyring
+    cd tor-*
     sudo debuild -rfakeroot -uc -us
-    sudo cd ..
+    cd ..
     sudo dpkg -i tor_*.deb
     sudo rm -r ~/debian-packages
     sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
@@ -138,7 +139,10 @@ update_tor()
     sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
     sudo systemctl enable tor
     sudo systemctl daemon-reload
+    cd ~/torbox
     sudo bash restart_tor update
+  else
+    if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   fi
 }
 
@@ -230,7 +234,7 @@ if [ $exitstatus = 0 ]; then
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
  			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version)
+      TOR_VERS=$(tor --version|rev|cut -c2-|rev)
     	WICD_VERS=$(wicd-curses --version)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
