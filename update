@@ -221,9 +221,9 @@ if [ $exitstatus = 0 ]; then
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
 
-    if [ "$ARGUMENT" = "" ]; then
-      exit 0
-    fi
+  if [ "$ARGUMENT" = "" ]; then
+   exit 0
+  fi
 
 #This updates the base system
     if [ $ARGUMENT = 1 ]; then
@@ -274,7 +274,6 @@ if [ $exitstatus = 0 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
         update_tor
         sleep 2
-      fi
       else
         update_tor
         sleep 2
