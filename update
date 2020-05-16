@@ -131,14 +131,14 @@ update_torcfg()
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
-  sudo cp etc/iptables.ipv4.nat /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+  sudo cp etc/iptables.ipv4.nat /etc/
+  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
   sudo cp /etc/motd /etc/motd.bak
   sudo cp etc/motd /etc/
-  echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+  echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
   sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup not necessary${NOCOLOR}"
   sudo cp /etc/rc.local /etc/rc.local.bak
   sudo cp etc/rc.local /etc/
   echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
@@ -156,6 +156,8 @@ update_torcfg()
   sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
   sudo cp etc/wicd/wired-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
+  sudo cp etc/new_ident .
+  echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
 }
 
 
