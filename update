@@ -404,18 +404,16 @@ if [ $exitstatus = 0 ]; then
     fi
   done
 
-# Additional configuration for obfs4 (bridge relay functionality) - THIS SHOULDNT BE NECESSARY !!!
-#sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-#sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-#sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-#sudo systemctl daemon-reload
-
-# Fixing and Cleaning
+# Fixing and Cleaning - Regardless of whether something has been changed or not. Just to be sure that all works properly.
   clear
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   echo " "
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+  sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+  sudo systemctl daemon-reload
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
