@@ -53,6 +53,7 @@ NOCOLOR='\033[0m'
 LOOP_NUMBER=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
+NEW_IDENT="new_ident"
 BOOTMSG=0
 
 ##############################
@@ -249,12 +250,30 @@ if [ $exitstatus = 0 ]; then
         online_check_update
         TORBOX_UPDATE=1
         clear
+        echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
+        PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
         cd ..
+        echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
         wget https://github.com/radio24/TorBox/archive/master.zip
-        unzip master.zip
-        rm -r torbox
-        mv TorBox-master torbox
-        rm -r master.zip
+        if [ -e master.zip ]; then
+          echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
+          unzip master.zip
+          echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
+          rm -r torbox/*
+          echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
+          mv TorBox-master/* torbox/
+          echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
+          rm -r TorBox-master
+          rm -r master.zip
+          sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${TORRC}
+          sleep 2
+        else
+          echo -e "${RED} ${NOCOLOR}"
+          echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
+          echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
+          echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
+          sleep 2
+        fi
         exit 0
       fi
 
