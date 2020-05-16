@@ -164,7 +164,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" -
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
 "3" "Update to the newest stable version of Tor (try entry 1 first!)" OFF \
-"4" "Update to the newest stable version of TorBox" OFF \
+"4" "Update to the newest stable version of the TorBox menu" OFF \
 "5" "Erase all log files" OFF \
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
 "7" "Reset network manager (anti-crash)" OFF \
