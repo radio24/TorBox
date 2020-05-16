@@ -266,7 +266,7 @@ if [ $exitstatus = 0 ]; then
           rm -r TorBox-master
           rm -r master.zip
           cd torbox
-          sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${TORRC}
+          sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
           sleep 2
         else
           echo -e "${RED} ${NOCOLOR}"
