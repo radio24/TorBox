@@ -265,6 +265,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
           rm -r TorBox-master
           rm -r master.zip
+          cd torbox
           sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${TORRC}
           sleep 2
         else
