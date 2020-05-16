@@ -171,7 +171,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" -
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
 "7" "Reset network manager (anti-crash)" OFF \
 "8" "Reset Tor and force a change of the permanent entry node" OFF \
-"9" "Remove permanently Bridge Relay data" OFF 3>&1 1>&2 2>&3)
+"9" "Remove permanently Bridge Relay data" OFF \
+"10" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -363,6 +364,10 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         sudo bash restart_tor update
       fi
+
+#Just fixing and cleaning
+    elif [ $ARGUMENT = 10 ]; then
+      clear
     fi
   done
 
