@@ -70,11 +70,17 @@ I_DEVICE1=$2
 I_DEVICE2=$3
 CAPTIVE=$4
 
-###########################
+
+##############################
+######## FUNCTIONS ###########
+
+#include lib
+.  lib/torbox.lib
+
 
 ###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
 clear
-sudo bash deactivating_bridge_relay
+deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 if [ "$O_DEVICE" = "eth0" ]; then

@@ -58,7 +58,12 @@ j=0
 
 
 ##############################
-######## PREPARATIONS ########
+######## FUNCTIONS ########
+
+# include lib
+.  lib/torbox.lib
+
+# This function imports the configuration and makes some preparations
 # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
@@ -96,6 +101,7 @@ fi
 number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
 }
 
+######## PREPARATIONS ########
 read_config
 
 ###### DISPLAY THE MENU ######
@@ -129,7 +135,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
         INPUT=$(cat text/activate-bridges-text)
         if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo bash deactivating_bridge_relay
+          deactivating_bridge_relay
           sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
           sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
@@ -145,12 +151,14 @@ if [ $exitstatus = 0 ]; then
       else
         INPUT=$(cat text/deactivate-bridges-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
           sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
           sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
-          sudo service tor restart
+          restarting_tor menu-bridges
+#          sudo service tor restart
         fi
       fi
       read_config
@@ -241,7 +249,11 @@ if [ $exitstatus = 0 ]; then
         read_config
       fi
     elif [ $CHOICE = 9 ]; then
-      sudo bash restart_tor menu-bridges
+      INPUT=$(cat text/restart-tor-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+      	clear
+        restarting_tor menu-bridges
+      fi
     elif [ $CHOICE = 10 ]; then
       whiptail --title "TorBox - INFO" --textbox text/ping-text $MENU_HEIGHT_25 $MENU_WIDTH
 			ping -q google.com >/dev/null &

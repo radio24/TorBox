@@ -140,7 +140,11 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
-    sudo bash restart_tor update
+    INPUT=$(cat text/restart-tor-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+    	clear
+      restarting_tor update
+    fi
   else
     if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   fi
@@ -251,9 +255,13 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
         sudo systemctl enable tor
         sudo systemctl daemon-reload
-        sudo bash restart_tor update
-        BOOTMSG=1
         sleep 2
+        INPUT=$(cat text/restart-tor-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
+          restarting_tor update
+        fi
+        BOOTMSG=1
       fi
 
 #This updates the firmware on a RPI4
@@ -360,7 +368,7 @@ if [ $exitstatus = 0 ]; then
         sudo service tor stop
         sleep 2
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        sudo bash deactivating_bridge_relay
+        deactivating_bridge_relay
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
@@ -384,7 +392,7 @@ if [ $exitstatus = 0 ]; then
         sudo touch /var/log/tor/notices.log
         sudo chown debian-tor /var/log/tor/notices.log
         sleep 2
-        sudo bash restart_tor update
+        restarting_tor update
       fi
 
 #This permanently removes Bridge Relay data
@@ -393,14 +401,14 @@ if [ $exitstatus = 0 ]; then
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        sudo bash deactivating_bridge_relay
+        deactivating_bridge_relay
         echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
         sudo rm -r /var/lib/tor/keys
         sudo rm /var/lib/tor/fingerprint
         sudo rm /var/lib/tor/hashed-fingerprint
         sudo rm -r /var/lib/tor/pt_state
         sleep 2
-        sudo bash restart_tor update
+        restarting_tor update
       fi
 
 #Just fixing and cleaning
