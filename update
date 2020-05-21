@@ -54,6 +54,8 @@ LOOP_NUMBER=0
 RECOMPILE=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
+NEW_IDENT="new_ident"
 BOOTMSG=0
 
 ##############################
@@ -301,6 +303,7 @@ if [ $exitstatus = 0 ]; then
         clear
         echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
         PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
+        IINTERFACE=$(grep "^IINTERFACE=" ${RUNFILE})
         cd ..
         echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
         wget https://github.com/radio24/TorBox/archive/master.zip
@@ -316,6 +319,7 @@ if [ $exitstatus = 0 ]; then
           rm -r master.zip
           cd torbox
           sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
+          sudo sed -i "s/^IINTERFACE=.*/${IINTERFACE}/g" ${RUNFILE}
           sleep 2
         else
           echo -e "${RED} ${NOCOLOR}"
