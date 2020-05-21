@@ -51,6 +51,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
 i=0
@@ -79,6 +80,9 @@ else
     TOGGLE06="ON]==="
     TOGGLE06b="ON"
 fi
+
+if grep -q "^PING=OFF" ${RUNFILE} ; then PING="OFF" ; fi
+if grep -q "^PING=ON" ${RUNFILE} ; then PING="ON" ; fi
 
 # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
 sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
@@ -120,7 +124,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - COUNTERMEASUR
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 10" "Countermeasure against a disconnection when idle feature" 3>&1 1>&2 2>&3)
+" 10" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -254,11 +258,23 @@ if [ $exitstatus = 0 ]; then
       	clear
         restarting_tor menu-bridges
       fi
-    elif [ $CHOICE = 10 ]; then
-      whiptail --title "TorBox - INFO" --textbox text/ping-text $MENU_HEIGHT_25 $MENU_WIDTH
-			ping -q google.com >/dev/null &
-			echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-			sleep 5
+    elif [ $CHOICE = 10 ] ; then
+      if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
+			  ping -q google.com >/dev/null &
+        #Alternative Möglichkeit: screen -dm ping google.com
+			  echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+        sudo sed -i "s/^PING=.*/PING=ON/" ${RUNFILE}
+			  sleep 2
+      fi
+      if [ "$PING" = "ON" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          sudo killall ping
+          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
+          sudo sed -i "s/^PING=.*/PING=OFF/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
     fi
  	fi
 else
