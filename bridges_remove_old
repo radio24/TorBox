@@ -118,7 +118,8 @@ else
             sudo cp ${TORRC} ${BAK}
             sudo sed -i "/^#Bridge /d" ${TORRC}
             sudo sed -i "/^Bridge /d" ${TORRC}
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            INPUT=$(cat text/restart-tor-text)
+            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
               clear
               restarting_tor menu-bridges
             fi
@@ -164,7 +165,8 @@ else
           sleep 3
           clear
           if [ $j -gt 0 ]; then
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            INPUT=$(cat text/restart-tor-text)
+            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
               restarting_tor menu-bridges
             fi
           fi
@@ -208,7 +210,8 @@ else
           sleep 3
           clear
           if [ $j -gt 0 ]; then
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            INPUT=$(cat text/restart-tor-text)
+            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
               restarting_tor menu-bridges
             fi
           fi
