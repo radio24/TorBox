@@ -142,7 +142,7 @@ exitstatus=$?
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
 
-# Display the read.me
+# Displays the read.me
 		if [ $CHOICE = 1 ]; then
       INPUT=$(cat text/help-bridge_server-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then

@@ -59,7 +59,7 @@ i=0
 j=0
 
 
-##############################
+###########################
 ######## FUNCTIONS ########
 
 # include lib
@@ -118,10 +118,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - COUNTERMEASUR
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
 "  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
-"  4" "Activate all configured bridges"  \
-"  5" "Add additional bridges - keep the old ones"  \
-"  6" "Remove selected bridges"  \
-"  7" "Remove all configured bridges"  \
+"  4" "Add additional bridges - keep the old ones"  \
+"  5" "Activate configured bridges"  \
+"  6" "Deactivate configured bridges"  \
+"  7" "Remove configured bridges"  \
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
@@ -131,11 +131,15 @@ exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
+
+# Display the read.me
 		if [ $CHOICE = 1 ]; then
       INPUT=$(cat text/help-bridges-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
       fi
+
+# Toggle Bridge Mode ON or OFF
 		elif [ $CHOICE = 2 ]; then
       if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
         INPUT=$(cat text/activate-bridges-text)
@@ -145,7 +149,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          sudo sh bridges_activate_old $number_configured_bridges_deactivated 0
+          sudo sh bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
           if [ $number_configured_bridges_total = 0]; then
             INPUT=$(cat text/add-bridges-first-text)
             if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
@@ -167,7 +171,11 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
       read_config
+
+# List all bridges configured in torrc and if online display the status of the bridges
 		elif [ $CHOICE = 3 ]; then
+      clear
+      echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
       OCHECK=$(curl -m 1 -s https://onionoo.torproject.org)
       if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
@@ -177,6 +185,8 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
           echo " "
+          # Disable CTRL-C
+          trap '' 2
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
@@ -192,6 +202,8 @@ if [ $exitstatus = 0 ]; then
               bridge_address="$i : $bridge_address $bridge_status"
               echo -e $bridge_address
           done
+          # Enable CTRL-C
+          trap 2
           echo " "
           echo " "
       fi
@@ -201,6 +213,8 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
           echo " "
+          # Disable CTRL-C
+          trap '' 2
           while [ $j -lt $number_configured_bridges_activated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
@@ -217,65 +231,54 @@ if [ $exitstatus = 0 ]; then
               bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
               echo -e "$bridge_address"
           done
+          # Enable CTRL-C
+          trap 2
       fi
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
-		elif [ $CHOICE = 4 ]; then
-      sudo sh bridges_activate_old $number_configured_bridges_deactivated 1
-      read_config
-		elif [ $CHOICE = 5 ]; then
+
+# Add bridges
+    elif [ $CHOICE = 4 ]; then
       INPUT=$(cat text/add-bridges-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo bash bridges_add $MODE_BRIDGES
         read_config
       fi
+
+# Activate bridges
+    elif [ $CHOICE = 5 ]; then
+      sudo bash bridges_activate_old 1
+      read_config
+
+# Deactivate bridges
     elif [ $CHOICE = 6 ]; then
-      INPUT=$(cat text/delete-selected-bridges-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number do you like to delete? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-        number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
-        delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
-        sudo cp ${TORRC} ${BAK}
-        while [[ "$delete_number" != " " && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
-        do
-          if [ $delete_number -gt $number_configured_bridges_deactivated ]; then
-            i=$(( $delete_number - $number_configured_bridges_deactivated - 1 ))
-            sudo grep -v "^${configured_bridges_activated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-          else
-            i=$(( $delete_number - 1 ))
-            sudo grep -v "^${configured_bridges_deactivated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-          fi
-          if [ $delete_number = $number_to_be_deleted ]; then
-            delete_number=0
-          else
-            number_to_be_deleted=$(cut -d ' ' -f2- <<< $number_to_be_deleted)
-            delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
-          fi
-        done
-        read_config
-      fi
-    elif [ $CHOICE = 7 ]; then
-      INPUT=$(cat text/delete-all-bridges-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          sudo cp ${TORRC} ${BAK}
-          sudo sed -i "/^#Bridge /d" ${TORRC}
-          sudo sed -i "/^Bridge /d" ${TORRC}
-          read_config
-      fi
-    elif [ $CHOICE = 8 ]; then
+      sudo bash bridges_deactivate_old 1
+      read_config
+
+# Remove bridges
+  elif [ $CHOICE = 7 ]; then
+      sudo bash bridges_remove_old 1
+      read_config
+
+# Enter the advanced configuration editor
+  elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/advanced-bridges-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
         sudo nano ${TORRC}
         read_config
       fi
-    elif [ $CHOICE = 9 ]; then
+
+# Restart Tor and check the progress
+  elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       	clear
         restarting_tor menu-bridges
       fi
-    elif [ $CHOICE = 10 ] ; then
+
+# Countermeasure against a disconnection when idle feature
+  elif [ $CHOICE = 10 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
 			  ping -q google.com >/dev/null &

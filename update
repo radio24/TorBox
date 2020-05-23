@@ -142,11 +142,11 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
-    INPUT=$(cat text/restart-tor-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-    	clear
-      restarting_tor update
-    fi
+    BOOTMSG=1
+#    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+#    	clear
+#      restarting_tor update
+#    fi
   else
     if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   fi
@@ -258,11 +258,6 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl enable tor
         sudo systemctl daemon-reload
         sleep 2
-        INPUT=$(cat text/restart-tor-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          restarting_tor update
-        fi
         BOOTMSG=1
       fi
 
@@ -349,8 +344,8 @@ if [ $exitstatus = 0 ]; then
         fi
       else
         update_torcfg
-        BOOTMSG=1
         sleep 2
+        BOOTMSG=1
       fi
 
 #This resets the network manager
