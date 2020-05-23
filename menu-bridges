@@ -46,6 +46,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
+GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -167,38 +168,54 @@ if [ $exitstatus = 0 ]; then
       fi
       read_config
 		elif [ $CHOICE = 3 ]; then
+      OCHECK=$(curl -m 1 -s https://onionoo.torproject.org)
+      if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
           echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
-          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
-          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
-          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
+              if [ $OCHECK == 0 ]; then
+                bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+                bridge_status=$(./bridges_check.py -f $bridge_hash)
+                if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
+                elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
+                elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+              else bridge_status=" "
+              fi
               i=$(( $i + 1 ))
-              bridge_address=$i": "$bridge_address
-              echo $bridge_address
+              bridge_address="$i : $bridge_address $bridge_status"
+              echo -e $bridge_address
           done
           echo " "
           echo " "
       fi
       if [ $number_configured_bridges_activated -gt 0 ]; then
           echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
-          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint>${NOCOLOR}"
-          echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
+          echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
+          echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
-          echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
           echo " "
           while [ $j -lt $number_configured_bridges_activated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
+              if [ $OCHECK == 0 ]; then
+                bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+                bridge_status=$(./bridges_check.py -f $bridge_hash)
+                if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
+                elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
+                elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+              else bridge_status=" "
+              fi
               j=$(( $j + 1 ))
               n=$(( $i + $j ))
-              bridge_address=$n": "$bridge_address
-              echo -e "${WHITE}$bridge_address${NOCOLOR}"
+              bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
+              echo -e "$bridge_address"
           done
       fi
       echo " "
