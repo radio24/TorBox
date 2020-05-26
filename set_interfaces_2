@@ -27,18 +27,18 @@
 # ./set_interfaces_2 <outgoing interface> <incoming interface> <incoming interface> <captive portal>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
-# eth0  -> 	TorBox is connected to the internet with a cable (onboard ethernet interface).
-# eth1  -> 	TorBox is connected to the internet with a tethering device.
-# wlan0 ->  TorBox is connected to the internet through a wireless network (onboard WLAN chip).
-# wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
-#	ppp0	->	TorBox is connected to the internet through a cellular adapter.
-# usb0	->  TorBox is connected to the internet through a USB adapter.
+# eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
+# eth1  -> 	TorBox is connected to the Internet with a cable (USB ethernet adapter) or with a tethering device.
+# wlan0 ->  TorBox is connected to the Internet through a wireless network (onboard chip).
+# wlan1 -> 	TorBox is connected to the Internet through a wireless network (USB wlan adapter).
+# usb0  ->  TorBox is connected to the Internet through an USB adapter or a cellular interface.
+# ppp0 ->   TorBox is connected to the Internet through a cellular interface
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
-# eth0  -> 	The device is connected with a cable (onboard ethernet interface).
-# eth1	-> 	The device is connected with a cable (USB ethernet adapter).
-# wlan0 -> 	The device is connected via wireless network (onboard WLAN chip).
-# wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
+# eth0  -> 	The device is connected with a cable (ethernet interface).
+# eth1  -> 	The device is connected with a cable (USB ethernet adapter).
+# wlan0 -> 	The device is connected via wireless network (onboard chip)
+# wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
 #
 # Possible values for <captive portal>:
 # 0	->	The network connection is open -- no login/password/phone number etc. is required.
