@@ -23,6 +23,8 @@
 # 1: bridge exists and is online
 # 2: bridge doesn't exist
 #
+# This program uses the Onionoo protocol - for more information go to: https://metrics.torproject.org/onionoo.html
+#
 # SYNTAX
 # ./bridges_check [-i] -f <fingerprint> [-s] [--info file_name] [-h]
 #
