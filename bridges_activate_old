@@ -128,8 +128,7 @@ else
           echo -e "${WHITE}[+] OK - we are connected with the bridge databas${NOCOLOR}"
           echo " "
           echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
-          # Disable CTRL-C
-          trap '' 2
+          trap "bash bridges_activate_old; exit 0" SIGINT
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
@@ -149,8 +148,6 @@ else
             fi
             i=$(( $i + 1 ))
           done
-          # Enable CTRL-C
-          trap 2
           sleep 3
           clear
           if [ $j -gt 0 ]; then

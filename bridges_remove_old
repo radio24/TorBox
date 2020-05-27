@@ -136,6 +136,7 @@ else
           echo " "
           echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
           sudo cp ${TORRC} ${BAK}
+          trap "bash bridges_remove_old; exit 0" SIGINT
           j=0
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
