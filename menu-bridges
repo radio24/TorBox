@@ -175,9 +175,18 @@ if [ $exitstatus = 0 ]; then
 # List all bridges configured in torrc and if online display the status of the bridges
 		elif [ $CHOICE = 3 ]; then
       clear
-      echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
-      OCHECK=$(curl -m 1 -s https://onionoo.torproject.org)
-      if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+      echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
+      #-m 6 must not be lower, otherwise it looks like there is no connection!
+      OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
+      if [ $? == 0 ]; then
+        OCHECK="0"
+        echo -e "${RED}[+] OK - we are connected with the bridge databas${NOCOLOR}"
+        sleep 2
+        else
+          OCHECK="1"
+          echo -e "${WHITE}[!] SORRY! - no connection with the bridge databas${NOCOLOR}"
+          sleep 2
+      fi
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
           echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
@@ -185,8 +194,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
           echo " "
-          # Disable CTRL-C
-          trap '' 2
+          trap "bash menu-bridge; exit 0" SIGINT
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
@@ -202,8 +210,6 @@ if [ $exitstatus = 0 ]; then
               bridge_address="$i : $bridge_address $bridge_status"
               echo -e $bridge_address
           done
-          # Enable CTRL-C
-          trap 2
           echo " "
           echo " "
       fi
@@ -213,8 +219,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
           echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
           echo " "
-          # Disable CTRL-C
-          trap '' 2
+          trap "bash menu-bridge; exit 0" SIGINT
           while [ $j -lt $number_configured_bridges_activated ]
           do
               bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
@@ -231,8 +236,6 @@ if [ $exitstatus = 0 ]; then
               bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
               echo -e "$bridge_address"
           done
-          # Enable CTRL-C
-          trap 2
       fi
       echo " "
       read -n 1 -s -r -p "Press any key to continue"

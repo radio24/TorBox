@@ -122,7 +122,7 @@ else
       elif [ $CHOICE = 2 ]; then
         clear
         echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
-        OCHECK=$(curl -m 1 -s https://onionoo.torproject.org)
+        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
         if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
         if [ $OCHECK == 0 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge databas${NOCOLOR}"
