@@ -1,8 +1,8 @@
 HMMM... THAT DOESN'T LOOK GOOD...
 
-We couldn't check if your connection is now protected. However, BE PATIENT! Tor needs UP TO ONE MINUTE to establish the necessary circuits -- check with menu entry "Tor statistics" in the main menu. You even may reboot TorBox. In this case, save the current connection settings first.
+We couldn't check if your connection is now protected. However, BE PATIENT! Tor needs UP TO ONE MINUTE to establish the necessary circuits -- check with main menu entry 3 "Show the Tor log file" in the main menu. At the end of Tor's boot process, you should see "Bootstrapped 100%: Done". You can leave the progress report with CTRL-C.
 
-Try again later to check manually, if your connection is protected. To make so, open on one of your client a web-browser and try to access the following address:
+If this doesn't help you may have to reboot TorBox. You can also manually check, if TorBox is working and your connection being protected. To make so, open on one of your client a web-browser and try to access the following address:
 
                       https://check.torproject.org
 
