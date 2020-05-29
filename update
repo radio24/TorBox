@@ -211,6 +211,44 @@ update_torcfg()
   echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
 }
 
+# This function updates the TorBox menu
+update_torbox_menu()
+{
+  clear
+  echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
+  PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
+  IINTERFACE=$(grep "^IINTERFACE=" ${RUNFILE})
+  PING=$(grep "^PING=" ${RUNFILE})
+  if [ "$IINTERFACE" = "" ] ; then IINTERFACE="IINTERFACE=eth0" ; echo $IINTERFACE >> ${RUNFILE} ; fi
+  if [ "$PING" = "" ] ; then PING="PING=off" ; $PING >> ${RUNFILE} fi
+  cd ..
+  echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
+  wget https://github.com/radio24/TorBox/archive/master.zip
+  if [ -e master.zip ]; then
+    TORBOX_UPDATE=1
+    echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
+    unzip master.zip
+    echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
+    rm -r torbox/*
+    echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
+    mv TorBox-master/* torbox/
+    echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
+    rm -r TorBox-master
+    rm -r master.zip
+    cd torbox
+    sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
+    sudo sed -i "s/^IINTERFACE=.*/${IINTERFACE}/g" ${RUNFILE}
+    sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
+    sleep 2
+  else
+    echo -e "${RED} ${NOCOLOR}"
+    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
+    echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
+    echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
+    sleep 2
+  fi
+}
+
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -231,10 +269,9 @@ if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-
-  if [ "$ARGUMENT" = "" ]; then
-   exit 0
-  fi
+    if [ "$ARGUMENT" = "" ]; then
+      exit 0
+    fi
 
 #This updates the base system
     if [ $ARGUMENT = 1 ]; then
@@ -291,41 +328,17 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the newest stable version of TorBox's menu
     elif [ $ARGUMENT = 4 ]; then
-      INPUT=$(cat text/torbox_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-        online_check_update
-        TORBOX_UPDATE=1
-        clear
-        echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
-        PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
-        IINTERFACE=$(grep "^IINTERFACE=" ${RUNFILE})
-        if [ "$IINTERFACE" = "" ] ; then IINTERFACE="IINTERFACE=eth0" ; fi
-        cd ..
-        echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
-        wget https://github.com/radio24/TorBox/archive/master.zip
-        if [ -e master.zip ]; then
-          echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
-          unzip master.zip
-          echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
-          rm -r torbox/*
-          echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
-          mv TorBox-master/* torbox/
-          echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
-          rm -r TorBox-master
-          rm -r master.zip
-          cd torbox
-          sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
-          sudo sed -i "s/^IINTERFACE=.*/${IINTERFACE}/g" ${RUNFILE}
-          sleep 2
-        else
-          echo -e "${RED} ${NOCOLOR}"
-          echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-          echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
-          echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
-          sleep 2
+      if [ $LOOP_NUMBER = 1 ]; then
+        INPUT=$(cat text/torbox_update-text)
+        if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
+          online_check_update
+          update_torbox_menu
         fi
-        exit 0
+      else
+        online_check_update
+        update_torbox_menu
       fi
+      exit 0
 
 #This erases all log files
     elif [ $ARGUMENT = 5 ]; then
