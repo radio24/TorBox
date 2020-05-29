@@ -51,6 +51,11 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
+HOSTAPD="/etc/hostapd/hostapd.conf"
+HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
+WLANMANGERCONF="/etc/wicd/manager-settting.conf"
+INTERFACESCONF="/etc/network/interfaces"
+ISCDHCPSERVER="/etc/default/isc-dhcp-server"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
