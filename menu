@@ -49,7 +49,7 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Other variables (don't change them - this will probably break wlan0 <-> wlan1 !!)
 TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -102,8 +102,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - MAIN MENU" --menu "Choose
 "  4" "Ethernet cable (eth0)" \
 "  5" "Wireless network (through a USB adapter; wlan1)" \
 "  6" "Wireless network (through the onboard chip; wlan0)" \
-"  7" "Cellular link or USB dongle (ppp0; usb0)" \
-"  8" "USB ethernet adapter or Tethering (with iOS) (eth1)" \
+"  7" "Cellular link, USB dongle or Tethering (Android) (ppp0; usb0)" \
+"  8" "USB ethernet adapter or Tethering (iOS) (eth1)" \
 "===" "===============================================[Sub-Menues]===" \
 "  9" "Go to the countermeasure sub-menu..." \
 " 10" "Go to the configuration sub-menu..." \
