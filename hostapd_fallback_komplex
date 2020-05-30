@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-#	This file prepars the network ans restart all necessary services. It also
+#	This file prepars the network and restarts all necessary services. It also
 # restarts TorBox's wireless network (AP, hostapd), check if the daemon is working
 # and if not resets the configuration with the last working version and
 # restarts the daemon again. If nothhing works, the configuration is that way in place

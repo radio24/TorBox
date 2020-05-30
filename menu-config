@@ -88,6 +88,7 @@ change_crda()
 }
 
 ######## PREPARATIONS ########
+# This imports the configuration and makes some preparations
 # TOGGLE03 / TOGGLE04 represents the extent of logging
 LOG_STATUS=$(sudo systemctl is-active rsyslog)
 if [ $LOG_STATUS = inactive ]; then
@@ -127,7 +128,7 @@ fi
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
 "  1" "Change admin (user pi) password"  \
@@ -204,7 +205,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$TLC" != "00" ] && [ "$TLC" != "" ]; then
         COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
       else
-        COUNTRY=global
+        COUNTRY=US
       fi
       INPUT=$(cat text/wrd-text)
       if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
@@ -518,7 +519,7 @@ if [ $exitstatus = 0 ]; then
         	sudo echo ${INPUTHASH} >> ${TORRC}
 				fi
 				sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
-				sudo service tor restart
+				restarting_tor menu-config
 			fi
 
 #This changes the extent of the logging
@@ -569,7 +570,7 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
-        cd ..
+        cd
         wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
         mv install.sh sixfab_install.sh
         chmod +x sixfab_install.sh

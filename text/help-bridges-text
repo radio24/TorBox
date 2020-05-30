@@ -4,7 +4,7 @@ BRIDGES, which support pluggable transports, help Tor to circumvent sophisticate
 To get bridges working in TorBox, you have to follow a 3-step procedure:
 1. Activate the BRIDGE MODE (menu entry 2).
 2. Activate already configured bridges or add/replace new bridges.
-3. Restart Tor (menu entry 9) or check Tor log (menu entry 11).
+3. Restart Tor.
 
 HOW TO OBTAIN BRIDGES?
 You have two ways to obtain the necessary bridge-addresses:

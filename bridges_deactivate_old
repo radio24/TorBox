@@ -19,10 +19,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file activates already configured bridges in /etc/torrc.
+# This file deactivates already configured bridges in /etc/torrc.
 #
 # SYNTAX
-# ./bridges_activate_old <show when zero bridges>
+# ./bridges_deactivate_old <show when zero bridges>
 #
 # <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/torrc.
 #
@@ -58,10 +58,10 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-show_when_zero_bridges=$3
+show_when_zero_bridges=$1
 i=0
 
-###########################
+##############################
 ######## FUNCTIONS ########
 
 # NONE YET
@@ -88,37 +88,37 @@ number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $nu
 
 ###########################
 
-if [ $number_configured_bridges_deactivated = 0 ]; then
+if [ $number_configured_bridges_activated = 0 ]; then
   if [ $show_when_zero_bridges = 1 ]; then
     clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO deactivated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
-      clear
+    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO activated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        clear
     fi
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
   "===" "==============================================================" \
-  "  1" "Activate ALL configured bridges"  \
-  "  2" "Activate only bridges, which are ONLINE"  \
-  "  3" "Activate only slected bridges"  \
+  "  1" "Deactivate ALL configured bridges"  \
+  "  2" "Deactivate only bridges, which are not longer ONLINE"  \
+  "  3" "Deactivate only slected bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
   if [ $exitstatus = 0 ]; then
     if [ "$CHOICE" != " " ]; then
 
-    # Activate ALL configured bridges
+    # Deactivate ALL configured bridges
 		  if [ $CHOICE = 1 ]; then
-        sudo sed -i "s/^#Bridge /Bridge /g" ${TORRC}
+        sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
         INPUT=$(cat text/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
           restarting_tor menu-bridges
         fi
 
-    # Activate only bridges, which are ONLINE
+    # Deactivate only bridges, which are OFFLINE or do not exist anymore
       elif [ $CHOICE = 2 ]; then
         clear
         echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
@@ -127,22 +127,22 @@ else
         if [ $OCHECK == 0 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge databas${NOCOLOR}"
           echo " "
-          echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
-          trap "bash bridges_activate_old; exit 0" SIGINT
-          while [ $i -lt $number_configured_bridges_deactivated ]
+          echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
+          trap "bash bridges_deactivate_old; exit 0" SIGINT
+          while [ $i -lt $number_configured_bridges_activated ]
           do
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
+            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             bridge_status=$(./bridges_check.py -f $bridge_hash)
             j=0
-            if [ $bridge_status == 1 ]; then
-              j=$(($i + 1))
-              echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
+            if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+              j=$(($j + 1))
+              echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
               #This is necessary to work with special characters in sed
-              ORIGINAL_STR="#Bridge $bridge_address"
+              ORIGINAL_STR="Bridge $bridge_address"
               ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
               ORIGINAL_STR="^$ORIGINAL_STR"
-              REPLACEMENT_STR="Bridge $bridge_address"
+              REPLACEMENT_STR="#Bridge $bridge_address"
               REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
             fi
@@ -162,35 +162,36 @@ else
           sleep 2
         fi
 
-      # Activate only selected bridges
+    # Deactivate only selected bridges
       elif [ $CHOICE = 3 ]; then
-        INPUT=$(cat text/activate-selected-bridges-text)
+        INPUT=$(cat text/deactivate-selected-bridges-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          number_to_be_activated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to activate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          number_to_be_activated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_activated)
-          activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
+          number_to_be_deactivated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to deactivate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          number_to_be_deactivated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deactivated)
+          deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
+          number_configured_bridges_activated=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
           clear
-          echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
+          echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
           j=0
-          while [[ "$activate_number" != " " && $activate_number -gt 0 && $activate_number -le $number_configured_bridges_deactivated ]]
+          while [[ "$deactivate_number" != " " && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
           do
-            i=$(( $activate_number - 1 ))
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
+            i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
+            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            j=$(($i + 1))
-            echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
+            j=$(($j + 1))
+            echo -e "${RED}[+] Dectivating bridge number $deactivate_number${NOCOLOR}"
             #This is necessary to work with special characters in sed
-            ORIGINAL_STR="#Bridge $bridge_address"
+            ORIGINAL_STR="Bridge $bridge_address"
             ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
             ORIGINAL_STR="^$ORIGINAL_STR"
-            REPLACEMENT_STR="Bridge $bridge_address"
+            REPLACEMENT_STR="#Bridge $bridge_address"
             REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
             sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
-            if [ "$activate_number" = "$number_to_be_activated" ]; then
-              activate_number=0
+            if [ "$deactivate_number" = "$number_to_be_deactivated" ]; then
+              deactivate_number=0
             else
-              number_to_be_activated=$(cut -d ' ' -f2- <<< $number_to_be_activated)
-              activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
+              number_to_be_deactivated=$(cut -d ' ' -f2- <<< $number_to_be_deactivated)
+              deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
             fi
           done
           sleep 3

@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file restarts hostapd, check if the daemon is working and if not rests
+# This file restarts hostapd, check if the daemon is working and if not resets
 # the configuration with the last working version and restarts the daemon again.
 # Before hostapd is changed, you have to add the following line in the code:
 # sudo cp ${HOSTAPD} ${HOSTAPD_SAV}

@@ -11,9 +11,9 @@ fi
 
 # Added by TorBox
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-sudo service dnsmasq start
+sudo systemctl start dnsmasq
 sleep 10
 sudo /usr/sbin/ntpdate pool.ntp.org
-sudo service dnsmasq stop
+sudo systemctl stop dnsmasq
 
 exit 0
