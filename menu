@@ -66,7 +66,7 @@ EXITID="EXITID=0"
 #include lib
 .  lib/torbox.lib
 
-# This opens the ports, after a restart if bridge relay is on
+# This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
 {
   MODE_BR=$(grep "BridgeRelay" ${TORRC})
@@ -84,20 +84,35 @@ check_bridge_relay()
   fi
 }
 
+# This function tests from where the Internet is coming
+check_interface_with_internet()
+{
+clear
+echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
+IINTERFACE=$(route | grep default | tr -s " " | cut -d " " -f8)
+if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
+if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
+if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
+if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; fi
+if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; fi
+if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; fi
+}
+
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 
-# Check where the Internet is coming from and draw a flash
-if grep -q "^IINTERFACE=eth0" ${RUNFILE} ; then FLASH_ETH0="<--" ; fi
-if grep -q "^IINTERFACE=eth1" ${RUNFILE} ; then FLASH_ETH1="<--" ; fi
-if grep -q "^IINTERFACE=wlan0" ${RUNFILE} ; then FLASH_WLAN0="<--" ; fi
-if grep -q "^IINTERFACE=wlan1" ${RUNFILE} ; then FLASH_WLAN1="<--" ; fi
-if grep -q "^IINTERFACE=usb0" ${RUNFILE} ; then FLASH_USB0="<--" ; fi
-if grep -q "^IINTERFACE=ppp0" ${RUNFILE} ; then FLASH_USB0="<--" ; fi
+# Check where the Internet is coming from and draw a flash (this the old method - we try something new)
+# if grep -q "^IINTERFACE=eth0" ${RUNFILE} ; then FLASH_ETH0="<--" ; fi
+# if grep -q "^IINTERFACE=eth1" ${RUNFILE} ; then FLASH_ETH1="<--" ; fi
+# if grep -q "^IINTERFACE=wlan0" ${RUNFILE} ; then FLASH_WLAN0="<--" ; fi
+# if grep -q "^IINTERFACE=wlan1" ${RUNFILE} ; then FLASH_WLAN1="<--" ; fi
+# if grep -q "^IINTERFACE=usb0" ${RUNFILE} ; then FLASH_USB0="<--" ; fi
+# if grep -q "^IINTERFACE=ppp0" ${RUNFILE} ; then FLASH_USB0="<--" ; fi
 
 check_bridge_relay
+check_interface_with_internet
 check_tor
 
 ###### DISPLAY THE MENU ######
@@ -171,7 +186,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
-          sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth0/" ${RUNFILE}
+          # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth0/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
@@ -182,7 +197,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo bash set_interfaces eth0 wlan0 $CAPTIVE
-          sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth0/" ${RUNFILE}
+          # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth0/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         fi
@@ -221,7 +236,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan1/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan1/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -232,7 +247,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan1/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan1/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -275,7 +290,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
-          sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
+          # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
           finish
         elif [ -n "$eth0_up" ] && [ -z "$wlan1_up" ] ; then
           sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
@@ -285,7 +300,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo bash set_interfaces wlan0 eth0 $CAPTIVE
-          sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
+          # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
           finish
         else
           sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
@@ -295,7 +310,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
-          sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
+          # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=wlan0/" ${RUNFILE}
           finish
         fi
       fi
@@ -333,7 +348,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=usb0/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=usb0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -344,7 +359,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces usb0 wlan0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=usb0/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=usb0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -360,7 +375,7 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
               sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
-              sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=ppp0/" ${RUNFILE}
+              # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=ppp0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             else
@@ -371,7 +386,7 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
               sudo bash set_interfaces ppp0 wlan0 $CAPTIVE
-              sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=ppp0/" ${RUNFILE}
+              # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=ppp0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             fi
@@ -414,7 +429,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth1/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth1/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -425,7 +440,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo bash set_interfaces eth1 wlan0 $CAPTIVE
-            sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth1/" ${RUNFILE}
+            # sudo sed -i "s/^IINTERFACE=.*/IINTERFACE=eth1/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
