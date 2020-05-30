@@ -124,8 +124,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - MAIN MENU" --menu "Choose
 "  4" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
 "  5" "Wireless network (through a USB adapter; wlan1)            "$FLASH_ETH1 \
 "  6" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-"  7" "Cellular link or USB dongle (ppp0; usb0)                   "$FLASH_USB0 \
-"  8" "Tethering or USB ethernet adapter (eth1)                   "$FLASH_WLAN1 \
+"  7" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+"  8" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_WLAN1 \
 "===" "===============================================[Sub-Menues]===" \
 "  9" "Go to the countermeasure sub-menu..." \
 " 10" "Go to the configuration sub-menu..." \
