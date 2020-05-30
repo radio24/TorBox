@@ -205,7 +205,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$TLC" != "00" ] && [ "$TLC" != "" ]; then
         COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
       else
-        COUNTRY=global
+        COUNTRY=US
       fi
       INPUT=$(cat text/wrd-text)
       if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
@@ -570,7 +570,7 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
-        cd ..
+        cd
         wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
         mv install.sh sixfab_install.sh
         chmod +x sixfab_install.sh

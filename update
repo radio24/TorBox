@@ -133,7 +133,7 @@ update_tor()
     sudo apt-get -y build-dep tor deb.torproject.org-keyring
     cd tor-*
     sudo debuild -rfakeroot -uc -us
-    cd ..
+    cd
     sudo dpkg -i tor_*.deb
     sudo rm -r ~/debian-packages
     sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
@@ -177,12 +177,6 @@ update_torcfg()
   sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
-  sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   sudo cp etc/iptables.ipv4.nat /etc/
   echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
   sudo cp /etc/motd /etc/motd.bak
@@ -209,6 +203,13 @@ update_torcfg()
   echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
   sudo cp etc/new_ident .
   echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
+  # This has to be at the end to avoid unnecessary error messages
+  sudo cp /etc/hostname /etc/hostname.bak
+  sudo cp etc/hostname /etc/
+  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+  sudo cp /etc/hosts /etc/hosts.bak
+  sudo cp etc/hosts /etc/
+  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 }
 
 # This function updates the TorBox menu
@@ -221,7 +222,7 @@ update_torbox_menu()
   PING=$(grep "^PING=" ${RUNFILE})
   # if [ "$IINTERFACE" = "" ] ; then IINTERFACE="IINTERFACE=eth0" ; fi
   if [ "$PING" = "" ] ; then PING="PING=off" ; fi
-  cd ..
+  cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   wget https://github.com/radio24/TorBox/archive/master.zip
   if [ -e master.zip ]; then
