@@ -99,7 +99,7 @@ if [ $number_configured_bridges_total = 0 ]; then
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
   "===" "==============================================================" \
   "  1" "Remove ALL configured bridges"  \

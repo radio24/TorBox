@@ -251,7 +251,7 @@ update_torbox_menu()
 
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
 "3" "Update to the newest stable version of Tor (try entry 1 first!)" OFF \

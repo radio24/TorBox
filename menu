@@ -115,7 +115,7 @@ check_interface_with_internet
 check_tor
 
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \

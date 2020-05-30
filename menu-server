@@ -120,7 +120,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
