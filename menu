@@ -87,7 +87,6 @@ check_bridge_relay()
 # This function tests from where the Internet is coming
 check_interface_with_internet()
 {
-clear
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=$(route | grep default | tr -s " " | cut -d " " -f8)
 if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
