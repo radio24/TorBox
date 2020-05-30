@@ -39,12 +39,14 @@ RED='\033[1;31m'
 NOCOLOR='\033[0m'
 
 #Other variables
+TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 
 ##############################
 ######## FUNCTIONS ###########
 
 # check_tor()
+# Used predefined variables: RED, NOCOLOR
 # This function checks the status on https://check.torproject.org/
 check_tor()
 {
@@ -83,6 +85,7 @@ fi
 
 # online_check()
 # Syntax online_check <source_script>
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
 # This function checks the internet connection and exits to <source_script> if none.
 online_check()
 {
@@ -99,6 +102,7 @@ online_check()
 }
 
 # erase_logs()
+# Used predefined variables: RED, NOCOLOR
 # This function flushes all LOG-files in /var/log and ~/.bash_history.
 erase_logs()
 {
@@ -112,4 +116,50 @@ erase_logs()
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   sudo rm ../.bash_history
   sudo history -c
+}
+
+# deactivating_bridge_relay()
+# Used predefined variables: RED, NOCOLOR, TORRC
+# This function deactivates the bridge relay.
+deactivating_bridge_relay()
+{
+  MODE_BR=$(grep "BridgeRelay" ${TORRC})
+
+  #The if clause below is necessary
+  if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+    echo -e "${RED}[+] Deactivating Bridge Relay Mode...${NOCOLOR}"
+    ORPORT=$(grep "^ORPort" ${TORRC})
+    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
+    sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+    sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+  	sudo sed -i "s/^BridgeRelay/#BridgeRelay/g" ${TORRC}
+  	sudo sed -i "s/^ORPort/#ORPort/g" ${TORRC}
+  	sudo sed -i "s/^ExtORPort/#ExtORPort/g" ${TORRC}
+  	sudo sed -i "s/^ServerTransportPlugin/#ServerTransportPlugin/g" ${TORRC}
+  	sudo sed -i "s/^ServerTransportListenAddr/#ServerTransportListenAddr/g" ${TORRC}
+  	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
+  	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
+  	sleep 2
+      	echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
+  	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
+  	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+    sleep 2
+  fi
+}
+
+# restarting_tor(<source script>)
+# Used predefined variables: RED, NOCOLOR
+# This function restarts Tor
+restarting_tor()
+{
+  SOURCE_SCRIPT=$1
+  echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+  sudo service tor restart &
+  echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+  echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+  echo -e "    You can leave the progress report with CTRL-C."
+  echo ""
+  sleep 2
+  trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
+  sudo tail -f -n 0 /var/log/tor/notices.log
 }

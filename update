@@ -51,8 +51,10 @@ NOCOLOR='\033[0m'
 
 #Other variables
 LOOP_NUMBER=0
+RECOMPILE=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 NEW_IDENT="new_ident"
 BOOTMSG=0
 
@@ -80,25 +82,74 @@ online_check_update()
   fi
 }
 
+# This function updates the firmware on a RPI4
+update_firmware()
+{
+  online_check_update
+  clear
+  sudo apt-get install rpi-eeprom
+  sleep 2
+  clear
+  echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
+  echo " "
+  sudo rpi-eeprom-update
+  echo " "
+  read -n 1 -s -r -p "Press any key to continue"
+  echo " "
+  sudo rpi-eeprom-update -a
+}
+
 # This function updates TOR
 update_tor()
 {
   online_check_update
   clear
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-  sudo apt-get -y install build-essential fakeroot devscripts
-  sudo apt build-dep tor deb.torproject.org-keyring
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
-  sudo mkdir ~/debian-packages; cd ~/debian-packages
-  sudo apt source tor; cd tor-*
-  sudo debuild -rfakeroot -uc -us; cd ..
-  sudo dpkg -i tor_*.deb
-  sudo rm -r ~/debian-packages
-  sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-  sudo systemctl enable tor
-  sudo systemctl daemon-reload
+  mkdir ~/debian-packages; cd ~/debian-packages
+  apt source tor
+  KERNEL_VERS=$(uname -s -r)
+  TOR_VERS=$(tor --version|rev|cut -c2-|rev)
+  TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
+  WICD_VERS=$(wicd-curses --version)
+  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -c5-)
+  if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      RECOMPILE=1
+    fi
+   else
+    if [ $LOOP_NUMBER = 1 ]; then
+      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        RECOMPILE=1
+      fi
+    else
+      RECOMPILE=1
+    fi
+  fi
+  if [ $RECOMPILE = 1 ]; then
+    sudo apt-get -y install build-essential fakeroot devscripts
+    sudo apt-get -y build-dep tor deb.torproject.org-keyring
+    cd tor-*
+    sudo debuild -rfakeroot -uc -us
+    cd ..
+    sudo dpkg -i tor_*.deb
+    sudo rm -r ~/debian-packages
+    sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+    sudo systemctl enable tor
+    sudo systemctl daemon-reload
+    cd ~/torbox
+    BOOTMSG=1
+#    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+#    	clear
+#      restarting_tor update
+#    fi
+  else
+    if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
+  fi
 }
 
 #This function updates / resets TorBox's configuration files
@@ -160,6 +211,44 @@ update_torcfg()
   echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
 }
 
+# This function updates the TorBox menu
+update_torbox_menu()
+{
+  clear
+  echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
+  PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
+  IINTERFACE=$(grep "^IINTERFACE=" ${RUNFILE})
+  PING=$(grep "^PING=" ${RUNFILE})
+  if [ "$IINTERFACE" = "" ] ; then IINTERFACE="IINTERFACE=eth0" ; echo $IINTERFACE >> ${RUNFILE} ; fi
+  if [ "$PING" = "" ] ; then PING="PING=off" ; $PING >> ${RUNFILE} fi
+  cd ..
+  echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
+  wget https://github.com/radio24/TorBox/archive/master.zip
+  if [ -e master.zip ]; then
+    TORBOX_UPDATE=1
+    echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
+    unzip master.zip
+    echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
+    rm -r torbox/*
+    echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
+    mv TorBox-master/* torbox/
+    echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
+    rm -r TorBox-master
+    rm -r master.zip
+    cd torbox
+    sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
+    sudo sed -i "s/^IINTERFACE=.*/${IINTERFACE}/g" ${RUNFILE}
+    sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
+    sleep 2
+  else
+    echo -e "${RED} ${NOCOLOR}"
+    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
+    echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
+    echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
+    sleep 2
+  fi
+}
+
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -180,7 +269,6 @@ if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-
     if [ "$ARGUMENT" = "" ]; then
       exit 0
     fi
@@ -190,7 +278,7 @@ if [ $exitstatus = 0 ]; then
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
  			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version)
+      TOR_VERS=$(tor --version|rev|cut -c2-|rev)
     	WICD_VERS=$(wicd-curses --version)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -206,80 +294,51 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
         sudo systemctl enable tor
         sudo systemctl daemon-reload
+        sleep 2
         BOOTMSG=1
       fi
 
 #This updates the firmware on a RPI4
     elif [ $ARGUMENT = 2 ]; then
-      INPUT=$(cat text/firmware_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
-        online_check_update
-        clear
-        sudo apt-get install rpi-eeprom
-        sleep 2
-        clear
-        echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
-        echo " "
-        sudo rpi-eeprom-update
-        echo " "
-        read -n 1 -s -r -p "Press any key to continue"
-        echo " "
-        sudo rpi-eeprom-update -a
+      if [ $LOOP_NUMBER = 1 ]; then
+        INPUT=$(cat text/firmware_update-text)
+        if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
+          update_firmware
+          BOOTMSG=1
+          LOOP_NUMBER=0
+          sleep 2
+        fi
+      else
+        update_firmware
         BOOTMSG=1
+        LOOP_NUMBER=0
+        sleep 2
       fi
 
 #This updates TOR
     elif [ $ARGUMENT = 3 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
-        clear
-   			KERNEL_VERS=$(uname -s -r)
-        TOR_VERS=$(tor --version)
-      	WICD_VERS=$(wicd-curses --version)
-  			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
-        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          update_tor
-          BOOTMSG=1
-        fi
+        update_tor
+        sleep 2
       else
         update_tor
-        BOOTMSG=1
+        sleep 2
       fi
 
 #This updates the newest stable version of TorBox's menu
     elif [ $ARGUMENT = 4 ]; then
-      INPUT=$(cat text/torbox_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-        online_check_update
-        TORBOX_UPDATE=1
-        clear
-        echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
-        PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
-        cd ..
-        echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
-        wget https://github.com/radio24/TorBox/archive/master.zip
-        if [ -e master.zip ]; then
-          echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
-          unzip master.zip
-          echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
-          rm -r torbox/*
-          echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
-          mv TorBox-master/* torbox/
-          echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
-          rm -r TorBox-master
-          rm -r master.zip
-          cd torbox
-          sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
-          sleep 2
-        else
-          echo -e "${RED} ${NOCOLOR}"
-          echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-          echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
-          echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
-          sleep 2
+      if [ $LOOP_NUMBER = 1 ]; then
+        INPUT=$(cat text/torbox_update-text)
+        if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
+          online_check_update
+          update_torbox_menu
         fi
-        exit 0
+      else
+        online_check_update
+        update_torbox_menu
       fi
+      exit 0
 
 #This erases all log files
     elif [ $ARGUMENT = 5 ]; then
@@ -298,8 +357,8 @@ if [ $exitstatus = 0 ]; then
         fi
       else
         update_torcfg
-        BOOTMSG=0
         sleep 2
+        BOOTMSG=1
       fi
 
 #This resets the network manager
@@ -322,7 +381,7 @@ if [ $exitstatus = 0 ]; then
         sudo service tor stop
         sleep 2
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        sudo bash deactivating_bridge_relay
+        deactivating_bridge_relay
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
@@ -346,7 +405,7 @@ if [ $exitstatus = 0 ]; then
         sudo touch /var/log/tor/notices.log
         sudo chown debian-tor /var/log/tor/notices.log
         sleep 2
-        sudo bash restart_tor update
+        restarting_tor update
       fi
 
 #This permanently removes Bridge Relay data
@@ -355,19 +414,19 @@ if [ $exitstatus = 0 ]; then
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        sudo bash deactivating_bridge_relay
+        deactivating_bridge_relay
         echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
         sudo rm -r /var/lib/tor/keys
         sudo rm /var/lib/tor/fingerprint
         sudo rm /var/lib/tor/hashed-fingerprint
         sudo rm -r /var/lib/tor/pt_state
         sleep 2
-        sudo bash restart_tor update
+        restarting_tor update
       fi
 
 #Just fixing and cleaning
     elif [ $ARGUMENT = 10 ]; then
-      clear
+       clear
     fi
   done
 

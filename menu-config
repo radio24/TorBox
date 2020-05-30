@@ -88,6 +88,7 @@ change_crda()
 }
 
 ######## PREPARATIONS ########
+# This imports the configuration and makes some preparations
 # TOGGLE03 / TOGGLE04 represents the extent of logging
 LOG_STATUS=$(sudo systemctl is-active rsyslog)
 if [ $LOG_STATUS = inactive ]; then
@@ -518,7 +519,7 @@ if [ $exitstatus = 0 ]; then
         	sudo echo ${INPUTHASH} >> ${TORRC}
 				fi
 				sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
-				sudo service tor restart
+				restarting_tor menu-config
 			fi
 
 #This changes the extent of the logging

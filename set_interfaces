@@ -26,21 +26,21 @@
 # SYNTAX
 # ./set_interfaces <outgoing interface> <incoming interface> <captive portal>
 #
-#
-# The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
-#
-# eth0  -> 	TorBox is connected to the internet with a cable (WIRELESS MODE).
-# eth1  -> 	TorBox is connected to the internet with a cable (CABLE MODE) or with a tethering device.
-# wlan0 ->  TorBox is connected to the Internet through a wireless network (CABLE MODE).
-# wlan1 -> 	TorBox is connected to the Internet through a wireless network (WIRELESS MODE).
+## The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
+# eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
+# eth1  -> 	TorBox is connected to the Internet with a cable (USB ethernet adapter) or with a tethering device.
+# wlan0 ->  TorBox is connected to the Internet through a wireless network (onboard chip).
+# wlan1 -> 	TorBox is connected to the Internet through a wireless network (USB wlan adapter).
+# usb0  ->  TorBox is connected to the Internet through an USB adapter or a cellular interface.
+# ppp0 ->   TorBox is connected to the Internet through a cellular interface
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
-#
-# eth0  -> 	The device is connected with a cable.        -> CABLE MODE
-# wlan0 -> 	The device is connected via wireless network -> WIRELESS MODE
+# eth0  -> 	The device is connected with a cable (ethernet interface).
+# eth1  -> 	The device is connected with a cable (USB ethernet adapter).
+# wlan0 -> 	The device is connected via wireless network (onboard chip)
+# wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
 #
 # Possible values for <captive portal>:
-#
 # 0	->	The network connection is open -- no login/password/phone number etc. is required.
 # 1	->	For a sucessful connection to the Internet login/password/phone number etc. is required (this is usually the case
 #       with provider of free wireless network access in hotels, airports, Internet cafées etc.).
@@ -67,11 +67,17 @@ O_DEVICE=$1
 I_DEVICE=$2
 CAPTIVE=$3
 
-###########################
+
+##############################
+######## FUNCTIONS ###########
+
+#include lib
+.  lib/torbox.lib
+
 
 ###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
 clear
-sudo bash deactivating_bridge_relay
+deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 if [ "$O_DEVICE" = "eth0" ]; then

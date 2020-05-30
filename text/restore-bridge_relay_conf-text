@@ -1,0 +1,9 @@
+This menu entry restores a backup of your bridge relay configuration, which is stored in your home directory (~).
+
+You can upload a backup file by using an FTP client, which supports SFTP (it uses the same login and password as your SSH client). Alternatively, you can transfer a backup-file by connecting a USB stick with your TorBox. You can mount the USB stick most probably by “sudo mount /dev/sda /mnt”, and then copy the backup file from the stick to your home directory.
+
+With that backup, upgrading a relay, or moving it from a different computer with keeping the same identity keys is possible. Keeping backups of the identity keys to restore a relay in the future is the recommended way to ensure the reputation of the relay won't be wasted.
+
+ATTENTION: An already existing bridge relay configuration is overwritten without confirmation!
+
+Do you like to restore the bridge relay configuration from a backup?
