@@ -21,14 +21,15 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Raspbian lite.
+# Ubuntu 20.04 LTS (32bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
-# ./run_install.sh
+# ./run_install_on_ubuntu.sh
 #
 # IMPORTANT
-# Start it as normal user (usually as pi)!
+# Start it as normal user (usually as ubuntu)!
 # Dont run it as root (no sudo)!
+# If Ubuntu 20.04 is freshly installed, you have to wait one or two minutes until you can log in with ubuntu / ubuntu
 #
 ##########################################################
 
@@ -74,6 +75,18 @@ NOCOLOR='\033[0m'
 #Other variables
 
 
+# 0. Read state
+if test -f .log; then
+    state=$(cat .log)
+else
+    state=1
+fi
+
+
+
+case $state in
+
+1 )
 # 1. Checking for Internet connection
 # Currently a working Internet connection is mandatory. Probably in a later
 # version, we will include an option to install the TorBox from a compressed
@@ -81,8 +94,7 @@ NOCOLOR='\033[0m'
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
-echo ""
-wget -q --spider http://google.com
+wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+] Yes, we have! :-)${NOCOLOR}"
 else
@@ -91,7 +103,7 @@ else
   sleep 30
   echo ""
   echo -e "${RED}[+] Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider http://ubuntu.com
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -103,7 +115,7 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+] Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider http://ubuntu.com
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -115,7 +127,7 @@ else
       echo -e "${RED}[+] Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+] Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
+      wget -q --spider http://ubuntu.com
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -128,25 +140,32 @@ else
 fi
 
 # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
-sleep 10
-clear
-echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
-COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
-if [ "$COUNTRY" = "00:" ] ; then
-  echo -e "${WHITE}[!] No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
-  echo -e "${WHITE}[!] Therefore we will set it to US! You can change it later.${NOCOLOR}"
-  sudo iw reg set US
-  INPUT="REGDOMAIN=US"
-  sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
-else
-  echo -e "${RED}[+] The WLAN regulatory domain is set correctly! ${NOCOLOR}"
-fi
-echo -e "${RED}[+] To be sure we will unblock wlan, now! ${NOCOLOR}"
-sudo rfkill unblock wlan
+# sleep 10
+# clear
+# echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
+# COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
+# if [ "$COUNTRY" = "00:" ] ; then
+#  echo -e "${WHITE}[!] No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
+#  echo -e "${WHITE}[!] Therefore we will set it to US! You can change it later.${NOCOLOR}"
+#  sudo iw reg set US
+#  INPUT="REGDOMAIN=US"
+#  sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
+# else
+#  echo -e "${RED}[+] The WLAN regulatory domain is set correctly! ${NOCOLOR}"
+# fi
+# echo -e "${RED}[+] To be sure we will unblock wlan, now! ${NOCOLOR}"
+# sudo rfkill unblock wlan
 
+echo 3 | tee .log
+exit 1;;
+3 )
 # 3. Updating the system
 sleep 10
 clear
+echo -e "${RED}[+] Step 3: Remove Ubuntus' unattended update feature...${NOCOLOR}"
+sudo killall unattended-upgr
+sudo apt-get -y remove unattended-upgrades
+sudo dpkg --configure -a
 echo -e "${RED}[+] Step 3: Updating the system and installing additional software...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
@@ -155,22 +174,60 @@ sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
 # 4. Adding the Tor repository to the source list.
+# sleep 10
+# clear
+# echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOCOLOR}"
+# echo ""
+# sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+# sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+# sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
+# sudo apt-get update
+
+echo 4 | tee .log
+exit 1;;
+4 )
+# 4. Installing all necessary packages
+# The problem with Ubuntu 20.04 is that they removed the support for python2 which is necessary for wicd
 sleep 10
 clear
-echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOCOLOR}"
-echo ""
-sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-sudo apt-get update
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+sudo apt-get -y install python2 hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx tor net-tools ifupdown unzip equivs
+curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
 
-# 5. Installing all necessary packages
-sleep 10
-clear
-echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx
-sudo apt-get -y install tor deb.torproject.org-keyring
+# urwid for python2, which is necessary for wicd-curse
+sudo pip install urwid
 
+echo 5 | tee .log
+exit 1;;
+5 )
+# 5. Installing wicd (this is necessary because starting with Ubuntu 20.04, they kicked the package out of their repository; see also here: https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
+echo -e "${RED}[+] Step 5: Installing wicd....${NOCOLOR}"
+
+mkdir -p ~/Downloads/wicd
+cd ~/Downloads/wicd
+wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/python-wicd_1.7.4+tb2-6_all.deb
+wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
+wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd_1.7.4+tb2-6_all.deb
+wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-curses_1.7.4+tb2-6_all.deb
+wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-cli_1.7.4+tb2-6_all.deb
+sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
+sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
+sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
+
+# Creating a dependency-dummy für wicd-curses (based on https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
+equivs-control python-urwid.conrol
+sed -i 's/<package name; defaults to equivs-dummy>/python-urwid/g' python-urwid.control
+sed -i 's/#Version: <enter version here; defaults to 1.0>/Version: 1.2/g' python-urwid.control
+equivs-build python-urwid.conrol
+sudo dpkg -i python-urwid_1.2_all.deb
+
+# Finally !!!
+sudo apt-get -y install ./Downloads/wicd/wicd-curses_1.7.4+tb2-6_all.deb
+
+echo 6 | tee .log
+exit 1;;
+6 )
 # 6. Configuring Tor and obfs4proxy
 sleep 10
 clear
@@ -179,6 +236,9 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
+echo 7 | tee .log
+exit 1;;
+7 )
 # 7 Again checking connectivity
 sleep 10
 clear
@@ -253,6 +313,9 @@ else
   exit 1
 fi
 
+echo 9 | tee .log
+exit 1;;
+9 )
 # 9. Installing all configuration files
 sleep 10
 clear
@@ -273,9 +336,10 @@ sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-sudo cp /etc/motd /etc/motd.bak
-sudo cp etc/motd /etc/
+# motd has to be integrated into /etc/update-motd.d/ (see here: https://www.ostechnix.com/how-to-disable-ads-in-terminal-welcome-message-in-ubuntu-server/
+# echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+# sudo cp /etc/motd /etc/motd.bak
+# sudo cp etc/motd /etc/
 echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
@@ -306,25 +370,31 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 
 # 10. Disabling Bluetooth
-sleep 10
-clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/config.txt
-  sudo systemctl disable hciuart.service
-  sudo systemctl disable bluealsa.service
-  sudo systemctl disable bluetooth.service
-  sudo apt-get -y purge bluez
-  sudo apt-get -y autoremove
-fi
+# sleep 10
+# clear
+# echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+# if ! grep "# Added by TorBox" /boot/config.txt ; then
+#  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/config.txt
+#  sudo systemctl disable hciuart.service
+#  sudo systemctl disable bluealsa.service
+#  sudo systemctl disable bluetooth.service
+#  sudo apt-get -y purge bluez
+#  sudo apt-get -y autoremove
+# fi
 
+echo 11 | tee .log
+exit 1;;
+11 )
 # We have to disable that or ask the user for a password
 # 11. Changing the password of pi to "CHANGE-IT"
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: We change the password of the user \"pi\" to \"CHANGE-IT\".${NOCOLOR}"
-echo 'pi:CHANGE-IT' | sudo chpasswd
+echo -e "${RED}[+] Step 11: We change the password of the user \"ubuntu\" to \"CHANGE-IT\".${NOCOLOR}"
+echo 'ubuntu:CHANGE-IT' | sudo chpasswd
 
+echo 12 | tee .log
+exit 1;;
+12 )
 # 12. Configure the system services and rebooting
 sleep 10
 clear
@@ -388,3 +458,5 @@ else
   echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
 fi
 exit 0
+
+esac # End of case
