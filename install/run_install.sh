@@ -347,7 +347,7 @@ sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
 echo ""
 echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
-sudo service rsyslog stop
+sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
 read -p "The system needs to reboot. This will also erase all log files. Would you do it now? (y/n) " -n 1 -r
@@ -363,25 +363,25 @@ then
     sleep 1
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  sudo rm ../.bash_history
+  sudo rm .bash_history
   sudo history -c
   echo ""
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp etc/hostname /etc/
+  sudo cp torbox/etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp etc/hosts /etc/
+  sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   echo echo -e "${RED}[+] Rebooting...${NOCOLOR}"
   sudo reboot
 else
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp etc/hostname /etc/
+  sudo cp torbox/etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp etc/hosts /etc/
+  sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   echo ""
   echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
