@@ -88,7 +88,7 @@ check_bridge_relay()
 check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
-IINTERFACE=$(route | grep default | tr -s " " | cut -d " " -f8)
+IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
 if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
 if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
 if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
@@ -122,10 +122,10 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - MAIN MENU" --menu "Choose
 "  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
 "  4" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-"  5" "Wireless network (through a USB adapter; wlan1)            "$FLASH_ETH1 \
+"  5" "Wireless network (through a USB adapter; wlan1)            "$FLASH_WLAN1 \
 "  6" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
 "  7" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-"  8" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_WLAN1 \
+"  8" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
 "===" "===============================================[Sub-Menues]===" \
 "  9" "Go to the countermeasure sub-menu..." \
 " 10" "Go to the configuration sub-menu..." \
