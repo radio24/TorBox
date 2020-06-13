@@ -540,7 +540,7 @@ if [ $exitstatus = 0 ]; then
 			else
 		  	clear
 				echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
-				sudo service rsyslog stop
+				sudo systemctl stop rsyslog
 				echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
 	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
 				sudo systemctl disable rsyslog
