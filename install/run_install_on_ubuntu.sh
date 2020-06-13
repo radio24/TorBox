@@ -422,7 +422,7 @@ sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
 echo ""
 echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
-sudo service rsyslog stop
+sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
 read -p "The system needs to reboot. This will also erase all log files. Would you do it now? (y/n) " -n 1 -r
