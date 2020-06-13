@@ -304,6 +304,8 @@ if [ -e master.zip ]; then
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
   (rm -r master.zip) 2> /dev/null
+  # Only Ubuntu - Sets the background of TorBox menu to dark blue
+  sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -436,25 +438,25 @@ then
     sleep 1
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  sudo rm ../.bash_history
+  sudo rm .bash_history
   sudo history -c
   echo ""
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp etc/hostname /etc/
+  sudo cp torbox/etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp etc/hosts /etc/
+  sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   echo echo -e "${RED}[+] Rebooting...${NOCOLOR}"
   sudo reboot
 else
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp etc/hostname /etc/
+  sudo cp torbox/etc/hostname /etc/
   echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
   sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp etc/hosts /etc/
+  sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
   echo ""
   echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
