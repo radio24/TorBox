@@ -528,7 +528,7 @@ if [ $exitstatus = 0 ]; then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
 					sudo systemctl enable rsyslog
-					sudo service rsyslog start
+					sudo systemctl start rsyslog
           if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
     				echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
             echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
@@ -540,7 +540,7 @@ if [ $exitstatus = 0 ]; then
 			else
 		  	clear
 				echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
-				sudo service rsyslog stop
+				sudo systemctl stop rsyslog
 				echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
 	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
 				sudo systemctl disable rsyslog
