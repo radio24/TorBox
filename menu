@@ -88,7 +88,7 @@ check_bridge_relay()
 check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
-IINTERFACE=$(route | grep default | tr -s " " | cut -d " " -f8)
+IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
 if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
 if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
 if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi

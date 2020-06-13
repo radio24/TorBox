@@ -163,7 +163,8 @@ exit 1;;
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Remove Ubuntus' unattended update feature...${NOCOLOR}"
-sudo killall unattended-upgr
+(sudo killall unattended-upgr) 2> /dev/null
+sleep 10
 sudo apt-get -y remove unattended-upgrades
 sudo dpkg --configure -a
 echo -e "${RED}[+] Step 3: Updating the system and installing additional software...${NOCOLOR}"
@@ -211,15 +212,16 @@ wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-daemon_1.7.4+tb2
 wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd_1.7.4+tb2-6_all.deb
 wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-curses_1.7.4+tb2-6_all.deb
 wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-cli_1.7.4+tb2-6_all.deb
+cd
 sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
 
 # Creating a dependency-dummy für wicd-curses (based on https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
-equivs-control python-urwid.conrol
-sed -i 's/<package name; defaults to equivs-dummy>/python-urwid/g' python-urwid.control
-sed -i 's/#Version: <enter version here; defaults to 1.0>/Version: 1.2/g' python-urwid.control
-equivs-build python-urwid.conrol
+equivs-control python-urwid.control
+sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
+sed -i "s/^# Version: <enter version here; defaults to 1.0>/Version: 1.2/g" python-urwid.control
+equivs-build python-urwid.control
 sudo dpkg -i python-urwid_1.2_all.deb
 
 # Finally !!!
@@ -301,8 +303,7 @@ if [ -e master.zip ]; then
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
-  rm -r master.zip
-  cd torbox
+  (rm -r master.zip) 2> /dev/null
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -319,20 +320,21 @@ exit 1;;
 # 9. Installing all configuration files
 sleep 10
 clear
+cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
-sudo cp /etc/default/hostapd /etc/default/hostapd.bak
+(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
-sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
+(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
 echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
-sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
+(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
-sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
+(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
 echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
-sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
+(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
@@ -343,7 +345,7 @@ sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
-sudo cp /etc/rc.local /etc/rc.local.bak
+(sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
 if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
@@ -351,13 +353,13 @@ if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
 fi
-sudo cp /etc/tor/torrc /etc/tor/torrc.bak
+(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak
+(sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/manager-settings.conf /etc/wicd/
 echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
+(sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/wired-settings.conf /etc/wicd/
 echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
@@ -368,6 +370,7 @@ if ! grep "# Added by TorBox" .profile ; then
   sudo cp .profile .profile.bak
   sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
 fi
+cd
 
 # 10. Disabling Bluetooth
 # sleep 10
@@ -411,7 +414,7 @@ sudo systemctl start tor
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-sudo systemctl disable dhcpcd
+#sudo systemctl disable dhcpcd
 sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
