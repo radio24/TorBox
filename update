@@ -218,9 +218,7 @@ update_torbox_menu()
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
-  # IINTERFACE=$(grep "^IINTERFACE=" ${RUNFILE})
   PING=$(grep "^PING=" ${RUNFILE})
-  # if [ "$IINTERFACE" = "" ] ; then IINTERFACE="IINTERFACE=eth0" ; fi
   if [ "$PING" = "" ] ; then PING="PING=off" ; fi
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
@@ -238,7 +236,6 @@ update_torbox_menu()
     rm -r master.zip
     cd torbox
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
-    # sudo sed -i "s/^IINTERFACE=.*/${IINTERFACE}/g" ${RUNFILE}
     sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
     sleep 2
   else
