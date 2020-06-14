@@ -63,7 +63,7 @@ NO_SPACER=0
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
-MENU_HEIGHT_25=20
+MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
@@ -78,7 +78,7 @@ NOCOLOR='\033[0m'
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n              WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" and ask for a password (asked for user information, simply press ENTER). This user name and the password are used for logging into your TorBox and to administering it.\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" and ask for a password (asked for user information, simply press ENTER). This user name and the password are used for logging into your TorBox and to administering it.\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 
@@ -167,15 +167,6 @@ sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
-# 4. Adding the Tor repository to the source list.
-# sleep 10
-# clear
-# echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOCOLOR}"
-# echo ""
-# sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-# sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-# sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-# sudo apt-get update
 
 echo 4 | tee .log
 exit 1;;
@@ -335,7 +326,7 @@ echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 sudo mkdir /etc/update-motd.d/bak
-sudo mv /etc/update-motd.d/* bak
+(sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2> /dev/null
 sudo rm /etc/legal
 # Comment out with sed
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/login
@@ -373,24 +364,25 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-# 10. Disabling Bluetooth
-# sleep 10
-# clear
-# echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
-# if ! grep "# Added by TorBox" /boot/config.txt ; then
-#  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/config.txt
-#  sudo systemctl disable hciuart.service
-#  sudo systemctl disable bluealsa.service
-#  sudo systemctl disable bluetooth.service
-#  sudo apt-get -y purge bluez
-#  sudo apt-get -y autoremove
-# fi
+10. Disabling Bluetooth
+sleep 10
+clear
+echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+if ! grep "# Added by TorBox" /boot/config.txt ; then
+  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
+# sudo systemctl disable hciuart.service
+# sudo systemctl disable bluealsa.service
+# sudo systemctl disable bluetooth.service
+# sudo apt-get -y purge bluez
+# sudo apt-get -y autoremove
+fi
 
 echo 11 | tee .log
 exit 1;;
 11 )
 # We have to disable that or ask the user for a password
 # 11. Changing the password of pi to "CHANGE-IT"
+# NICHT MEHR NOTWENDIG !!! --> STEP 13
 sleep 10
 clear
 echo -e "${RED}[+] Step 11: We change the password of the user \"ubuntu\" to \"CHANGE-IT\".${NOCOLOR}"
@@ -441,6 +433,7 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
   sudo visudo -c
 fi
+cd /home/torbox/
 
 echo 14 | tee .log
 exit 1;;
