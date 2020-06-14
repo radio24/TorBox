@@ -439,7 +439,7 @@ echo 14 | tee .log
 exit 1;;
 14 )
 # 14. Finishing
-read -p "The system needs to reboot. This will also erase all log files. Would you do it now? (y/n) " -n 1 -r
+read -p "The system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -455,6 +455,12 @@ then
   sudo rm .bash_history
   sudo history -c
   echo ""
+  echo -e "${RED}[+]${NOCOLOR} Cleaning up.."
+  sudo rm -r Downloads
+  sudo rm -r get-pip.py
+  sudo rm -r python-urwid*
+  echo ""
+  echo -e "${RED}[+]${NOCOLOR} Setting up the hostname..."
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
   sudo cp torbox/etc/hostname /etc/
