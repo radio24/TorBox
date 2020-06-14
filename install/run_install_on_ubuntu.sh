@@ -435,6 +435,7 @@ sudo mv /home/ubuntu/* /home/torbox/
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
+  sudo visudo -c
 fi
 
 echo 14 | tee .log
