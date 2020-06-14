@@ -340,10 +340,12 @@ echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
-# motd has to be integrated into /etc/update-motd.d/ (see here: https://www.ostechnix.com/how-to-disable-ads-in-terminal-welcome-message-in-ubuntu-server/
-# echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-# sudo cp /etc/motd /etc/motd.bak
-# sudo cp etc/motd /etc/
+echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+sudo mkdir /etc/update-motd.d/bak
+sudo mv /etc/update-motd.d/* bak
+echo -e "${RED}[+] Disabled Ubuntu's update-motd feature -- backup done${NOCOLOR}"
+(sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
+sudo cp etc/motd /etc/
 echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
