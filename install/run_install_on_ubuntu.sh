@@ -63,6 +63,7 @@ NO_SPACER=0
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
+MENU_HEIGHT_25=20
 MENU_HEIGHT_15=15
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
@@ -73,6 +74,15 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+
+
+###### DISPLAY THE INTRO ######
+clear
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n              WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" and ask for a password (asked for user information, simply press ENTER). This user name and the password are used for logging into your TorBox and to administering it.\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+clear
+
+
+
 
 
 # 0. Read state
@@ -138,23 +148,6 @@ else
     fi
   fi
 fi
-
-# 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
-# sleep 10
-# clear
-# echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
-# COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
-# if [ "$COUNTRY" = "00:" ] ; then
-#  echo -e "${WHITE}[!] No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
-#  echo -e "${WHITE}[!] Therefore we will set it to US! You can change it later.${NOCOLOR}"
-#  sudo iw reg set US
-#  INPUT="REGDOMAIN=US"
-#  sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
-# else
-#  echo -e "${RED}[+] The WLAN regulatory domain is set correctly! ${NOCOLOR}"
-# fi
-# echo -e "${RED}[+] To be sure we will unblock wlan, now! ${NOCOLOR}"
-# sudo rfkill unblock wlan
 
 echo 3 | tee .log
 exit 1;;
@@ -427,6 +420,27 @@ echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
+
+
+echo 13 | tee .log
+exit 1;;
+13 )
+# 13. Adding the user torbox
+echo " "
+echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
+sudo adduser torbox
+sudo adduser torbox sudo
+sudo mv /home/ubuntu/* /home/torbox/
+(sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+sudo chown -R torbox.torbox /home/torbox/
+if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
+  sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
+fi
+
+echo 14 | tee .log
+exit 1;;
+14 )
+# 14. Finishing
 read -p "The system needs to reboot. This will also erase all log files. Would you do it now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
