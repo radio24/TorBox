@@ -336,6 +336,10 @@ sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 sudo mkdir /etc/update-motd.d/bak
 sudo mv /etc/update-motd.d/* bak
+sudo rm /etc/legal
+# Comment out with sed
+sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/login
+sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/sshd
 echo -e "${RED}[+] Disabled Ubuntu's update-motd feature -- backup done${NOCOLOR}"
 (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
