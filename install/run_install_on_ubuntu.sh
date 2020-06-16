@@ -34,18 +34,18 @@
 ##########################################################
 
 # Table of contents for this script:
-# 1. Checking for Internet connection
-# 2. Checking for the WLAN regulatory domain
-# 3. Updating the system
-# 4. Adding the Tor repository to the source list.
-# 5. Installing all necessary packages
-# 6. Configuring Tor and obfs4proxy
-# 7. Again checking connectivity
-# 8. Downloading and installing the latest version of TorBox
-# 9. Installing all configuration files
-#10. Disabling Bluetooth
-#11. hanging the password of pi to "CHANGE-IT"
-#12. Configure the system services and rebooting
+#  1. Checking for Internet connection
+#  2. Updating the system
+#  3. Installing all necessary packages
+#  4. Installing wicd
+#  5. Configuring Tor and obfs4proxy
+#  6. Re-checking Internet connectivity
+#  7. Downloading and installing the latest version of TorBox
+#  8. Installing all configuration files
+#  9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
+# 10. Configure the system services
+# 11. Adding and implementing the user torbox
+# 12. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -81,22 +81,6 @@ clear
 whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" and ask for a password (asked for user information, simply press ENTER). This user name and the password are used for logging into your TorBox and to administering it.\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
-
-
-
-
-# 0. Read state
-if test -f .log; then
-    state=$(cat .log)
-else
-    state=1
-fi
-
-
-
-case $state in
-
-1 )
 # 1. Checking for Internet connection
 # Currently a working Internet connection is mandatory. Probably in a later
 # version, we will include an option to install the TorBox from a compressed
@@ -149,33 +133,26 @@ else
   fi
 fi
 
-echo 3 | tee .log
-exit 1;;
-3 )
-# 3. Updating the system
+# 2. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 3: Remove Ubuntus' unattended update feature...${NOCOLOR}"
+echo -e "${RED}[+] Step 2a: Remove Ubuntus' unattended update feature...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
 sleep 10
 sudo apt-get -y remove unattended-upgrades
 sudo dpkg --configure -a
-echo -e "${RED}[+] Step 3: Updating the system and installing additional software...${NOCOLOR}"
+echo -e "${RED}[+] Step 2b: Updating the system and installing additional software...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
-
-echo 4 | tee .log
-exit 1;;
-4 )
-# 4. Installing all necessary packages
+# 3. Installing all necessary packages
 # The problem with Ubuntu 20.04 is that they removed the support for python2 which is necessary for wicd
 sleep 10
 clear
-echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 sudo apt-get -y install python2 hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx tor net-tools ifupdown unzip equivs
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
@@ -183,11 +160,10 @@ sudo python2 get-pip.py
 # urwid for python2, which is necessary for wicd-curse
 sudo pip install urwid
 
-echo 5 | tee .log
-exit 1;;
-5 )
-# 5. Installing wicd (this is necessary because starting with Ubuntu 20.04, they kicked the package out of their repository; see also here: https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
-echo -e "${RED}[+] Step 5: Installing wicd....${NOCOLOR}"
+# 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
+#    kicked the package out of their repository; see also here:
+#    https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
+echo -e "${RED}[+] Step 4: Installing wicd....${NOCOLOR}"
 
 mkdir -p ~/Downloads/wicd
 cd ~/Downloads/wicd
@@ -201,7 +177,8 @@ sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
 
-# Creating a dependency-dummy für wicd-curses (based on https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
+# Creating a dependency-dummy für wicd-curses (based on
+# https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
 equivs-control python-urwid.control
 sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
 sed -i "s/^# Version: <enter version here; defaults to 1.0>/Version: 1.2/g" python-urwid.control
@@ -211,24 +188,18 @@ sudo dpkg -i python-urwid_1.2_all.deb
 # Finally !!!
 sudo apt-get -y install ./Downloads/wicd/wicd-curses_1.7.4+tb2-6_all.deb
 
-echo 6 | tee .log
-exit 1;;
-6 )
-# 6. Configuring Tor and obfs4proxy
+# 5. Configuring Tor and obfs4proxy
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Configuring Tor and obfs4proxy....${NOCOLOR}"
+echo -e "${RED}[+] Step 5: Configuring Tor and obfs4proxy....${NOCOLOR}"
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
-echo 7 | tee .log
-exit 1;;
-7 )
-# 7 Again checking connectivity
+# 6. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+] Yes, we have still Internet connectivity! :-)${NOCOLOR}"
@@ -272,10 +243,10 @@ else
   fi
 fi
 
-# 8. Downloading and installing the latest version of TorBox
+# 7. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Download and install the latest version of TorBox....${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox....${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/master.zip
@@ -300,14 +271,11 @@ else
   exit 1
 fi
 
-echo 9 | tee .log
-exit 1;;
-9 )
-# 9. Installing all configuration files
+# 8. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Installing all configuration files....${NOCOLOR}"
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
@@ -364,37 +332,18 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-10. Disabling Bluetooth
+# 9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
-# sudo systemctl disable hciuart.service
-# sudo systemctl disable bluealsa.service
-# sudo systemctl disable bluetooth.service
-# sudo apt-get -y purge bluez
-# sudo apt-get -y autoremove
 fi
 
-echo 11 | tee .log
-exit 1;;
-11 )
-# We have to disable that or ask the user for a password
-# 11. Changing the password of pi to "CHANGE-IT"
-# NICHT MEHR NOTWENDIG !!! --> STEP 13
+# 10. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: We change the password of the user \"ubuntu\" to \"CHANGE-IT\".${NOCOLOR}"
-echo 'ubuntu:CHANGE-IT' | sudo chpasswd
-
-echo 12 | tee .log
-exit 1;;
-12 )
-# 12. Configure the system services and rebooting
-sleep 10
-clear
-echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
@@ -407,7 +356,7 @@ sudo systemctl start tor
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-#sudo systemctl disable dhcpcd
+#sudo systemctl disable dhcpcd - not installed on Ubuntu
 sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
@@ -417,13 +366,11 @@ sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
 
-
-echo 13 | tee .log
-exit 1;;
-13 )
-# 13. Adding the user torbox
+# 11. Adding the user torbox
 echo " "
-echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
+echo -e "${WHITE}[!] IMPORTANT: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}    and the password, chosen in this step!!${NOCOLOR}"
 sudo adduser torbox
 sudo adduser torbox sudo
 sudo mv /home/ubuntu/* /home/torbox/
@@ -435,11 +382,8 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-echo 14 | tee .log
-exit 1;;
-14 )
-# 14. Finishing
-read -p "The system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now? (y/n) " -n 1 -r
+# 12. Finishing, cleaning and booting
+read -p "The system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now (highly recommended!)? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -483,5 +427,3 @@ else
   echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
 fi
 exit 0
-
-esac # End of case
