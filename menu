@@ -146,10 +146,12 @@ if [ $exitstatus = 0 ]; then
 
 # This enforces a new exit node
     elif [ $CHOICE = 2 ]; then
+      clear
       sudo bash new_ident
 
 # This displays the Tor LOG file (quick and dirty)
     elif [ $CHOICE = 3 ]; then
+      clear
       trap "bash menu; exit 0" SIGINT
       sudo tail -f -n 25 /var/log/tor/notices.log
 

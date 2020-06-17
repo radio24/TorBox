@@ -29,7 +29,8 @@
 # IMPORTANT
 # Start it as normal user (usually as ubuntu)!
 # Dont run it as root (no sudo)!
-# If Ubuntu 20.04 is freshly installed, you have to wait one or two minutes until you can log in with ubuntu / ubuntu
+# If Ubuntu 20.04 is freshly installed, you have to wait one or two minutes
+# until you can log in with ubuntu / ubuntu
 #
 ##########################################################
 
@@ -78,7 +79,9 @@ NOCOLOR='\033[0m'
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" and ask for a password (asked for user information, simply press ENTER). This user name and the password are used for logging into your TorBox and to administering it.\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+# Only Ubuntu - Sets the background of TorBox menu to dark blue
+sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password are used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -90,43 +93,43 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+] Yes, we have! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!] Hmmm, no we don't have... :-(${NOCOLOR}"
-  echo -e "${RED}[+] We will check again in about 30 seconds...${NOCOLOR}"
+  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
-  echo -e "${RED}[+] Trying again...${NOCOLOR}"
+  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
   wget -q --spider http://ubuntu.com
   if [ $? -eq 0 ]; then
-    echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
-    echo -e "${WHITE}[!] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+] We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
     (sudo dhclient -r) 2>&1
     sleep 5
     sudo dhclient &>/dev/null &
     sleep 30
     echo ""
-    echo -e "${RED}[+] Trying again...${NOCOLOR}"
+    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
     wget -q --spider http://ubuntu.com
     if [ $? -eq 0 ]; then
-      echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+] We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
       sleep 15
-      echo -e "${RED}[+] Dumdidum...${NOCOLOR}"
+      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
       sleep 15
-      echo -e "${RED}[+] Trying again...${NOCOLOR}"
+      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
       wget -q --spider http://ubuntu.com
       if [ $? -eq 0 ]; then
-        echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
-        echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+] Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
         exit 1
       fi
     fi
@@ -136,11 +139,15 @@ fi
 # 2. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 2a: Remove Ubuntus' unattended update feature...${NOCOLOR}"
+echo -e "${RED}[+] Step 2a: Remove Ubuntus' unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
-sleep 10
+sleep 15
+echo -e "${RED}[+]          Please wait...${NOCOLOR}"
+(sudo killall unattended-upgr) 2> /dev/null
+sleep 15
 sudo apt-get -y remove unattended-upgrades
 sudo dpkg --configure -a
+echo ""
 echo -e "${RED}[+] Step 2b: Updating the system and installing additional software...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
@@ -163,8 +170,9 @@ sudo pip install urwid
 # 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
 #    kicked the package out of their repository; see also here:
 #    https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
+sleep 10
+clear
 echo -e "${RED}[+] Step 4: Installing wicd....${NOCOLOR}"
-
 mkdir -p ~/Downloads/wicd
 cd ~/Downloads/wicd
 wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/python-wicd_1.7.4+tb2-6_all.deb
@@ -202,41 +210,41 @@ clear
 echo -e "${RED}[+] Step 6: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+] Yes, we have still Internet connectivity! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+] Hmmm, no we don't have... :-(${NOCOLOR}"
-  echo -e "${RED}[+] We will check again in about 30 seconds...${NOCOLOR}"
+  echo -e "${RED}[+]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
-  echo -e "${RED}[+] Trying again...${NOCOLOR}"
+  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
   wget -q --spider https://google.com
   if [ $? -eq 0 ]; then
-    echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
-    echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+] We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+    echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
     sudo dhclient -r
     sleep 5
     sudo dhclient &>/dev/null &
     sleep 30
-    echo -e "${RED}[+] Trying again...${NOCOLOR}"
+    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
     wget -q --spider https://google.com
     if [ $? -eq 0 ]; then
-      echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+] We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
       sleep 15
-      echo -e "${RED}[+] Dumdidum...${NOCOLOR}"
+      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
-      echo -e "${RED}[+] Trying again...${NOCOLOR}"
+      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
       wget -q --spider https://google.com
       if [ $? -eq 0 ]; then
-        echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
-        echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+] Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
+        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
         exit 1
       fi
     fi
@@ -253,14 +261,13 @@ wget https://github.com/radio24/TorBox/archive/master.zip
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
+  echo ""
   echo -e "${RED}[+]       Removing the old one...${NOCOLOR}"
-  rm -r torbox
+  (rm -r torbox) 2> /dev/null
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
   (rm -r master.zip) 2> /dev/null
-  # Only Ubuntu - Sets the background of TorBox menu to dark blue
-  sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -336,7 +343,7 @@ cd
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/config.txt ; then
+if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
 
@@ -367,23 +374,33 @@ sudo systemctl disable rsyslog
 echo""
 
 # 11. Adding the user torbox
-echo " "
+sleep 10
+clear
 echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
+echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
+echo ""
 echo -e "${WHITE}[!] IMPORTANT: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the password, chosen in this step!!${NOCOLOR}"
-sudo adduser torbox
+echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
+echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
+echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo ""
+sudo adduser --disabled-password --gecos "" torbox
+echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
 sudo adduser torbox sudo
 sudo mv /home/ubuntu/* /home/torbox/
 (sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+(sudo rm .bash_history) 2> /dev/null
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
-  sudo visudo -c
+  (sudo visudo -c) 2> /dev/null
 fi
 cd /home/torbox/
 
 # 12. Finishing, cleaning and booting
-read -p "The system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now (highly recommended!)? (y/n) " -n 1 -r
+echo ""
+read -p $'\e[0;31mThe system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now (\e[1;37mHIGHLY RECOMMENDED!\e[0;31m)? (Y/n) \e[0m' -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -396,10 +413,10 @@ then
     sleep 1
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  sudo rm .bash_history
-  sudo history -c
+  #.bash_history is already deleted
+  history -c
   echo ""
-  echo -e "${RED}[+]${NOCOLOR} Cleaning up.."
+  echo -e "${RED}[+]${NOCOLOR} Cleaning up..."
   sudo rm -r Downloads
   sudo rm -r get-pip.py
   sudo rm -r python-urwid*
@@ -412,7 +429,7 @@ then
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-  echo echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+  echo -e "${RED}[+] Rebooting...${NOCOLOR}"
   sudo reboot
 else
   # This has to be at the end to avoid unnecessary error messages
