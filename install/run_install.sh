@@ -39,7 +39,7 @@
 # 4. Adding the Tor repository to the source list.
 # 5. Installing all necessary packages
 # 6. Configuring Tor and obfs4proxy
-# 7 Again checking connectivity
+# 7. Again checking connectivity
 # 8. Downloading and installing the latest version of TorBox
 # 9. Installing all configuration files
 #10. Disabling Bluetooth
