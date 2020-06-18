@@ -37,13 +37,13 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 
 ### Alternative installation method with the TorBox installation script
 Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/downloads/raspbian/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script:
-```Bash
+```console
 cd
 wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
 chmod a+x run_install.sh
 ./run_install.sh
 ```
-
+\
 We recommend running TorBox on a Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) under [Raspberry Pi OS Lite](https://www.raspberrypi.org/downloads/raspbian/). However, [there is another installation script](https://www.torbox.ch/?page_id=1168#ubuntu) that installs TorBox on [Ubuntu Server 20.04 LTS](https://en.wikipedia.org/wiki/Ubuntu#Official_distributions) and therefore, might run on other hardware platforms (this script is currently in an experimental state).
 
 ### Building from scratch
