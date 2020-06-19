@@ -148,6 +148,7 @@ sleep 15
 sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
+# Should we remove network-manager??
 echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
