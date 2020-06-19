@@ -78,9 +78,11 @@ if [ -z "$STATICIP1" ] ; then
 	sudo /sbin/iptables -P FORWARD DROP
 	sudo /sbin/iptables -P INPUT ACCEPT
 	sudo /sbin/iptables -P OUTPUT ACCEPT
+	# --- The lines below doesn't seem to be correct or to be on the right place?? (*)
 	if [ $INTERFACE1 = wlan1 ]; then
 		sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
 	fi
+	# ---
 	sleep 5
 	LOG_STATUS=$(sudo systemctl is-active hostapd)
 	if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
@@ -96,11 +98,13 @@ if [ -z "$STATICIP1" ] ; then
 		LOG_STATUS=$(sudo systemctl is-active hostapd)
 		if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
 			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+			# --- I think that's the right place for the lines above (*1) ... or even better: make a HOSTAPD_SAV and a INTERFACES_SAV
 			sudo service hostapd restart
 		fi
 	fi
 		if [ $INTERFACE1 = wlan1 ]; then
 			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
+			# --- I think that's the right place for the lines above (*1) ... or even better: make a HOSTAPD_SAV and a INTERFACES_SAV
 		fi
 fi
 if ip link | grep $INTERFACE2 | grep "state UP"; then
