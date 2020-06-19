@@ -145,7 +145,7 @@ sleep 15
 echo -e "${RED}[+]          Please wait...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
 sleep 15
-sudo apt-get -y remove unattended-upgrades
+sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
 echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
