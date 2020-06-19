@@ -43,7 +43,7 @@
 #  6. Re-checking Internet connectivity
 #  7. Downloading and installing the latest version of TorBox
 #  8. Installing all configuration files
-#  9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
+#  9. Disabling Bluetooth
 # 10. Configure the system services
 # 11. Adding and implementing the user torbox
 # 12. Finishing, cleaning and booting
@@ -81,7 +81,7 @@ NOCOLOR='\033[0m'
 clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password are used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -148,7 +148,7 @@ sleep 15
 sudo apt-get -y remove unattended-upgrades
 sudo dpkg --configure -a
 echo ""
-echo -e "${RED}[+] Step 2b: Updating the system and installing additional software...${NOCOLOR}"
+echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
@@ -254,7 +254,7 @@ fi
 # 7. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox....${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/master.zip
@@ -267,7 +267,7 @@ if [ -e master.zip ]; then
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
-  (rm -r master.zip) 2> /dev/null
+  (rm -r torbox) 2> /dev/null
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -298,8 +298,9 @@ echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
 (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
 sudo mkdir /etc/update-motd.d/bak
 (sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2> /dev/null
 sudo rm /etc/legal
@@ -309,7 +310,8 @@ sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+
 echo -e "${RED}[+] Disabled Ubuntu's update-motd feature -- backup done${NOCOLOR}"
 (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
-echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
@@ -339,7 +341,7 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-# 9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
+# 9. Disabling Bluetooth
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
@@ -368,7 +370,7 @@ sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
 echo ""
-echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
@@ -394,6 +396,7 @@ sudo mv /home/ubuntu/* /home/torbox/
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
+  # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
 cd /home/torbox/
@@ -412,7 +415,7 @@ then
     sudo rm $logs
     sleep 1
   done
-  echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
+  echo -e "${RED}[+]${NOCOLOR} Erasing History..."
   #.bash_history is already deleted
   history -c
   echo ""

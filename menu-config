@@ -131,7 +131,7 @@ clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===========================================[Configuration]===" \
-"  1" "Change admin (user pi) password"  \
+"  1" "Change admin (user torbox) password"  \
 "  2" "Change the name of TorBox's WLAN"  \
 "  3" "Change the password of TorBox's WLAN (reboot required)"  \
 "  4" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
