@@ -161,7 +161,7 @@ sudo apt-get -y autoremove
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install python2 hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx tor net-tools ifupdown unzip equivs
+sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx net-tools ifupdown unzip equivs
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 
@@ -185,8 +185,9 @@ cd
 sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
+sudo apt-get -y install ./Downloads/wicd/wicd_1.7.4+tb2-6_all.deb
 
-# Creating a dependency-dummy für wicd-curses (based on
+# Creating a dependency-dummy for wicd-curses (based on
 # https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
 equivs-control python-urwid.control
 sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
