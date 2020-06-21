@@ -161,11 +161,15 @@ sudo apt-get -y autoremove
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx net-tools ifupdown unzip equivs
+sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 
-# urwid for python2, which is necessary for wicd-curse
+# Additional installations for Python 3
+sudo pip3 install pytesseract
+sudo pip3 install mechanize
+
+# urwid for Python 2, which is necessary for wicd-curse
 sudo pip install urwid
 
 # 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
