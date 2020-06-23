@@ -252,7 +252,7 @@ if [ -e master.zip ]; then
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
-  (rm -r torbox) 2> /dev/null
+  (rm -r master.zip) 2> /dev/null
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
