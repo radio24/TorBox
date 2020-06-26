@@ -1,0 +1,4 @@
+#!/bin/sh -e
+#
+sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+sudo /usr/sbin/ntpdate pool.ntp.org
