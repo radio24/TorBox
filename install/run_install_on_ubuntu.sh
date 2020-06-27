@@ -140,7 +140,7 @@ fi
 # 2. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 2a: Remove Ubuntus' unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
+echo -e "${RED}[+] Step 2a: Remove Ubuntu's unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
 sleep 15
 echo -e "${RED}[+]          Please wait...${NOCOLOR}"
@@ -149,8 +149,11 @@ sleep 15
 sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
-# Should we remove network-manager??
-echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
+echo -e "${RED}[+] Step 2b: Remove Ubuntu's cloud-init...${NOCOLOR}"
+sudo apt-get -y purge cloud-init
+sudo rm -Rf /etc/cloud
+echo ""
+echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
