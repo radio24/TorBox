@@ -43,7 +43,7 @@
 #  6. Re-checking Internet connectivity
 #  7. Downloading and installing the latest version of TorBox
 #  8. Installing all configuration files
-#  9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
+#  9. Disabling Bluetooth
 # 10. Configure the system services
 # 11. Adding and implementing the user torbox
 # 12. Finishing, cleaning and booting
@@ -81,7 +81,7 @@ NOCOLOR='\033[0m'
 clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation should run more or less automatically. During the installation, we will set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password are used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -118,8 +118,9 @@ else
     else
       echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
+      sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
+      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee -a /etc/systemd/resolved.conf) 2>&1
+      sudo systemctl restart systemd-resolved
       sleep 15
       echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
       sleep 15
@@ -145,10 +146,11 @@ sleep 15
 echo -e "${RED}[+]          Please wait...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
 sleep 15
-sudo apt-get -y remove unattended-upgrades
+sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
-echo -e "${RED}[+] Step 2b: Updating the system and installing additional software...${NOCOLOR}"
+# Should we remove network-manager??
+echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
@@ -160,11 +162,15 @@ sudo apt-get -y autoremove
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install python2 hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx tor net-tools ifupdown unzip equivs
+sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 
-# urwid for python2, which is necessary for wicd-curse
+# Additional installations for Python 3
+sudo pip3 install pytesseract
+sudo pip3 install mechanize
+
+# urwid for Python 2, which is necessary for wicd-curse
 sudo pip install urwid
 
 # 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
@@ -184,8 +190,9 @@ cd
 sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
 sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
+sudo apt-get -y install ./Downloads/wicd/wicd_1.7.4+tb2-6_all.deb
 
-# Creating a dependency-dummy für wicd-curses (based on
+# Creating a dependency-dummy for wicd-curses (based on
 # https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
 equivs-control python-urwid.control
 sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
@@ -214,7 +221,7 @@ if [ $? -eq 0 ]; then
 else
   echo -e "${RED}[+]         Hmmm, no we don't have... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
-  sleeo 30
+  sleep 30
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
   wget -q --spider https://google.com
   if [ $? -eq 0 ]; then
@@ -233,8 +240,9 @@ else
     else
       echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
+      sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
+      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee -a /etc/systemd/resolved.conf) 2>&1
+      sudo systemctl restart systemd-resolved
       sleep 15
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
@@ -254,7 +262,7 @@ fi
 # 7. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox....${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/master.zip
@@ -283,55 +291,68 @@ sleep 10
 clear
 cd torbox
 echo -e "${RED}[+] Step 8: Installing all configuration files....${NOCOLOR}"
+echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
 (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
 (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
 (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
 (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 sudo mkdir /etc/update-motd.d/bak
 (sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2> /dev/null
 sudo rm /etc/legal
 # Comment out with sed
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/login
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/sshd
-echo -e "${RED}[+] Disabled Ubuntu's update-motd feature -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Disabled Ubuntu's update-motd feature -- backup done"
 (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
-echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+# See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
+cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
-sudo cp etc/rc.local /etc/
-echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
+sudo cp etc/rc.local.ubuntu /etc/rc.local
+sudo chmod u+x /etc/rc.local
+# We will enable rc-local further below
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
+# Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).
+# To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
+# LLMNR=yes / MulticastDNS=yes / Chache=no
+(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
+sudo sp etc/systemd/resolved.conf /etc/systemd/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
 if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
-echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 (sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/manager-settings.conf /etc/wicd/
-echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/manager-settings.conf -- backup done"
 (sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/wired-settings.conf /etc/wicd/
-echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/wired-settings.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR}         Changing .profile if necessary"
 cd
 if ! grep "# Added by TorBox" .profile ; then
   sudo cp .profile .profile.bak
@@ -339,7 +360,7 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-# 9. Disabling Bluetooth (this works only on the Raspberry Pi, I guess)
+# 9. Disabling Bluetooth
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
@@ -351,6 +372,17 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
+# Under Ubuntu systemd-resolved act as local DNS server. However, clients can not use it, because systemd-resolved is listening
+# on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
+# them over 127.0.0.53:53. This is what we need to get to the login page at captive portals.
+# CLIENT --> DNSMASQ --> resolve.conf --> systemd-resolver --> ext DNS address
+# However, this approach only works, if the following options are set in /etc/systemd/resolved.conf: LLMNR=yes / MulticastDNS=yes / Chache=no
+# and bind-interfaces in /etc/dnsmasq.conf
+#
+# Important commands for systemd-resolve:
+# sudo systemctl restart systemd-resolve
+# sudo systemd-resolve --statistic / --status / --flush-cashes
+
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
@@ -363,14 +395,19 @@ sudo systemctl start tor
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-#sudo systemctl disable dhcpcd - not installed on Ubuntu
-sudo systemctl stop dnsmasq
+# sudo systemctl disable dhcpcd - not installed on Ubuntu
+sudo systemctl restart systemd-resolved
+# We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
+# --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
+# However, we don't want to start dnsmasq automatically after booting the system
+sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
 sudo systemctl disable dnsmasq
-sudo systemctl daemon-reload
+sudo systemctl enable rc-local
 echo ""
-echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
+sudo systemctl daemon-reload
 echo""
 
 # 11. Adding the user torbox
@@ -394,6 +431,7 @@ sudo mv /home/ubuntu/* /home/torbox/
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
+  # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
 cd /home/torbox/
@@ -412,7 +450,7 @@ then
     sudo rm $logs
     sleep 1
   done
-  echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
+  echo -e "${RED}[+]${NOCOLOR} Erasing History..."
   #.bash_history is already deleted
   history -c
   echo ""
@@ -425,20 +463,20 @@ then
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
   sudo cp torbox/etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostname -- backup done"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-  echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
+  echo -e "${RED}[+]${NOCOLOR} Rebooting..."
   sudo reboot
 else
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
   sudo cp torbox/etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostname -- backup done"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
   echo ""
   echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
   echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
