@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Ubuntu 20.04 LTS (32bit; https://ubuntu.com/download/raspberry-pi).
+# Ubuntu 20.04 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
 # ./run_install_on_ubuntu.sh
