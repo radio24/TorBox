@@ -276,8 +276,6 @@ if [ -e master.zip ]; then
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
   (rm -r master.zip) 2> /dev/null
-  (sudo cp /etc/systemd/resolved.conf.bak /etc/systemd/resolved.conf) 2> /dev/null
-  sudo systemctl restart systemd-resolved
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -325,13 +323,19 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
-#see also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
+# See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local.ubuntu /etc/rc.local
 sudo chmod u+x /etc/rc.local
-#we will enable rc-local further below
+# We will enable rc-local further below
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
+# Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).
+# To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
+# LLMNR=yes / MulticastDNS=yes / Chache=no
+(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
+sudo sp etc/systemd/resolved.conf /etc/systemd/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
 if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
@@ -370,13 +374,14 @@ clear
 echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
 # Under Ubuntu systemd-resolved act as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
-# them over 127.0.0.53:53. This is what we need to get to the login page at captive portals. The approach is similar to
-# Raspberry Pi OS, except that here the /etc/resolve.conf is adjusted by resolveconf
+# them over 127.0.0.53:53. This is what we need to get to the login page at captive portals.
 # CLIENT --> DNSMASQ --> resolve.conf --> systemd-resolver --> ext DNS address
+# However, this approach only works, if the following options are set in /etc/systemd/resolved.conf: LLMNR=yes / MulticastDNS=yes / Chache=no
+# and bind-interfaces in /etc/dnsmasq.conf
 #
 # Important commands for systemd-resolve:
 # sudo systemctl restart systemd-resolve
-# sudo systemd-resolve --statistic / --status / -- flush-cashes
+# sudo systemd-resolve --statistic / --status / --flush-cashes
 
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
@@ -391,17 +396,18 @@ sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 # sudo systemctl disable dhcpcd - not installed on Ubuntu
+sudo systemctl restart systemd-resolved
 # We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 # --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
 # However, we don't want to start dnsmasq automatically after booting the system
 sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
 sudo systemctl disable dnsmasq
 sudo systemctl enable rc-local
-sudo systemctl daemon-reload
 echo ""
 echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
+sudo systemctl daemon-reload
 echo""
 
 # 11. Adding the user torbox
