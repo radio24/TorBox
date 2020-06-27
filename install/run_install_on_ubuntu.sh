@@ -375,7 +375,7 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
-# Under Ubuntu systemd-resolved act as local DNS server. However, clients can not use it, because systemd-resolved is listening
+# Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
 # them over 127.0.0.53:53. This is what we need to get to the login page at captive portals.
 # CLIENT --> DNSMASQ --> resolve.conf --> systemd-resolver --> ext DNS address
