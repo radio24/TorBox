@@ -1,5 +1,33 @@
 #!/usr/bin/python3
 
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2020 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file fetches one new bridge. The return values is:
+# obfs4 <IP address>:<Port> <Fingerprint> <Certificate> <iat-mode>
+#
+# IMPORTANT
+# The bridge database delivers only 1-3 bridges approximately every 24 hours,
+# of which we pick one. With the bridges already delivered this should be sufficient.
+#
+# SYNTAX
+# ./bridges_get.py
+
 tmp_dir = '/tmp' # where we store the temporal captchas to solve (full path)
 tor_get_bridges_url = 'https://bridges.torproject.org/bridges?transport=obfs4' # url where we get the bridges
 
@@ -21,7 +49,7 @@ while bridges == False:
 	res = br.open(tor_get_bridges_url)
 
 	# look for the captcha image
-	html = str(res.read()) 
+	html = str(res.read())
 	q = re.findall(r'src="data:image/jpeg;base64,(.*?)"', html, re.DOTALL)
 	img_data = q[0]
 
@@ -40,7 +68,7 @@ while bridges == False:
 	# if captcha len doesn't match on what we look, we just try again
 	if len(captcha_text) < 7 or len(captcha_text) > 7:
 		continue
-	
+
 	# reply to server with the captcha text
 	br.select_form(nr=0)
 	br['captcha_response_field'] = captcha_text
