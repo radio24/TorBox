@@ -118,7 +118,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - COUNTERMEASUR
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
 "  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
-"  4" "Add additional bridges - keep the old ones"  \
+"  4" "Add additional bridges"  \
 "  5" "Activate configured bridges"  \
 "  6" "Deactivate configured bridges"  \
 "  7" "Remove configured bridges"  \
@@ -149,11 +149,11 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          sudo sh bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
+          sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
           if [ $number_configured_bridges_total = 0]; then
             INPUT=$(cat text/add-bridges-first-text)
             if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
-              sudo bash bridges_add
+              sudo bash bridges_add_old
             fi
           fi
         fi
@@ -180,12 +180,12 @@ if [ $exitstatus = 0 ]; then
       OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
       if [ $? == 0 ]; then
         OCHECK="0"
-        echo -e "${RED}[+] OK - we are connected with the bridge databas${NOCOLOR}"
+        echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
         sleep 2
-        else
-          OCHECK="1"
-          echo -e "${WHITE}[!] SORRY! - no connection with the bridge databas${NOCOLOR}"
-          sleep 2
+      else
+        OCHECK="1"
+        echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+        sleep 2
       fi
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
@@ -242,11 +242,8 @@ if [ $exitstatus = 0 ]; then
 
 # Add bridges
     elif [ $CHOICE = 4 ]; then
-      INPUT=$(cat text/add-bridges-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add $MODE_BRIDGES
-        read_config
-      fi
+      sudo bash bridges_add_old $MODE_BRIDGES
+      read_config
 
 # Activate bridges
     elif [ $CHOICE = 5 ]; then

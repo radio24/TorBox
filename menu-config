@@ -495,7 +495,7 @@ if [ $exitstatus = 0 ]; then
         TOGGLE08="visible"
       fi
       sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-			if grep "^ignore_broadcast_ssid=" ${HOSTAPD}; then
+			if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
       	sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
 			else
       	sudo echo ${INPUT} >> ${HOSTAPD}
@@ -513,7 +513,7 @@ if [ $exitstatus = 0 ]; then
 			if [ "$INPUT" != "" ]; then
 				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
 				INPUT=PASSWORD=\"$INPUT\"
-				if grep "^HashedControlPassword\ " ${TORRC}; then
+				if grep -q "^HashedControlPassword\ " ${TORRC}; then
       	  sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
 				else
         	sudo echo ${INPUTHASH} >> ${TORRC}

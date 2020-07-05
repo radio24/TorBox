@@ -339,7 +339,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 (sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
 sudo sp etc/systemd/resolved.conf /etc/systemd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
-if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"

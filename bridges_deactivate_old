@@ -121,11 +121,11 @@ else
     # Deactivate only bridges, which are OFFLINE or do not exist anymore
       elif [ $CHOICE = 2 ]; then
         clear
-        echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
+        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
         OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
         if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
         if [ $OCHECK == 0 ]; then
-          echo -e "${WHITE}[+] OK - we are connected with the bridge databas${NOCOLOR}"
+          echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
           echo " "
           echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
           trap "bash bridges_deactivate_old; exit 0" SIGINT
@@ -157,7 +157,7 @@ else
             fi
           fi
         else
-          echo -e "${WHITE}[+] OH NO! - no connection to the bridge databas :( ${NOCOLOR}"
+          echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[+] Cant fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
           sleep 2
         fi
