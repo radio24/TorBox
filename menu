@@ -272,7 +272,7 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         # This line has to be tested out. Restoring the standard configuration (necessary in case of a reboot)
-        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
+        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
