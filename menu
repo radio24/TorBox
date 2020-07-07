@@ -204,7 +204,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the wlan1 configuration
+        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
         sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         # Wieso gehen wir nicht in jedem Fall über diese Routine (so wie bei den anderen Einträgen)? Das könnte ** erübrigen!
         if ip link | grep wlan1; then
@@ -271,8 +271,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the wlan1 configuration
-        sudo cp etc/network/interfaces.wlan1eth0 /etc/network/interfaces
+        # This line has to be tested out. Restoring the standard configuration (necessary in case of a reboot)
+        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
