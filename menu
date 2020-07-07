@@ -151,6 +151,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 4 ]; then
       INPUT=$(cat text/cable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # This line has to be tested out. Restoring the standard configuration
+        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
         clear
         echo ""
 	      echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -178,7 +180,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-          # This line has to be tested out. It should minimze the cases where a restart is necessary
+          # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
           finish
@@ -190,7 +192,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-          # This line has to be tested out. It should minimze the cases where a restart is necessary
+          # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces eth0 wlan0 $CAPTIVE
           finish
@@ -202,6 +204,9 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # This line has to be tested out. Restoring the wlan1 configuration
+        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
+        # Wieso gehen wir nicht in jedem Fall über diese Routine (so wie bei den anderen Einträgen)? Das könnte ** erübrigen!
         if ip link | grep wlan1; then
           clear
           echo ""
@@ -230,7 +235,16 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # This lines has to be tested out (**).
+            sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
+            echo ""
+            echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+            echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+            echo -e "${RED}[+] This can take up to two minutes - please wait!${NOCOLOR}"
+            echo -e "${RED}[+] If it doesn't work - try to turn TorBox off and on again.${NOCOLOR}"
+            sudo ifdown eth0
+            sudo ifup eth0
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
             finish
@@ -242,7 +256,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
             finish
@@ -257,6 +271,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # This line has to be tested out. Restoring the wlan1 configuration
+        sudo cp etc/network/interfaces.wlan1eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -286,7 +302,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-          # This line has to be tested out. It should minimze the cases where a restart is necessary
+          # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
           finish
@@ -297,7 +313,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-          # This line has to be tested out. It should minimze the cases where a restart is necessary
+          # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 eth0 $CAPTIVE
           finish
@@ -308,7 +324,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-          # This line has to be tested out. It should minimze the cases where a restart is necessary
+          # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
           finish
@@ -319,6 +335,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
+        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -347,7 +365,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
             finish
@@ -359,7 +377,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces usb0 wlan0 $CAPTIVE
             finish
@@ -376,7 +394,7 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
               sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-              # This line has to be tested out. It should minimze the cases where a restart is necessary
+              # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
               finish
@@ -388,7 +406,7 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
               sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-              # This line has to be tested out. It should minimze the cases where a restart is necessary
+              # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces ppp0 wlan0 $CAPTIVE
               finish
@@ -404,6 +422,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
+        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         if ip link | grep eth1 ; then
           clear
           echo ""
@@ -432,7 +452,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
             finish
@@ -444,7 +464,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This line has to be tested out. It should minimze the cases where a restart is necessary
+            # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces eth1 wlan0 $CAPTIVE
             finish
