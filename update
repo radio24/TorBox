@@ -441,7 +441,6 @@ if [ $exitstatus = 0 ]; then
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       clear
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       sleep 2

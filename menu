@@ -490,11 +490,7 @@ if [ $exitstatus = 0 ]; then
 
 # Reboot
     elif [ $CHOICE = 13 ]; then
-      wlan1_up=$(ip addr show wlan1 | grep 192.168.42.1)
       clear
-      if [ -z wlan1_up ]; then
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
-      fi
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
       echo ""
@@ -504,11 +500,7 @@ if [ $exitstatus = 0 ]; then
 
 # Shutdown
     elif [ $CHOICE = 14 ]; then
-      wlan1_up=$(ip addr show wlan1 | grep 192.168.42.1)
       clear
-      if [ -z wlan1_up ]; then
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
-      fi
       echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
       sleep 2
       echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"

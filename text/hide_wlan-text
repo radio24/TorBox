@@ -1,0 +1,14 @@
+This menu entry hides the name of TorBox's WLAN. To connect it, its name has
+to be known and enter manually.
+
+However, except that the WLAN is not immediately visible, it DOES NOT increase
+security. Someone with the right tools and enough time can sniff the traffic
+and find the SSID. Another, probably more elegant solution, is to blend
+into the neighborhood and to rename TorBox's WLAN accordingly. For example:
+If you near a Starbucks coffee shop, why not call it "Starbucks_"
+
+Alternatively, in a high-risk situation, you can connect TorBox with an
+Ethernet cable with your client and altogether disable TorBox's WLAN (menu
+entry 8)
+
+Do you want to hide TorBox's WLAN?

@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=12
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -87,43 +87,60 @@ change_crda()
 #  (nohup ./hostapd_fallback) 2>/dev/null
 }
 
+# This function imports the configuration and makes some preparations
+# TOGGLE05 / TOGGLE06 represents the status of the bridging mode
+read_config()
+{
+  # TOGGLE03 / TOGGLE04 represents the extent of logging
+  LOG_STATUS=$(sudo systemctl is-active rsyslog)
+  if [ $LOG_STATUS = inactive ]; then
+      TOGGLE03="LOW]====="
+      TOGGLE03b="LOW"
+      TOGGLE04="HIGH]===="
+      TOGGLE04b="HIGH"
+  else
+      TOGGLE03="HIGH]===="
+      TOGGLE03b="HIGH"
+      TOGGLE04="LOW]====="
+      TOGGLE04b="LOW"
+  fi
+
+  # TOGGLE05 / TOGGLE06 / represents the 2.4 GHz and 5 GHz Band
+  if grep -q "^hw_mode=g" ${HOSTAPD}; then
+    TOGGLE05="2.5 GHz"
+  else
+    TOGGLE06="2.5 Ghz band"
+  fi
+
+  if grep -q "^hw_mode=a" ${HOSTAPD}; then
+    TOGGLE05="5 GHz"
+  else
+    TOGGLE06="5 Ghz band"
+  fi
+
+  # TOGGLE07 represents the WLAN channel;
+  TOGGLE07=$(grep "^channel=" ${HOSTAPD})
+  TOGGLE07=$(echo "$TOGGLE07" | cut -c9-10 | sed 's/ //')
+
+  # TOGGLE08 shows if the SSID is hidden or not
+  if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
+    TOGGLE08="Unide"
+  else
+    TOGGLE08="Hide"
+  fi
+
+  # TOGGLE09 shows if TorBox's WLAN is disabled or not
+  HOSTAPD_STATUS=""
+  HOSTAPD_STATUS=$(sudo systemctl status hostapd | grep "active (running)")
+  if [ -z "$HOSTAPD_STATUS" ]; then
+    TOGGLE09="Enable"
+  else
+    TOGGLE09="Disable"
+  fi
+}
+
 ######## PREPARATIONS ########
-# This imports the configuration and makes some preparations
-# TOGGLE03 / TOGGLE04 represents the extent of logging
-LOG_STATUS=$(sudo systemctl is-active rsyslog)
-if [ $LOG_STATUS = inactive ]; then
-    TOGGLE03="LOW]====="
-    TOGGLE03b="LOW"
-    TOGGLE04="HIGH]===="
-    TOGGLE04b="HIGH"
-else
-    TOGGLE03="HIGH]===="
-    TOGGLE03b="HIGH"
-    TOGGLE04="LOW]====="
-    TOGGLE04b="LOW"
-fi
-
-# TOGGLE05 / TOGGLE06 / represents the 2.4 GHz and 5 GHz Band; TOGGLE07 the WLAN channel; TOGGLE08 show if the SSID is hidden or not
-if grep -q "^hw_mode=g" ${HOSTAPD}; then
-  TOGGLE05="2.5 GHz"
-else
-  TOGGLE06="2.5 Ghz band"
-fi
-
-if grep -q "^hw_mode=a" ${HOSTAPD}; then
-  TOGGLE05="5 GHz"
-else
-  TOGGLE06="5 Ghz band"
-fi
-
-TOGGLE07=$(grep "^channel=" ${HOSTAPD})
-TOGGLE07=$(echo "$TOGGLE07" | cut -c9-10 | sed 's/ //')
-
-if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
-  TOGGLE08="Unide"
-else
-  TOGGLE08="Hide"
-fi
+read_config
 
 ###### DISPLAY THE MENU ######
 clear
@@ -138,13 +155,14 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - CONFIGURATION
 "  5" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 "  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
 "  7" "$TOGGLE08 TorBox's WLAN (SSID)"  \
-"  8" "Change the password of your Tor control port (restarts Tor!)"  \
+"  8" "$TOGGLE09 TorBox's WLAN (SSID)"  \
+"  9" "Change the password of your Tor control port (restarts Tor!)"  \
 "===" "===========================================[Logging "$TOGGLE03 \
-"  9" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
-" 10" "Erase all log files" \
+" 10" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
+" 11" "Erase all log files" \
 "===" "===========================================[Features]========" \
-" 11" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 12" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+" 12" "Support for Adafruit's PiTFT displays (reboot required)" \
+" 13" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -259,6 +277,7 @@ if [ $exitstatus = 0 ]; then
           sudo service hostapd restart
         fi
       fi
+      read_config
 
 #Change the WLAN channel
     elif [ $CHOICE = 6 ]; then
@@ -484,31 +503,91 @@ if [ $exitstatus = 0 ]; then
           fi
         fi
       fi
+      read_config
 
 #This hides / unhides the WLAN
     elif [ $CHOICE = 7 ]; then
       if [ "$TOGGLE08" = "Hide" ]; then
-        INPUT=ignore_broadcast_ssid=1
-        TOGGLE08="hidden"
+        INPUT=$(cat text/hide_wlan-text)
+        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          INPUT=ignore_broadcast_ssid=1
+          TOGGLE08="hidden"
+          CHANGE=1
+        fi
       else
-				INPUT=ignore_broadcast_ssid=0
-        TOGGLE08="visible"
+        INPUT=$(cat text/unhide_wlan-text)
+        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				  INPUT=ignore_broadcast_ssid=0
+          TOGGLE08="visible"
+          CHANGE=1
+        fi
       fi
-      sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-			if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
-      	sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
-			else
-      	sudo echo ${INPUT} >> ${HOSTAPD}
-			fi
-      if (whiptail --yesno "TorBox's WLAN (SSID) is now $TOGGLE08.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        clear
-        echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
-        echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-        (nohup ./hostapd_fallback) 2>/dev/null
+      if [ $CHANGE = 1 ]; then
+        sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+			  if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
+      	  sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
+			  else
+      	  sudo echo ${INPUT} >> ${HOSTAPD}
+			  fi
+        if (whiptail --yesno "TorBox's WLAN (SSID) is now $TOGGLE08.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
+          echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+          (nohup ./hostapd_fallback) 2>/dev/null
+        fi
+        read_config
       fi
 
-#This changes the password of the Tor control port
+#This disables / enables the WLAN
     elif [ $CHOICE = 8 ]; then
+      if [ "$TOGGLE09" = "Disable" ]; then
+        CABLE=""
+        CABLE=$(ip addr show eth0 | grep 192.168.43.1)
+        CABLE=$(ip addr show eth1 | grep 192.168.43.1)
+        clear
+        if [ "$CABLE" != "" ]; then
+          INPUT=$(cat text/disable_wlan-text)
+          DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
+          "1" "Temporary   - Disable TorBox's WLAN until next boot" OFF \
+          "2" "Permanently - Disable TorBox's WLAN until enabled again" OFF 3>&1 1>&2 2>&3)
+          exitstatus=$?
+          if [ $exitstatus = 0 ]; then
+            if [ "$DISABLED_CHOICE" != "" ]; then
+      		    if [ $DISABLED_CHOICE = 1 ]; then
+                clear
+                echo -e "${RED}[+] Disabling TorBox's WLAN temporary now...${NOCOLOR}"
+                sudo systemctl stop hostapd
+                sleep 2
+      		    elif [ $DISABLED_CHOICE = 2 ]; then
+                clear
+                echo -e "${RED}[+] Disabling TorBox's WLAN now...${NOCOLOR}"
+                sudo systemctl stop hostapd
+                echo -e "${RED}[+] Make it permanent...${NOCOLOR}"
+                sudo systemctl disable hostapd
+                sleep 2
+              fi
+            fi
+          else
+            clear
+          fi
+        else
+          INPUT=$(cat text/disable_wlan_error-text)
+          whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+        fi
+      else
+        INPUT=$(cat text/enable_wlan-text)
+        if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
+          echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
+          sudo systemctl disable hostapd
+          sudo systemctl start hostapd
+          sleep 2
+        fi
+      fi
+      read_config
+
+#This changes the password of the Tor control port
+    elif [ $CHOICE = 9 ]; then
 			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
 				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
@@ -523,7 +602,7 @@ if [ $exitstatus = 0 ]; then
 			fi
 
 #This changes the extent of the logging
-    elif [ $CHOICE = 9 ]; then
+    elif [ $CHOICE = 10 ]; then
 			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
@@ -547,15 +626,16 @@ if [ $exitstatus = 0 ]; then
         erase_logs
         sleep 2
 			fi
+      read_config
 
 #This erases all log files
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 11 ]; then
 			clear
 			erase_logs
 			sleep 2
 
 #This is the support for Adafruit's PiTFT displays
-    elif [ $CHOICE = 11 ]; then
+    elif [ $CHOICE = 12 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
@@ -565,8 +645,8 @@ if [ $exitstatus = 0 ]; then
         sudo ./adafruit-pitft.sh
       fi
 
-#This is the support for
-    elif [ $CHOICE = 12 ]; then
+#This is the support for Sixfab Shields/HATs for cellular connections
+    elif [ $CHOICE = 13 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
