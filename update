@@ -114,6 +114,7 @@ update_tor()
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
+  sudo apt-get -y update
   apt source tor
   KERNEL_VERS=$(uname -s -r)
   TOR_VERS=$(tor --version|rev|cut -c2-|rev)
@@ -125,9 +126,13 @@ update_tor()
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     fi
+  elif [ -z "$SOURCE_VERS_NUMBER" ] ; then
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
+    whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    RECOMPILE=0
   else
     if [ $LOOP_NUMBER = 1 ]; then
-      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
+      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         RECOMPILE=1
       fi
@@ -278,7 +283,7 @@ update_torbox_menu()
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
-"3" "Update to the newest stable version of Tor (try entry 1 first!)" OFF \
+"3" "Update to the newest version of Tor (try entry 1 first!)" OFF \
 "4" "Update to the newest stable version of the TorBox menu" OFF \
 "5" "Erase all log files" OFF \
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
