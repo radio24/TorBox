@@ -112,7 +112,7 @@ update_tor()
     sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
   fi
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-  if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
+  if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
   sudo apt-get -y update
   apt source tor
@@ -163,7 +163,7 @@ update_tor()
 #      restarting_tor update
 #    fi
   else
-    if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
+    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   fi
 }
 
