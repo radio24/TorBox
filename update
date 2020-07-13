@@ -97,6 +97,9 @@ update_firmware()
   read -n 1 -s -r -p "Press any key to continue"
   echo " "
   sudo rpi-eeprom-update -a
+  echo " "
+  echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+  sleep 5
 }
 
 # This function updates TOR
@@ -104,6 +107,10 @@ update_tor()
 {
   online_check_update
   clear
+  if ! grep "torproject" /etc/apt/sources.list ; then
+    sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
@@ -118,7 +125,7 @@ update_tor()
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     fi
-   else
+  else
     if [ $LOOP_NUMBER = 1 ]; then
       INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -142,6 +149,9 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
+    echo ""
+    echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
+    sleep 5
     BOOTMSG=1
 #    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 #    	clear
@@ -162,29 +172,31 @@ update_torcfg()
     sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
     echo -e "${RED}[+] Changed /etc/apt/sources.list -- backup done${NOCOLOR}"
   fi
-  sudo cp /etc/default/hostapd /etc/default/hostapd.bak
+  (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
   sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
-  sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
+  (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
   sudo cp etc/default/isc-dhcp-server /etc/default/
   echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
-  sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
+  (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
+  (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
+  (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+  (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
   sudo cp etc/iptables.ipv4.nat /etc/
-  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
-  sudo cp /etc/motd /etc/motd.bak
+  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+  (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+  (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
   sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup not necessary${NOCOLOR}"
-  sudo cp /etc/rc.local /etc/rc.local.bak
+  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+  (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
   sudo cp etc/rc.local /etc/
   echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
   if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
@@ -192,15 +204,23 @@ update_torcfg()
     sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
     echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
   fi
-  sudo cp /etc/tor/torrc /etc/tor/torrc.bak
+  (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
   echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-  sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak
+  (sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
   sudo cp etc/wicd/manager-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
+  (sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
   sudo cp etc/wicd/wired-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+  sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+  echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+  cd
+  if ! grep "# Added by TorBox" .profile ; then
+    sudo cp .profile .profile.bak
+    sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
+  fi
   sudo cp etc/new_ident .
   echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
   # This has to be at the end to avoid unnecessary error messages
@@ -210,6 +230,9 @@ update_torcfg()
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+  echo ""
+  echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
+  sleep 5
 }
 
 # This function updates the TorBox menu
@@ -237,13 +260,16 @@ update_torbox_menu()
     cd torbox
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
     sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
-    sleep 2
+    echo -e "${RED} ${NOCOLOR}"
+    echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
+    sleep 5
   else
     echo -e "${RED} ${NOCOLOR}"
-    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-    echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
+    echo -e "${WHITE}[!] FAILED!${NOCOLOR}"
+    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub has failed !!${NOCOLOR}"
+    echo -e "${WHITE}[!] I can't update TorBox menu !!${NOCOLOR}"
     echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
-    sleep 2
+    sleep 5
   fi
 }
 
@@ -292,7 +318,9 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
         sudo systemctl enable tor
         sudo systemctl daemon-reload
-        sleep 2
+        echo ""
+        echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+        sleep 5
         BOOTMSG=1
       fi
 
@@ -304,13 +332,11 @@ if [ $exitstatus = 0 ]; then
           update_firmware
           BOOTMSG=1
           LOOP_NUMBER=0
-          sleep 2
         fi
       else
         update_firmware
         BOOTMSG=1
         LOOP_NUMBER=0
-        sleep 2
       fi
 
 #This updates TOR
@@ -318,10 +344,8 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
         update_tor
-        sleep 2
       else
         update_tor
-        sleep 2
       fi
 
 #This updates the newest stable version of TorBox's menu
@@ -342,7 +366,9 @@ if [ $exitstatus = 0 ]; then
     elif [ $ARGUMENT = 5 ]; then
       clear
       erase_logs
-      sleep 2
+      echo ""
+      echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
+      sleep 5
 
 #This updates / resets TorBox's configuration files
     elif [ $ARGUMENT = 6 ]; then
@@ -351,11 +377,9 @@ if [ $exitstatus = 0 ]; then
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           update_torcfg
           BOOTMSG=1
-          sleep 2
         fi
       else
         update_torcfg
-        sleep 2
         BOOTMSG=1
       fi
 
@@ -367,7 +391,9 @@ if [ $exitstatus = 0 ]; then
       sudo service wicd stop
       sudo rm /etc/wicd/wireless-settings.conf
       sudo service wicd start
-      sleep 2
+      echo " "
+      echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+      sleep 5
 
 #This resets Tor and forces a change of the permanent entry node
     elif [ $ARGUMENT = 8 ]; then
