@@ -82,7 +82,7 @@ if [ $exitstatus = 0 ]; then
         clear
         whiptail --title "TorBox - INFO" --textbox text/add-bridges-automatically-text $MENU_HEIGHT_25 $MENU_WIDTH
         clear
-        echo -e "${RED}[+] Fetching bridge(s)... please wait!${NOCOLOR}"
+        echo -e "${RED}[+] Fetching a bridge... please wait!${NOCOLOR}"
         bridge_address=$(./bridges_get.py)
         if grep -q "$bridge_address" $TORRC ; then
           echo -e "${WHITE}[+] This bridge is already added!${NOCOLOR}"

@@ -18,17 +18,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-#	This file prepars the network and restarts all necessary services. It also
-# restarts TorBox's wireless network (AP, hostapd), check if the daemon is working
-# and if not resets the configuration with the last working version and
-# restarts the daemon again. If nothhing works, the configuration is that way in place
-# that after a restart TorBox's wireless network can be found on wlan0.
+# This file tries to fix all network-related problems, like wrong assigned IP
+# addresses, issues with dhclient, hostapd, and others. It also restarts
+# TorBox's wireless network (AP, hostapd) if we use a WLAN adapter as an AP,
+# checks if the daemon is working, and, if not, resets the configuration with
+# the last working version and restarts the daemon again. If nothing works,
+# the configuration is set that way that after a restart, TorBox's wireless
+# network can be found on wlan0.
 #
 # SYNTAX
 # nohup ./hostapd_fallback_komplex <interface 1> <interface 2>
 #
 # <interface 1>: Is the interface with the AP: wlan0 or wlan1.
-# <interface 2>: Is the interface with the connected cable: eth0 or ethh1
+# <interface 2>: Is the interface with the connected cable client: eth0 or ethh1
 #
 #
 ##### SET VARIABLES ######
@@ -41,49 +43,76 @@ NOCOLOR='\033[0m'
 #Other variables
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
-INTERFACESCONF="/etc/network/interfaces"
 INTERFACE1=$1
 INTERFACE2=$2
 
-if [ $INTERFACE1 = wlan1 ]; then
+if [ $INTERFACE1 = wlan1 ] ; then
 	INTERFACE3="wlan0"
 else
 	INTERFACE3="wlan1"
 fi
 
-if [ $INTERFACE2 = eth1 ]; then
+if [ $INTERFACE2 = eth1 ] ; then
 	INTERFACE4="eth0"
 else
 	INTERFACE4="eth1"
 fi
 
-STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
+# We don't want dhclient running on our clients
+if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
+	(sudo dhclient -r) 2>&1
+	sudo killall dhclient
+	sudo rm /var/lib/dhcp/dhclient.$INTERFACE1.leases
+	sudo ifdown $INTERFACE3
+	sudo ifdown $INTERFACE4
+	sudo ifdown usb0
+	sudo ifup $INTERFACE3 &>/dev/null &
+	sudo ifup $INTERFACE4 &>/dev/null &
+	sudo ifup usb0 &>/dev/null &
+fi
+
+if ps -ax | grep "[d]hclient.$INTERFACE2" ; then
+  (sudo dhclient -r) 2>&1
+  sudo killall dhclient
+	sudo rm /var/lib/dhcp/dhclient.$INTERFACE2.leases
+	sudo ifdown $INTERFACE3
+	sudo ifdown $INTERFACE4
+	sudo ifdown usb0
+	sudo ifup $INTERFACE3 &>/dev/null &
+	sudo ifup $INTERFACE4 &>/dev/null &
+	sudo ifup usb0 &>/dev/null &
+fi
+
+# Is INTERFACE1 ready?
+STATICIP1=$(ip addr show $INTERFACE1 | grep -w inet)
+# wlan0 or wlan1 doesn't have an IP address - we have to do something about it!
 if [ -z "$STATICIP1" ] ; then
-	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
-	if [ $INTERFACE1 = wlan1 ]; then
+	sudo ifdown $INTERFACE1
+	# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+	sudo ifup $INTERFACE1  &>/dev/null
+fi
+
+STATICIP1=$(ip addr show $INTERFACE1 | grep -w 192.168.42.1)
+# wlan0 or wlan1 is not acting as AP - we have to do something about it!
+if [ -z "$STATICIP1" ] ; then
+	if [ $INTERFACE1 = wlan1 ] ; then
 		sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
 	fi
 	sudo sed -i "s/^interface=$INTERFACE3/interface=$INTERFACE1/" ${HOSTAPD}
-	sudo service isc-dhcp-server stop
-	sudo dhclient -r
-	sudo service wicd stop
+	sudo systemctl stop isc-dhcp-server
+  (sudo dhclient -r) 2>&1
+	sudo systemctl stop wicd
 	sudo ifdown $INTERFACE1
 	sudo ifdown $INTERFACE3
-	sudo ifup $INTERFACE1
-	sudo service hostapd restart
-	sudo service isc-dhcp-server start
+	sudo ifup $INTERFACE1 &>/dev/null &
+	sudo systemctl restart hostapd
+	sudo systemctl start isc-dhcp-server
 	sudo ifup $INTERFACE3 &>/dev/null &
 	sudo /sbin/iptables -F
 	sudo /sbin/iptables -t nat -F
 	sudo /sbin/iptables -P FORWARD DROP
 	sudo /sbin/iptables -P INPUT ACCEPT
 	sudo /sbin/iptables -P OUTPUT ACCEPT
-	# --- The lines below doesn't seem to be correct or to be on the right place?? (*)
-	if [ $INTERFACE1 = wlan1 ]; then
-		sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
-	fi
-	# ---
-	sleep 5
 	LOG_STATUS=$(sudo systemctl is-active hostapd)
 	if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
 		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
@@ -91,35 +120,68 @@ if [ -z "$STATICIP1" ] ; then
 		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
 		sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
 		sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
-		sudo service hostapd restart
+		sudo systemctl restart hostapd
 		sleep 5
 	fi
-	if [ $INTERFACE1 = wlan1 ]; then
+	if [ $INTERFACE1 = wlan1 ] ; then
+		sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
 		LOG_STATUS=$(sudo systemctl is-active hostapd)
 		if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
-			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
-			# --- I think that's the right place for the lines above (*1) ... or even better: make a HOSTAPD_SAV and a INTERFACES_SAV
-			sudo service hostapd restart
+			sudo cp etc/network/interfaces.wlan0$INTERFACE2 /etc/network/interfaces
+			sudo systemctl restart hostapd
 		fi
 	fi
-		if [ $INTERFACE1 = wlan1 ]; then
-			sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
-			# --- I think that's the right place for the lines above (*1) ... or even better: make a HOSTAPD_SAV and a INTERFACES_SAV
-		fi
 fi
-if ip link | grep $INTERFACE2 | grep "state UP"; then
-	STATICIP2=$(ip addr show $INTERFACE2 | grep 192.168.43.1)
-	if [ -z "$STATICIP2" ] || ; then
-		sudo cp etc/network/interfaces.wlan0$INTERFACE2 /etc/network/interfaces
-		if [ $INTERFACE2 = eth1 ]; then
-			if ip addr show $INTERFACE1 | grep 192.168.43.1; then
-				sudo ifdown $INTERFACE3
-			fi
-		fi
+
+# Is INTERFACE2 ready?
+if ip link | grep $INTERFACE2 | grep "state UP" ; then
+	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
+	if [ -z "$STATICIP2" ] ; then
 		sudo ifdown $INTERFACE2
-		sudo ifdown $INTERFACE4
-		sudo ifup $INTERFACE2
-		sudo service isc-dhcp-server restart
-		sudo ifup $INTERFACE4  &>/dev/null &
+#		sudo ifdown $INTERFACE4
+		sudo ifup $INTERFACE2 &>/dev/null &
+		sudo systemctl restart isc-dhcp-server
+#		sudo ifup $INTERFACE4 &>/dev/null &
 	fi
+else
+		sudo ifdown $INTERFACE2
+		sudo ifup $INTERFACE2 &>/dev/null &
+fi
+
+# Is INTERFACE3 ready?
+if ip link | grep $INTERFACE3 | grep "state UP" ; then
+	STATICIP3=$(ip addr show $INTERFACE3 | grep -w inet)
+	if [ -z "$STATICIP3" ] ; then
+		sudo ifdown $INTERFACE3
+#		(sudo dhclient -r) 2>&1
+		sudo ifup $INTERFACE3 &>/dev/null &
+	fi
+	STATICIP3=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
+	if [ -n "$STATICIP3" ] ; then
+		sudo ifdown $INTERFACE3
+#		(sudo dhclient -r) 2>&1
+		sudo ifup $INTERFACE3 &>/dev/null &
+	fi
+else
+		sudo ifdown $INTERFACE3
+		sudo ifup $INTERFACE3 &>/dev/null &
+fi
+
+# Is INTERFACE4 ready?
+if ip link | grep $INTERFACE4 | grep "state UP" ; then
+	STATICIP4=$(ip addr show $INTERFACE4 | grep -w inet)
+	if [ -z "$STATICIP4" ] ; then
+		(sudo dhclient -r) 2>&1
+		sudo ifdown $INTERFACE4
+		sudo ifup $INTERFACE4 &>/dev/null &
+	fi
+	STATICIP4=$(ip addr show $INTERFACE4 | grep 192.168.43.1)
+	if [ -n "$STATICIP4" ] ; then
+		(sudo dhclient -r) 2>&1
+		sudo ifdown $INTERFACE4
+		sudo ifup $INTERFACE4 &>/dev/null &
+	fi
+else
+		sudo ifdown $INTERFACE4
+		sudo ifup $INTERFACE4 &>/dev/null &
 fi

@@ -33,7 +33,7 @@
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 
-STATICIP_WLAN1=$(ip addr show wlan1 | grep 192.168.42.1)
+STATICIP_WLAN1=$(ip addr show wlan1 | grep -w 192.168.42.1)
 if [ -n "$STATICIP_WLAN1" ]; then
 	sudo sed -i "s/^interface=wlan0/interface=wlan1/" ${HOSTAPD}
 fi
@@ -47,7 +47,6 @@ LOG_STATUS=$(sudo systemctl is-active hostapd)
 sleep 5
 echo $LOG_STATUS
 if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ]; then
-	echo "Zweiter Loop"
 	sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
 	if [ -n "$STATICIP_WLAN1" ]; then
 		sudo sed -i "s/^interface=wlan0/interface=wlan1/" ${HOSTAPD}

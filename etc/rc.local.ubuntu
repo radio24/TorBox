@@ -1,5 +1,19 @@
 #!/bin/sh -e
 #
+# Not necessary, yet - idea: failsafe if wlan1 is in /etc/network/interfaces
+# which shouldn't be the case! Instead we have sudo
+# cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces in menu
+# if grep "iface wlan1 inet static" /etc/network/interfaces ; then
+#  sudo ifdown wlan0
+#  sudo ifdown wlan1
+#  sudo sed -i "s/^auto wlan0/auto wlan1/" /etc/network/interfaces
+#  sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
+#  sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
+#  sudo ifup wlan0 &>/dev/null &
+#  sudo ifup wlan1 &>/dev/null &
+#  sudo systemctl restart hostapd
+#  sudo systemctl start isc-dhcp-server
+# fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10

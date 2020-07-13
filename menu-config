@@ -130,9 +130,9 @@ read_config()
   fi
 
   # TOGGLE09 shows if TorBox's WLAN is disabled or not
-  HOSTAPD_STATUS=""
-  HOSTAPD_STATUS=$(sudo systemctl status hostapd | grep "active (running)")
-  if [ -z "$HOSTAPD_STATUS" ]; then
+  LOG_STATUS=""
+  LOG_STATUS=$(sudo systemctl is-active hostapd)
+  if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
     TOGGLE09="Enable"
   else
     TOGGLE09="Disable"
@@ -154,8 +154,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - CONFIGURATION
 "  4" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
 "  5" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 "  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-"  7" "$TOGGLE08 TorBox's WLAN (SSID)"  \
-"  8" "$TOGGLE09 TorBox's WLAN (SSID)"  \
+"  7" "$TOGGLE08 TorBox's WLAN"  \
+"  8" "$TOGGLE09 TorBox's WLAN"  \
 "  9" "Change the password of your Tor control port (restarts Tor!)"  \
 "===" "===========================================[Logging "$TOGGLE03 \
 " 10" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
@@ -188,6 +188,7 @@ if [ $exitstatus = 0 ]; then
 					echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
           echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
           (nohup ./hostapd_fallback) 2>/dev/null
+          rm nohup.out
 				fi
 			fi
 
@@ -262,6 +263,7 @@ if [ $exitstatus = 0 ]; then
               echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
               echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
+              rm nohup.out
             fi
           fi
         fi
@@ -422,6 +424,7 @@ if [ $exitstatus = 0 ]; then
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
               echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
+              rm nohup.out
             fi
           else
             sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]" ${HOSTAPD}
@@ -430,6 +433,7 @@ if [ $exitstatus = 0 ]; then
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
               echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
+              rm nohup.out
             fi
           fi
         fi
@@ -490,6 +494,7 @@ if [ $exitstatus = 0 ]; then
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
               echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
+              rm nohup.out
             fi
           else
             sudo sed -i "s/^#vht_oper_chwidth=1/vht_oper_chwidth=1/" ${HOSTAPD}
@@ -499,6 +504,7 @@ if [ $exitstatus = 0 ]; then
               echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
               echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
               (nohup ./hostapd_fallback) 2>/dev/null
+              rm nohup.out
             fi
           fi
         fi
@@ -534,6 +540,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
           echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
           (nohup ./hostapd_fallback) 2>/dev/null
+          rm nohup.out
         fi
         read_config
       fi
@@ -541,11 +548,12 @@ if [ $exitstatus = 0 ]; then
 #This disables / enables the WLAN
     elif [ $CHOICE = 8 ]; then
       if [ "$TOGGLE09" = "Disable" ]; then
-        CABLE=""
-        CABLE=$(ip addr show eth0 | grep 192.168.43.1)
-        CABLE=$(ip addr show eth1 | grep 192.168.43.1)
+        CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
+        if [ -z "$CABLE" ]; then
+          CABLE=$(ip addr show eth1 | grep -w 192.168.43.1)
+        fi
         clear
-        if [ "$CABLE" != "" ]; then
+        if [ -n "$CABLE" ]; then
           INPUT=$(cat text/disable_wlan-text)
           DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
           "1" "Temporary   - Disable TorBox's WLAN until next boot" OFF \
@@ -579,7 +587,7 @@ if [ $exitstatus = 0 ]; then
         if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
           echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-          sudo systemctl disable hostapd
+          sudo systemctl enable hostapd
           sudo systemctl start hostapd
           sleep 2
         fi

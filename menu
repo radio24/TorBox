@@ -54,8 +54,6 @@ TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 WLANMANGERCONF="/etc/wicd/manager-settting.conf"
-INTERFACESCONF="/etc/network/interfaces"
-ISCDHCPSERVER="/etc/default/isc-dhcp-server"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
@@ -151,21 +149,27 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 4 ]; then
       INPUT=$(cat text/cable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the standard configuration
+        # Restoring the standard configuration
         sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
         clear
         echo ""
-	      echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-	      echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-	      echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+        echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
         echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
-	      echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
-        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
-	      echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+        echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+        echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+        echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+        echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+        echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
-	      echo ""
+        echo ""
         (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
         clear
+        rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
@@ -173,7 +177,15 @@ if [ $exitstatus = 0 ]; then
           CAPTIVE=0
         fi
         sleep 2
-        if ip link | grep eth1 | grep "state UP"; then
+        if ip link | grep wlan0 | grep "state UP" ; then
+          WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+          clear
+        fi
+        if ip link | grep eth1 | grep "state UP" ; then
+          ETH1_IP=$(ip addr show eth1 | grep -w 192.168.43.1)
+          clear
+        fi
+        if [ -n "$WLAN0_IP" ] && [ -n "$ETH1_IP" ] ; then
           sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -183,6 +195,18 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
+          finish
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        elif [ -z "$WLAN0_IP" ] && [ -n "$ETH1_IP" ] ; then
+          sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+          sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+          sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+          sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+          sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+          sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+          # The following line should minimize those cases where a restart is required.
+          sudo systemctl restart isc-dhcp-server
+          sudo bash set_interfaces eth0 eth1 $CAPTIVE
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
@@ -204,23 +228,28 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
+        # Restoring the wlan0 / eth0 configuration
         sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
-        # Wieso gehen wir nicht in jedem Fall über diese Routine (so wie bei den anderen Einträgen)? Das könnte ** erübrigen!
         if ip link | grep wlan1; then
           clear
           echo ""
           echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
           echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-          echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+          echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
           echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
-          echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
-          echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+          echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+          echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+          echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+          echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+          echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+          echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+          echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
           clear
+          rm nohup.out
           INPUT=$(cat text/captive_or_not-text)
           if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
             CAPTIVE=1
@@ -228,25 +257,36 @@ if [ $exitstatus = 0 ]; then
             CAPTIVE=0
           fi
           sleep 2
-          if ip link | grep eth0 | grep "state UP"; then
+          if ip link | grep wlan0 | grep "state UP" ; then
+            WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+            clear
+          fi
+          if ip link | grep eth0 | grep "state UP" ; then
+            ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+            clear
+          fi
+          if [ -n "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
-            # This lines has to be tested out (**).
-            sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
-            echo ""
-            echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-            echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-            echo -e "${RED}[+] This can take up to two minutes - please wait!${NOCOLOR}"
-            echo -e "${RED}[+] If it doesn't work - try to turn TorBox off and on again.${NOCOLOR}"
-            sudo ifdown eth0
-            sudo ifup eth0
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+            sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces wlan1 eth0 $CAPTIVE
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -271,21 +311,28 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the standard configuration (necessary in case of a reboot)
-        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
+        # Temporary restoring the wlan1 / eth0 configuration - this cannot survive a reboot! (see *)
+        sudo cp etc/network/interfaces.wlan1eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
         echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-        echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
         echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
-        echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
-        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+        echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+        echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+        echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+        echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+        echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
         (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
+        # * Restoring the standard configuration
         clear
+        rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
@@ -293,9 +340,15 @@ if [ $exitstatus = 0 ]; then
           CAPTIVE=0
         fi
         sleep 2
-        eth0_up=$(ip link | grep eth0 | grep "state UP")
-        wlan1_up=$(ip link | grep wlan1 | grep "state UP")
-        if [ -n "$eth0_up" ] && [ -n "$wlan1_up" ] ; then
+        if ip link | grep wlan1 | grep "state UP" ; then
+          WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
+          clear
+        fi
+        if ip link | grep eth0 | grep "state UP" ; then
+          ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+          clear
+        fi
+        if [ -n "$WLAN1_IP" ] && [ -n "$ETH0_IP" ] ; then
           sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -306,7 +359,8 @@ if [ $exitstatus = 0 ]; then
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
           finish
-        elif [ -n "$eth0_up" ] && [ -z "$wlan1_up" ] ; then
+          # iptables cannot be saved !!
+        elif [ -z "$WLAN1_IP" ] && [ -n "$ETH0_IP" ] ; then
           sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
           sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -317,6 +371,7 @@ if [ $exitstatus = 0 ]; then
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 eth0 $CAPTIVE
           finish
+          # iptables cannot be saved !!
         else
           sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
@@ -328,28 +383,39 @@ if [ $exitstatus = 0 ]; then
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
           finish
+          # iptables cannot be saved !!
         fi
+        # Can be replaced by a failsave routine in rc.local
+        echo -e "${RED}[+] Please wait...${NOCOLOR}"
+        sleep 5
+        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
       fi
 
 # Cellular or other connections (ppp0; usb0 --> wlan0 / eth0)
     elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
+        # Restoring the wlan0 / eth0 configuration
         sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
         echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-        echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
         echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
-        echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
-        echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+        echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+        echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+        echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+        echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+        echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
         clear
+        rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
@@ -358,7 +424,15 @@ if [ $exitstatus = 0 ]; then
         fi
         sleep 2
         if ip link | grep usb0 ; then
-          if ip link | grep eth0 | grep "state UP"; then
+          if ip link | grep wlan0 | grep "state UP" ; then
+            WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+            clear
+          fi
+          if ip link | grep eth0 | grep "state UP" ; then
+            ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+            clear
+          fi
+          if [ -n "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -368,6 +442,18 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+            sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces usb0 eth0 $CAPTIVE
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -384,10 +470,19 @@ if [ $exitstatus = 0 ]; then
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
         else
+          # pon is installed by Sixfab Shields/HATs for cellular connections software support. It is part of the ppp package, which we didn't install by default.
           sudo pon > /dev/null
           sleep 5
           if ip link | grep ppp0 > /dev/null; then
-            if ip link | grep eth0 | grep "state UP"; then
+            if ip link | grep wlan0 | grep "state UP" ; then
+              WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+              clear
+            fi
+            if ip link | grep eth0 | grep "state UP" ; then
+              ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+              clear
+            fi
+            if [ -n "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
               sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
               sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -397,6 +492,18 @@ if [ $exitstatus = 0 ]; then
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
+              finish
+              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+            elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+              sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+              sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+              sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+              sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+              sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+              sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+              # The following line should minimize those cases where a restart is required.
+              sudo systemctl restart isc-dhcp-server
+              sudo bash set_interfaces ppp0 eth0 $CAPTIVE
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             else
@@ -420,24 +527,30 @@ if [ $exitstatus = 0 ]; then
 
 # Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0)
     elif [ $CHOICE = 8 ]; then
-      INPUT=$(cat text/ppp0-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # This line has to be tested out. Restoring the wlan0 / eth0 configuration
+      INPUT=$(cat text/tethering-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        # Restoring the wlan0 / eth0 configuration
         sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         if ip link | grep eth1 ; then
           clear
           echo ""
           echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
           echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-          echo -e "${RED}[+] Usually, the configuration continuous afterwards -- however,${NOCOLOR}"
+          echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
           echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
-          echo -e "${RED}[+] If it doesn't, then please reconnect your client device with TorBox's${NOCOLOR}"
-          echo -e "${RED}    wireless network and reconnect with our ssh program.${NOCOLOR}"
+          echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+          echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+          echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+          echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+          echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+          echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+          echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
           clear
+          rm nohup.out
           INPUT=$(cat text/captive_or_not-text)
           if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
             CAPTIVE=1
@@ -445,7 +558,15 @@ if [ $exitstatus = 0 ]; then
             CAPTIVE=0
           fi
           sleep 2
-          if ip link | grep eth0 | grep "state UP"; then
+          if ip link | grep wlan0 | grep "state UP" ; then
+            WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+            clear
+          fi
+          if ip link | grep eth0 | grep "state UP" ; then
+            ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+            clear
+          fi
+          if [ -n "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
             sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
@@ -455,6 +576,18 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+            sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces eth1 eth0 $CAPTIVE
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
