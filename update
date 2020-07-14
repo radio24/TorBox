@@ -393,9 +393,9 @@ if [ $exitstatus = 0 ]; then
       clear
       echo -e "${RED}[!] Resetting the network manager...${NOCOLOR}"
       echo " "
-      sudo service wicd stop
+      sudo systemctl stop wicd
       sudo rm /etc/wicd/wireless-settings.conf
-      sudo service wicd start
+      sudo systemctl start wicd
       echo " "
       echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
       sleep 5
@@ -407,7 +407,7 @@ if [ $exitstatus = 0 ]; then
         clear
         MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
         echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
-        sudo service tor stop
+        sudo systemctl stop tor
         sleep 2
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
         deactivating_bridge_relay

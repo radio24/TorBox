@@ -276,7 +276,7 @@ if [ $exitstatus = 0 ]; then
           clear
           echo -e "${RED}[+] Activating the 2.5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
           echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-          sudo service hostapd restart
+          sudo systemctl restart hostapd
         fi
       fi
       read_config

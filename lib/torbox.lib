@@ -154,7 +154,7 @@ restarting_tor()
 {
   SOURCE_SCRIPT=$1
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-  sudo service tor restart &
+  sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."

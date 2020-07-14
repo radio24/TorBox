@@ -94,7 +94,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 	sudo sed -i "s/^wireless_interface = wlan1/wireless_interface = wlan0/" /etc/wicd/manager-settings.conf
 	clear
 	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	service $WLAN_MANAGER_DAEMON_NAME restart
+	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
 	sleep 5
 	$WLAN_MANAGER
 	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
@@ -108,7 +108,7 @@ elif [ "$O_DEVICE" = "wlan1" ]; then
 	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
 	clear
 	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	service $WLAN_MANAGER_DAEMON_NAME restart
+	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
 	sleep 5
 	$WLAN_MANAGER
 	clear
@@ -180,5 +180,5 @@ $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 ###### FINISH ######
 echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
 sleep 5
-sudo service tor restart
+sudo systemctl restart tor
 sleep 5

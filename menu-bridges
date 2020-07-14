@@ -167,7 +167,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
           sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
           restarting_tor menu-bridges
-#          sudo service tor restart
+#          sudo systemctl restart tor
         fi
       fi
       read_config
