@@ -385,6 +385,7 @@ cd /home/torbox/
 echo ""
 echo -e "${RED}[+] Step 11b: Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
+# Later, you can also delete the user pi with "sudo userdel -r pi"
 sudo chage -E0 pi
 
 # 13. Finishing, cleaning and booting
