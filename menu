@@ -249,7 +249,6 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
-          nohup ./hostapd_fallback_komplex wlan0 eth0
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
           clear
           rm nohup.out

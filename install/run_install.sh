@@ -174,7 +174,7 @@ sudo apt-get update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git
 sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python

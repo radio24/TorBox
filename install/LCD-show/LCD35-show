@@ -16,10 +16,14 @@
 ###### SET VARIABLES ######
 
 
+# Original - supports only kernel 4.9.*
+# sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
+# sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
+
+# Added by MrYacha - supports kernel 5.4.*
+sudo cp ./usr/waveshare35a.dtbo /boot/overlays/
 
 # Original
-sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
-sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
 root_dev=`grep -oPr "root=[^\s]*" /boot/cmdline.txt | awk -F= '{printf $NF}'`
 if test "$root_dev" = "/dev/mmcblk0p7";then
   sudo cp -rf ./boot/config-noobs-nomal.txt ./boot/config.txt.bak
@@ -30,24 +34,23 @@ fi
 sudo echo "dtparam=i2c_arm=on" >> ./boot/config.txt.bak
 sudo echo "dtparam=spi=on" >> ./boot/config.txt.bak
 sudo echo "enable_uart=1" >> ./boot/config.txt.bak
-sudo echo "dtoverlay=tft35a:rotate=90" >> ./boot/config.txt.bak
+
+# Original - supports only kernel 4.9.*
+# sudo echo "dtoverlay=tft35a:rotate=90" >> ./boot/config.txt.bak
+
+sudo echo "dtoverlay=waveshare35a:rotate=90" >> ./boot/config.txt.bak
+
+# Added by MrYacha - supports kernel 5.4.*
 sudo cp -rf ./boot/config.txt.bak /boot/config.txt
 
+# Original
 if test "$root_dev" = "/dev/mmcblk0p7";then
   sudo cp ./usr/cmdline.txt-noobs /boot/cmdline.txt
 else
   sudo cp ./usr/cmdline.txt /boot/
 fi
 
-# Original - however, is it really necessary?
-# sudo cp ./usr/inittab /etc/
-
-# Original - however, is it really necessary?
-version=`uname -v`
-version=${version##* }
-echo $version
-# zu löschen
-sleep 10
+sudo cp ./usr/inittab /etc/
 
 sudo sync
 sudo sync

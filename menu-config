@@ -660,11 +660,13 @@ if [ $exitstatus = 0 ]; then
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         online_check menu-config
-        cd ~
+        cd
         sudo rm -rf LCD-show
-        git clone https://github.com/goodtft/LCD-show.git
-        cp ~/torbox/install/LSCD-show/LCD35-show LCD-show/
-        chmod -R 755 LCD-show
+        # This is the original repository, but doesn't worl with kernel 5.4.*, yet
+        # git clone https://github.com/goodtft/LCD-show.git
+        git clone https://github.com/MrYacha/LCD-show.git
+        cp torbox/install/LCD-show/LCD35-show LCD-show/
+        sudo chmod -R 755 LCD-show/
         cd LCD-show/
         if [ "$INPUT" != "" ]; then
           if [ "$INPUT" = 0 ] || [ "$INPUT" = 90] || [ "$INPUT" = 180] || [ "$INPUT" = 270] ; then
@@ -678,12 +680,19 @@ if [ $exitstatus = 0 ]; then
         cd ~
         if (whiptail --defaultno --yesno "\n\nDo you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 #ACHTUNG!! BEI DER SCHLUSSVERSION MUSS --autologin pi durch --autologin torbox ersetzt werden!!
-          sudo printf "\n# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin pi --noclear %I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
-          systemctl enable getty@tty1.service
-          systemctl daemon-reload
+          if ! grep "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
+            sudo printf "\n# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin pi --noclear %I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
+            sudo systemctl enable getty@tty1.service
+            sudo systemctl daemon-reload
+          fi
+        else
+          (sudo /etc/systemd/system/getty@tty1.service.d/override.conf) 2>/dev/null
+          sudo systemctl daemon-reload
         fi
         if (whiptail --defaultno --yesno "\n\nWould you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo sed -i "s/^.\/menu/screen .\/menu/g" .profile
+        else
+          sudo sed -i "s/^screen .\/menu/.\/menu/g" .profile
         fi
         if (whiptail --yesno "\n\nWould you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
