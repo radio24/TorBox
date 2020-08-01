@@ -23,25 +23,19 @@
 # Added by MrYacha - supports kernel 5.4.*
 sudo cp ./usr/waveshare35a.dtbo /boot/overlays/
 
-# Original
-root_dev=`grep -oPr "root=[^\s]*" /boot/cmdline.txt | awk -F= '{printf $NF}'`
-if test "$root_dev" = "/dev/mmcblk0p7";then
-  sudo cp -rf ./boot/config-noobs-nomal.txt ./boot/config.txt.bak
-else
-  sudo cp -rf ./boot/config-nomal.txt ./boot/config.txt.bak
-  sudo echo "hdmi_force_hotplug=1" >> ./boot/config.txt.bak
-fi
-sudo echo "dtparam=i2c_arm=on" >> ./boot/config.txt.bak
-sudo echo "dtparam=spi=on" >> ./boot/config.txt.bak
-sudo echo "enable_uart=1" >> ./boot/config.txt.bak
+# Changed by TorBox
+if ! grep "# Added by LCD-show" /boot/config.txt ; then
+  sudo printf "\n\n# Added by LCD-show\n" | sudo tee -a /boot/config.txt
+  root_dev=`grep -oPr "root=[^\s]*" /boot/cmdline.txt | awk -F= '{printf $NF}'`
+  if test "$root_dev" = "/dev/mmcblk0p7";then
+    echo "Nothing to do :-)"
+  else
+    sudo printf "hdmi_force_hotplug=1\n" | sudo tee -a /boot/config.txt
+  fi
+  sudo printf "dtparam=i2c_arm=on\ndtparam=spi=on\nenable_uart=1\ndtoverlay=waveshare35a:rotate=90\n" | sudo tee -a /boot/config.txt
 
 # Original - supports only kernel 4.9.*
 # sudo echo "dtoverlay=tft35a:rotate=90" >> ./boot/config.txt.bak
-
-sudo echo "dtoverlay=waveshare35a:rotate=90" >> ./boot/config.txt.bak
-
-# Added by MrYacha - supports kernel 5.4.*
-sudo cp -rf ./boot/config.txt.bak /boot/config.txt
 
 # Original
 if test "$root_dev" = "/dev/mmcblk0p7";then
