@@ -149,8 +149,6 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 4 ]; then
       INPUT=$(cat text/cable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # Restoring the standard configuration
-        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -234,8 +232,6 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # Restoring the wlan0 / eth0 configuration
-        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         if ip link | grep wlan1; then
           clear
           echo ""
@@ -253,6 +249,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
+          nohup ./hostapd_fallback_komplex wlan0 eth0
           (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
           clear
           rm nohup.out
@@ -323,8 +320,8 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # Temporary restoring the wlan1 / eth0 configuration - this cannot survive a reboot! (see *)
-        sudo cp etc/network/interfaces.wlan1eth0 /etc/network/interfaces
+        # This temporary restores the wlan1 / eth0 configuration, which does not survive a reboot!
+        # A failsave routine in rc.local takes care of it!
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -342,7 +339,6 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
         (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
-        # * Restoring the standard configuration
         clear
         rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
@@ -403,18 +399,12 @@ if [ $exitstatus = 0 ]; then
           finish
           # iptables cannot be saved !!
         fi
-        # Can be replaced by a failsave routine in rc.local
-        echo -e "${RED}[+] Please wait...${NOCOLOR}"
-        sleep 5
-        sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
       fi
 
 # Cellular or other connections (ppp0; usb0 --> wlan0 / eth0)
     elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # Restoring the wlan0 / eth0 configuration
-        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         clear
         echo ""
         echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -559,8 +549,6 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/tethering-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        # Restoring the wlan0 / eth0 configuration
-        sudo cp etc/network/interfaces.wlan0eth0 /etc/network/interfaces
         if ip link | grep eth1 ; then
           clear
           echo ""

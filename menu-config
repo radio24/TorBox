@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -132,7 +132,7 @@ read_config()
   # TOGGLE09 shows if TorBox's WLAN is disabled or not
   LOG_STATUS=""
   LOG_STATUS=$(sudo systemctl is-active hostapd)
-  if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+  if [ $LOG_STATUS = inactive ] || [ $LOG_STATUS = failed ] ; then
     TOGGLE09="Enable"
   else
     TOGGLE09="Disable"
@@ -162,13 +162,14 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - CONFIGURATION
 " 11" "Erase all log files" \
 "===" "===========================================[Features]========" \
 " 12" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 13" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+" 13" "Support for 3.5\" no-name TFT displays (reboot required)" \
+" 14" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != "" ]; then
 
-#This changes the admin (user pi) password
+#This changes the admin password
 		if [ $CHOICE = 1 ]; then
 			whiptail --title "TorBox - INFO" --msgbox "\n\nYou will now be asked to enter a new admin password." $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
   		passwd
@@ -653,8 +654,48 @@ if [ $exitstatus = 0 ]; then
         sudo ./adafruit-pitft.sh
       fi
 
-#This is the support for Sixfab Shields/HATs for cellular connections
+#This is the support for 3.5" no-name TFT displays
     elif [ $CHOICE = 13 ]; then
+      INPUT=$(cat text/nonametft-text)
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        online_check menu-config
+        cd ~
+        sudo rm -rf LCD-show
+        git clone https://github.com/goodtft/LCD-show.git
+        cp ~/torbox/install/LSCD-show/LCD35-show LCD-show/
+        chmod -R 755 LCD-show
+        cd LCD-show/
+        if [ "$INPUT" != "" ]; then
+          if [ "$INPUT" = 0 ] || [ "$INPUT" = 90] || [ "$INPUT" = 180] || [ "$INPUT" = 270] ; then
+              sudo ./LCD35-show $INPUT
+          else
+            sudo ./LCD35-show
+          fi
+        else
+          sudo ./LCD35-show
+        fi
+        cd ~
+        if (whiptail --defaultno --yesno "\n\nDo you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+#ACHTUNG!! BEI DER SCHLUSSVERSION MUSS --autologin pi durch --autologin torbox ersetzt werden!!
+          sudo printf "\n# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin pi --noclear %I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
+          systemctl enable getty@tty1.service
+          systemctl daemon-reload
+        fi
+        if (whiptail --defaultno --yesno "\n\nWould you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          sudo sed -i "s/^.\/menu/screen .\/menu/g" .profile
+        fi
+        if (whiptail --yesno "\n\nWould you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+          echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+          sleep 2
+          sudo reboot
+          exit 0
+        fi
+      fi
+
+#This is the support for Sixfab Shields/HATs for cellular connections
+    elif [ $CHOICE = 14 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config

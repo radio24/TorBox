@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# This file is a modified version of the file on https://github.com/goodtft/LCD-show
+# Latest commit of the original file: 5a6f609 on 6 Nov 2019
+#
+# DESCRIPTION
+# This file installs the support for no-name 3.5″ TFTs.
+#
+# SYNTAX
+# ./LCD35-show <rotation>
+#
+# Optional, the <rotation> can be changed to 0, 90, 180 and 270, respectively representing
+# rotation angles of 0 degrees, 90 degrees, 180 degrees, 270 degrees.
+#
+###### SET VARIABLES ######
+
+
+
+# Original
+sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
+sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
+root_dev=`grep -oPr "root=[^\s]*" /boot/cmdline.txt | awk -F= '{printf $NF}'`
+if test "$root_dev" = "/dev/mmcblk0p7";then
+  sudo cp -rf ./boot/config-noobs-nomal.txt ./boot/config.txt.bak
+else
+  sudo cp -rf ./boot/config-nomal.txt ./boot/config.txt.bak
+  sudo echo "hdmi_force_hotplug=1" >> ./boot/config.txt.bak
+fi
+sudo echo "dtparam=i2c_arm=on" >> ./boot/config.txt.bak
+sudo echo "dtparam=spi=on" >> ./boot/config.txt.bak
+sudo echo "enable_uart=1" >> ./boot/config.txt.bak
+sudo echo "dtoverlay=tft35a:rotate=90" >> ./boot/config.txt.bak
+sudo cp -rf ./boot/config.txt.bak /boot/config.txt
+
+if test "$root_dev" = "/dev/mmcblk0p7";then
+  sudo cp ./usr/cmdline.txt-noobs /boot/cmdline.txt
+else
+  sudo cp ./usr/cmdline.txt /boot/
+fi
+
+# Original - however, is it really necessary?
+# sudo cp ./usr/inittab /etc/
+
+# Original - however, is it really necessary?
+version=`uname -v`
+version=${version##* }
+echo $version
+# zu löschen
+sleep 10
+
+sudo sync
+sudo sync
+sleep 1
+if [ $# -eq 1 ]; then
+  sudo ./rotate.sh $1
+elif [ $# -gt 1 ]; then
+  echo "Too many parameters"
+fi
