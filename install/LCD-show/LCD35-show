@@ -16,7 +16,7 @@
 ###### SET VARIABLES ######
 # How many degrees should the display output be rotated? We set a prefix of 90 degrees
 # because using 0 means that we will have it landscape, not portrait.
-rotate=90+$i
+ROTATE=90+$i
 
 
 # Original - supports only kernel 4.9.*
@@ -28,11 +28,14 @@ sudo cp ./usr/waveshare35a.dtbo /boot/overlays/
 
 # By TorBox
 if ! grep "# Added by LCD-show" /boot/config.txt ; then
-  sudo printf "\n# Added by LCD-show\nhdmi_force_hotplug=1\n#dtparam=i2c_arm=on\ndtparam=spi=on\n#enable_uart=1\ndtoverlay=waveshare35a:rotate=$rotate\n" | sudo tee -a /boot/config.txt
+  sudo printf "\n# Added by LCD-show\nhdmi_force_hotplug=1\n#dtparam=i2c_arm=on\ndtparam=spi=on\n#enable_uart=1\ndtoverlay=waveshare35a:rotate=$ROTATE\n" | sudo tee -a /boot/config.txt
 fi
 
 if ! grep "fbcon=map:10" /boot/cmdline.txt ; then
-  sudo printf " fbcon=map:10" | sudo tee -a /boot/config.txt
+  CMDLINE=$(</boot/cmdline.txt)
+  CMDLINE=${CMDLINE//[$'\n']}
+  CMDLINE="$CMDLINE fbcon=map:10"
+  echo "$CMDLINE" > /boot/cmdline.txt
 fi
 
 # Final statement

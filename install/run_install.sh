@@ -324,7 +324,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/config.txt
+  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
   sudo systemctl disable bluealsa.service
   sudo systemctl disable bluetooth.service
