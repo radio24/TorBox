@@ -97,6 +97,9 @@ update_firmware()
   read -n 1 -s -r -p "Press any key to continue"
   echo " "
   sudo rpi-eeprom-update -a
+  echo " "
+  echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+  sleep 5
 }
 
 # This function updates TOR
@@ -104,9 +107,14 @@ update_tor()
 {
   online_check_update
   clear
+  if ! grep "torproject" /etc/apt/sources.list ; then
+    sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-  if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
+  if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
+  sudo apt-get -y update
   apt source tor
   KERNEL_VERS=$(uname -s -r)
   TOR_VERS=$(tor --version|rev|cut -c2-|rev)
@@ -118,9 +126,13 @@ update_tor()
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     fi
-   else
+  elif [ -z "$SOURCE_VERS_NUMBER" ] ; then
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
+    whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    RECOMPILE=0
+  else
     if [ $LOOP_NUMBER = 1 ]; then
-      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest stable version of Tor?"
+      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         RECOMPILE=1
       fi
@@ -142,13 +154,16 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
+    echo ""
+    echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
+    sleep 5
     BOOTMSG=1
 #    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 #    	clear
 #      restarting_tor update
 #    fi
   else
-    if [ -d ~/debian-package ] ; then sudo rm -r ~/debian-package ; fi
+    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   fi
 }
 
@@ -162,45 +177,55 @@ update_torcfg()
     sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
     echo -e "${RED}[+] Changed /etc/apt/sources.list -- backup done${NOCOLOR}"
   fi
-  sudo cp /etc/default/hostapd /etc/default/hostapd.bak
+  (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
   sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
-  sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
+  (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
   sudo cp etc/default/isc-dhcp-server /etc/default/
   echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
-  sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
+  (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
+  (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
   echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
+  (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+  (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
   sudo cp etc/iptables.ipv4.nat /etc/
-  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup not necessary${NOCOLOR}"
-  sudo cp /etc/motd /etc/motd.bak
+  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+  (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+  (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
   sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup not necessary${NOCOLOR}"
-  sudo cp /etc/rc.local /etc/rc.local.bak
+  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+  (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
   sudo cp etc/rc.local /etc/
   echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
-  if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+  if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
     sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
     sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
     echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
   fi
-  sudo cp /etc/tor/torrc /etc/tor/torrc.bak
+  (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
   echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-  sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak
+  (sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
   sudo cp etc/wicd/manager-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-  sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
+  (sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
   sudo cp etc/wicd/wired-settings.conf /etc/wicd/
   echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+  sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+  echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+  cd
+  if ! grep "# Added by TorBox" .profile ; then
+    sudo cp .profile .profile.bak
+    sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
+  fi
   sudo cp etc/new_ident .
   echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
   # This has to be at the end to avoid unnecessary error messages
@@ -210,6 +235,9 @@ update_torcfg()
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
   echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+  echo ""
+  echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
+  sleep 5
 }
 
 # This function updates the TorBox menu
@@ -237,22 +265,25 @@ update_torbox_menu()
     cd torbox
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
     sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
-    sleep 2
+    echo -e "${RED} ${NOCOLOR}"
+    echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
+    sleep 5
   else
     echo -e "${RED} ${NOCOLOR}"
-    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-    echo -e "${WHITE}[!] I'can't update TorBox menu !!${NOCOLOR}"
+    echo -e "${WHITE}[!] FAILED!${NOCOLOR}"
+    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub has failed !!${NOCOLOR}"
+    echo -e "${WHITE}[!] I can't update TorBox menu !!${NOCOLOR}"
     echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
-    sleep 2
+    sleep 5
   fi
 }
 
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose your options (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update the firmware of the RPI 4 (reboot required!)" OFF \
-"3" "Update to the newest stable version of Tor (try entry 1 first!)" OFF \
+"3" "Update to the newest version of Tor (try entry 1 first!)" OFF \
 "4" "Update to the newest stable version of the TorBox menu" OFF \
 "5" "Erase all log files" OFF \
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
@@ -292,7 +323,9 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
         sudo systemctl enable tor
         sudo systemctl daemon-reload
-        sleep 2
+        echo ""
+        echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+        sleep 5
         BOOTMSG=1
       fi
 
@@ -304,13 +337,11 @@ if [ $exitstatus = 0 ]; then
           update_firmware
           BOOTMSG=1
           LOOP_NUMBER=0
-          sleep 2
         fi
       else
         update_firmware
         BOOTMSG=1
         LOOP_NUMBER=0
-        sleep 2
       fi
 
 #This updates TOR
@@ -318,10 +349,8 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
         update_tor
-        sleep 2
       else
         update_tor
-        sleep 2
       fi
 
 #This updates the newest stable version of TorBox's menu
@@ -342,7 +371,9 @@ if [ $exitstatus = 0 ]; then
     elif [ $ARGUMENT = 5 ]; then
       clear
       erase_logs
-      sleep 2
+      echo ""
+      echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
+      sleep 5
 
 #This updates / resets TorBox's configuration files
     elif [ $ARGUMENT = 6 ]; then
@@ -351,11 +382,9 @@ if [ $exitstatus = 0 ]; then
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           update_torcfg
           BOOTMSG=1
-          sleep 2
         fi
       else
         update_torcfg
-        sleep 2
         BOOTMSG=1
       fi
 
@@ -364,10 +393,12 @@ if [ $exitstatus = 0 ]; then
       clear
       echo -e "${RED}[!] Resetting the network manager...${NOCOLOR}"
       echo " "
-      sudo service wicd stop
+      sudo systemctl stop wicd
       sudo rm /etc/wicd/wireless-settings.conf
-      sudo service wicd start
-      sleep 2
+      sudo systemctl start wicd
+      echo " "
+      echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+      sleep 5
 
 #This resets Tor and forces a change of the permanent entry node
     elif [ $ARGUMENT = 8 ]; then
@@ -376,7 +407,7 @@ if [ $exitstatus = 0 ]; then
         clear
         MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
         echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
-        sudo service tor stop
+        sudo systemctl stop tor
         sleep 2
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
         deactivating_bridge_relay
@@ -388,16 +419,16 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
         fi
         echo -e "${RED}[+] Deleting all circuits and forcing a change of the permanent entry node${NOCOLOR}"
-        sudo rm -r /var/lib/tor/cached-certs
-        sudo rm -r /var/lib/tor/cached-consensus
-        sudo rm -r /var/lib/tor/cached-descriptors
-        sudo rm -r /var/lib/tor/cached-descriptors.new
-        sudo rm -r /var/lib/tor/cached-microdesc-consensus
-        sudo rm -r /var/lib/tor/cached-microdescs
-        sudo rm -r /var/lib/tor/cached-microdescs.new
-        sudo rm -r /var/lib/tor/diff-cache
-        sudo rm -r /var/lib/tor/lock
-        sudo rm -r /var/lib/tor/state
+        (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
+        (sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
+        (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
+        (sudo rm -r /var/lib/tor/lock) 2> /dev/null
+        (sudo rm -r /var/lib/tor/state) 2> /dev/null
         sleep 2
         echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
         sudo touch /var/log/tor/notices.log
@@ -414,10 +445,10 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
         deactivating_bridge_relay
         echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
-        sudo rm -r /var/lib/tor/keys
-        sudo rm /var/lib/tor/fingerprint
-        sudo rm /var/lib/tor/hashed-fingerprint
-        sudo rm -r /var/lib/tor/pt_state
+        (sudo rm -r /var/lib/tor/keys) 2> /dev/null
+        (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
+        (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
+        (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
         sleep 2
         restarting_tor update
       fi
@@ -430,8 +461,11 @@ if [ $exitstatus = 0 ]; then
 
 # Fixing and Cleaning - Regardless of whether something has been changed or not. Just to be sure that all works properly.
   clear
-  echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
+  echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
+  sudo /usr/sbin/ntpdate pool.ntp.org
+  sleep 3
   echo " "
+  echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
   sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
@@ -441,7 +475,6 @@ if [ $exitstatus = 0 ]; then
   sleep 3
   if [ $BOOTMSG = 1 ]; then
     if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary to load a new kernel!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       clear
       echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
       sleep 2

@@ -120,7 +120,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
@@ -192,7 +192,7 @@ if [ $exitstatus = 0 ]; then
           if [ "$nOBFS4PORT" = "" ]; then
             nOBFS4PORT="443"
           fi
-            nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge (optional).\n\nEnter your contact email address (default: <address@email.com>):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+            nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address (default: <address@email.com>):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           if [ "$nCONTACT" = "" ]; then
             nCONTACT="<address@email.com>"
           fi

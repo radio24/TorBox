@@ -1,4 +1,22 @@
 #!/bin/sh -e
 #
+# Added by TorBox
+if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
+  sudo ifdown wlan0
+  sudo ifdown wlan1
+  sudo sed -i "s/^auto wlan0/auto wlan1/" /etc/network/interfaces
+  sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
+  sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
+  sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
+  sudo ifup wlan0 &>/dev/null &
+  sudo ifup wlan1 &>/dev/null &
+  sudo systemctl restart hostapd
+  sudo systemctl restart isc-dhcp-server
+  sleep 5
+fi
+
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+sudo systemctl start dnsmasq
+sleep 10
 sudo /usr/sbin/ntpdate pool.ntp.org
+sudo systemctl stop dnsmasq

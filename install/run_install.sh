@@ -33,18 +33,19 @@
 ##########################################################
 
 # Table of contents for this script:
-# 1. Checking for Internet connection
-# 2. Checking for the WLAN regulatory domain
-# 3. Updating the system
-# 4. Adding the Tor repository to the source list.
-# 5. Installing all necessary packages
-# 6. Configuring Tor and obfs4proxy
-# 7. Again checking connectivity
-# 8. Downloading and installing the latest version of TorBox
-# 9. Installing all configuration files
-#10. Disabling Bluetooth
-#11. hanging the password of pi to "CHANGE-IT"
-#12. Configure the system services and rebooting
+#  1. Checking for Internet connection
+#  2. Checking for the WLAN regulatory domain
+#  3. Updating the system
+#  4. Adding the Tor repository to the source list.
+#  5. Installing all necessary packages
+#  6. Configuring Tor and obfs4proxy
+#  7. Re-checking Internet connectivity
+#  8. Downloading and installing the latest version of TorBox
+#  9. Installing all configuration files
+# 10. Disabling Bluetooth
+# 11. Configure the system services
+# 12. Adding and implementing the user torbox
+# 13. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -62,6 +63,7 @@ NO_SPACER=0
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
@@ -74,6 +76,11 @@ NOCOLOR='\033[0m'
 #Other variables
 
 
+###### DISPLAY THE INTRO ######
+clear
+whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+clear
+
 # 1. Checking for Internet connection
 # Currently a working Internet connection is mandatory. Probably in a later
 # version, we will include an option to install the TorBox from a compressed
@@ -81,46 +88,45 @@ NOCOLOR='\033[0m'
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
-echo ""
 wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+] Yes, we have! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!] Hmmm, no we don't have... :-(${NOCOLOR}"
-  echo -e "${RED}[+] We will check again in about 30 seconds...${NOCOLOR}"
+  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
-  echo -e "${RED}[+] Trying again...${NOCOLOR}"
+  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
   wget -q --spider https://google.com
   if [ $? -eq 0 ]; then
-    echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
-    echo -e "${WHITE}[!] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+] We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
     (sudo dhclient -r) 2>&1
     sleep 5
     sudo dhclient &>/dev/null &
     sleep 30
     echo ""
-    echo -e "${RED}[+] Trying again...${NOCOLOR}"
+    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
     wget -q --spider https://google.com
     if [ $? -eq 0 ]; then
-      echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+] We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
       sleep 15
-      echo -e "${RED}[+] Dumdidum...${NOCOLOR}"
+      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
       sleep 15
-      echo -e "${RED}[+] Trying again...${NOCOLOR}"
+      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
       wget -q --spider https://google.com
       if [ $? -eq 0 ]; then
-        echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
-        echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+] Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
         exit 1
       fi
     fi
@@ -133,21 +139,21 @@ clear
 echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
 COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
 if [ "$COUNTRY" = "00:" ] ; then
-  echo -e "${WHITE}[!] No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
-  echo -e "${WHITE}[!] Therefore we will set it to US! You can change it later.${NOCOLOR}"
+  echo -e "${WHITE}[!]         No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
+  echo -e "${WHITE}[!]         Therefore we will set it to US! You can change it later.${NOCOLOR}"
   sudo iw reg set US
   INPUT="REGDOMAIN=US"
   sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
 else
-  echo -e "${RED}[+] The WLAN regulatory domain is set correctly! ${NOCOLOR}"
+  echo -e "${RED}[+]         The WLAN regulatory domain is set correctly! ${NOCOLOR}"
 fi
-echo -e "${RED}[+] To be sure we will unblock wlan, now! ${NOCOLOR}"
+echo -e "${RED}[+]         To be sure we will unblock wlan, now! ${NOCOLOR}"
 sudo rfkill unblock wlan
 
 # 3. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 3: Updating the system and installing additional software...${NOCOLOR}"
+echo -e "${RED}[+] Step 3: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
@@ -168,8 +174,12 @@ sudo apt-get update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools ntpdate screen nyx
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn
 sudo apt-get -y install tor deb.torproject.org-keyring
+
+# Additional installations for Python
+sudo pip3 install pytesseract
+sudo pip3 install mechanize
 
 # 6. Configuring Tor and obfs4proxy
 sleep 10
@@ -185,41 +195,41 @@ clear
 echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
 wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+] Yes, we have still Internet connectivity! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+] Hmmm, no we don't have... :-(${NOCOLOR}"
-  echo -e "${RED}[+] We will check again in about 30 seconds...${NOCOLOR}"
+  echo -e "${RED}[+]          Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
-  echo -e "${RED}[+] Trying again...${NOCOLOR}"
+  echo -e "${RED}[+]          Trying again...${NOCOLOR}"
   wget -q --spider https://google.com
   if [ $? -eq 0 ]; then
-    echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+    echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
-    echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+] We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+    echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
+    echo -e "${RED}[+]          We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
     sudo dhclient -r
     sleep 5
     sudo dhclient &>/dev/null &
     sleep 30
-    echo -e "${RED}[+] Trying again...${NOCOLOR}"
+    echo -e "${RED}[+]          Trying again...${NOCOLOR}"
     wget -q --spider https://google.com
     if [ $? -eq 0 ]; then
-      echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+      echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+] We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]          We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
       sleep 15
-      echo -e "${RED}[+] Dumdidum...${NOCOLOR}"
+      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
-      echo -e "${RED}[+] Trying again...${NOCOLOR}"
+      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
       wget -q --spider https://google.com
       if [ $? -eq 0 ]; then
-        echo -e "${RED}[+] Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
-        echo -e "${RED}[+] Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+] Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
+        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
         exit 1
       fi
     fi
@@ -229,20 +239,20 @@ fi
 # 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Download and install the latest version of TorBox....${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/master.zip
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
+  echo ""
   echo -e "${RED}[+]       Removing the old one...${NOCOLOR}"
-  rm -r torbox
+  (rm -r torbox) 2> /dev/null
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
-  rm -r master.zip
-  cd torbox
+  (rm -r master.zip) 2> /dev/null
   echo ""
 else
   echo -e "${RED} ${NOCOLOR}"
@@ -256,44 +266,47 @@ fi
 # 9. Installing all configuration files
 sleep 10
 clear
+cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
-sudo cp /etc/default/hostapd /etc/default/hostapd.bak
+(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
-sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak
+(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
 echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
-sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak
+(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
-sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhpcd.conf.bak
+(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
 echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
-sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
+(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-sudo cp /etc/motd /etc/motd.bak
+echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+(sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
-echo -e "${RED}[+] Copied /etc/motd -- backup not necessary${NOCOLOR}"
+echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
-sudo cp /etc/rc.local /etc/rc.local.bak
+(sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
-if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
 fi
-sudo cp /etc/tor/torrc /etc/tor/torrc.bak
+(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak
+(sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/manager-settings.conf /etc/wicd/
 echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak
+(sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
 sudo cp etc/wicd/wired-settings.conf /etc/wicd/
 echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
@@ -304,13 +317,14 @@ if ! grep "# Added by TorBox" .profile ; then
   sudo cp .profile .profile.bak
   sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
 fi
+cd
 
 # 10. Disabling Bluetooth
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/config.txt
+  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
   sudo systemctl disable bluealsa.service
   sudo systemctl disable bluetooth.service
@@ -318,17 +332,10 @@ if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo apt-get -y autoremove
 fi
 
-# We have to disable that or ask the user for a password
-# 11. Changing the password of pi to "CHANGE-IT"
+# 11. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: We change the password of the user \"pi\" to \"CHANGE-IT\".${NOCOLOR}"
-echo 'pi:CHANGE-IT' | sudo chpasswd
-
-# 12. Configure the system services and rebooting
-sleep 10
-clear
-echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
@@ -346,11 +353,45 @@ sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
 sudo systemctl daemon-reload
 echo ""
-echo -e "${RED}[+] Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
-read -p "The system needs to reboot. This will also erase all log files. Would you do it now? (y/n) " -n 1 -r
+
+# 12. Adding the user torbox
+sleep 10
+clear
+echo -e "${RED}[+] Step 11a: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
+echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
+echo ""
+echo -e "${WHITE}[!] IMPORTANT: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
+echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
+echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo ""
+sudo adduser --disabled-password --gecos "" torbox
+echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
+sudo adduser torbox sudo
+sudo mv /home/pi/* /home/torbox/
+(sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
+sudo mkdir /home/torbox/openvpn
+(sudo rm .bash_history) 2> /dev/null
+sudo chown -R torbox.torbox /home/torbox/
+if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
+  sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
+  (sudo visudo -c) 2> /dev/null
+fi
+cd /home/torbox/
+echo ""
+echo -e "${RED}[+] Step 11b: Disable the user pi...${NOCOLOR}"
+# This can be undone by sudo chage -E-1 pi
+# Later, you can also delete the user pi with "sudo userdel -r pi"
+sudo chage -E0 pi
+
+# 13. Finishing, cleaning and booting
+echo ""
+read -p $'\e[0;31mThe system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now (\e[1;37mHIGHLY RECOMMENDED!\e[0;31m)? (Y/n) \e[0m' -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
@@ -362,9 +403,9 @@ then
     sudo rm $logs
     sleep 1
   done
-  echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  sudo rm .bash_history
-  sudo history -c
+  echo -e "${RED}[+]${NOCOLOR} Erasing History..."
+  #.bash_history is already deleted
+  history -c
   echo ""
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak

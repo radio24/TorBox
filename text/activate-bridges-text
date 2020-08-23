@@ -1,14 +1,14 @@
-To circumvent sophisticated censorship, Tor introduced BRIDGES which support pluggable transports. These transports manipulate all Tor traffic between the client and its first hop such that it is not identifiable as a Tor connection. Currently, TorBox supports only OBFS4, because it is currently the most effective transport to bypass censorship.
+To circumvent sophisticated censorship, Tor introduced BRIDGES, which supports pluggable transports. These transports manipulate all Tor traffic between the client and its first hop such that it is not identifiable as a Tor connection. Currently, TorBox supports only OBFS4, because it is currently the most effective transport to bypass censorship.
 
 IMPORTANT
-- With this menu entry, you can activate the BRIDGE MODE of TorBox to
-  bypass Tor blocking in your country. However, this helps to circumvent
-  censorship; it doesn't help if a firewall blocks your network traffic.
+- This menu entry activates the BRIDGE MODE of TorBox to bypass Tor blocking
+  in a country. It helps to circumvent censorship; however, it doesn't help
+  if a firewall blocks the network traffic.
 - BRIDGE RELAY MODE will automatically be deactivated; the configuration will be kept for later re-activation.
 
 You should only activate BRIDGE MODE if necessary because it complicates configuration and could lead to a less stable and slower data transfer speed. By default, BRIDGE MODE is deactivated.
 
-Furthermore, you have to activate already configured bridges or add/replace additional bridges (menu entry 4 or 5). To take effect, finally, you have to restart tor (menu entry 9).
-More information on how obtaining bridges can you find in the "ALL ABOUT BRIDGES - READ ME FIRST" menu entry.
+Furthermore, you have to activate already configured bridges or add/replace additional bridges (menu entry 4 or 5). To take effect, finally, you have to restart Tor (menu entry 9).
+More information on how to obtain bridges can you find in the "ALL ABOUT BRIDGES - READ ME FIRST" menu entry.
 
 Would you like to ACTIVATE the BRIDGE MODE of TorBox?

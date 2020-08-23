@@ -5,6 +5,8 @@
 source-directory /etc/network/interfaces.d
 
 auto lo
+auto eth0
+auto wlan1
 auto usb0
 
 iface lo inet loopback

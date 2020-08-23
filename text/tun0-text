@@ -1,0 +1,31 @@
+This menu entry supposes that TorBox is connected with the internet
+through a VPN connection. There are two possibilities of how TorBox handles
+VPN connections:
+
+1. The VPN connection is already established, and the interface tun0 is
+   configured.
+2. The VPN connection is not yet established, but a *.ovpn - file is in the
+   ~/openvpn directory so that TorBox can execute OpenVPN with that file.
+
+IMPORTANT
+- We do NOT recommend using a VPN. If Tor entry guards cannot be reached
+  for censorship reasons, we recommend using OBFS4 bridges as a priority
+  (main menu entry 10). We consider a VPN connection as a last resort.
+- Nevertheless, we consider the additional risk of this "Tor over VPN"
+  situation  to be proportionate - see here: https://bit.ly/31lUhLQ
+- Depending on your configuration and your VPN provider, local DNS
+  resolution may not work. This does not affect the clients because
+  their DNS resolution is routed through the Tor network. However,
+  probably you are unable to execute some menu points in the TorBox menu
+  when a local Internet connection with working DNS resolution is mandatory.
+
+The next step is to setup TorBox so that your client devices have access
+through TorBox's wireless network. However, if you also like to access
+through the onboard ethernet interface (cable), please plug in the cable
+with your client device, NOW.
+
+If we have to restart TorBox's wireless network, then please reconnect your
+client without closing the ssh session. Usually, the configuration
+continuous -- if not, then please repeat the process.
+
+Would you like to CONTINUE?

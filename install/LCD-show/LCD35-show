@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# This file is a modified version of the file on https://github.com/goodtft/LCD-show
+# Latest commit of the original file: 5a6f609 on 6 Nov 2019
+#
+# DESCRIPTION
+# This file installs the support for no-name 3.5″ TFTs.
+#
+# SYNTAX
+# ./LCD35-show <rotation>
+#
+# Optional, the <rotation> can be changed to 0, 90, 180 and 270, respectively representing
+# rotation angles of 0 degrees, 90 degrees, 180 degrees, 270 degrees.
+#
+###### SET VARIABLES ######
+# How many degrees should the display output be rotated? We set a prefix of 90 degrees
+# because using 0 means that we will have it landscape, not portrait.
+ROTATE=90+$i
+
+
+# Original - supports only kernel 4.9.*
+# sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
+# sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
+
+# By MrYacha - supports kernel 5.4.*
+sudo cp ./usr/waveshare35a.dtbo /boot/overlays/
+
+# By TorBox
+if ! grep "# Added by LCD-show" /boot/config.txt ; then
+  sudo printf "\n# Added by LCD-show\nhdmi_force_hotplug=1\n#dtparam=i2c_arm=on\ndtparam=spi=on\n#enable_uart=1\ndtoverlay=waveshare35a:rotate=$ROTATE\n" | sudo tee -a /boot/config.txt
+fi
+
+if ! grep "fbcon=map:10" /boot/cmdline.txt ; then
+  CMDLINE=$(</boot/cmdline.txt)
+  CMDLINE=${CMDLINE//[$'\n']}
+  CMDLINE="$CMDLINE fbcon=map:10"
+  echo "$CMDLINE" > /boot/cmdline.txt
+fi
+
+# Final statement
+# We know that we have to improfe our script and how we possibly responsible configure a system, but the installations script handed out by LCD-show is REALLY of lousy quality. They
+# are overwriting configuration files and put things in it, which are not necessary -- at least not for working with TorBox. The following sources help to understand what is essential
+# when it comes to configuring a TFT display with LCD-show:
+# https://avikdas.com/2018/12/31/setting-up-lcd-screen-on-raspberry-pi.html
+# https://www.willprice.dev/2017/09/16/adventures-with-tft-screens-for-raspberry-pi.html

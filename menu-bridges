@@ -69,41 +69,41 @@ j=0
 # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
-MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
-if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-    TOGGLE05="ON]==="
-    TOGGLE05b="ON"
-    TOGGLE06="OFF]=="
-    TOGGLE06b="OFF"
-else
-    TOGGLE05="OFF]=="
-    TOGGLE05b="OFF"
-    TOGGLE06="ON]==="
-    TOGGLE06b="ON"
-fi
+  MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
+  if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+      TOGGLE05="ON]==="
+      TOGGLE05b="ON"
+      TOGGLE06="OFF]=="
+      TOGGLE06b="OFF"
+  else
+      TOGGLE05="OFF]=="
+      TOGGLE05b="OFF"
+      TOGGLE06="ON]==="
+      TOGGLE06b="ON"
+  fi
 
-if grep -q "^PING=OFF" ${RUNFILE} ; then PING="OFF" ; fi
-if grep -q "^PING=ON" ${RUNFILE} ; then PING="ON" ; fi
+  if grep -q "^PING=OFF" ${RUNFILE} ; then PING="OFF" ; fi
+  if grep -q "^PING=ON" ${RUNFILE} ; then PING="ON" ; fi
 
-# NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
-sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+  # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
+  sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+  sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 
-# HOW MANY CONFIGURED BRIDGES DO WE HAVE?
-# readarray reads into an array beginning with index 0
-readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
-readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
-if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
-  number_configured_bridges_deactivated=0
-else
-  number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
-fi
-if [ ${#configured_bridges_activated[0]} = 0 ]; then
-  number_configured_bridges_activated=0
-else
-  number_configured_bridges_activated=${#configured_bridges_activated[*]}
-fi
-number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+  # HOW MANY CONFIGURED BRIDGES DO WE HAVE?
+  # readarray reads into an array beginning with index 0
+  readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
+  readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
+  if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
+    number_configured_bridges_deactivated=0
+  else
+    number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
+  fi
+  if [ ${#configured_bridges_activated[0]} = 0 ]; then
+    number_configured_bridges_activated=0
+  else
+    number_configured_bridges_activated=${#configured_bridges_activated[*]}
+  fi
+  number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
 }
 
 ######## PREPARATIONS ########
@@ -112,13 +112,13 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
 "  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
-"  4" "Add additional bridges - keep the old ones"  \
+"  4" "Add additional bridges"  \
 "  5" "Activate configured bridges"  \
 "  6" "Deactivate configured bridges"  \
 "  7" "Remove configured bridges"  \
@@ -149,11 +149,11 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
           #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          sudo sh bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
+          sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
           if [ $number_configured_bridges_total = 0]; then
             INPUT=$(cat text/add-bridges-first-text)
             if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
-              sudo bash bridges_add
+              sudo bash bridges_add_old
             fi
           fi
         fi
@@ -167,7 +167,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
           sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
           restarting_tor menu-bridges
-#          sudo service tor restart
+#          sudo systemctl restart tor
         fi
       fi
       read_config
@@ -180,12 +180,12 @@ if [ $exitstatus = 0 ]; then
       OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
       if [ $? == 0 ]; then
         OCHECK="0"
-        echo -e "${RED}[+] OK - we are connected with the bridge databas${NOCOLOR}"
+        echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
         sleep 2
-        else
-          OCHECK="1"
-          echo -e "${WHITE}[!] SORRY! - no connection with the bridge databas${NOCOLOR}"
-          sleep 2
+      else
+        OCHECK="1"
+        echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+        sleep 2
       fi
       if [ $number_configured_bridges_deactivated -gt 0 ]; then
           clear
@@ -242,11 +242,8 @@ if [ $exitstatus = 0 ]; then
 
 # Add bridges
     elif [ $CHOICE = 4 ]; then
-      INPUT=$(cat text/add-bridges-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add $MODE_BRIDGES
-        read_config
-      fi
+      sudo bash bridges_add_old $MODE_BRIDGES
+      read_config
 
 # Activate bridges
     elif [ $CHOICE = 5 ]; then

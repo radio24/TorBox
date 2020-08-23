@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Ubuntu 20.04 LTS (32bit; https://ubuntu.com/download/raspberry-pi).
+# Ubuntu 20.04 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
 # ./run_install_on_ubuntu.sh
@@ -140,7 +140,7 @@ fi
 # 2. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 2a: Remove Ubuntus' unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
+echo -e "${RED}[+] Step 2a: Remove Ubuntu's unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
 (sudo killall unattended-upgr) 2> /dev/null
 sleep 15
 echo -e "${RED}[+]          Please wait...${NOCOLOR}"
@@ -149,8 +149,12 @@ sleep 15
 sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
-# Should we remove network-manager??
-echo -e "${RED}[+] Step 2b: Updating the system...${NOCOLOR}"
+
+echo -e "${RED}[+] Step 2b: Remove Ubuntu's cloud-init...${NOCOLOR}"
+sudo apt-get -y purge cloud-init
+sudo rm -Rf /etc/cloud
+echo ""
+echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
@@ -162,7 +166,8 @@ sudo apt-get -y autoremove
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs
+
+sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 
@@ -336,7 +341,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 (sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
 sudo sp etc/systemd/resolved.conf /etc/systemd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
-if grep "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
@@ -372,7 +377,8 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
-# Under Ubuntu systemd-resolved act as local DNS server. However, clients can not use it, because systemd-resolved is listening
+
+# Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
 # them over 127.0.0.53:53. This is what we need to get to the login page at captive portals.
 # CLIENT --> DNSMASQ --> resolve.conf --> systemd-resolver --> ext DNS address
@@ -427,6 +433,7 @@ echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
 sudo adduser torbox sudo
 sudo mv /home/ubuntu/* /home/torbox/
 (sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2> /dev/null
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
@@ -481,4 +488,5 @@ else
   echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
   echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
 fi
+
 exit 0

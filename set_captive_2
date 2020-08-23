@@ -37,7 +37,7 @@
 # wlan0 ->  TorBox is connected to the internet through a wireless network (onboard WLAN chip).
 # wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
 #	ppp0	->	TorBox is connected to the internet through a cellular adapter.
-# usb0	->  TorBox is connected to the internet through a USB adapter.
+# usb0	->  TorBox is connected to the internet through an USB adapter.
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
 # eth0  -> 	The device is connected with a cable (onboard ethernet interface).
@@ -86,7 +86,7 @@ fi
 ######## PREPARATIONS ########
 clear
 echo -e "${RED}[+] Starting DNS forwarder...${NOCOLOR}"
-sudo service $DNSPROG start
+sudo systemctl start $DNSPROG
 echo -e "${RED}[+] Flushing existing iptables rules...${NOCOLOR}"
 $IPTABLES -F
 $IPTABLES -F -t nat
@@ -112,7 +112,7 @@ $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT
 clear
 whiptail --title "TorBox - INFO" --textbox text/browser-text 25 80
 echo -e "${RED}[+] Stopping DNS forwarder...${NOCOLOR}"
-sudo service $DNSPROG stop
+sudo systemctl stop $DNSPROG
 
 ########## FINISHING ##########
 exit 0

@@ -58,7 +58,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-show_when_zero_bridges=$3
+show_when_zero_bridges=$1
 i=0
 
 ###########################
@@ -97,7 +97,7 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
   "===" "==============================================================" \
   "  1" "Activate ALL configured bridges"  \
@@ -121,11 +121,11 @@ else
     # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
         clear
-        echo -e "${RED}[+] Checking connectivity to the bridge databas - please wait...${NOCOLOR}"
+        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
         OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
         if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
         if [ $OCHECK == 0 ]; then
-          echo -e "${WHITE}[+] OK - we are connected with the bridge databas${NOCOLOR}"
+          echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
           echo " "
           echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
           trap "bash bridges_activate_old; exit 0" SIGINT
@@ -157,7 +157,7 @@ else
             fi
           fi
         else
-          echo -e "${WHITE}[+] OH NO! - no connection to the bridge databas :( ${NOCOLOR}"
+          echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[+] Cant fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
           sleep 2
         fi

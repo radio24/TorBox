@@ -26,7 +26,7 @@
 # This program uses the Onionoo protocol - for more information go to: https://metrics.torproject.org/onionoo.html
 #
 # SYNTAX
-# ./bridges_check [-i] -f <fingerprint> [-s] [--info file_name] [-h]
+# ./bridges_check.py [-i] -f <fingerprint> [-s] [--info file_name] [-h]
 #
 # -h: print the help screen
 # --help: print the help screen
