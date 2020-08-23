@@ -63,12 +63,13 @@ while bridges == False:
 	os.system('convert %s/captcha.tif -morphology Erode Disk:2 %s/captcha.tif'  % (tmp_dir, tmp_dir))
 
 	# solve the captcha
-	captcha_text =  image_to_string(Image.open('%s/captcha.tif' % tmp_dir), config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKMNLOPKRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+	captcha_text = image_to_string(Image.open('%s/captcha.tif' % tmp_dir), config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKMNLOPKRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+	captcha_text = captcha_text.strip()
 
 	# if captcha len doesn't match on what we look, we just try again
 	if len(captcha_text) < 7 or len(captcha_text) > 7:
 		continue
-
+	
 	# reply to server with the captcha text
 	br.select_form(nr=0)
 	br['captcha_response_field'] = captcha_text
