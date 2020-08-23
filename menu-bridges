@@ -112,7 +112,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.1 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \

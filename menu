@@ -109,7 +109,7 @@ check_interface_with_internet
 check_tor
 
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
@@ -788,8 +788,8 @@ if [ $exitstatus = 0 ]; then
 
 # Reboot or Shotdown TorBox
     elif [ $CHOICE = 14 ]; then
-      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.3.1 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
-      "  1" "REBOOT TorBox" \
+      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.3.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+      "  1" "REBOOT   TorBox" \
       "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)
       exitstatus=$?
 
@@ -806,7 +806,6 @@ if [ $exitstatus = 0 ]; then
           elif [ $CHOICE_EXIT = 2 ]; then
             clear
             echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
-            sleep 2
             echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
             echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
             echo ""
