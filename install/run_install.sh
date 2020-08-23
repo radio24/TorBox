@@ -387,7 +387,7 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 12. Finishing, cleaning and booting
+# 13. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
@@ -398,12 +398,12 @@ echo -e "${RED}[+]          If you don't need the \"pi\" account anymore, you ca
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
-echo -e "${WHITE}    In order to do that you have to log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14 to reboot it.${NOCOLOR}"
-echo -e "${WHITE}    After the reboot please, immediately change the default passwords!!${NOCOLOR}"
+echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
+echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
+echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
-read -n 1 -s -r -p $'\e[1;37mTo complete the installation, please press any key... \e[0m'
+read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
@@ -416,14 +416,22 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
 echo ""
+echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 sudo cp /etc/hostname /etc/hostname.bak
 sudo cp torbox/etc/hostname /etc/
-echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+echo -e "${RED}[+]Copied /etc/hostname -- backup done${NOCOLOR}"
 sudo cp /etc/hosts /etc/hosts.bak
 sudo cp torbox/etc/hosts /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Disable the user pi...${NOCOLOR}"
+echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
+echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
 # Later, you can also delete the user pi with "sudo userdel -r pi"
-sudo chage -E0 pi ; exit ; exit
+echo ""
+echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+echo -e "${WHITE}    TorBox has to be rebooted manually.${NOCOLOR}"
+echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
+echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
+echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
+echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+sudo chage -E0 pi
