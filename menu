@@ -165,7 +165,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
         echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
         echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
@@ -249,7 +249,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
           echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
           echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-          echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+          echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
@@ -337,7 +337,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
         echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
         echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
@@ -420,7 +420,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
         echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
         echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
@@ -565,7 +565,7 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
           echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
           echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-          echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+          echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
           echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
           echo -e "${RED}    load the default values.${NOCOLOR}"
           echo ""
@@ -651,7 +651,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
         echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
         echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-9)${NOCOLOR}"
         echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
         echo -e "${RED}    load the default values.${NOCOLOR}"
         echo ""
@@ -787,33 +787,39 @@ if [ $exitstatus = 0 ]; then
       cd torbox
 
 # Reboot or Shotdown TorBox
-elif [ $CHOICE = 14 ]; then
-      INPUT=$(cat text/wrd-text)
-      if (whiptail --title "Reboot or Shutdown (ESC to quit)" --defaultno --no-button "REBOOT" --yes-button "SHUTDOWN" --yesno "" 5 $MENU_WIDTH_REDUX); then
-        clear
-        echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-        echo ""
-        sleep 2
-        sudo reboot
-        exit 0
-      fi
+    elif [ $CHOICE = 14 ]; then
+      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.3.1 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+      "  1" "REBOOT TorBox" \
+      "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)
       exitstatus=$?
+
       if [ $exitstatus = 0 ]; then
-        clear
-        echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
-        sleep 2
-        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-        echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
-        echo ""
-        sleep 2
-        sudo shutdown -h now
-        exit 0
-  		fi
+        if [ "$CHOICE_EXIT" != " " ]; then
+          if [ $CHOICE_EXIT = 1 ]; then
+            clear
+            echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+            echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+            echo ""
+            sleep 2
+            sudo reboot
+            exit 0
+          elif [ $CHOICE_EXIT = 2 ]; then
+            clear
+            echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
+            sleep 2
+            echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+            echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
+            echo ""
+            sleep 2
+            sudo shutdown -h now
+            exit 0
+          fi
+        fi
+      fi
     fi
-	fi
+  fi
 else
-	clear
+ clear
 	PROMPTTEXT=$(cat text/prompt-text)
 	echo -e "$PROMPTTEXT"
 	echo " "
