@@ -12,9 +12,6 @@ if [ "$_IP" ]; then
 fi
 
 # Added by TorBox
-# Not necessary, yet - idea: failsafe if wlan1 is in /etc/network/interfaces
-# which shouldn't be the case! Instead we have sudo
-# cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces in menu
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1

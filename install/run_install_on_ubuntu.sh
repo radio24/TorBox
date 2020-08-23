@@ -485,4 +485,5 @@ else
   echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
   echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
 fi
+
 exit 0
