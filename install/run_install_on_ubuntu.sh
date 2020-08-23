@@ -149,6 +149,7 @@ sleep 15
 sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
 echo ""
+
 echo -e "${RED}[+] Step 2b: Remove Ubuntu's cloud-init...${NOCOLOR}"
 sudo apt-get -y purge cloud-init
 sudo rm -Rf /etc/cloud
@@ -165,6 +166,7 @@ sudo apt-get -y autoremove
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+
 sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
@@ -375,6 +377,7 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
+
 # Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
 # them over 127.0.0.53:53. This is what we need to get to the login page at captive portals.
