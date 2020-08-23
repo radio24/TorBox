@@ -695,6 +695,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^screen .\/menu/.\/menu/g" .profile
         fi
         if (whiptail --yesno "\n\nWould you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
           sleep 2

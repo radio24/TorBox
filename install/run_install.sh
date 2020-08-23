@@ -174,7 +174,7 @@ sudo apt-get update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn
 sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
@@ -375,6 +375,7 @@ echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
 sudo adduser torbox sudo
 sudo mv /home/pi/* /home/torbox/
 (sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
+sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2> /dev/null
 sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then

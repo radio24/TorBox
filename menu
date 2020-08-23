@@ -86,13 +86,17 @@ check_bridge_relay()
 check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
-IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
-if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
-if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
-if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; fi
-if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; fi
-if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; fi
+IINTERFACE=""
+IINTERFACE=$(route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+if [ "$IINTERFACE" = "0.0.0.0" ] ; then FLASH_TUN0="<--" ; else
+  IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; fi
+  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; fi
+fi
 }
 
 ######## PREPARATIONS ########
@@ -112,18 +116,18 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.1 - MAIN MENU" --menu "Choose
 "  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
 "  4" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-"  5" "Wireless network (through a USB adapter; wlan1)            "$FLASH_WLAN1 \
+"  5" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
 "  6" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
 "  7" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
 "  8" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+"  9" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
 "===" "===============================================[Sub-Menues]===" \
-"  9" "Go to the countermeasure sub-menu..." \
-" 10" "Go to the configuration sub-menu..." \
-" 11" "Go to defend the open internet..." \
-" 12" "Go to the update and reset sub-menu..." \
+" 10" "Go to the countermeasure sub-menu..." \
+" 11" "Go to the configuration sub-menu..." \
+" 12" "Go to defend the open internet..." \
+" 13" "Go to the update and reset sub-menu..." \
 "===" "========================================[Reboot & Shutdown]===" \
-" 13" "Reboot TorBox" \
-" 14" "Shutdown TorBox" 3>&1 1>&2 2>&3)
+" 14" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -228,7 +232,7 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
 
-# Wireless network (through a USB adapter; wlan1 --> wlan0 / eth0)
+# Wireless network (through an USB adapter; wlan1 --> wlan0 / eth0)
     elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -631,41 +635,182 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
 
-# Sub-menues
+# Over a VPN connection (tun0)
     elif [ $CHOICE = 9 ]; then
-      bash menu-bridges
+      INPUT=$(cat text/tun0-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        echo ""
+        echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+        echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+        echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
+        echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
+        echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+        echo -e "${RED}    disconnect and reconnect your client device from TorBox's WLAN${NOCOLOR}"
+        echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+        echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+        echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+        echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+        echo -e "${RED}    source again (main menu 4-8)${NOCOLOR}"
+        echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+        echo -e "${RED}    load the default values.${NOCOLOR}"
+        echo ""
+        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+        clear
+        rm nohup.out
+        INPUT=$(cat text/captive_or_not-text)
+        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          CAPTIVE=1
+        else
+          CAPTIVE=0
+        fi
+        sleep 2
+        tun0up=$(ip link | grep tun0)
+        if [ "$tun0up" = "" ] ; then
+          readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
+          if [ "${ovpnlist[0]}" = "" ] ; then
+            whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+            trap "bash menu; exit 0" EXIT
+            exit 0
+          fi
+          ovpnlist_anzahl=${#ovpnlist[*]}
+          anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
+          menu_content=""
+          for (( i=0; i<=$anzahl_loops; i++ ))
+          do
+            menu_item=$(( $i + 1 ))
+            menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
+          done
+          clear
+          echo -e "${WHITE}Choose an OpenVPN configuration${NOCOLOR}"
+          echo ""
+          echo -e "$menu_content"
+          echo ""
+          read -r -p $'\e[1;37mWhich OpenVPN configuration would you like to use? -> \e[0m'
+          echo
+          if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+            CHOICE_OVPN=$(( $REPLY - 1 ))
+            clear
+            echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
+            echo ""
+            sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+            echo ""
+            echo -e "${RED}[+] Please wait...${NOCOLOR}"
+            sleep 10
+            tun0up=$(ip link | grep tun0)
+          else
+            trap "bash menu; exit 0" EXIT
+            exit 0
+          fi
+        fi
+        if [ "$tun0up" != "" ] ; then
+          clear
+          echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+          wget -q --spider http://google.com
+          if [ $? -eq 0 ]; then
+            echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+          else
+            echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+            echo -e "${RED}[+] We will add a bunch of public nameservers to /etc/resolv.conf and try again...${NOCOLOR}"
+            echo -e "${RED}[+] This nameservers are only used for local resolution. All clients DNS resquest are handled through Tor.${NOCOLOR}"
+            sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+            (sudo resolvconf -a tun0 <etc/resolv.conf) 2> /dev/null
+            sleep 2
+          fi
+          if ip link | grep wlan0 | grep "state UP" ; then
+            WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+            clear
+          fi
+          if ip link | grep eth0 | grep "state UP" ; then
+            ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+            clear
+          fi
+          if [ -n "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9051/SocksPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9051/SocksPort 192.168.43.1:9051/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
+            sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.42.1:9050/#SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.42.1:9051/#SocksPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.43.1:9051/SocksPort 192.168.43.1:9051/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces tun0 eth0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          else
+            sudo sed -i "s/^#TransPort 192.168.42.1:9040/TransPort 192.168.42.1:9040/" ${TORRC}
+            sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
+            sudo sed -i "s/^#SocksPort 192.168.42.1:9051/SocksPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
+            sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
+            sudo sed -i "s/^SocksPort 192.168.43.1:9051/#SocksPort 192.168.43.1:9051/" ${TORRC}
+            # The following line should minimize those cases where a restart is required.
+            sudo systemctl restart isc-dhcp-server
+            sudo bash set_interfaces tun0 wlan0 $CAPTIVE
+            finish
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          fi
+        else
+          whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+        fi
+      fi
+
+# Sub-menues
     elif [ $CHOICE = 10 ]; then
-      bash menu-config
+      bash menu-bridges
     elif [ $CHOICE = 11 ]; then
-      bash menu-server
+      bash menu-config
     elif [ $CHOICE = 12 ]; then
+      bash menu-server
+    elif [ $CHOICE = 13 ]; then
       screen bash update
       clear
       cd
       cd torbox
 
-# Reboot
-    elif [ $CHOICE = 13 ]; then
-      clear
-      echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-      echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-      echo ""
-      sleep 2
-      sudo reboot
-      exit 0
-
-# Shutdown
-    elif [ $CHOICE = 14 ]; then
-      clear
-      echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
-      sleep 2
-      echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-      echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
-      echo ""
-      sleep 2
-      sudo shutdown -h now
-      exit 0
-		fi
+# Reboot or Shotdown TorBox
+elif [ $CHOICE = 14 ]; then
+      INPUT=$(cat text/wrd-text)
+      if (whiptail --title "Reboot or Shutdown (ESC to quit)" --defaultno --no-button "REBOOT" --yes-button "SHUTDOWN" --yesno "" 5 $MENU_WIDTH_REDUX); then
+        clear
+        echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+        echo ""
+        sleep 2
+        sudo reboot
+        exit 0
+      fi
+      exitstatus=$?
+      if [ $exitstatus = 0 ]; then
+        clear
+        echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
+        sleep 2
+        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+        echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
+        echo ""
+        sleep 2
+        sudo shutdown -h now
+        exit 0
+  		fi
+    fi
 	fi
 else
 	clear

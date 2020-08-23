@@ -37,7 +37,7 @@
 # wlan0 ->  TorBox is connected to the internet through a wireless network (onboard WLAN chip).
 # wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
 #	ppp0	->	TorBox is connected to the internet through a cellular adapter.
-# usb0	->  TorBox is connected to the internet through a USB adapter.
+# usb0	->  TorBox is connected to the internet through an USB adapter.
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
 # eth0  -> 	The device is connected with a cable (onboard ethernet interface).
