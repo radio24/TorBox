@@ -212,7 +212,7 @@ if [ $exitstatus = 0 ]; then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
-        nNICK="TorBox031"
+        nNICK="TorBox032"
         change_config
         read_config
       fi

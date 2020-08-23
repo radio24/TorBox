@@ -118,6 +118,7 @@ else
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
       sleep 15
+      echo ""
       echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]         Trying again...${NOCOLOR}"
@@ -221,6 +222,7 @@ else
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
       sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
       sleep 15
+      echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
@@ -361,11 +363,12 @@ echo""
 # 12. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 11a: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
-echo -e "${WHITE}[!] IMPORTANT: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
 echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
 echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
@@ -383,49 +386,44 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   (sudo visudo -c) 2> /dev/null
 fi
 cd /home/torbox/
+
+# 12. Finishing, cleaning and booting
 echo ""
-echo -e "${RED}[+] Step 11b: Disable the user pi...${NOCOLOR}"
+echo ""
+echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
+echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
+echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"
+echo -e "${RED}[+]          If you don't need the \"pi\" account anymore, you can remove it with \"sudo userdel -r pi\".${NOCOLOR}"
+echo ""
+echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
+echo -e "${WHITE}    In order to do that you have to log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
+echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14 to reboot it.${NOCOLOR}"
+echo -e "${WHITE}    After the reboot please, immediately change the default passwords!!${NOCOLOR}"
+echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo ""
+read -n 1 -s -r -p $'\e[1;37mTo complete the installation, please press any key... \e[0m'
+clear
+echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
+echo " "
+for logs in `sudo find /var/log -type f`; do
+  echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
+  sudo rm $logs
+  sleep 1
+done
+echo -e "${RED}[+]${NOCOLOR} Erasing History..."
+#.bash_history is already deleted
+history -c
+echo ""
+# This has to be at the end to avoid unnecessary error messages
+sudo cp /etc/hostname /etc/hostname.bak
+sudo cp torbox/etc/hostname /etc/
+echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+sudo cp /etc/hosts /etc/hosts.bak
+sudo cp torbox/etc/hosts /etc/
+echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+echo -e "${RED}[+] Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
 # Later, you can also delete the user pi with "sudo userdel -r pi"
-sudo chage -E0 pi
-
-# 13. Finishing, cleaning and booting
-echo ""
-read -p $'\e[0;31mThe system needs to reboot. This will also erase all log files and cleaning up the system. Would you do it now (\e[1;37mHIGHLY RECOMMENDED!\e[0;31m)? (Y/n) \e[0m' -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-  clear
-  echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-  echo " "
-  for logs in `sudo find /var/log -type f`; do
-    echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
-    sudo rm $logs
-    sleep 1
-  done
-  echo -e "${RED}[+]${NOCOLOR} Erasing History..."
-  #.bash_history is already deleted
-  history -c
-  echo ""
-  # This has to be at the end to avoid unnecessary error messages
-  sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp torbox/etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
-  sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-  echo echo -e "${RED}[+] Rebooting...${NOCOLOR}"
-  sudo reboot
-else
-  # This has to be at the end to avoid unnecessary error messages
-  sudo cp /etc/hostname /etc/hostname.bak
-  sudo cp torbox/etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
-  sudo cp /etc/hosts /etc/hosts.bak
-  sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-  echo ""
-  echo -e "${WHITE}[!] You need to reboot the system as soon as possible!${NOCOLOR}"
-  echo -e "${WHITE}[!] The log files are not deleted, yet. You can do this later with configuration sub-menu.${NOCOLOR}"
-fi
-exit 0
+sudo chage -E0 pi ; exit ; exit
