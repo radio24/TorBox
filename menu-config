@@ -679,9 +679,8 @@ if [ $exitstatus = 0 ]; then
         fi
         cd ~
         if (whiptail --defaultno --yesno "\n\nDo you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-#ACHTUNG!! BEI DER SCHLUSSVERSION MUSS --autologin pi durch --autologin torbox ersetzt werden!!
           if ! grep "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
-            sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin pi --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
+            sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin torbox --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
             sudo systemctl enable getty@tty1.service
             sudo systemctl daemon-reload
           fi
