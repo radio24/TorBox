@@ -648,6 +648,7 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
+        cd
         sudo apt-get -y install python3-dev
         wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
         chmod +x adafruit-pitft.sh
@@ -677,7 +678,7 @@ if [ $exitstatus = 0 ]; then
         else
           sudo ./LCD35-show
         fi
-        cd ~
+        cd
         if (whiptail --defaultno --yesno "\n\nDo you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           if ! grep "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
             sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin torbox --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
