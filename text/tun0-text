@@ -4,8 +4,10 @@ VPN connections:
 
 1. The VPN connection is already established, and the interface tun0 is
    configured.
-2. The VPN connection is not yet established, but a *.ovpn - file is in the
-   ~/openvpn directory so that TorBox can execute OpenVPN with that file.
+
+2. The VPN connection is not established yet, but one ore more *.ovpn
+   - files are in the ~/openvpn directory so that TorBox can execute
+   OpenVPN with that file.
 
 IMPORTANT
 - We do NOT recommend using a VPN. If Tor entry guards cannot be reached
@@ -13,11 +15,6 @@ IMPORTANT
   (main menu entry 10). We consider a VPN connection as a last resort.
 - Nevertheless, we consider the additional risk of this "Tor over VPN"
   situation  to be proportionate - see here: https://bit.ly/31lUhLQ
-- Depending on your configuration and your VPN provider, local DNS
-  resolution may not work. This does not affect the clients because
-  their DNS resolution is routed through the Tor network. However,
-  probably you are unable to execute some menu points in the TorBox menu
-  when a local Internet connection with working DNS resolution is mandatory.
 
 The next step is to setup TorBox so that your client devices have access
 through TorBox's wireless network. However, if you also like to access
