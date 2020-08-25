@@ -435,4 +435,4 @@ echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" 
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-sudo chage -E0 pi
+(sudo chage -E0 pi) 2> /dev/null
