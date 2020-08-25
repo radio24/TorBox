@@ -120,7 +120,7 @@ update_tor()
   TOR_VERS=$(tor --version|rev|cut -c2-|rev)
   TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
   WICD_VERS=$(wicd-curses --version)
-  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -c5-)
+  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f10-)
   if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then

@@ -376,6 +376,7 @@ echo ""
 sudo adduser --disabled-password --gecos "" torbox
 echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
 sudo adduser torbox sudo
+sudo adduser torbox netdev
 sudo mv /home/pi/* /home/torbox/
 (sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
 sudo mkdir /home/torbox/openvpn
