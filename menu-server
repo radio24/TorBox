@@ -313,20 +313,20 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
           MODE_BR_BAK=$(grep "BridgeRelay" backup.tbx/etc/tor/torrc)
           if [ "$MODE_BR_BAK" = "BridgeRelay 1" ]; then
-            ORPORT=$(grep "^ORPort" backup.tbx/etc/tor/torrc)
-            OBFS4PORT=$(grep "^ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
-            CONTACT=$(grep "^ContactInfo" backup.tbx/etc/tor/torrc)
-            NICK=$(grep "^Nickname" backup.tbx/etc/tor/torrc)
+            ORPORT_BAK=$(grep "^ORPort" backup.tbx/etc/tor/torrc)
+            OBFS4PORT_BAK=$(grep "^ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
+            CONTACT_BAK=$(grep "^ContactInfo" backup.tbx/etc/tor/torrc)
+            NICK_BAK=$(grep "^Nickname" backup.tbx/etc/tor/torrc)
           else
-            ORPORT=$(grep "^#ORPort" backup.tbx/etc/tor/torrc)
-            OBFS4PORT=$(grep "^#ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
-            CONTACT=$(grep "^#ContactInfo" backup.tbx/etc/tor/torrc)
-            NICK=$(grep "^#Nickname" backup.tbx/etc/tor/torrc)
+            ORPORT_BAK=$(grep "^#ORPort" backup.tbx/etc/tor/torrc)
+            OBFS4PORT_BAK=$(grep "^#ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
+            CONTACT_BAK=$(grep "^#ContactInfo" backup.tbx/etc/tor/torrc)
+            NICK_BAK=$(grep "^#Nickname" backup.tbx/etc/tor/torrc)
           fi
-          nORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-          nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
-          nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
-          nNICK=$(cut -d ' ' -f2 <<< $NICK)
+          nORPORT=$(cut -d ' ' -f2 <<< $ORPORT_BAK)
+          nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT_BAK)
+          nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT_BAK)
+          nNICK=$(cut -d ' ' -f2 <<< $NICK_BAK)
           sleep 1
           echo -e "${RED}[+] Cleaning...${NOCOLOR}"
           sudo rm -r backup.tbx
