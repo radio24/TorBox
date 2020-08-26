@@ -1,6 +1,6 @@
 This menu entry supposes that TorBox is connected with the internet
-through a VPN connection. There are two possibilities of how TorBox handles
-VPN connections:
+through a VPN connection using the interface tun0. There are two
+possibilities of how TorBox handles VPN connections:
 
 1. The VPN connection is already established, and the interface tun0 is
    configured.
@@ -21,8 +21,8 @@ through TorBox's wireless network. However, if you also like to access
 through the onboard ethernet interface (cable), please plug in the cable
 with your client device, NOW.
 
-If we have to restart TorBox's wireless network, then please reconnect your
-client without closing the ssh session. Usually, the configuration
+If we have to restart TorBox's wireless network, then please reconnect
+your client without closing the ssh session. Usually, the configuration
 continuous -- if not, then please repeat the process.
 
 Would you like to CONTINUE?

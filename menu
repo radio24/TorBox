@@ -693,10 +693,12 @@ if [ $exitstatus = 0 ]; then
             clear
             echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
             echo ""
+            ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+            sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
             sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
             echo ""
-            echo -e "${RED}[+] Please wait...${NOCOLOR}"
-            sleep 10
+            echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+            sleep 15
             tun0up=$(ip link | grep tun0)
           else
             trap "bash menu; exit 0" EXIT
