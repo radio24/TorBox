@@ -156,6 +156,7 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
+    sudo apt-get install tor-geoipdb
     echo ""
     echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
     sleep 5
