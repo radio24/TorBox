@@ -36,7 +36,7 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 * It allows easy access to .onion websites without client configuration (Chrome) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
 
 ### Alternative installation method with the TorBox installation script
-Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/downloads/raspbian/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script:
+Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script:
 ```console
 cd
 wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
@@ -44,7 +44,7 @@ chmod a+x run_install.sh
 ./run_install.sh
 ```
 \
-We recommend running TorBox on a Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) under [Raspberry Pi OS Lite](https://www.raspberrypi.org/downloads/raspbian/). However, [there is another installation script](https://www.torbox.ch/?page_id=1168#ubuntu) that installs TorBox on [Ubuntu Server 20.04 LTS (32/64 bit)](https://en.wikipedia.org/wiki/Ubuntu#Official_distributions) and therefore, might run on other hardware platforms (this script is currently in an experimental state).
+We recommend running TorBox on a Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) under [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/). However, [there is another installation script](https://www.torbox.ch/?page_id=1168#ubuntu) that installs TorBox on [Ubuntu Server 20.04 LTS (32/64 bit)](https://en.wikipedia.org/wiki/Ubuntu#Official_distributions) and therefore, might run on other hardware platforms (this script is currently in an experimental state).
 
 ### Building from scratch
 All you need to run TorBox on your Raspberry Pi is the image file. However, if you want to build it from scratch, whether you like to implement it to an existing system, to another hardware, respectively another operating system or you don’t trust an image file, which you didn’t bundle of your own, then check out our detailed manual [for a Raspberry Pi with Raspberry Pi OS Lite](https://www.torbox.ch/?page_id=205) or [for Ubuntu Server 20.04 LTS (32/64 bit)](https://www.torbox.ch/?page_id=1629).
