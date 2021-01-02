@@ -10,6 +10,10 @@ import asyncio
 
 from .wifi_scanner import wifi_scanner
 
+# Just debug
+#import logging
+#logging.basicConfig(filename='twm.log', format="%(asctime)s - %(message)s", level=logging.INFO)
+
 class wireless_manager:
 
 	# Flags counting scanning between different methods inside the class
@@ -18,19 +22,23 @@ class wireless_manager:
 
 	# The default color palette
 	_palette = [
-		("column_headers",		"white, bold",			""),
-		("reveal_focus",		"black",				"dark cyan",	"standout"),
-		("start_msg",			"white, bold", 			"",				"standout"),
-		("network_status_off",	"dark red, bold",		""),
-		("network_status_on",	"light green, bold",	""),
-		("connect_title",		"white, bold",			"dark red"),
-		("connect_ask",			"white",				"dark cyan"),
-		("connect_input",		"white",				"dark blue"),
-		("connect_button",		"white",				"dark gray"),
-		("connect_wrong_pass",	"yellow",				"dark red"),
-		("scanning",			"white",				"dark cyan"),
-		("scanning_hidden",		"white",				"brown"),
-		("connecting",			"white",				"dark cyan"),
+		("column_headers",				"white, bold",			""),
+		("reveal_focus",				"black",				"dark cyan",	"standout"),
+		("start_msg",					"white, bold", 			"",				"standout"),
+		("network_status_off",			"dark red, bold",		""),
+		("network_status_on",			"light green, bold",	""),
+		("connect_title",				"light red",			"light gray"),
+		("connect_title_divider",		"black",				"light gray"),
+		("connect_ask_focus",			"black",				"light cyan"),
+		("connect_ask",					"black",				"light gray"),
+		("connect_input",				"white",				"dark blue"),
+		("connect_button_connect",		"white, bold",				"dark red"),
+		("connect_button_cancel",		"white, bold",				"dark red"),
+		("connect_buttons",				"black",				"light gray"),
+		("connect_wrong_pass",			"yellow",				"dark red"),
+		("scanning",					"white",				"dark cyan"),
+		("scanning_hidden",				"white",				"brown"),
+		("connecting",					"white",				"dark cyan"),
 
 	]
 
@@ -350,41 +358,70 @@ class wireless_manager:
 		def _button_cancel_callback(widget):
 			self.loop.widget = self.last_widget
 
+		def connect_box_keypress(size, key):
+			if key == 'tab' or key == 'shift tab':
+				if self.connect_box.focus_position == 'body':
+					self.connect_box.focus_position = 'footer'
+				else:
+					self.connect_box.focus_position = 'body'
+			elif key == 'esc':
+				self.loop.widget = self.last_widget
+			else:
+				return urwid.Frame.keypress(self.connect_box, size, key)
+
 		# Header
 		_header = urwid.Text('Connect to [%s]' % essid, align = 'center')
 		_header = urwid.AttrMap(_header, 'connect_title')
+		_divider = urwid.Divider('-')
+		_divider = urwid.AttrMap(_divider, 'connect_title_divider')
+		_header = urwid.Pile([
+			_divider,
+			_header,
+			_divider
+		])
 
 		# Ask
-		_ask = urwid.Text('Password:')
-		_ask = urwid.AttrMap(_ask, 'connect_ask')
+		_ask = urwid.Text('Enter password:', align="center")
+		_ask = urwid.AttrMap(_ask, 'connect_ask', 'connect_ask_focus')
 
 		# input
 		_input_edit = urwid.Edit('', align="center")
 		_input = urwid.AttrMap(_input_edit, "connect_input")
-
-		# buttons
-		_button_connect = urwid.Button('Connect')
-		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[essid, bssid, _input_edit])
-
-		_button_cancel = urwid.Button('Cancel')
-		urwid.connect_signal(_button_cancel, 'click', _button_cancel_callback)
-
-		_button = urwid.GridFlow([_button_cancel, _button_connect], 12, 1, 1, 'center')
-		_button = urwid.AttrMap(_button, "connect_button")
+		_input = urwid.Padding(_input, left=15, right=15, min_width=15)
 
 		body = urwid.Pile([
 			_ask,
 			_input,
-			_button
 		])
 		body = urwid.Filler(body)
 		body = urwid.AttrMap(body, 'connect_ask')
 
+		# buttons
+		_button_connect = urwid.Button('Connect')
+		_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
+		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[essid, bssid, _input_edit])
+
+		#_button_cancel = urwid.Button('Cancel')
+		#_button = urwid.AttrMap(_button_cancel, "", "connect_button_cancel")
+		#urwid.connect_signal(_button_cancel, 'click', _button_cancel_callback)
+
+		#_button = urwid.GridFlow([_button_connect], 12, 1, 1, 'center')
+		_button = urwid.Padding(_button, align='center', left=38, right=38, min_width=15)
+		_button = urwid.AttrMap(_button, 'connect_buttons')
+
+		_footer = urwid.Pile([
+			_button,
+			_divider
+		])
+
 		_connect_box = urwid.Frame(
-			body,
+			body = body,
 			header = _header,
+			footer = _footer,
 			focus_part='body'
 		)
+		_connect_box.keypress = connect_box_keypress
+		self.connect_box = _connect_box
 
 		# store actual widget
 		self.last_widget = self.loop.widget
@@ -396,7 +433,7 @@ class wireless_manager:
 			align = 'center',
 			valign = 'middle',
 			width = ('relative', 45),
-			height = ('relative', 12)
+			height = ('relative', 18)
 		)
 
 		self.loop.widget = overlay
