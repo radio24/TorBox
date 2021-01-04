@@ -17,7 +17,7 @@ from .wifi_scanner import wifi_scanner
 class wireless_manager:
 
 	# Flags counting scanning between different methods inside the class
-	scan_times_current = 1
+	scan_times_current = 3
 	scan_times = 3
 
 	# The default color palette
@@ -288,8 +288,8 @@ class wireless_manager:
 			networks = self.network_list
 			for bssid in networks.keys():
 				__essid = networks[bssid][0]
-				if '\\x00' in __essid or '??' in __essid:
-					__essid = 'HIDDEN'
+				if '\\x00' in __essid or '?' in __essid or __essid == '':
+					__essid = '-HIDDEN-'
 				networks[bssid][0] = __essid
 			
 			# Networks found
@@ -310,17 +310,21 @@ class wireless_manager:
 			self.loop.widget = widget
 
 	# Show dialog for connecting to selected network
-	def __connect_dialog(self, network):
+	def __connect_dialog(self, network, widget=False):
 
 		# Network info
 		essid = network[0]
 		bssid = network[3]
-		security = network[2]
+		#security = network[2]
 
 		# Callbacks for buttons
-		def _button_connect_callback(essid, bssid, pass_input, widget):
+		def _button_connect_callback(essid_input, bssid, pass_input, hidden_flag, widget):
+			essid = essid_input.get_edit_text()
 			password = pass_input.get_edit_text()
 			self.loop.widget = self.last_widget
+
+			if essid == '' or password == '':
+				return
 
 			_text = urwid.Text('Connecting to [%s]. Please wait...' % (essid), align='center')
 			_text = urwid.AttrMap(_text, 'connecting')
@@ -353,7 +357,7 @@ class wireless_manager:
 
 			self.loop.widget = overlay
 
-			self.loop.set_alarm_in(0.1, self.__network_connect, user_data=[essid, bssid, password])
+			self.loop.set_alarm_in(0.1, self.__network_connect, user_data=[essid, bssid, password, hidden_flag])
 
 		def _button_cancel_callback(widget):
 			self.loop.widget = self.last_widget
@@ -381,25 +385,46 @@ class wireless_manager:
 		])
 
 		# Ask
-		_ask = urwid.Text('Enter password:', align="center")
-		_ask = urwid.AttrMap(_ask, 'connect_ask', 'connect_ask_focus')
+		_ask_pass = urwid.Text('Enter password:', align="center")
+		_ask_pass = urwid.AttrMap(_ask_pass, 'connect_ask', 'connect_ask_focus')
 
 		# input
-		_input_edit = urwid.Edit('', align="center")
-		_input = urwid.AttrMap(_input_edit, "connect_input")
-		_input = urwid.Padding(_input, left=15, right=15, min_width=15)
+		_input_pass_edit = urwid.Edit('', align="center")
+		_input_pass = urwid.AttrMap(_input_pass_edit, "connect_input")
+		_input_pass = urwid.Padding(_input_pass, left=15, right=15, min_width=15)
 
 		body = urwid.Pile([
-			_ask,
-			_input,
+			_ask_pass,
+			_input_pass,
 		])
+
+		# input
+		_input_essid_edit = urwid.Edit('', align="center", edit_text=essid)
+		_input_essid = urwid.AttrMap(_input_essid_edit, "connect_input")
+		_input_essid = urwid.Padding(_input_essid, left=15, right=15, min_width=15)
+
+		_hidden_flag = False
+		if essid == '-HIDDEN-':
+			_hidden_flag = True
+			# Ask ESSID
+			_input_essid_edit.set_edit_text('')
+			_ask_essid = urwid.Text('ESSID Name:', align="center")
+			_ask_essid = urwid.AttrMap(_ask_essid, 'connect_ask', 'connect_ask_focus')
+
+			body = urwid.Pile([
+				_ask_essid,
+				_input_essid,
+				_ask_pass,
+				_input_pass,
+			])
+		
 		body = urwid.Filler(body)
 		body = urwid.AttrMap(body, 'connect_ask')
 
 		# buttons
 		_button_connect = urwid.Button('Connect')
 		_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
-		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[essid, bssid, _input_edit])
+		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[_input_essid_edit, bssid, _input_pass_edit, _hidden_flag])
 
 		#_button_cancel = urwid.Button('Cancel')
 		#_button = urwid.AttrMap(_button_cancel, "", "connect_button_cancel")
@@ -424,7 +449,8 @@ class wireless_manager:
 		self.connect_box = _connect_box
 
 		# store actual widget
-		self.last_widget = self.loop.widget
+		if widget is False:
+			self.last_widget = self.loop.widget
 
 		# Create a popup
 		overlay = urwid.Overlay(
@@ -433,13 +459,19 @@ class wireless_manager:
 			align = 'center',
 			valign = 'middle',
 			width = ('relative', 45),
-			height = ('relative', 18)
+			height = ('relative', 25)
 		)
 
 		self.loop.widget = overlay
 
 	def __network_connect(self, _loop, _data):
-		essid, bssid, password = [_data[0], _data[1], _data[2]]
+		essid, bssid, password, hidden_flag = [_data[0], _data[1], _data[2], _data[3]]
+		_network = [
+			essid,
+			0,
+			0,
+			bssid
+		]
 
 		# If we are connected and trying to connect to a new network, we need to disconnect 1st
 		if self.connected:
@@ -453,7 +485,6 @@ class wireless_manager:
 		except:
 			raise urwid.ExitMainLoop()
 
-
 		#--------------------------------
 		# Start connection
 		#--------------------------------
@@ -462,6 +493,10 @@ class wireless_manager:
 		n = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
 		network_id = int(n.strip().split(b"\n")[0])
 
+		# Set the BSSID where we are going to connect
+		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "bssid", '{}'.format(bssid)]
+		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 		# Set the essid where we are going to connect
 		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "ssid", '"{}"'.format(essid)]
 		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -469,6 +504,11 @@ class wireless_manager:
 		# Set the password
 		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "psk", '"{}"'.format(password)]
 		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+		# Scan AP for hidden networks
+		if hidden_flag:
+			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "scan_ssid", '1']
+			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 		# Select the network before enable/connect
 		cmd = ["wpa_cli", "-i", self.interface, "note", "Restarted"]
@@ -491,7 +531,10 @@ class wireless_manager:
 			if 'CTRL-EVENT-CONNECTED' in f.read():
 				wpa_supplicant_event = 'CONNECTED'
 			f.seek(0)
-			if 'CTRL-EVENT-DISCONNECTED' in f.read():
+			if 'CTRL-EVENT-DISCONNECTED' in f.read() or 'CTRL-EVENT-ASSOC-REJECT' in f.read():
+				wpa_supplicant_event = 'DISCONNECTED'
+			f.seek(0)
+			if 'CTRL-EVENT-ASSOC-REJECT' in f.read():
 				wpa_supplicant_event = 'DISCONNECTED'
 		f.close()
 		#open(self.wpa_logfile, 'w+').close() # Clean/create wpa_logfile
@@ -503,20 +546,60 @@ class wireless_manager:
 
 			cmd = ["wpa_cli", "-i", self.interface, "remove_network", "{}".format(network_id)]
 			n = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			
+			#------------------------------------------------------
+			# Popup: Password wrong. Enter a new one or cancel
+			#------------------------------------------------------
+			# Header
+			_header = urwid.Text('Password error', align = 'center')
+			_header = urwid.AttrMap(_header, 'connect_title')
+			_divider = urwid.Divider('-')
+			_divider = urwid.AttrMap(_divider, 'connect_title_divider')
+			_header = urwid.Pile([
+				_divider,
+				_header,
+				_divider
+			])
 
-			# alert that password is wrong
-			_text = urwid.Text('\nPassword is not valid for this network.', align='center')
+			_text = urwid.Text('Password is not valid for this network.', align='center')
 			_text = urwid.AttrMap(_text, 'connect_wrong_pass')
+			_text = urwid.Padding(_text, align='center', left=15, right=15, min_width=20)
+			_text = urwid.Pile([
+				urwid.Divider(' '),
+				_text,
+				urwid.Divider(' ')
+			])
 
-			_button = urwid.Button('OK', self.__network_scan_list)
+			#_button = urwid.Button('OK', self.__network_scan_list)
+			# buttons
+			_button_new_password_button = urwid.Button('New Password')
+			_button_new_password = urwid.AttrMap(_button_new_password_button, "connect_buttons", "connect_button_connect")
+			_button_new_password = urwid.Padding(_button_new_password, align='center', right=0, min_width=15)
+			urwid.connect_signal(_button_new_password_button, 'click', self.__connect_dialog, user_args=[_network])
+
+			_button_cancel = urwid.Button('Cancel', self.__network_scan_list)
+			_button_cancel = urwid.AttrMap(_button_cancel, "connect_buttons", "connect_button_connect")
+			_button_cancel = urwid.Padding(_button_cancel, align='center', left=5, min_width=15)
+			#_button = urwid.AttrMap(_button_cancel, "", "connect_button_cancel")
+			#urwid.connect_signal(_button_cancel, 'click', _button_cancel_callback)
+
+			#_button = urwid.GridFlow([_button_connect], 12, 1, 1, 'center')
+			_button = urwid.Columns([
+				_button_new_password,
+				_button_cancel
+			])
+			_button = urwid.Padding(_button, align='center', left=15, right=15, min_width=15)
+			_button = urwid.AttrMap(_button, 'connect_buttons')
 
 			_body = urwid.Pile([
+				_header,
 				_text,
-				_button
+				_button,
+				_divider
 			])
 
 			_body = urwid.Filler(_body)
-			_body = urwid.AttrMap(_body, 'connect_wrong_pass')
+			_body = urwid.AttrMap(_body, 'connect_ask')
 
 			_connect_box = urwid.Frame(
 				_body,
@@ -531,7 +614,7 @@ class wireless_manager:
 				align = 'center',
 				valign = 'middle',
 				width = ('relative', 35),
-				height = ('relative', 9)
+				height = ('relative', 20)
 			)
 
 			self.loop.widget = overlay
