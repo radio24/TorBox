@@ -11,8 +11,8 @@ import asyncio
 from .wifi_scanner import wifi_scanner
 
 # Just debug
-#import logging
-#logging.basicConfig(filename='twm.log', format="%(asctime)s - %(message)s", level=logging.INFO)
+import logging
+logging.basicConfig(filename='twm.log', format="%(asctime)s - %(message)s", level=logging.INFO)
 
 class wireless_manager:
 
@@ -251,7 +251,7 @@ class wireless_manager:
 
 		cmd = ["wpa_cli", "-i", self.interface, "disconnect"]
 		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-		pass
+		#pass
 
 	# Show network list after scan is done
 	def __network_scan_list(self, _loop=object, _data=[False]):
@@ -293,7 +293,7 @@ class wireless_manager:
 				networks[bssid][0] = __essid
 			
 			# Networks found
-			_netlist = [SelectableRow(networks[bssid], self.__connect_dialog) for bssid in networks.keys()]
+			_netlist = [SelectableRow(networks[bssid], self.__connect_network) for bssid in networks.keys()]
 			_netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
 
 			pile = urwid.Pile([
@@ -308,6 +308,63 @@ class wireless_manager:
 			widget = self.__get_container(widget)
 			
 			self.loop.widget = widget
+
+	def __connect_network(self, network):
+		#------------------------------------------------------
+		# Check if network is already configured
+		# we try to connect without asking password
+		#------------------------------------------------------
+		essid = network[0]
+		bssid = network[3]
+
+		#cmd = ["wpa_cli", "-i", self.interface, "list_networks", "|", "grep", "'{}'".format(bssid)]
+		cmd = "wpa_cli -i %s list_networks |grep '%s'" % (self.interface, bssid)
+		n = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+		_str = n.communicate()[0]
+		logging.info(_str)
+		try:
+			network_id = _str.strip().split(b"\t")[0]
+			network_id = int(network_id)
+			self.__disconnect()
+		except:
+			network_id = False
+
+		if network_id is False:
+			self.__connect_dialog(network)
+		else:
+			_text = urwid.Text('Connecting to [%s]. Please wait...' % (essid), align='center')
+			_text = urwid.AttrMap(_text, 'connecting')
+
+			_body = urwid.Pile([
+				_text
+			])
+
+			_body = urwid.Filler(_body)
+			_body = urwid.AttrMap(_body, 'connecting')
+
+			_connect_box = urwid.Frame(
+				_body,
+				header=urwid.Divider(' '),
+				focus_part='body'
+			)
+
+			# store actual widget
+			self.last_widget = self.loop.widget
+
+			# Create a popup
+			overlay = urwid.Overlay(
+				_connect_box,
+				self.loop.widget,
+				align = 'center',
+				valign = 'middle',
+				width = ('relative', 35),
+				height = ('relative', 9)
+			)
+
+			self.loop.widget = overlay
+			self.loop.set_alarm_in(0.1, self.__network_connect, user_data=[essid, bssid, False, False, network_id])
+			#self.__network_connect(self.loop, network, network_id)
+
 
 	# Show dialog for connecting to selected network
 	def __connect_dialog(self, network, widget=False):
@@ -357,7 +414,7 @@ class wireless_manager:
 
 			self.loop.widget = overlay
 
-			self.loop.set_alarm_in(0.1, self.__network_connect, user_data=[essid, bssid, password, hidden_flag])
+			self.loop.set_alarm_in(0.1, self.__network_connect, user_data=[essid, bssid, password, hidden_flag, False])
 
 		def _button_cancel_callback(widget):
 			self.loop.widget = self.last_widget
@@ -464,19 +521,54 @@ class wireless_manager:
 
 		self.loop.widget = overlay
 
-	def __network_connect(self, _loop, _data):
-		essid, bssid, password, hidden_flag = [_data[0], _data[1], _data[2], _data[3]]
-		_network = [
-			essid,
-			0,
-			0,
-			bssid
-		]
+	def __network_connect(self, _loop, _data, saved_network=False):
 
+		essid, bssid, password, hidden_flag, saved_network = [_data[0], _data[1], _data[2], _data[3], _data[4]]
+		
 		# If we are connected and trying to connect to a new network, we need to disconnect 1st
 		if self.connected:
 			self.__disconnect()
 		
+		
+
+		if saved_network is not False:
+			network_id = saved_network
+		#--------------------------------
+		# Configure NEW connection
+		#--------------------------------
+		else:
+			# We get a new network id on wpa_supplicant
+			cmd = ["wpa_cli", "-i", self.interface, "add_network"]
+			n = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+			network_id = int(n.strip().split(b"\n")[0])
+
+			# Set the BSSID where we are going to connect
+			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "bssid", '{}'.format(bssid)]
+			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Set the essid where we are going to connect
+			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "ssid", '"{}"'.format(essid)]
+			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Set the password
+			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "psk", '"{}"'.format(password)]
+			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Scan AP for hidden networks
+			if hidden_flag:
+				cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "scan_ssid", '1']
+				r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Enable network
+			cmd = ["wpa_cli", "-i", self.interface, "enable_network", "{}".format(network_id)]
+			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		logging.info('Connecting to network_id: %s' % network_id)
+		
+
+		# Select the network
+		cmd = ["wpa_cli", "-i", self.interface, "select_network", "{}".format(network_id)]
+		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 		# Clean wpa_supplicant log
 		try:
 			os.remove(self.wpa_logfile)
@@ -485,41 +577,8 @@ class wireless_manager:
 		except:
 			raise urwid.ExitMainLoop()
 
-		#--------------------------------
-		# Start connection
-		#--------------------------------
-		# We get a new network id on wpa_supplicant
-		cmd = ["wpa_cli", "-i", self.interface, "add_network"]
-		n = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-		network_id = int(n.strip().split(b"\n")[0])
-
-		# Set the BSSID where we are going to connect
-		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "bssid", '{}'.format(bssid)]
-		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Set the essid where we are going to connect
-		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "ssid", '"{}"'.format(essid)]
-		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Set the password
-		cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "psk", '"{}"'.format(password)]
-		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Scan AP for hidden networks
-		if hidden_flag:
-			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "scan_ssid", '1']
-			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Select the network before enable/connect
+		# FIXME: Log note
 		cmd = ["wpa_cli", "-i", self.interface, "note", "Restarted"]
-		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Enable network and connect
-		cmd = ["wpa_cli", "-i", self.interface, "enable_network", "{}".format(network_id)]
-		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-		# Select the network
-		cmd = ["wpa_cli", "-i", self.interface, "select_network", "{}".format(network_id)]
 		r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 		# Check wpa_supplicant log for connect/error event
@@ -570,7 +629,9 @@ class wireless_manager:
 				urwid.Divider(' ')
 			])
 
-			#_button = urwid.Button('OK', self.__network_scan_list)
+			# Args to pass to __connect_dialog
+			_network = [essid,0,0,bssid]
+
 			# buttons
 			_button_new_password_button = urwid.Button('New Password')
 			_button_new_password = urwid.AttrMap(_button_new_password_button, "connect_buttons", "connect_button_connect")
