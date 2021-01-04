@@ -11,8 +11,8 @@ import asyncio
 from .wifi_scanner import wifi_scanner
 
 # Just debug
-import logging
-logging.basicConfig(filename='twm.log', format="%(asctime)s - %(message)s", level=logging.INFO)
+#import logging
+#logging.basicConfig(filename='twm.log', format="%(asctime)s - %(message)s", level=logging.INFO)
 
 class wireless_manager:
 
@@ -321,7 +321,7 @@ class wireless_manager:
 		cmd = "wpa_cli -i %s list_networks |grep '%s'" % (self.interface, bssid)
 		n = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
 		_str = n.communicate()[0]
-		logging.info(_str)
+		#logging.info(_str)
 		try:
 			network_id = _str.strip().split(b"\t")[0]
 			network_id = int(network_id)
@@ -562,7 +562,7 @@ class wireless_manager:
 			# Enable network
 			cmd = ["wpa_cli", "-i", self.interface, "enable_network", "{}".format(network_id)]
 			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-		logging.info('Connecting to network_id: %s' % network_id)
+		#logging.info('Connecting to network_id: %s' % network_id)
 		
 
 		# Select the network
