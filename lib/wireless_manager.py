@@ -17,7 +17,7 @@ from .wifi_scanner import wifi_scanner
 class wireless_manager:
 
 	# Flags counting scanning between different methods inside the class
-	scan_times_current = 3
+	scan_times_current = 1
 	scan_times = 3
 
 	# The default color palette
