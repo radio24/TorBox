@@ -54,11 +54,11 @@ class wireless_manager:
 		self.scanner = wifi_scanner(self.interface)
 
 		# Terminate wpa_supplicant if its running
-		try:
-			cmd = ["wpa_cli", "-i", self.interface, "terminate"]
-			n = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
-			time.sleep(1)
-		except: pass
+		#try:
+		#	cmd = ["wpa_cli", "-i", self.interface, "terminate"]
+		#	n = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+		#	time.sleep(1)
+		#except: pass
 
 		# Start WPA_SUPPLICANT
 		wpa_config = "/etc/wpa_supplicant/wpa_supplicant-%s.conf" % self.interface
