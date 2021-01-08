@@ -68,6 +68,12 @@ BOOTMSG=0
 online_check_update()
 {
   clear
+#This is only for TorBox 0.3.2 ===
+  echo -e "${RED}[+] Let's add some open nameservers and try again...${NOCOLOR}"
+  sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+  (sudo printf "\n# Added by TorBox update script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee -a /etc/resolv.conf) 2>&1
+  sleep 15
+#==================================
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s http://google.com)
   clear
