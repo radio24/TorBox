@@ -67,13 +67,16 @@ BOOTMSG=0
 #This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
 online_check_update()
 {
-  clear
 #This is only for TorBox 0.3.2 ===
+  clear
   echo -e "${RED}[+] Let's add some open nameservers and try again...${NOCOLOR}"
   sudo cp /etc/resolv.conf /etc/resolv.conf.bak
   (sudo printf "\n# Added by TorBox update script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee -a /etc/resolv.conf) 2>&1
+  echo " "
+  echo -e "${RED}[+] Please wait...${NOCOLOR}"
   sleep 15
 #==================================
+  clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s http://google.com)
   clear
@@ -126,7 +129,7 @@ update_tor()
   TOR_VERS=$(tor --version|rev|cut -c2-|rev)
   TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
   WICD_VERS=$(wicd-curses --version)
-  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f10-)
+  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f11-)
   if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
