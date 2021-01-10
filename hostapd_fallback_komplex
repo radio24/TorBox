@@ -69,13 +69,11 @@ fi
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	sudo systemctl stop wicd
 	sudo ifdown $INTERFACE1
 	INTERFACE1_DOWN=1
 fi
 if ps -ax | grep "[d]hclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
-	sudo systemctl stop wicd
 	sudo ifdown $INTERFACE2
 	INTERFACE2_DOWN=1
 fi

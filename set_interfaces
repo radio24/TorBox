@@ -59,8 +59,6 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
-WLAN_MANAGER="/usr/bin/wicd-curses"
-WLAN_MANAGER_DAEMON_NAME="wicd"
 MY_OWN_IP="192.168.42.1"
 INT_NET="$MY_OWN_IP/8"
 O_DEVICE=$1
@@ -90,27 +88,18 @@ elif [ "$O_DEVICE" = "eth1" ]; then
 	fi
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
-	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
-	sudo sed -i "s/^wireless_interface = wlan1/wireless_interface = wlan0/" /etc/wicd/manager-settings.conf
-	clear
-	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
+	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
 	sleep 5
-	$WLAN_MANAGER
-	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
+	sudo ./torbox_wireless_manager.py -i wlan0
 	clear
 	if [ $CAPTIVE = 1 ]; then
 	   sudo bash set_captive $O_DEVICE $I_DEVICE
 	fi
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
-	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
-	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
-	clear
-	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
+	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
 	sleep 5
-	$WLAN_MANAGER
+	sudo ./torbox_wireless_manager.py -i wlan1
 	clear
 	if [ $CAPTIVE = 1 ]; then
 	   sudo bash set_captive $O_DEVICE $I_DEVICE

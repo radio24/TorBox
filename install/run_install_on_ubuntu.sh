@@ -38,15 +38,14 @@
 #  1. Checking for Internet connection
 #  2. Updating the system
 #  3. Installing all necessary packages
-#  4. Installing wicd
-#  5. Configuring Tor and obfs4proxy
-#  6. Re-checking Internet connectivity
-#  7. Downloading and installing the latest version of TorBox
-#  8. Installing all configuration files
-#  9. Disabling Bluetooth
-# 10. Configure the system services
-# 11. Adding and implementing the user torbox
-# 12. Finishing, cleaning and booting
+#  4. Configuring Tor and obfs4proxy
+#  5. Re-checking Internet connectivity
+#  6. Downloading and installing the latest version of TorBox
+#  7. Installing all configuration files
+#  8. Disabling Bluetooth
+#  9. Configure the system services
+# 10. Adding and implementing the user torbox
+# 11. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -163,53 +162,18 @@ sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
 # 3. Installing all necessary packages
-# The problem with Ubuntu 20.04 is that they removed the support for python2 which is necessary for wicd
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 
-sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
-curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
-sudo python2 get-pip.py
+sudo apt-get -y install hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
 
 # Additional installations for Python 3
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install urwid
 
-# urwid for Python 2, which is necessary for wicd-curse
-sudo pip install urwid
-
-# 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
-#    kicked the package out of their repository; see also here:
-#    https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
-sleep 10
-clear
-echo -e "${RED}[+] Step 4: Installing wicd....${NOCOLOR}"
-mkdir -p ~/Downloads/wicd
-cd ~/Downloads/wicd
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/python-wicd_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-curses_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-cli_1.7.4+tb2-6_all.deb
-cd
-sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd_1.7.4+tb2-6_all.deb
-
-# Creating a dependency-dummy for wicd-curses (based on
-# https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
-equivs-control python-urwid.control
-sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
-sed -i "s/^# Version: <enter version here; defaults to 1.0>/Version: 1.2/g" python-urwid.control
-equivs-build python-urwid.control
-sudo dpkg -i python-urwid_1.2_all.deb
-
-# Finally !!!
-sudo apt-get -y install ./Downloads/wicd/wicd-curses_1.7.4+tb2-6_all.deb
-
-# 5. Configuring Tor and obfs4proxy
+# 4. Configuring Tor and obfs4proxy
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor and obfs4proxy....${NOCOLOR}"
@@ -217,10 +181,10 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
-# 6. Again checking connectivity
+# 5. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Re-checking Internet connectivity...${NOCOLOR}"
+echo -e "${RED}[+] Step 5: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
@@ -266,10 +230,10 @@ else
   fi
 fi
 
-# 7. Downloading and installing the latest version of TorBox
+# 6. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/master.zip
@@ -293,11 +257,11 @@ else
   exit 1
 fi
 
-# 8. Installing all configuration files
+# 7. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 8: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Installing all configuration files....${NOCOLOR}"
 echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
@@ -351,12 +315,6 @@ fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
-(sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/manager-settings.conf /etc/wicd/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/manager-settings.conf -- backup done"
-(sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/wired-settings.conf /etc/wicd/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/wired-settings.conf -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile if necessary"
@@ -367,18 +325,18 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-# 9. Disabling Bluetooth
+# 8. Disabling Bluetooth
 sleep 10
 clear
-echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
 
-# 10. Configure the system services
+# 9. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Configure the system services...${NOCOLOR}"
 
 # Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
@@ -418,10 +376,10 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 11. Adding the user torbox
+# 10. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -447,10 +405,10 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 12. Finishing, cleaning and booting
+# 11. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 11: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"

@@ -119,20 +119,19 @@ update_tor()
   KERNEL_VERS=$(uname -s -r)
   TOR_VERS=$(tor --version|rev|cut -c2-|rev)
   TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
-  WICD_VERS=$(wicd-curses --version)
   SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f10-)
   if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
-    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     fi
   elif [ -z "$SOURCE_VERS_NUMBER" ] ; then
-    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\nWicd:   $WICD_VERS\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
+    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
     whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     RECOMPILE=0
   else
     if [ $LOOP_NUMBER = 1 ]; then
-      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\nWicd:   $WICD_VERS\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
+      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         RECOMPILE=1
       fi
@@ -215,12 +214,6 @@ update_torcfg()
   (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
   echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-  (sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
-  sudo cp etc/wicd/manager-settings.conf /etc/wicd/
-  echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-  (sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
-  sudo cp etc/wicd/wired-settings.conf /etc/wicd/
-  echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
   echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
   echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
@@ -290,10 +283,9 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - UPDATE & RESET OPTIONS" -
 "4" "Update to the newest stable version of the TorBox menu" OFF \
 "5" "Erase all log files" OFF \
 "6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
-"7" "Reset network manager (anti-crash)" OFF \
-"8" "Reset Tor and force a change of the permanent entry node" OFF \
-"9" "Remove permanently Bridge Relay data" OFF \
-"10" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
+"7" "Reset Tor and force a change of the permanent entry node" OFF \
+"8" "Remove permanently Bridge Relay data" OFF \
+"9" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -311,8 +303,7 @@ if [ $exitstatus = 0 ]; then
       clear
  			KERNEL_VERS=$(uname -s -r)
       TOR_VERS=$(tor --version|rev|cut -c2-|rev)
-    	WICD_VERS=$(wicd-curses --version)
-			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\nWicd:   $WICD_VERS\n\nWould you like to update the base system to the newest version?"
+			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         online_check_update
         clear
@@ -391,20 +382,8 @@ if [ $exitstatus = 0 ]; then
         BOOTMSG=1
       fi
 
-#This resets the network manager
-    elif [ $ARGUMENT = 7 ]; then
-      clear
-      echo -e "${RED}[!] Resetting the network manager...${NOCOLOR}"
-      echo " "
-      sudo systemctl stop wicd
-      sudo rm /etc/wicd/wireless-settings.conf
-      sudo systemctl start wicd
-      echo " "
-      echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
-      sleep 5
-
 #This resets Tor and forces a change of the permanent entry node
-    elif [ $ARGUMENT = 8 ]; then
+    elif [ $ARGUMENT = 7 ]; then
       INPUT=$(cat text/tor-reset-text)
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
@@ -441,7 +420,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This permanently removes Bridge Relay data
-    elif [ $ARGUMENT = 9 ]; then
+    elif [ $ARGUMENT = 8 ]; then
       INPUT=$(cat text/remove-brdata-text)
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
@@ -457,7 +436,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #Just fixing and cleaning
-    elif [ $ARGUMENT = 10 ]; then
+    elif [ $ARGUMENT = 9 ]; then
        clear
     fi
   done
