@@ -19,4 +19,5 @@ sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10
 sudo /usr/sbin/ntpdate pool.ntp.org
+sleep 5
 sudo systemctl stop dnsmasq
