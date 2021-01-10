@@ -73,7 +73,7 @@ class wireless_manager:
 		self.ws.wait()
 
 		urwid.set_encoding("UTF-8")
-		
+
 		# -----------------------
 		# Create the UI
 		# -----------------------
@@ -96,7 +96,7 @@ class wireless_manager:
 			unhandled_input = self._manage_hotkeys,
 			event_loop = self._event_loop
 		)
-	
+
 	#------------------------------------------------------------------------------------------------
 	# CONTAINER UI
 	#------------------------------------------------------------------------------------------------
@@ -185,7 +185,7 @@ class wireless_manager:
 		if key in ('D','d'):
 			self.__disconnect()
 		#----------------------------
-		# (H) Scan for hidden 
+		# (H) Scan for hidden
 		#----------------------------
 		#if key in ('H','h'):
 		#	self.scan(True)
@@ -262,7 +262,7 @@ class wireless_manager:
 			self.network_list = self.scanner.scan_hidden()
 		else:
 			self.network_list = self.scanner.scan()
-		
+
 		# If we didn't hit the counter of scans, we scan again
 		if self.scan_times_current < self.scan_times:
 			# We add count on current scans
@@ -273,11 +273,11 @@ class wireless_manager:
 
 			# Scan again
 			self.scan(hidden_scan)
-		
+
 		else:
 			# Reset scan loop
 			#self.scan_times_current = 1
-			
+
 			terminal_cols, terminal_rows = urwid.raw_display.Screen().get_cols_rows()
 
 			# Headers columns
@@ -291,7 +291,7 @@ class wireless_manager:
 				if '\\x00' in __essid or '?' in __essid or __essid == '':
 					__essid = '-HIDDEN-'
 				networks[bssid][0] = __essid
-			
+
 			# Networks found
 			_netlist = [SelectableRow(networks[bssid], self.__connect_network) for bssid in networks.keys()]
 			_netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
@@ -306,7 +306,7 @@ class wireless_manager:
 
 			widget = urwid.Filler(pile)
 			widget = self.__get_container(widget)
-			
+
 			self.loop.widget = widget
 
 	def __connect_network(self, network):
@@ -474,12 +474,12 @@ class wireless_manager:
 				_ask_pass,
 				_input_pass,
 			])
-		
+
 		body = urwid.Filler(body)
 		body = urwid.AttrMap(body, 'connect_ask')
 
 		# buttons
-		_button_connect = urwid.Button('Connect')
+		_button_connect = urwid.Button('      Connect')
 		_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
 		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[_input_essid_edit, bssid, _input_pass_edit, _hidden_flag])
 
@@ -524,12 +524,12 @@ class wireless_manager:
 	def __network_connect(self, _loop, _data, saved_network=False):
 
 		essid, bssid, password, hidden_flag, saved_network = [_data[0], _data[1], _data[2], _data[3], _data[4]]
-		
+
 		# If we are connected and trying to connect to a new network, we need to disconnect 1st
 		if self.connected:
 			self.__disconnect()
-		
-		
+
+
 
 		if saved_network is not False:
 			network_id = saved_network
@@ -563,7 +563,7 @@ class wireless_manager:
 			cmd = ["wpa_cli", "-i", self.interface, "enable_network", "{}".format(network_id)]
 			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 		#logging.info('Connecting to network_id: %s' % network_id)
-		
+
 
 		# Select the network
 		cmd = ["wpa_cli", "-i", self.interface, "select_network", "{}".format(network_id)]
@@ -605,7 +605,7 @@ class wireless_manager:
 
 			cmd = ["wpa_cli", "-i", self.interface, "remove_network", "{}".format(network_id)]
 			n = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-			
+
 			#------------------------------------------------------
 			# Popup: Password wrong. Enter a new one or cancel
 			#------------------------------------------------------
@@ -691,7 +691,7 @@ class wireless_manager:
 
 			#self.loop.widget = self.last_widget
 			self.__network_scan_list(self.loop, [False])
-			
+
 # Urwid class for custom list
 class SelectableRow(urwid.WidgetWrap):
 	def __init__(self, contents, on_select=None):
@@ -720,7 +720,7 @@ class SelectableRow(urwid.WidgetWrap):
 		#if self.on_select and key.lower() == 'c':
 			self.on_select(self.contents)
 			pass
-			
+
 		return key
 
 	def __repr__(self):
