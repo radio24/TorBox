@@ -116,7 +116,7 @@ else
       echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
+      (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf) 2>&1
       sleep 15
       echo ""
       echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
@@ -220,7 +220,7 @@ else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]          We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
       sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
+      sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf
       sleep 15
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
