@@ -711,11 +711,18 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 #        online_check menu-config
-        cd install/Sixfab_PPP_Installer/ppp_installer
+        cd install/Sixfab_PPP_Installer-master/ppp_installer
 #        wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
 #        mv install.sh sixfab_install.sh
         chmod +x install.sh
         sudo ./install.sh
+#We should move that one and the one from the update file into the lib
+        if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
+          clear
+          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+          sleep 2
+          sudo reboot
+        else
         trap "cd torbox; bash menu-config; exit 0" SIGINT
       fi
 

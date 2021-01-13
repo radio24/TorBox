@@ -26,6 +26,8 @@ case $shield_hat in
 esac
 
 #Downloading setup files as will as ppp wiringpi is not necessary, because they are alredy there
+#However, we have to copy some unchanged configuration files
+sudo cp unchanged_files/provider .
 
 echo "${YELLOW}What is your carrier APN?${SET}"
 read carrierapn
@@ -60,8 +62,8 @@ read devicename
 
 mkdir -p /etc/chatscripts
 
-mv chat-connect /etc/chatscripts/
-mv chat-disconnect /etc/chatscripts/
+cp chat-connect /etc/chatscripts/
+cp chat-disconnect /etc/chatscripts/
 
 mkdir -p /etc/ppp/peers
 sed -i "s/#APN/$carrierapn/" provider
@@ -86,8 +88,8 @@ do
 	case $auto_reconnect in
 		[Yy]* )
 #Downloading setup files as will as ppp wiringpi is not necessary, because they are alredy there
-			  mv reconnect.sh /usr/src/
-			  mv reconnect.service /etc/systemd/system/
+			  cp reconnect.sh /usr/src/
+			  cp reconnect.service /etc/systemd/system/
 
 			  systemctl daemon-reload
 			  systemctl enable reconnect.service
@@ -100,5 +102,5 @@ do
 	esac
 done
 
-read -p "Press ENTER key to reboot" ENTER
-reboot
+#read -p "Press ENTER key to reboot" ENTER
+#reboot
