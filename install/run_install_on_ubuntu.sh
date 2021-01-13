@@ -166,7 +166,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 
-sudo apt-get -y install hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
+sudo apt-get -y install hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp wiringpi
 
 # Additional installations for Python 3
 sudo pip3 install pytesseract
