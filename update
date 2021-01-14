@@ -291,10 +291,11 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - UPDATE & RESET OPTIONS" -
 "3" "Update to the newest version of Tor" OFF \
 "4" "Update to the newest stable version of the TorBox menu" OFF \
 "5" "Erase all log files" OFF \
-"6" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
-"7" "Reset Tor and force a change of the permanent entry node" OFF \
-"8" "Remove permanently Bridge Relay data" OFF \
-"9" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
+"6" "Erase all passwords in the Torbox Wireless Manager" OFF \
+"7" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
+"8" "Reset Tor and force a change of the permanent entry node" OFF \
+"9" "Remove permanently Bridge Relay data" OFF \
+"10" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -378,8 +379,16 @@ if [ $exitstatus = 0 ]; then
       echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
       sleep 5
 
-#This updates / resets TorBox's configuration files
+#Erase all passwords in Torbox Wireless Manager
     elif [ $ARGUMENT = 6 ]; then
+      INPUT=$(cat text/erase_TWM_pwd-text)
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        (head -n 2 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
+        (head -n 2 /etc/wpa_supplicant/wpa_supplicant-wlan1.conf > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+      fi
+
+#This updates / resets TorBox's configuration files
+  elif [ $ARGUMENT = 7 ]; then
       if [ $TORBOX_UPDATE = 0 ]; then
         INPUT=$(cat text/torboxcfg_update-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -392,7 +401,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This resets Tor and forces a change of the permanent entry node
-    elif [ $ARGUMENT = 7 ]; then
+  elif [ $ARGUMENT = 8 ]; then
       INPUT=$(cat text/tor-reset-text)
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
@@ -429,7 +438,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This permanently removes Bridge Relay data
-    elif [ $ARGUMENT = 8 ]; then
+  elif [ $ARGUMENT = 9 ]; then
       INPUT=$(cat text/remove-brdata-text)
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
@@ -445,7 +454,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #Just fixing and cleaning
-    elif [ $ARGUMENT = 9 ]; then
+  elif [ $ARGUMENT = 10 ]; then
        clear
     fi
   done
