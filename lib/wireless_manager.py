@@ -42,7 +42,7 @@ class wireless_manager:
 
 	]
 
-	def __init__(self, interface='wlan0'):
+	def __init__(self, interface='wlan0', autoconnect=False):
 		# Interface to use
 		self.interface = interface
 
@@ -72,6 +72,29 @@ class wireless_manager:
 		self.ws = subprocess.Popen(cmd)
 		self.ws.wait()
 
+		if autoconnect is True:
+			# start wpa_supplicant and try to connect, check if we are connected, if not, we proceed with the urwid interface
+			# Disable dhcp connection from current interface
+			cmd = ["dhclient", "-r", self.interface]
+			n = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Check if we got connect by wpa_supplicant
+			# run dhcp for getting ip
+			cmd = ["dhclient", self.interface]
+			n = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+			# Give some time to dhclient
+			time.sleep(5)
+
+			# Check if it's connected
+			if self.__is_connected() is True:
+				print('1')
+			else:
+				print('0')
+			
+			quit()
+
+
 		urwid.set_encoding("UTF-8")
 
 		# -----------------------
@@ -79,7 +102,8 @@ class wireless_manager:
 		# -----------------------
 
 		# Start MSG
-		_start_box = urwid.Text('Press [R] to start scanning', 'center')
+		#_start_box = urwid.Text('Press [R] to start scanning', 'center')
+		_start_box = urwid.Text('Starting....', 'center')
 		_start_box = urwid.Filler( _start_box, valign="middle", top=1, bottom=1 )
 		_start_box = urwid.AttrMap( _start_box, 'start_msg' )
 
@@ -96,6 +120,25 @@ class wireless_manager:
 			unhandled_input = self._manage_hotkeys,
 			event_loop = self._event_loop
 		)
+		self.loop.set_alarm_in(0.1, self.scan, user_data=[False])
+
+	def __is_connected(self):
+		try:
+			cmd = ["wpa_cli", "-i", self.interface, "status"]
+			output = subprocess.check_output(cmd)
+			output = output.decode("utf-8")
+			output = output.split("\n")
+			status = output[8].split("=")[1]
+
+			# Connected
+			if status == 'COMPLETED':
+				self.connected = True
+			else:
+				self.connected = False
+		except:
+			self.connected = False
+
+		return self.connected
 
 	#------------------------------------------------------------------------------------------------
 	# CONTAINER UI
@@ -193,7 +236,8 @@ class wireless_manager:
 		#	print('Exception! {}'.format(e))
 			#raise urwid.ExitMainLoop()
 
-	def scan(self, hidden=False):
+	def scan(self, _loop=object, _data=[False]):
+		hidden = _data[0]
 		# scanning popup
 		if hidden is False:
 			if self.scan_times_current < self.scan_times:
@@ -272,7 +316,7 @@ class wireless_manager:
 			time.sleep(2)
 
 			# Scan again
-			self.scan(hidden_scan)
+			self.scan()
 
 		else:
 			# Reset scan loop
