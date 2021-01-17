@@ -23,7 +23,7 @@ for opt, arg in options:
 		autoconnect = True
 
 if not interface:
-	print("Usage: %s -i <interface>" % (sys.argv[0]) )
+	print("Usage: %s -i <interface> [-a|--autoconnect]" % (sys.argv[0]) )
 	quit()
 else:
 	# check interface exists
