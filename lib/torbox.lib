@@ -36,6 +36,7 @@ MENU_HEIGHT_15=15
 
 #Colors
 RED='\033[1;31m'
+WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -162,4 +163,49 @@ restarting_tor()
   sleep 2
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
   sudo tail -f -n 0 /var/log/tor/notices.log
+}
+
+# restarting_tor(<source script>)
+# Used predefined variables: RED, NOCOLOR
+# This function restarts Tor
+connecting_to_VPN()
+{
+  clear
+  readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
+  if [ "${ovpnlist[0]}" = "" ] ; then
+    whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    trap "bash menu; exit 0" EXIT
+    exit 0
+  fi
+  ovpnlist_anzahl=${#ovpnlist[*]}
+  anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
+  menu_content=""
+  for (( i=0; i<=$anzahl_loops; i++ ))
+  do
+    menu_item=$(( $i + 1 ))
+    menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
+  done
+  clear
+  echo -e "${WHITE}Choose an OpenVPN configuration:${NOCOLOR}"
+  echo ""
+  echo -e "$menu_content"
+  echo ""
+  read -r -p $'\e[1;37mWhich OpenVPN configuration (number) would you like to use? -> \e[0m'
+  echo
+  if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+    CHOICE_OVPN=$(( $REPLY - 1 ))
+    clear
+    echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
+    echo ""
+    ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+    sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
+    sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+    echo ""
+    echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+    sleep 15
+  else
+    sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+    trap "bash menu; exit 0" EXIT
+    exit 0
+  fi
 }

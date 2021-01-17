@@ -87,7 +87,9 @@ check_interface_with_internet()
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
 IINTERFACE=$(route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ "$IINTERFACE" = "0.0.0.0" ] ; then FLASH_TUN0="<--" ; else
+IIPTABLES=""
+IIPTABLES=$(sudo iptables-legacy -t nat -L -v | grep MASQUERADE | grep tun0)
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
   IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
@@ -666,43 +668,8 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         tun0up=$(ip link | grep tun0)
         if [ "$tun0up" = "" ] ; then
-          readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
-          if [ "${ovpnlist[0]}" = "" ] ; then
-            whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-            trap "bash menu; exit 0" EXIT
-            exit 0
-          fi
-          ovpnlist_anzahl=${#ovpnlist[*]}
-          anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
-          menu_content=""
-          for (( i=0; i<=$anzahl_loops; i++ ))
-          do
-            menu_item=$(( $i + 1 ))
-            menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
-          done
-          clear
-          echo -e "${WHITE}Choose an OpenVPN configuration${NOCOLOR}"
-          echo ""
-          echo -e "$menu_content"
-          echo ""
-          read -r -p $'\e[1;37mWhich OpenVPN configuration would you like to use? -> \e[0m'
-          echo
-          if [[ $REPLY =~ ^[1234567890]$ ]] ; then
-            CHOICE_OVPN=$(( $REPLY - 1 ))
-            clear
-            echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
-            echo ""
-            ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
-            sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
-            sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
-            echo ""
-            echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
-            sleep 15
-            tun0up=$(ip link | grep tun0)
-          else
-            trap "bash menu; exit 0" EXIT
-            exit 0
-          fi
+          connecting_to_VPN
+          tun0up=$(ip link | grep tun0)
         fi
         if [ "$tun0up" != "" ] ; then
           clear
