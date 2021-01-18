@@ -723,7 +723,8 @@ if [ $exitstatus = 0 ]; then
           sleep 2
           sudo reboot
         else
-        trap "cd torbox; bash menu-config; exit 0" SIGINT
+          trap "cd torbox; bash menu-config; exit 0" SIGINT
+        fi
       fi
 
 #Finish
