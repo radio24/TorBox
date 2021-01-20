@@ -228,5 +228,5 @@ recommended_reboot()
     else
       trap "cd ~/torbox; bash $TRAP_DESTINATION; exit 0" SIGINT
     fi
-  if
+  fi
 }
