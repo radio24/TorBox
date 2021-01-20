@@ -165,9 +165,9 @@ restarting_tor()
   sudo tail -f -n 0 /var/log/tor/notices.log
 }
 
-# restarting_tor(<source script>)
-# Used predefined variables: RED, NOCOLOR
-# This function restarts Tor
+# connecting_to_VPN()
+# Used predefined variables: RED, WHITE, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
+# This function connects the TorBox to a VPN
 connecting_to_VPN()
 {
   clear
@@ -208,4 +208,25 @@ connecting_to_VPN()
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
+}
+
+# recommended_reboot(<trap-destination>)
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
+# This function strongly recommends a reboot
+recommended_reboot()
+{
+  TRAP_DESTINATION=$1
+  if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
+    clear
+    echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+    sleep 2
+    sudo reboot
+  else
+    if [ "$TRAP_DESTINATION" = "" ] ; then
+      clear
+      exit 0
+    else
+      trap "cd ~/torbox; bash $TRAP_DESTINATION; exit 0" SIGINT
+    fi
+  if
 }

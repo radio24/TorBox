@@ -716,15 +716,7 @@ if [ $exitstatus = 0 ]; then
 #        mv install.sh sixfab_install.sh
         chmod +x install.sh
         sudo ./install.sh
-#We should move that one and the one from the update file into the lib
-        if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
-          clear
-          echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-          sleep 2
-          sudo reboot
-        else
-          trap "cd torbox; bash menu-config; exit 0" SIGINT
-        fi
+        recommended_reboot(menu-config)
       fi
 
 #Finish
