@@ -87,8 +87,13 @@ check_interface_with_internet()
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
 IINTERFACE=$(route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-IIPTABLES=""
-IIPTABLES=$(sudo iptables-legacy -t nat -L -v | grep MASQUERADE | grep tun0)
+if [ "$IINTERFACE" != "" ] ; then
+  VPN_STATUS="VPN is up"
+  IIPTABLES=""
+  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
+else
+  VPN_STATUS=""
+fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
   IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
@@ -109,8 +114,14 @@ check_bridge_relay
 check_interface_with_internet
 check_tor
 
+if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="VPN is up & TOR working"
+elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ] ; then TOR_STATUS="         TOR is working"
+elif [ "$TOR_STATUS" = "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="              VPN is up"
+else TOR_STATUS=""
+fi
+
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
