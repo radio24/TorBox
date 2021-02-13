@@ -650,9 +650,9 @@ if [ $exitstatus = 0 ]; then
         online_check menu-config
         cd
         sudo apt-get -y install python3-dev
-        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.sh
-        chmod +x adafruit-pitft.sh
-        sudo ./adafruit-pitft.sh -u /home/torbox
+        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/adafruit-pitft.py
+        chmod +x adafruit-pitft.py
+        sudo ./adafruit-pitft.py -u /home/torbox
       fi
 
 #This is the support for 3.5" no-name TFT displays
