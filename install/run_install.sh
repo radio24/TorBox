@@ -45,7 +45,8 @@
 # 10. Disabling Bluetooth
 # 11. Configure the system services
 # 12. Adding and implementing the user torbox
-# 13. Finishing, cleaning and booting
+# 13. Installing additional network drivers
+# 14. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -75,6 +76,34 @@ NOCOLOR='\033[0m'
 
 #Other variables
 
+
+##############################
+######## FUNCTIONS ###########
+
+# This function downloads, unpacks and installs the network drivers
+# Syntax install_network_drivers <path> <filename> <text_message>
+install_network_drivers()
+{
+	path=$1
+  filename=$2
+  text_message=$3
+	clear
+  echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+  echo -e " "
+	cd ~
+	mkdir install_network_driver
+	cd install_network_driver
+	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
+	wget http://downloads.fars-robotics.net/wifi-drivers/$path$filename
+	echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
+	tar xzf $filename
+	chmod a+x install.sh
+	echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
+	sudo ./install.sh
+	cd ~
+	rm -r install_network_driver
+	sleep 2
+}
 
 ###### DISPLAY THE INTRO ######
 clear
@@ -181,6 +210,7 @@ sudo apt-get -y install tor deb.torproject.org-keyring
 # Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install urwid
 
 # 6. Configuring Tor and obfs4proxy
 sleep 10
@@ -382,10 +412,62 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 13. Finishing, cleaning and booting
+# 13. Installing additional network drivers
+kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
+
+path_8188eu="8188eu-drivers/"
+filename_8188eu="8188eu-"$kernelversion".tar.gz"
+text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
+install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
+
+path_8188fu="8188fu-drivers/"
+filename_8188fu="8188fu-"$kernelversion".tar.gz"
+text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
+install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
+
+path_8192eu="8192eu-drivers/"
+filename_8192eu="8192eu-"$kernelversion".tar.gz"
+text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
+install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
+
+# Deactivated because no driver for new kernels available
+#path_8192su="8192su-drivers/"
+#filename_8192su="8192su-"$kernelversion".tar.gz"
+#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
+#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
+
+path_8812au="8812au-drivers/"
+filename_8812au="8812au-"$kernelversion".tar.gz"
+text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
+install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
+
+path_8821cu="8821cu-drivers/"
+filename_8821cu="8821cu-"$kernelversion".tar.gz"
+text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
+install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
+
+path_8822bu="8822bu-drivers/"
+filename_8822bu="8822bu-"$kernelversion".tar.gz"
+text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
+install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
+
+# Deactivated because no driver for new kernels available
+#path_mt7610="mt7610-drivers/"
+#filename_mt7610="mt7610-"$kernelversion".tar.gz"
+#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
+#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
+
+# Deactivated because no driver for new kernels available
+#path_mt7612="mt7612-drivers/"
+#filename_mt7612="mt7612-"$kernelversion".tar.gz"
+#text_filename_mt7612="Mediatek MT7610 Wireless Network Driver"
+#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
+
+
+# 14. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
 echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"
