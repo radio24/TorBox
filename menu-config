@@ -54,6 +54,7 @@ CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 
 
 ##############################
@@ -137,6 +138,16 @@ read_config()
   else
     TOGGLE09="Disable"
   fi
+
+  # TOGGLE10 shows if TorBox can be accessed from the Internet
+  (sudo iptables -C INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+  RULE_CHECK=$?
+  if [ $RULE_CHECK = 1 ]; then
+    TOGGLE10="Enable"
+  else
+    TOGGLE10="Disable"
+  fi
+
 }
 
 ######## PREPARATIONS ########
@@ -156,14 +167,15 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - CONFIGURATION
 "  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
 "  7" "$TOGGLE08 TorBox's WLAN"  \
 "  8" "$TOGGLE09 TorBox's WLAN"  \
-"  9" "Change the password of your Tor control port (restarts Tor!)"  \
+"  9" "$TOGGLE10 SSH access from the Internet"  \
+" 10" "Change the password of your Tor control port (restarts Tor!)"  \
 "===" "===========================================[Logging "$TOGGLE03 \
-" 10" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
-" 11" "Erase all log files" \
+" 11" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
+" 12" "Erase all log files" \
 "===" "===========================================[Features]========" \
-" 12" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 13" "Support for 3.5\" no-name TFT displays (reboot required)" \
-" 14" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+" 13" "Support for Adafruit's PiTFT displays (reboot required)" \
+" 14" "Support for 3.5\" no-name TFT displays (reboot required)" \
+" 15" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -595,8 +607,43 @@ if [ $exitstatus = 0 ]; then
       fi
       read_config
 
+#This disables / enables SSH access through Internet
+  elif [ $CHOICE = 9 ]; then
+    if [ "$TOGGLE10" = "Enable" ]; then
+      INPUT=$(cat text/ssh_i_access-on-txt)
+      ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
+      "1" "Temporary until reconfiguration or restart" OFF \
+      "2" "Permanently until disabled again" OFF 3>&1 1>&2 2>&3)
+      exitstatus=$?
+      if [ $exitstatus = 0 ]; then
+        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g)
+        clear
+        echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
+        echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
+        echo ""
+        echo -e "${WHITE}[!] $INTERNET_IP"
+        echo ""
+        read -n 1 -s -r -p "Press any key to continue"
+        sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+        if [ $ENABLED_CHOICE = 1 ]; then
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
+        fi
+      fi
+    fi
+    if [ "$TOGGLE10" = "Disable" ]; then
+      if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to disable SSH access from the Internet (this is the default)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        clear
+        echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
+        sudo iptables -D INPUT -p tcp --dport 22 -j ACCEPT
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
+        sleep 2
+      fi
+    fi
+
 #This changes the password of the Tor control port
-    elif [ $CHOICE = 9 ]; then
+    elif [ $CHOICE = 10 ]; then
 			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
 				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
@@ -611,7 +658,7 @@ if [ $exitstatus = 0 ]; then
 			fi
 
 #This changes the extent of the logging
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 11 ]; then
 			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
@@ -638,13 +685,13 @@ if [ $exitstatus = 0 ]; then
       read_config
 
 #This erases all log files
-    elif [ $CHOICE = 11 ]; then
+    elif [ $CHOICE = 12 ]; then
 			clear
 			erase_logs
 			sleep 2
 
 #This is the support for Adafruit's PiTFT displays
-    elif [ $CHOICE = 12 ]; then
+    elif [ $CHOICE = 13 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
@@ -657,7 +704,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This is the support for 3.5" no-name TFT displays
-    elif [ $CHOICE = 13 ]; then
+    elif [ $CHOICE = 14 ]; then
       INPUT=$(cat text/nonametft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -708,7 +755,7 @@ if [ $exitstatus = 0 ]; then
 #This is the support for Sixfab Shields/HATs for cellular connections
 #Remark for TorBox v.0.4.0 - we try to do it without an online connection.
 #Preinstalled packages needed: ppp wiringpi
-    elif [ $CHOICE = 14 ]; then
+    elif [ $CHOICE = 15 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 #        online_check menu-config
@@ -717,7 +764,7 @@ if [ $exitstatus = 0 ]; then
 #        mv install.sh sixfab_install.sh
         chmod +x install.sh
         sudo ./install.sh
-        recommended_reboot(menu-config)
+        recommended_reboot menu-config
       fi
 
 #Finish

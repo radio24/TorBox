@@ -94,8 +94,11 @@ read_config()
   fi
 
 # Is the Countermeasure against a disconnection when idle feature active?
-  if grep -q "^PING=OFF" ${RUNFILE} ; then PING="OFF" ; fi
-  if grep -q "^PING=ON" ${RUNFILE} ; then PING="ON" ; fi
+    if ps -ax | grep "[p]ing -q google.com" ; then
+      PING="ON"
+    else
+      PING="OFF"
+    fi
 
   # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
   sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
@@ -326,14 +329,12 @@ if [ $exitstatus = 0 ]; then
 			  ping -q google.com >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
 			  echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-        sudo sed -i "s/^PING=.*/PING=ON/" ${RUNFILE}
 			  sleep 2
       fi
       if [ "$PING" = "ON" ]; then
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo killall ping
           echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
-          sudo sed -i "s/^PING=.*/PING=OFF/" ${RUNFILE}
           sleep 2
         fi
       fi

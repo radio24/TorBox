@@ -251,8 +251,6 @@ update_torbox_menu()
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
-  PING=$(grep "^PING=" ${RUNFILE})
-  if [ "$PING" = "" ] ; then PING="PING=off" ; fi
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   wget https://github.com/radio24/TorBox/archive/master.zip
@@ -269,7 +267,6 @@ update_torbox_menu()
     rm -r master.zip
     cd torbox
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
-    sudo sed -i "s/^PING=.*/${PING}/g" ${RUNFILE}
     echo -e "${RED} ${NOCOLOR}"
     echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
     sleep 5

@@ -67,6 +67,7 @@ O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
 CAPTIVE=$4
+RUNFILE="run/torbox.run"
 
 
 ##############################
@@ -175,6 +176,11 @@ $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
 ## Masquerading
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
+
+###### SSH access through Internet ######
+if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
+fi
 
 ###### FINISH ######
 echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
