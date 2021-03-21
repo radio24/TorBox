@@ -125,7 +125,7 @@ read_config()
 
   # TOGGLE08 shows if the SSID is hidden or not
   if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
-    TOGGLE08="Unide"
+    TOGGLE08="Unhide"
   else
     TOGGLE08="Hide"
   fi
@@ -676,9 +676,11 @@ if [ $exitstatus = 0 ]; then
 		  	clear
 				echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
 				sudo systemctl stop rsyslog
+        echo ""
 				echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
 	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
 				sudo systemctl disable rsyslog
+        echo ""
         erase_logs
         sleep 2
 			fi

@@ -108,7 +108,6 @@ online_check()
 erase_logs()
 {
   echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-  echo " "
   for logs in `sudo find /var/log -type f`; do
   	echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   	sudo rm $logs
@@ -116,7 +115,7 @@ erase_logs()
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   sudo rm ../.bash_history
-  sudo history -c
+  history -c
 }
 
 # deactivating_bridge_relay()
