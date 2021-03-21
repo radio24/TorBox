@@ -170,6 +170,21 @@ $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 ###### SSH access through Internet ######
 if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
+else
+	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+fi
+
+###### HTTP plain text traffic blocker ######
+if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
+	$IPTABLES -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options
+	$IPTABLES -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
+	$IPTABLES -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0
+	$IPTABLES -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0
+else
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
 fi
 
 ###### FINISH ######

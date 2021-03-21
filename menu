@@ -75,8 +75,11 @@ check_bridge_relay()
     (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
     RULE_CHECK=$?
     if [ $RULE_CHECK = 1 ]; then
-      sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
-      sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+      (sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+      (sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+    else
+      (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+      (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
     fi
   fi
 }

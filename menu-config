@@ -139,13 +139,29 @@ read_config()
     TOGGLE09="Disable"
   fi
 
-  # TOGGLE10 shows if TorBox can be accessed from the Internet
+  # TOGGLE10 / TOGGLE11 shows if TorBox can be accessed from the Internet
+  RULE_CHECK=0
   (sudo iptables -C INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
   RULE_CHECK=$?
   if [ $RULE_CHECK = 1 ]; then
     TOGGLE10="Enable"
+    TOGGLE11="(not recommended)"
   else
     TOGGLE10="Disable"
+    TOGGLE11=""
+  fi
+
+  # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
+  # (sudo iptables -t nat -C PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+  RULE_CHECK=0
+  (sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+  RULE_CHECK=$?
+  if [ $RULE_CHECK = 1 ]; then
+    TOGGLE12="Enable"
+    TOGGLE13=""
+  else
+    TOGGLE12="Disable"
+    TOGGLE13="(not recommended)"
   fi
 
 }
@@ -170,8 +186,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - CONFIGURATION
 "  8" "$TOGGLE08 TorBox's WLAN"  \
 "  9" "$TOGGLE09 TorBox's WLAN"  \
 "===" "================================================[Security]===" \
-" 10" "$TOGGLE10 SSH access from the Internet (not recommended)" \
-" 11" "$TOGGLE10 HTTP plain text traffic block (not recommended)" \
+" 10" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+" 11" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "===" "============================================[Logging "$TOGGLE03 \
 " 12" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
 " 13" "Erase all log files" \
@@ -660,9 +676,34 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
 
-#Disable HTTP plain text traffic block (not recommended)
+#THis disables / enables HTTP plain text traffic block
     elif [ $CHOICE = 11 ]; then
-      sleep 2
+      if [ "$TOGGLE12" = "Enable" ]; then
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic (this is the default)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
+          (sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
+      if [ "$TOGGLE12" = "Disable" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic (not recommended)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
+          (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=0/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
 
 #This changes the extent of the logging
     elif [ $CHOICE = 12 ]; then

@@ -140,7 +140,7 @@ deactivating_bridge_relay()
   	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
   	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
   	sleep 2
-      	echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
+    echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
   	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
   	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
     sleep 2
