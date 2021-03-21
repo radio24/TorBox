@@ -72,14 +72,14 @@ read_config()
 {
   MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
   if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-      TOGGLE05="ON]==="
+      TOGGLE05="ON!]==="
       TOGGLE05b="ON"
-      TOGGLE06="OFF]=="
+      TOGGLE06="OFF]==="
       TOGGLE06b="OFF"
   else
-      TOGGLE05="OFF]=="
+      TOGGLE05="OFF]==="
       TOGGLE05b="OFF"
-      TOGGLE06="ON]==="
+      TOGGLE06="ON!]==="
       TOGGLE06b="ON"
   fi
 
@@ -129,7 +129,7 @@ clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
-"===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
+"===" "==================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
 "  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
 "  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
