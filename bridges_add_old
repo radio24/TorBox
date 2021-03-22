@@ -56,7 +56,13 @@ TORRC="/etc/tor/torrc"
 MODE_BRIDGES=$1
 number_bridges=0
 
-##############################
+###########################
+######## FUNCTIONS ########
+
+#include lib
+.  lib/torbox.lib
+
+
 
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
