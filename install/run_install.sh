@@ -117,11 +117,15 @@ clear
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
-wget -q --spider http://google.com
+echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
+sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+sleep 15
+wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
@@ -138,27 +142,13 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider http://ubuntu.com
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf) 2>&1
-      sleep 15
-      echo ""
-      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
+			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+			exit 1
     fi
   fi
 fi
@@ -224,11 +214,11 @@ sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/to
 sleep 10
 clear
 echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider http://google.com
+wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+]          Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
   echo -e "${RED}[+]          Trying again...${NOCOLOR}"
@@ -243,20 +233,20 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider http://ubuntu.com
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]          We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee -a /etc/resolv.conf
+			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
+			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+			(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
       sleep 15
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
+      wget -q --spider http://ubuntu.com
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -289,7 +279,7 @@ if [ -e master.zip ]; then
 else
   echo -e "${RED} ${NOCOLOR}"
   echo -e "${WHITE}[!]      Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-  echo -e "${WHITE}[!]      I'can't update TorBox menu !!${NOCOLOR}"
+  echo -e "${WHITE}[!]      I can't update TorBox menu !!${NOCOLOR}"
   echo -e "${WHITE}[!]      You may try it later or manually !!${NOCOLOR}"
   sleep 2
   exit 1
@@ -327,6 +317,11 @@ echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
+(sudo cp /etc/resolvconf.conf /etc/resolvconf.conf.bak) 2> /dev/null
+sudo cp etc/resolvconf.conf /etc/
+# Update not overwrite
+sudo resolvconf -u
+echo -e "${RED}[+] Copied /etc/resolvconf.conf -- backup done${NOCOLOR}"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf

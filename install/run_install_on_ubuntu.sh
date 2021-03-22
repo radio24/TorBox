@@ -90,11 +90,15 @@ clear
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
+echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
+sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
+(sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
+sudo systemctl restart systemd-resolved
 wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
+  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
@@ -115,24 +119,9 @@ else
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee -a /etc/systemd/resolved.conf) 2>&1
-      sudo systemctl restart systemd-resolved
-      sleep 15
-      echo ""
-      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-      wget -q --spider http://ubuntu.com
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
+      echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+      exit 1
     fi
   fi
 fi
@@ -189,7 +178,7 @@ wget -q --spider http://google.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
@@ -209,9 +198,9 @@ else
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
       echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${RED}[+]         Let's add some open nameservers and try again...${NOCOLOR}"
       sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee -a /etc/systemd/resolved.conf) 2>&1
+      (sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
       sudo systemctl restart systemd-resolved
       sleep 15
       echo ""
@@ -251,7 +240,7 @@ if [ -e master.zip ]; then
 else
   echo -e "${RED} ${NOCOLOR}"
   echo -e "${WHITE}[!]      Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-  echo -e "${WHITE}[!]      I'can't update TorBox menu !!${NOCOLOR}"
+  echo -e "${WHITE}[!]      I can't update TorBox menu !!${NOCOLOR}"
   echo -e "${WHITE}[!]      You may try it later or manually !!${NOCOLOR}"
   sleep 2
   exit 1
