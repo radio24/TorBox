@@ -133,6 +133,8 @@ update_tor()
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
+    else
+      RECOMPILE=0
     fi
   elif [ -z "$SOURCE_VERS_NUMBER" ] ; then
     INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
@@ -143,6 +145,8 @@ update_tor()
       INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         RECOMPILE=1
+      else
+        RECOMPILE=0
       fi
     else
       RECOMPILE=1
@@ -168,11 +172,8 @@ update_tor()
     echo ""
     echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
     sleep 5
-    BOOTMSG=1
-#    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "Would you like to restart Tor so that the changes are applied?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-#    	clear
-#      restarting_tor update
-#    fi
+    #Return code for BOOTMSG / 1=reboot recommended / 0=no reboot needed
+    return 1
   else
     if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   fi
@@ -488,8 +489,10 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
         update_tor
+        BOOTMSG=$?
       else
         update_tor
+        BOOTMSG=$?
       fi
 
 #This updates the newest stable version of TorBox's menu
@@ -608,7 +611,7 @@ if [ $exitstatus = 0 ]; then
   sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
   sudo systemctl daemon-reload
   sleep 3
-  if [ $BOOTMSG = 1 ]; then recommended_reboot fi
+  if [ $BOOTMSG = 1 ]; then recommended_reboot; fi
 else
   clear
   exit 0
