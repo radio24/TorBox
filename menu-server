@@ -158,7 +158,6 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
             sudo sed -i "s/^#ORPort/ORPort/g" ${TORRC}
             sudo sed -i "s/^#ExtORPort/ExtORPort/g" ${TORRC}
-            #Currently, we support only OBFS4 bridges
             sudo sed -i "s/^#ServerTransportPlugin/ServerTransportPlugin/g" ${TORRC}
             sudo sed -i "s/^#ServerTransportListenAddr/ServerTransportListenAddr/g" ${TORRC}
             sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}

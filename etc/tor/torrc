@@ -1,6 +1,6 @@
 ## This is the configuration file of Tor
 
-## DON'T CHANGE THE FOLLOWING 13 LINES!
+## DON'T CHANGE THE FOLLOWING 15 LINES!
 ######################################################
 ## Configuration for TorBox
 
@@ -55,16 +55,16 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #UpdateBridgesFromAuthority 1
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
 
-## ...and add your bridges below (the bridges below are examples which may or
-## may not work. Uncomment to use them). Please give us feedback, if some of
-## the bridges below doesn't work anymore: anonym@torbox.ch
+## Meek-Azure
+#Bridge meek_lite 0.0.2.0:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
+
+## OBFS4 bridges
 ##
 ## You have two ways to get new bridge-addresses:
 ## 1. Get them here https://bridges.torproject.org/
 ##    (chose "Advanced Options", "obfs4" and press "Get Bridges)
 ## 2. Or send an email to bridges@torproject.org, using an address
 ##    from Riseup or Gmail with "get transport obfs4" in the body of the mail.
-
 #Bridge obfs4 144.217.20.138:80 FB70B257C162BF1038CA669D568D76F5B7F0BABB cert=vYIV5MgrghGQvZPIi1tJwnzorMgqgmlKaB77Y3Z9Q/v94wZBOAXkW+fdx4aSxLVnKO+xNw iat-mode=0
 #Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
 #Bridge obfs4 [2001:470:b381:bfff:216:3eff:fe23:d6c3]:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
@@ -93,3 +93,4 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
 #Bridge obfs4 216.252.162.21:46089 0DB8799466902192B6C7576D58D4F7F714EC87C1 cert=XPUwcQPxEXExHfJYX58gZXN7mYpos7VNAHbkgERNFg+FCVNzuYo1Wp+uMscl3aR9hO2DRQ iat-mode=0
 #Bridge obfs4 76.230.156.129:5002 B37BC162454314B6572F9A3A79A1C92BB9E63809 cert=IIJMWkUUmzRbS78LCm8znYKvMf/mmcWIM5ZNyzwl1gHxKievV4h1NKdlVkRH3KpZH/fmbg iat-mode=0
+#Bridge obfs4 95.31.12.22:5010 5721D25FA2D0194E698EC46AC4703F24DE82829F cert=whNT5Nx/k1fZL4MQu99SIl+5OXccyAlMKwjKmjoTGTgPTdVSNeMnh6lPBxcqbx4vMdRTTQ iat-mode=0

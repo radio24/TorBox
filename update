@@ -552,8 +552,8 @@ if [ $exitstatus = 0 ]; then
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
           sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-          #Currently, we support only OBFS4 bridges
           sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+          #Deaktivate all sort of bridges obfs4 and meek-azure
           sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
         fi
         echo -e "${RED}[+] Deleting all circuits and forcing a change of the permanent entry node${NOCOLOR}"

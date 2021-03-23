@@ -67,11 +67,19 @@ j=0
 .  lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
-# TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
-  MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
-  if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+  # MEEKSTRING represents the status of the Meek-Azure bridging mode
+    MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC})
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
+        MEEKSTRING="ON!"
+    else
+        MEEKSTRING="OFF"
+    fi
+
+  # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+  if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$MODE_MEEK" != "Bridge meek_lite " ]; then
       TOGGLE05="ON!]==="
       TOGGLE05b="ON"
       TOGGLE06="OFF]==="
@@ -106,8 +114,8 @@ read_config()
 
   # HOW MANY CONFIGURED BRIDGES DO WE HAVE?
   # readarray reads into an array beginning with index 0
-  readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
-  readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
+  readarray -t configured_bridges_deactivated < <(grep "^#Bridge obfs4 " ${TORRC})
+  readarray -t configured_bridges_activated < <(grep "^Bridge obfs4 " ${TORRC})
   if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
     number_configured_bridges_deactivated=0
   else
@@ -129,9 +137,9 @@ clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
-"===" "==================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
-"  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
-"  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
+"===" "============[Bypass Tor blocking with OBFS4 bridges -> "$TOGGLE05 \
+"  1" "ALL ABOUT OBFS4 BRIDGES - READ ME FIRST"  \
+"  2" "Toggle OBFS4 Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
 "  4" "Add additional bridges"  \
 "  5" "Activate configured bridges"  \
@@ -140,8 +148,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASUR
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 10" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
-" 11" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
+" 10" "Use MEEK-AZURE to circumvent censorship -> "$MEEKSTRING  \
+" 11" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
+" 12" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -157,33 +166,34 @@ if [ $exitstatus = 0 ]; then
 
 # Toggle Bridge Mode ON or OFF
 		elif [ $CHOICE = 2 ]; then
-      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-        INPUT=$(cat text/activate-bridges-text)
-        if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          deactivating_bridge_relay
-          sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-          sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-          #Currently, we support only OBFS4 bridges
-          sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
-          if [ $number_configured_bridges_total = 0]; then
-            INPUT=$(cat text/add-bridges-first-text)
-            if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
-              sudo bash bridges_add_old
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-azure-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      else
+        if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+          INPUT=$(cat text/activate-bridges-text)
+          if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            deactivating_bridge_relay
+            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
+            sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
+            if [ $number_configured_bridges_total = 0]; then
+              INPUT=$(cat text/add-bridges-first-text)
+              if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
+                sudo bash bridges_add_old
+              fi
             fi
           fi
-        fi
-      else
-        INPUT=$(cat text/deactivate-bridges-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-          sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-          #Currently, we support only OBFS4 bridges
-          sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-          sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
-          restarting_tor menu-bridges
-#          sudo systemctl restart tor
+        else
+          INPUT=$(cat text/deactivate-bridges-text)
+          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+            sudo sed -i "s/^Bridge obfs4 /#Bridge  obfs4 /g" ${TORRC}
+            restarting_tor menu-bridges
+          fi
         fi
       fi
       read_config
@@ -263,7 +273,11 @@ if [ $exitstatus = 0 ]; then
 
 # Activate bridges
     elif [ $CHOICE = 5 ]; then
-      sudo bash bridges_activate_old 1
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-azure-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      else
+        sudo bash bridges_activate_old 1
+      fi
       read_config
 
 # Deactivate bridges
@@ -293,8 +307,81 @@ if [ $exitstatus = 0 ]; then
         restarting_tor menu-bridges
       fi
 
-# Connect/Disconnect TorBox to/from VPN
+# Use Meek-Azure to circumvent censorship
   elif [ $CHOICE = 10 ]; then
+    if [ "$MEEKSTRING" = "OFF" ]; then
+      clear
+      echo -e "${WHITE}[!] Let's first check, if MEEK-AZURE could work for you!${NOCOLOR}"
+      readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
+      if [ ${#configured_meekazure_deactivated[0]} = 0 ]; then
+        echo " "
+        echo -e "${WHITE}[!] There is no MEEK-AZURE configured! Did you change /etc/torrc ?${NOCOLOR}"
+        echo -e "${WHITE}[!] We cannot activate MEEK-AZURE! Contact anonym@torbox.ch for help!${NOCOLOR}"
+        read -n 1 -s -r -p "Press any key to continue"
+        exit 1
+      else
+        number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
+      fi
+      echo " "
+      echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
+      #-m 6 must not be lower, otherwise it looks like there is no connection!
+      OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
+      if [ $? == 0 ]; then
+        echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
+        echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
+        sleep 2
+        echo " "
+        while [ $i -lt $number_configured_meekazure_deactivated ]
+        do
+          bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
+          bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
+          elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
+          elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+          i=$(( $i + 1 ))
+          bridge_address="$i : $bridge_address $bridge_status"
+          echo -e $bridge_address
+        done
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+      else
+        echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+        echo -e "${RED}[+] We cannot check the MEEK-AZURE SERVER - we try to use it anyway!${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+      fi
+      clear
+      INPUT=$(cat text/activate-meek-azure-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        deactivating_bridge_relay
+        sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+        if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+          sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+          sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+          sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
+        fi
+        sudo sed -i "s/#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
+        clear
+        restarting_tor menu-bridges
+      fi
+    else
+      INPUT=$(cat text/deactivate-meek-azure-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        clear
+        sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+        sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+        sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+        sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+        sudo sed -i "s/^Bridge obfs4 /#Bridge  obfs4 /g" ${TORRC}
+        restarting_tor menu-bridges
+      fi
+    fi
+    read_config
+
+# Connect/Disconnect TorBox to/from VPN
+  elif [ $CHOICE = 11 ]; then
     if [ "$tun0up" = "" ] ; then
       INPUT=$(cat text/connecting-VPN-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -323,7 +410,7 @@ if [ $exitstatus = 0 ]; then
     fi
 
 # Countermeasure against a disconnection when idle feature
-  elif [ $CHOICE = 11 ] ; then
+  elif [ $CHOICE = 12 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
 			  ping -q google.com >/dev/null &

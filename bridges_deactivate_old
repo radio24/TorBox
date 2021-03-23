@@ -73,8 +73,8 @@ i=0
 #
 # HOW MANY CONFIGURED BRIDGES DO WE HAVE?
 # readarray reads into an array beginning with index 0
-readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
-readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
+readarray -t configured_bridges_deactivated < <(grep "^#Bridge obfs4 " ${TORRC})
+readarray -t configured_bridges_activated < <(grep "^Bridge obfs4 " ${TORRC})
 if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
   number_configured_bridges_deactivated=0
 else
@@ -112,7 +112,7 @@ else
 
     # Deactivate ALL configured bridges
 		  if [ $CHOICE = 1 ]; then
-        sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
+        sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
         INPUT=$(cat text/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
