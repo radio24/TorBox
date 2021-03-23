@@ -68,24 +68,17 @@ i=0
 .  lib/torbox.lib
 
 
-
 ######## PREPARATIONS ########
 #
-# HOW MANY CONFIGURED BRIDGES DO WE HAVE?
-# readarray reads into an array beginning with index 0
-readarray -t configured_bridges_deactivated < <(grep "^#Bridge obfs4 " ${TORRC})
-readarray -t configured_bridges_activated < <(grep "^Bridge obfs4 " ${TORRC})
-if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
-  number_configured_bridges_deactivated=0
-else
-  number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
-fi
-if [ ${#configured_bridges_activated[0]} = 0 ]; then
-  number_configured_bridges_activated=0
-else
-  number_configured_bridges_activated=${#configured_bridges_activated[*]}
-fi
-number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+# number_of_bridges()
+# How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+# Following variables can be used:
+# $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
+# $configured_bridges_activated -> An array with all activated OBFS4 bridges
+# $number_configured_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_bridges_activated -> Number of activated bridges
+# $number_configured_bridges_total -> Total number of bridges
+number_of_bridges
 
 ###########################
 
