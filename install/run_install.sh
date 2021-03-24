@@ -38,7 +38,7 @@
 #  3. Updating the system
 #  4. Adding the Tor repository to the source list.
 #  5. Installing all necessary packages
-#  6. Configuring Tor and obfs4proxy
+#  6. Configuring Tor with the pluggable transports
 #  7. Re-checking Internet connectivity
 #  8. Downloading and installing the latest version of TorBox
 #  9. Installing all configuration files
@@ -202,13 +202,36 @@ sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install urwid
 
-# 6. Configuring Tor and obfs4proxy
+# Additional installation for GO
+cd ~
+sudo rm -rf /usr/local/go
+ wget https://golang.org/dl/go1.16.2.linux-armv6l.tar.gz
+ sudo tar -C /usr/local -xzvf go1.16.2.linux-armv6l.tar.gz 
+sudo export PATH=$PATH:/usr/local/go/bin
+sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+rm go1.16.2.linux-armv6l.tar.gz
+
+# 6. Configuring Tor with the pluggable transports
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Configuring Tor and obfs4proxy....${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+
+# Additional installation for Snowflake
+cd ~
+git clone https://git.torproject.org/pluggable-transports/snowflake.git
+export GO111MODULE="on"
+cd ~/snowflake/snowflake-proxy
+go get
+go build
+sudo cp proxy /usr/bin/snowflake-proxy
+
+cd ~/snowflake/snowflake-proxy
+go get
+go build
+sudo cp client /usr/bin/snowflake-client
 
 # 7 Again checking connectivity
 sleep 10

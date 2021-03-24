@@ -38,7 +38,7 @@
 #  1. Checking for Internet connection
 #  2. Updating the system
 #  3. Installing all necessary packages
-#  4. Configuring Tor and obfs4proxy
+#  4. Configuring Tor with the pluggable transports
 #  5. Re-checking Internet connectivity
 #  6. Downloading and installing the latest version of TorBox
 #  7. Installing all configuration files
@@ -155,20 +155,37 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 
-sudo apt-get -y install hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp wiringpi
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp wiringpi
+
+# Only for Ubuntu (version of go has to be checked)
+sudo apt-get -y install tor golang
 
 # Additional installations for Python 3
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install urwid
 
-# 4. Configuring Tor and obfs4proxy
+# 4. Configuring Tor with the pluggable transports
 sleep 10
 clear
-echo -e "${RED}[+] Step 5: Configuring Tor and obfs4proxy....${NOCOLOR}"
+echo -e "${RED}[+] Step 4: Configuring Tor with the pluggable transports....${NOCOLOR}"
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+
+# Additional installation for Snowflake
+cd ~
+git clone https://git.torproject.org/pluggable-transports/snowflake.git
+export GO111MODULE="on"
+cd ~/snowflake/snowflake-proxy
+go get
+go build
+sudo cp proxy /usr/bin/snowflake-proxy
+
+cd ~/snowflake/snowflake-proxy
+go get
+go build
+sudo cp client /usr/bin/snowflake-client
 
 # 5. Again checking connectivity
 sleep 10
