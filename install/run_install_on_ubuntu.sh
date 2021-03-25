@@ -187,6 +187,9 @@ go get
 go build
 sudo cp client /usr/bin/snowflake-client
 
+cd ~
+rm -r snowflake
+
 # 5. Again checking connectivity
 sleep 10
 clear
