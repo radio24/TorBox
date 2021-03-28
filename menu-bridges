@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=11
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -150,7 +150,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASUR
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 10" "Use SNOWFLAKE to circumvent censorship -> "$MEEKSTRING  \
+" 10" "Use SNOWFLAKE to circumvent censorship -> "$SNOWSTRING  \
 " 11" "Use MEEK-AZURE to circumvent censorship -> "$MEEKSTRING  \
 " 12" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
 " 13" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
@@ -312,83 +312,12 @@ if [ $exitstatus = 0 ]; then
 
 # Use Snowflake to circumvent censorship
   elif [ $CHOICE = 10 ]; then
-    echo " "
+    sudo bash meek-azure
+    read_config
 
 # Use Meek-Azure to circumvent censorship
   elif [ $CHOICE = 11 ]; then
-    if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-    else
-      if [ "$MEEKSTRING" = "OFF" ]; then
-        clear
-        echo -e "${WHITE}[!] Let's first check, if MEEK-AZURE could work for you!${NOCOLOR}"
-        readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
-        if [ ${#configured_meekazure_deactivated[0]} = 0 ]; then
-          echo " "
-          echo -e "${WHITE}[!] There is no MEEK-AZURE configured! Did you change /etc/torrc ?${NOCOLOR}"
-          echo -e "${WHITE}[!] We cannot activate MEEK-AZURE! Contact anonym@torbox.ch for help!${NOCOLOR}"
-          read -n 1 -s -r -p "Press any key to continue"
-          exit 1
-        else
-          number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
-        fi
-        echo " "
-        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-        #-m 6 must not be lower, otherwise it looks like there is no connection!
-        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-        if [ $? == 0 ]; then
-          echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
-          echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
-          sleep 2
-          echo " "
-          while [ $i -lt $number_configured_meekazure_deactivated ]
-          do
-            bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
-            bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
-            if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
-            elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-            elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
-            i=$(( $i + 1 ))
-            bridge_address="$i : $bridge_address $bridge_status"
-            echo -e $bridge_address
-          done
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-        else
-          echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-          echo -e "${RED}[+] We cannot check the MEEK-AZURE SERVER - we try to use it anyway!${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-        fi
-        clear
-        INPUT=$(cat text/activate-meek-azure-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          clear
-          deactivating_bridge_relay
-          sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-          if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          fi
-          sudo sed -i "s/#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
-          clear
-          restarting_tor menu-bridges
-        fi
-      else
-        INPUT=$(cat text/deactivate-meek-azure-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          clear
-          sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-          sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-          sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-          sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-          sudo sed -i "s/^Bridge obfs4 /#Bridge  obfs4 /g" ${TORRC}
-          restarting_tor menu-bridges
-        fi
-      fi
-    fi
+    sudo bash snowflake
     read_config
 
 # Connect/Disconnect TorBox to/from VPN
