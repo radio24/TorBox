@@ -1,4 +1,24 @@
-#from scapy.all import *
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file contains the Python 3 class "wifi_scanner", which is used 
+# by the class "wireless_manager" of the Torbox Wireless Manager.
+
 from threading import Thread, Event
 import time
 import subprocess
@@ -102,7 +122,7 @@ class wifi_scanner:
 
 		# Flag for hidden networks scan
 		self.keep_scanning = True
-	
+
 	def scan(self):
 		# scan
 		cmd = "wpa_cli", "-i", self.interface, "scan"
@@ -120,7 +140,7 @@ class wifi_scanner:
 
 		# Remove headers from response
 		r.remove(r[0])
-		
+
 		# sort the list
 		for line in r:
 			c = line.split(b"\t")
@@ -153,12 +173,12 @@ class wifi_scanner:
 			#if '\\x00' in essid:
 			#	essid = 'HIDDEN'
 			self.networks[bssid] = [essid, quality, security, bssid, channel, dbm_signal]
-		
+
 		return self.networks
 
 
 
-	
+
 	#def scan_hidden(self):
 	#	# set up the interface for Monitor mode
 	#	cmd = "ifconfig wlan0 down"
@@ -187,7 +207,7 @@ class wifi_scanner:
 
 	#	cmd = ["iw", "dev", "mon0", "del"]
 	#	subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-	#	
+	#
 	#	cmd = ["ifconfig", "wlan0", "up"]
 	#	subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -219,12 +239,12 @@ class wifi_scanner:
 	#def __change_channel(self):
 	#	# we use time to stop the scanning after 10 seconds
 	#	time_limit = time.time() + 10
-	#	
+	#
 	#	ch = 1
 	#	while self.keep_scanning:
 	#		if time.time() >= time_limit:
 	#			self.keep_scanning = False
-	#			
+	#
 	#		# change channel freq
 	#		cmd = ["iw", "dev", "mon0", "set", "freq", "%s" % self.channel_freq[ch]]
 	#		try:
@@ -235,6 +255,6 @@ class wifi_scanner:
 	#		ch = ch % 14 + 1
 #
 	#		time.sleep(0.5)
-	#	
+	#
 	#	# Stop event
 	#	self.stop_event.set()

@@ -89,7 +89,6 @@ change_crda()
 }
 
 # This function imports the configuration and makes some preparations
-# TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
   # TOGGLE03 / TOGGLE04 represents the extent of logging
@@ -172,7 +171,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===============================================[Passwords]===" \
 "  1" "Change admin (user torbox) password"  \

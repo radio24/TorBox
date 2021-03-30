@@ -48,7 +48,7 @@ while bridges == False:
 	br.set_handle_robots(False)
 	res = br.open(tor_get_bridges_url)
 
-	# look for the captcha image
+	# look for the captcha image / re.findall returns all the findings as a list
 	html = str(res.read())
 	q = re.findall(r'src="data:image/jpeg;base64,(.*?)"', html, re.DOTALL)
 	img_data = q[0]
@@ -58,7 +58,7 @@ while bridges == False:
 	f.write( base64.b64decode(img_data) )
 	f.close()
 
-	# cleaning captcha
+	# cleaning captcha / convert is part of imagemagick
 	os.system('convert %s/captcha.jpg -threshold 15%% %s/captcha.tif'  % (tmp_dir, tmp_dir))
 	os.system('convert %s/captcha.tif -morphology Erode Disk:2 %s/captcha.tif'  % (tmp_dir, tmp_dir))
 
@@ -66,23 +66,26 @@ while bridges == False:
 	captcha_text = image_to_string(Image.open('%s/captcha.tif' % tmp_dir), config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKMNLOPKRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
 	captcha_text = captcha_text.strip()
 
-	# if captcha len doesn't match on what we look, we just try again
+	# if captcha len doesn't match on what we look, we just try again / ATTENTION: the length has to match the one of the captcha on https://bridges.torproject.org/bridges?transport=obfs4 !!
 	if len(captcha_text) < 7 or len(captcha_text) > 7:
 		continue
-	
+
 	# reply to server with the captcha text
 	br.select_form(nr=0)
 	br['captcha_response_field'] = captcha_text
 	reply = br.submit()
 
-	# look for the bridges if the captcha was beaten
+	# look for the bridges if the captcha was beaten  / re.findall returns all the findings as a list
 	html = str(reply.read())
 	q = re.findall(r'<div class="bridge-lines" id="bridgelines">(.*?)</div>', html, re.DOTALL)
 	try:
 		txt = q[0]
+		# split into a list
 		b = txt.split('<br />')
+		# remark by Patrick: this creates an empty list - not sure if that is necessary (???)
 		r = []
 		for l in b:
+			# removes spaces at the beginning and at the end of the string as well as all newlines
 			_b = l.strip().replace('\\n', '')
 			if _b != '':
 				bridges = _b

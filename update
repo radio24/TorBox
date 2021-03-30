@@ -67,15 +67,6 @@ BOOTMSG=0
 #This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
 online_check_update()
 {
-  #This is only for TorBox 0.3.2 - has to be removed ===
-    clear
-    echo -e "${RED}[+] Let's add some open nameservers and try again...${NOCOLOR}"
-    sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-    (sudo printf "\n# Added by TorBox update script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
-    echo " "
-    echo -e "${RED}[+] Please wait...${NOCOLOR}"
-    sleep 15
-  #==================================
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s http://google.com)
@@ -310,7 +301,7 @@ install_network_drivers()
 
 
 ###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update additional network drivers (reboot required!)" OFF \
 "3" "Update the firmware of the RPI 4 (reboot required!)" OFF \

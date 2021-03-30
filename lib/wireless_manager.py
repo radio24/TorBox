@@ -1,5 +1,26 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file contains the Python 3 class "wireless_manager", which is used
+# by the Torbox Wireless Manager.
+
 from pprint import pprint
 
 import os
@@ -91,7 +112,7 @@ class wireless_manager:
 				print('1')
 			else:
 				print('0')
-			
+
 			quit()
 
 

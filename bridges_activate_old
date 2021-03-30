@@ -91,7 +91,7 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
   "===" "==============================================================" \
   "  1" "Activate ALL configured bridges"  \
@@ -152,8 +152,8 @@ else
           fi
         else
           echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-          echo -e "${WHITE}[+] Cant fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 2
+          echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+          sleep 3
         fi
 
       # Activate only selected bridges

@@ -1,8 +1,32 @@
 #!/usr/bin/python3
-# -* coding: utf-8 -*-
-#-------------------------
-# TorBox Wireless Manager
-#-------------------------
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This is the TorBox Wireless Manager - an easy, userfriendly way to
+# connect the TorBox to a wireless network. It is a replacement of wicd,
+# which is based on Python 2 and seemes to be abadone by the developers.
+#
+# SYNTAX
+# sudo torbox_wireless_manager -i <interface> [-a|--autoconnect]
+#
+# -i <interface>: Interface to connect - mandatory!
+# -a|--autoconnect: Don't show an interactive user menu, just try to automatically connect to an already know network
 
 import sys
 import getopt
