@@ -249,7 +249,7 @@ update_torbox_menu()
   PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
-  wget https://github.com/radio24/TorBox/archive/master.zip
+  wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
   if [ -e master.zip ]; then
     TORBOX_UPDATE=1
     echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"

@@ -245,7 +245,7 @@ clear
 echo -e "${RED}[+] Step 6: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
-wget https://github.com/radio24/TorBox/archive/master.zip
+wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip

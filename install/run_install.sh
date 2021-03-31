@@ -38,15 +38,16 @@
 #  3. Updating the system
 #  4. Adding the Tor repository to the source list.
 #  5. Installing all necessary packages
-#  6. Configuring Tor with the pluggable transports
-#  7. Re-checking Internet connectivity
-#  8. Downloading and installing the latest version of TorBox
-#  9. Installing all configuration files
-# 10. Disabling Bluetooth
-# 11. Configure the system services
-# 12. Adding and implementing the user torbox
-# 13. Installing additional network drivers
-# 14. Finishing, cleaning and booting
+#  6. Compile and install the newest version of Tor
+#  7. Configuring Tor with the pluggable transports
+#  8. Re-checking Internet connectivity
+#  9. Downloading and installing the latest version of TorBox
+# 10. Installing all configuration files
+# 11. Disabling Bluetooth
+# 12. Configure the system services
+# 13. Adding and implementing the user torbox
+# 14. Installing additional network drivers
+# 15. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -88,7 +89,7 @@ install_network_drivers()
   filename=$2
   text_message=$3
 	clear
-  echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+  echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
   echo -e " "
 	cd ~
 	mkdir install_network_driver
@@ -194,7 +195,7 @@ sudo apt-get update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
 sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
@@ -211,10 +212,26 @@ sudo export PATH=$PATH:/usr/local/go/bin
 sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
 rm go1.16.2.linux-armv6l.tar.gz
 
-# 6. Configuring Tor with the pluggable transports
+# 6. Compile and install the newest version of Tor
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Compile and install the newest version of Tor....${NOCOLOR}"
+mkdir ~/debian-packages; cd ~/debian-packages
+apt source tor
+sudo apt-get -y install build-essential fakeroot devscripts
+sudo apt-get -y upgrade tor deb.torproject.org-keyring
+sudo apt-get -y build-dep tor deb.torproject.org-keyring
+cd tor-*
+sudo debuild -rfakeroot -uc -us
+cd ..
+sudo dpkg -i tor_*.deb
+cd
+sudo rm -r ~/debian-packages
+
+# 7. Configuring Tor with the pluggable transports
+sleep 10
+clear
+echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -236,10 +253,10 @@ sudo cp client /usr/bin/snowflake-client
 cd ~
 rm -r snowflake
 
-# 7 Again checking connectivity
+# 8. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
 wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
@@ -284,13 +301,20 @@ else
   fi
 fi
 
-# 8. Downloading and installing the latest version of TorBox
+# 9. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
-echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
-wget https://github.com/radio24/TorBox/archive/master.zip
+#echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
+wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
+
+# TO REMOVE BEFORE RELEASE
+rm master.zip
+wget https://github.com/radio24/TorBox/archive/refs/heads/torbox-wireless-manager.zip
+mv torbox-wireless-manager.zip master.zip
+# -------------------------------------------------
+
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
@@ -311,11 +335,11 @@ else
   exit 1
 fi
 
-# 9. Installing all configuration files
+# 10. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
@@ -366,10 +390,10 @@ if ! grep "# Added by TorBox" .profile ; then
 fi
 cd
 
-# 10. Disabling Bluetooth
+# 11. Disabling Bluetooth
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
@@ -379,10 +403,10 @@ if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo apt-get -y autoremove
 fi
 
-# 11. Configure the system services
+# 12. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
@@ -405,10 +429,10 @@ sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 echo""
 
-# 12. Adding the user torbox
+# 13. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 12: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -433,7 +457,7 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 13. Installing additional network drivers
+# 14. Installing additional network drivers
 kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 path_8188eu="8188eu-drivers/"
@@ -485,10 +509,10 @@ install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
 #install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
 
 
-# 14. Finishing, cleaning and booting
+# 15. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
 echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"

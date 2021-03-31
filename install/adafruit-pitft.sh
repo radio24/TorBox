@@ -244,7 +244,7 @@ function update_configtxt() {
         dtc -@ -I dts -O dtb -o /boot/overlays/drm-st7789v_240x320.dtbo overlays/st7789v_240x320-overlay.dts
         overlay="dtoverlay=drm-st7789v_240x320,rotate=${pitftrot}"
     fi
-    
+
     if [ "${pitfttype}" == "st7789_240x240" ]; then
         dtc -@ -I dts -O dtb -o /boot/overlays/drm-minipitft13.dtbo overlays/minipitft13-overlay.dts
         overlay="dtoverlay=drm-minipitft13,rotate=${pitftrot}"
@@ -357,7 +357,8 @@ function install_fbcp() {
     echo "Downloading rpi-fbcp..."
     pushd /tmp
     #curl -sLO https://github.com/tasanakorn/rpi-fbcp/archive/master.zip
-    curl -sLO https://github.com/adafruit/rpi-fbcp/archive/master.zip
+    #curl -sLO https://github.com/adafruit/rpi-fbcp/archive/master.zip
+    curl -sLO https://github.com/adafruit/rpi-fbcp/archive/refs/heads/master.zip
     echo "Uncompressing rpi-fbcp..."
     rm -rf /tmp/rpi-fbcp-master
     unzip master.zip 1> /dev/null  || { warning "Failed to uncompress fbcp!" && exit 1; }
