@@ -80,7 +80,7 @@ NOCOLOR='\033[0m'
 clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -95,6 +95,7 @@ sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
 (sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
 sudo systemctl restart systemd-resolved
 wget -q --spider http://ubuntu.com
+echo ""
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
@@ -177,24 +178,25 @@ sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/to
 cd ~
 git clone https://git.torproject.org/pluggable-transports/snowflake.git
 export GO111MODULE="on"
-cd ~/snowflake/snowflake-proxy
+cd ~/snowflake/proxy
 go get
 go build
 sudo cp proxy /usr/bin/snowflake-proxy
 
-cd ~/snowflake/snowflake-proxy
+cd ~/snowflake/client
 go get
 go build
 sudo cp client /usr/bin/snowflake-client
 
 cd ~
-rm -r snowflake
+sudo rm -rf snowflake
+sudo rm -rf go*
 
 # 5. Again checking connectivity
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Re-checking Internet connectivity...${NOCOLOR}"
-wget -q --spider http://google.com
+wget -q --spider http://ubuntu.com
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
@@ -213,7 +215,7 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider http://ubuntu.com
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -227,7 +229,7 @@ else
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
+      wget -q --spider http://ubuntu.com
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -326,13 +328,9 @@ sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR}         Changing .profile if necessary"
+echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
-if ! grep "# Added by TorBox" .profile ; then
-  sudo cp .profile .profile.bak
-  sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
-fi
-cd
+sudo printf "\n\ncd torbox\n./menu\n" | sudo tee -a .profile
 
 # 8. Disabling Bluetooth
 sleep 10

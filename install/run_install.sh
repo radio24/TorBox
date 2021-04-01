@@ -108,7 +108,7 @@ install_network_drivers()
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -123,6 +123,7 @@ sudo cp /etc/resolv.conf /etc/resolv.conf.bak
 (sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
 sleep 15
 wget -q --spider http://ubuntu.com
+echo ""
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
@@ -206,11 +207,10 @@ sudo pip3 install urwid
 # Additional installation for GO
 cd ~
 sudo rm -rf /usr/local/go
- wget https://golang.org/dl/go1.16.2.linux-armv6l.tar.gz
- sudo tar -C /usr/local -xzvf go1.16.2.linux-armv6l.tar.gz 
-sudo export PATH=$PATH:/usr/local/go/bin
+wget https://golang.org/dl/go1.16.2.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xzvf go1.16.2.linux-armv6l.tar.gz
+export PATH=$PATH:/usr/local/go/bin
 sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
-rm go1.16.2.linux-armv6l.tar.gz
 
 # 6. Compile and install the newest version of Tor
 sleep 10
@@ -240,18 +240,19 @@ sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/to
 cd ~
 git clone https://git.torproject.org/pluggable-transports/snowflake.git
 export GO111MODULE="on"
-cd ~/snowflake/snowflake-proxy
+cd ~/snowflake/proxy
 go get
 go build
 sudo cp proxy /usr/bin/snowflake-proxy
 
-cd ~/snowflake/snowflake-proxy
+cd ~/snowflake/client
 go get
 go build
 sudo cp client /usr/bin/snowflake-client
 
 cd ~
-rm -r snowflake
+sudo rm -rf snowflake
+sudo rm -rf go*
 
 # 8. Again checking connectivity
 sleep 10
@@ -322,6 +323,9 @@ if [ -e master.zip ]; then
   echo -e "${RED}[+]       Removing the old one...${NOCOLOR}"
   (rm -r torbox) 2> /dev/null
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
+# TO REMOVE BEFORE RELEASE
+	mv TorBox-torbox-wireless-manager torbox
+# -------------------------------------------------
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
   (rm -r master.zip) 2> /dev/null
@@ -382,13 +386,9 @@ sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+echo -e "${RED}[+] Changing .profile${NOCOLOR}"
 cd
-if ! grep "# Added by TorBox" .profile ; then
-  sudo cp .profile .profile.bak
-  sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
-fi
-cd
+sudo printf "\n\ncd torbox\n./menu\n" | sudo tee -a .profile
 
 # 11. Disabling Bluetooth
 sleep 10
