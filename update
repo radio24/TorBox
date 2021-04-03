@@ -153,6 +153,7 @@ update_tor()
     sudo dpkg -i tor_*.deb
     cd
     sudo rm -r ~/debian-packages
+    sudo cp /usr/share/tor/geoip* /usr/bin
     sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
     sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
     sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -339,6 +340,7 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl unmask hostapd
         sudo systemctl enable hostapd
         sudo systemctl enable isc-dhcp-server
+        sudo cp /usr/share/tor/geoip* /usr/bin
         sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -597,6 +599,7 @@ if [ $exitstatus = 0 ]; then
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+  sudo cp /usr/share/tor/geoip* /usr/bin
   sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
   sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
   sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service

@@ -160,7 +160,7 @@ read_config()
     TOGGLE13=""
   else
     TOGGLE12="Disable"
-    TOGGLE13="(not recommended)"
+    TOGGLE13=""
   fi
 
 }
@@ -678,7 +678,7 @@ if [ $exitstatus = 0 ]; then
 #THis disables / enables HTTP plain text traffic block
     elif [ $CHOICE = 11 ]; then
       if [ "$TOGGLE12" = "Enable" ]; then
-        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic (this is the default)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
           (sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
@@ -691,7 +691,7 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
       if [ "$TOGGLE12" = "Disable" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic (not recommended)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
           (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
@@ -744,12 +744,11 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
-        cd
         sudo apt-get -y install python3-dev
         # This is the older version of the installation script - https://github.com/adafruit/Raspberry-Pi-Installer-Scripts/blob/master/converted_shell_scripts/adafruit-pitft.sh
         # wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/converted_shell_scripts/adafruit-pitft.sh
         # chmod +x adafruit-pitft.sh
-        sudo ./install/adafruit-pitft.sh -u /home/torbox
+        sudo bash install/adafruit-pitft.sh -u /home/torbox
       fi
 
 #This is the support for 3.5" no-name TFT displays

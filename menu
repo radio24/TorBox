@@ -63,6 +63,20 @@ EXITID="EXITID=0"
 #include lib
 .  lib/torbox.lib
 
+# This function check if TorBox is freshly installed by the install script
+# If yes, then it removes the user "pi" and restart TorBox
+check_fresh_install()
+{
+  FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
+  if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
+    sudo userdel pi
+    clear
+    echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
+    sleep 5
+    sudo reboot
+  fi
+}
+
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
 {
@@ -89,7 +103,7 @@ check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
-IINTERFACE=$(route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+IINTERFACE=$(timeout 5 route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
 if [ "$IINTERFACE" != "" ] ; then
   VPN_STATUS="VPN is up"
   IIPTABLES=""
@@ -98,7 +112,7 @@ else
   VPN_STATUS=""
 fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
-  IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  IINTERFACE=$(timeout 5 route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
   if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
@@ -113,6 +127,7 @@ fi
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 
+check_fresh_install
 check_bridge_relay
 check_interface_with_internet
 check_tor
@@ -502,9 +517,13 @@ if [ $exitstatus = 0 ]; then
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
         else
-          # pon is installed by Sixfab Shields/HATs for cellular connections software support. It is part of the ppp package, which we didn't install by default.
-          sudo pon > /dev/null
-          sleep 5
+          echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
+          echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
+          echo ""
+          sudo pon
+          echo ""
+          sleep 2
+          read -n 1 -s -r -p "Press any key to continue"
           if ip link | grep ppp0 > /dev/null; then
             if ip link | grep wlan0 | grep "state UP" ; then
               WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)

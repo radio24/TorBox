@@ -544,7 +544,7 @@ class wireless_manager:
 		body = urwid.AttrMap(body, 'connect_ask')
 
 		# buttons
-		_button_connect = urwid.Button('      Connect')
+		_button_connect = urwid.Button('Connect')
 		_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
 		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[_input_essid_edit, bssid, _input_pass_edit, _hidden_flag])
 

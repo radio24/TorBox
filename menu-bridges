@@ -87,7 +87,7 @@ read_config()
 
   # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
   MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
-  if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$MODE_MEEK" != "Bridge meek_lite " ] && [ "$MODE_SNOW" != "Bridge meek_lite " ]; then
+  if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$MODE_MEEK" != "Bridge meek_lite " ] && [ "$MODE_SNOW" != "Bridge snowflake " ]; then
       TOGGLE05="ON!]==="
       TOGGLE05b="ON"
       TOGGLE06="OFF]==="
@@ -312,12 +312,12 @@ if [ $exitstatus = 0 ]; then
 
 # Use Snowflake to circumvent censorship
   elif [ $CHOICE = 10 ]; then
-    sudo bash meek-azure
+    sudo bash snowflake $SNOWSTRING $MEEKSTRING
     read_config
 
 # Use Meek-Azure to circumvent censorship
   elif [ $CHOICE = 11 ]; then
-    sudo bash snowflake
+    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
     read_config
 
 # Connect/Disconnect TorBox to/from VPN

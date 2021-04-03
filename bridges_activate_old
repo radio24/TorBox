@@ -27,7 +27,6 @@
 # <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/torrc.
 #
 # Possible values for <show when zero bridges>:
-#
 # 0	->	No message is shown.
 # 1	->	Message is shown.
 #

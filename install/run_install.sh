@@ -76,7 +76,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-
+RUNFILE="run/torbox.run"
 
 ##############################
 ######## FUNCTIONS ###########
@@ -196,7 +196,9 @@ sudo apt-get update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
+#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
+
 sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
@@ -232,6 +234,7 @@ sudo rm -r ~/debian-packages
 sleep 10
 clear
 echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
+sudo cp /usr/share/tor/geoip* /usr/bin
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -309,13 +312,6 @@ echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorB
 cd
 #echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
-
-# TO REMOVE BEFORE RELEASE
-rm master.zip
-wget https://github.com/radio24/TorBox/archive/refs/heads/torbox-wireless-manager.zip
-mv torbox-wireless-manager.zip master.zip
-# -------------------------------------------------
-
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
@@ -323,9 +319,6 @@ if [ -e master.zip ]; then
   echo -e "${RED}[+]       Removing the old one...${NOCOLOR}"
   (rm -r torbox) 2> /dev/null
   echo -e "${RED}[+]       Moving the new one...${NOCOLOR}"
-# TO REMOVE BEFORE RELEASE
-	mv TorBox-torbox-wireless-manager torbox
-# -------------------------------------------------
   mv TorBox-master torbox
   echo -e "${RED}[+]       Cleaning up...${NOCOLOR}"
   (rm -r master.zip) 2> /dev/null
@@ -551,9 +544,9 @@ echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    TorBox has to be rebooted manually.${NOCOLOR}"
+echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 (sudo chage -E0 pi) 2> /dev/null

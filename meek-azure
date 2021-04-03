@@ -25,7 +25,12 @@
 #
 #
 # SYNTAX
-# ./meek-azure
+# ./meek-azure <MEEKSTRING> <SNOWSTRING>
+#
+# <MEEKSTRING> <SNOWSTRING> give the status of Snowflake and Meek-Azure.
+#
+# Possible values for <MEEKSTRING> <SNOWSTRING>: "ON!" or "OFF".
+#
 #
 #
 ##### SET VARIABLES ######
@@ -47,6 +52,9 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+MEEKSTRING=$1
+SNOWSTRING=$2
+i=0
 
 
 ###########################
@@ -82,6 +90,7 @@ else
 		if [ $? == 0 ]; then
 			echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
+			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2
 			echo " "
 			while [ $i -lt $number_configured_meekazure_deactivated ]
@@ -106,15 +115,13 @@ else
 		fi
 		clear
 		INPUT=$(cat text/activate-meek-azure-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-			if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-				sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-				sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-				sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-			fi
+			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+			sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+			sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
 			sudo sed -i "s/#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
 			clear
 			restarting_tor menu-bridges

@@ -6,6 +6,7 @@
 #
 # This file manages global variables -- please don't change the entries and don't remove the file
 
+FRESH_INSTALLED=0
 EXITID=0
-BLOCK_HTTP=1
+BLOCK_HTTP=0
 SSH_FROM_INTERNET=0

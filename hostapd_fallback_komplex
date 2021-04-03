@@ -143,6 +143,8 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	fi
 else
 		sudo ifdown $INTERFACE3
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $INTERFACE3
 		sudo ifup $INTERFACE3 &>/dev/null &
 fi
 
@@ -164,6 +166,8 @@ if ip link | grep $INTERFACE4 | grep "state UP" ; then
 	fi
 else
 		sudo ifdown $INTERFACE4
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 fi
 

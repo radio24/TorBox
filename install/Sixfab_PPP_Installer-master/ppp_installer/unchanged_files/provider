@@ -1,5 +1,5 @@
 # /etc/ppp/peers/provider
-/dev/#DEVICE 115200
+/dev/ttyUSB3 115200
 # The chat script, customize your APN in this file
 connect 'chat -s -v -f /etc/chatscripts/chat-connect -T #APN'
 # The close script

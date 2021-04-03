@@ -90,7 +90,7 @@ elif [ "$O_DEVICE" = "eth1" ]; then
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
 	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
-	sleep 5
+	sleep 2
 	sudo ./torbox_wireless_manager.py -i $O_DEVICE
 	clear
 	if [ $CAPTIVE = 1 ]; then
@@ -99,7 +99,7 @@ elif [ "$O_DEVICE" = "wlan0" ]; then
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
 	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
-	sleep 5
+	sleep 2
 	sudo ./torbox_wireless_manager.py -i $O_DEVICE
 	clear
 	if [ $CAPTIVE = 1 ]; then
