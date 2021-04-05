@@ -375,12 +375,13 @@ class wireless_manager:
 			self.loop.widget = widget
 
 	def __connect_network(self, network):
-		#------------------------------------------------------
-		# Check if network is already configured
-		# we try to connect without asking password
-		#------------------------------------------------------
+		#---------------------------------------------------------------------
+		# If network is already configured  connect without asking password
+		# If security is ESS, we don't ask for password
+		#---------------------------------------------------------------------
 		essid = network[0]
 		bssid = network[3]
+		security = network[2]
 
 		#cmd = ["wpa_cli", "-i", self.interface, "list_networks", "|", "grep", "'{}'".format(bssid)]
 		cmd = "wpa_cli -i %s list_networks |grep '%s'" % (self.interface, bssid)
@@ -394,7 +395,7 @@ class wireless_manager:
 		except:
 			network_id = False
 
-		if network_id is False:
+		if network_id is False and security != '[ESS]':
 			self.__connect_dialog(network)
 		else:
 			_text = urwid.Text('Connecting to [%s]. Please wait...' % (essid), align='center')
@@ -615,9 +616,14 @@ class wireless_manager:
 			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "ssid", '"{}"'.format(essid)]
 			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-			# Set the password
-			cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "psk", '"{}"'.format(password)]
-			r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			if password is not False:
+				# Set the password
+				cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "psk", '"{}"'.format(password)]
+				r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+			else:
+				# No key management
+				cmd = ["wpa_cli", "-i", self.interface, "set_network", "{}".format(network_id), "key_mgmt", 'NONE']
+				r = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 			# Scan AP for hidden networks
 			if hidden_flag:
