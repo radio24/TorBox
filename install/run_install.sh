@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Raspbian lite.
+# Raspberry Pi OS lite.
 #
 # SYNTAX
 # ./run_install.sh
@@ -76,7 +76,9 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-RUNFILE="run/torbox.run"
+CHECK_URL1="http://ubuntu.com"
+CHECK_URL2="https://google.com"
+RUNFILE="torbox/run/torbox.run"
 
 ##############################
 ######## FUNCTIONS ###########
@@ -108,7 +110,7 @@ install_network_drivers()
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n            WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also remove the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -122,9 +124,10 @@ echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameser
 sudo cp /etc/resolv.conf /etc/resolv.conf.bak
 (sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
 sleep 15
-wget -q --spider http://ubuntu.com
+wget -q --spider $CHECK_URL1
+OCHECK=$?
 echo ""
-if [ $? -eq 0 ]; then
+if [ $OCHECK -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
   echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
@@ -132,7 +135,7 @@ else
   sleep 30
   echo ""
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -144,7 +147,7 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider http://ubuntu.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -190,16 +193,20 @@ echo ""
 sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
 sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-sudo apt-get update
+sudo apt-get -y update
 
 # 5. Installing all necessary packages
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
 #sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb
 
-sudo apt-get -y install tor deb.torproject.org-keyring
+#Install wiringpi
+wget https://project-downloads.drogon.net/wiringpi-latest.deb
+sudo dpkg -i wiringpi-latest.deb
+
+# sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
 sudo pip3 install pytesseract
@@ -209,10 +216,10 @@ sudo pip3 install urwid
 # Additional installation for GO
 cd ~
 sudo rm -rf /usr/local/go
-wget https://golang.org/dl/go1.16.2.linux-armv6l.tar.gz
-sudo tar -C /usr/local -xzvf go1.16.2.linux-armv6l.tar.gz
+wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
 export PATH=$PATH:/usr/local/go/bin
-sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+#sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
 
 # 6. Compile and install the newest version of Tor
 sleep 10
@@ -220,6 +227,7 @@ clear
 echo -e "${RED}[+] Step 6: Compile and install the newest version of Tor....${NOCOLOR}"
 mkdir ~/debian-packages; cd ~/debian-packages
 apt source tor
+# IMPORTANT: build-essential is also necessary for the installation of network driver further below
 sudo apt-get -y install build-essential fakeroot devscripts
 sudo apt-get -y upgrade tor deb.torproject.org-keyring
 sudo apt-get -y build-dep tor deb.torproject.org-keyring
@@ -235,6 +243,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
 sudo cp /usr/share/tor/geoip* /usr/bin
+sudo chmod a+x /usr/bin/geoip*
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -261,7 +270,7 @@ sudo rm -rf go*
 sleep 10
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider http://ubuntu.com
+wget -q --spider $CHECK_URL1
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
@@ -269,7 +278,7 @@ else
   echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
   echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -280,7 +289,7 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider http://ubuntu.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -293,7 +302,7 @@ else
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider http://ubuntu.com
+      wget -q --spider $CHECK_URL1
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -415,11 +424,11 @@ sudo systemctl start ssh
 sudo systemctl disable dhcpcd
 sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
-sudo systemctl daemon-reload
 echo ""
 echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
+sudo systemctl daemon-reload
 echo""
 
 # 13. Adding the user torbox
@@ -498,8 +507,56 @@ install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
 # Deactivated because no driver for new kernels available
 #path_mt7612="mt7612-drivers/"
 #filename_mt7612="mt7612-"$kernelversion".tar.gz"
-#text_filename_mt7612="Mediatek MT7610 Wireless Network Driver"
+#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
 #install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
+
+sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+
+# Installing the RTL8814AU
+clear
+echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8814au.git
+cd 8814au
+cp ../torbox/install/Network/install-rtl8814au.sh .
+chmod a+x install-rtl8814au.sh
+if grep -q "Raspberry Pi" /proc/device-tree/model; then
+	#This has to be checked
+	if uname -s | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+./install-rtl8814au.sh
+cd ~
+rm -r 8814au
+sleep 2
+
+# Installing the RTL8821AU
+clear
+echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8821au.git
+cd 8821au
+cp ../torbox/install/Network/install-rtl8821au.sh .
+chmod a+x install-rtl8821au.sh
+if grep -q "Raspberry Pi" /proc/device-tree/model; then
+	if uname -s | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+./install-rtl8821au.sh
+cd ~
+rm -r 8821au
+sleep 2
+
+
+
 
 
 # 15. Finishing, cleaning and booting
@@ -533,10 +590,10 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo cp /etc/hostname /etc/hostname.bak
+(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
 sudo cp torbox/etc/hostname /etc/
 echo -e "${RED}[+]Copied /etc/hostname -- backup done${NOCOLOR}"
-sudo cp /etc/hosts /etc/hosts.bak
+(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"

@@ -50,6 +50,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables (don't change them - this will probably break wlan0 <-> wlan1 !!)
+CHECK_URL1="http://google.com"
 TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -69,7 +70,9 @@ check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
-    sudo userdel pi
+    if [ -d "/home/pi" ]; then 
+      sudo userdel -r pi
+    fi
     clear
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
@@ -707,7 +710,7 @@ if [ $exitstatus = 0 ]; then
         if [ "$tun0up" != "" ] ; then
           clear
           echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-          wget -q --spider http://google.com
+          wget -q --spider $CHECK_URL1
           if [ $? -eq 0 ]; then
             echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
           else

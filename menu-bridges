@@ -52,6 +52,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+PING_SERVER="google.com"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
@@ -110,7 +111,7 @@ read_config()
   fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
-    if ps -ax | grep "[p]ing -q google.com" ; then
+    if ps -ax | grep "[p]ing -q $PING_SERVER" ; then
       PING="ON"
     else
       PING="OFF"
@@ -353,7 +354,7 @@ if [ $exitstatus = 0 ]; then
   elif [ $CHOICE = 13 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-			  ping -q google.com >/dev/null &
+			  ping -q $PING_SERVER >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
 			  echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
 			  sleep 2

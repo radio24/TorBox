@@ -74,13 +74,16 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+CHECK_URL1="http://ubuntu.com"
+CHECK_URL2="https://google.com"
+RUNFILE="torbox/run/torbox.run"
 
 
 ###### DISPLAY THE INTRO ######
 clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
-whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n            WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_on_ubuntu\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -94,9 +97,10 @@ echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!
 sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
 (sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
 sudo systemctl restart systemd-resolved
-wget -q --spider http://ubuntu.com
+wget -q --spider $CHECK_URL1
+OCHECK=$?
 echo ""
-if [ $? -eq 0 ]; then
+if [ $OCHECK -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
   echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
@@ -104,7 +108,7 @@ else
   sleep 30
   echo ""
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider http://ubuntu.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -116,7 +120,7 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider http://ubuntu.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -156,12 +160,16 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp wiringpi
+# Check the availability of the following packages: snowflake, wiringpi / Also, check the version of go
 
-# Only for Ubuntu (version of go has to be checked)
-sudo apt-get -y install tor golang
+# wiringpi is not available for Debian -> that could be problematic for Sixfab Shields/HATs support
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb tor golang
 
-# Additional installations for Python 3
+#Install wiringpi
+wget https://project-downloads.drogon.net/wiringpi-latest.deb
+sudo dpkg -i wiringpi-latest.deb
+
+# Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install urwid
@@ -170,6 +178,9 @@ sudo pip3 install urwid
 sleep 10
 clear
 echo -e "${RED}[+] Step 4: Configuring Tor with the pluggable transports....${NOCOLOR}"
+# Check if the line below is necessary
+# sudo cp /usr/share/tor/geoip* /usr/bin
+# sudo chmod a+x /usr/bin/geoip*
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -196,7 +207,7 @@ sudo rm -rf go*
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Re-checking Internet connectivity...${NOCOLOR}"
-wget -q --spider http://ubuntu.com
+wget -q --spider $CHECK_URL1
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
@@ -204,7 +215,7 @@ else
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -215,7 +226,7 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider http://ubuntu.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
@@ -229,7 +240,7 @@ else
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider http://ubuntu.com
+      wget -q --spider $CHECK_URL1
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -445,10 +456,10 @@ sudo rm -r python-urwid*
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo cp /etc/hostname /etc/hostname.bak
+(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
 sudo cp torbox/etc/hostname /etc/
 echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
-sudo cp /etc/hosts /etc/hosts.bak
+(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"

@@ -15,6 +15,11 @@ if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wl
   sleep 5
 fi
 
+if ip link | grep wlan1 | grep "state DOWN" ; then
+  sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
+  sleep 5
+fi
+
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10

@@ -280,6 +280,7 @@ if [ $exitstatus = 0 ]; then
 #This changes the frequency band
     elif [ $CHOICE = 6 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
+        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
         if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
           clear
           echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
@@ -330,6 +331,7 @@ if [ $exitstatus = 0 ]; then
 #Change the WLAN channel
     elif [ $CHOICE = 7 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
+        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
         if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
           "A" "Channel  1 at 20 MHz" OFF \
