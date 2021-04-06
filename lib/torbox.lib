@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,11 @@ MENU_HEIGHT_15=15
 
 #Colors
 RED='\033[1;31m'
+WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
+
+#Connectivity check
+CHECK_URL1="http://google.com"
 
 #Other variables
 TORRC="/etc/tor/torrc"
@@ -93,7 +97,7 @@ online_check()
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   JUMPTO=$1
   clear
-  OCHECK=$(curl -m 5 -s http://google.com)
+  OCHECK=$(curl -m 5 -s $CHECK_URL1)
   if [ $? -gt 0 ]; then
     whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
     trap "bash $JUMPTO; exit 0" EXIT
@@ -107,7 +111,6 @@ online_check()
 erase_logs()
 {
   echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-  echo " "
   for logs in `sudo find /var/log -type f`; do
   	echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   	sudo rm $logs
@@ -115,7 +118,7 @@ erase_logs()
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   sudo rm ../.bash_history
-  sudo history -c
+  history -c
 }
 
 # deactivating_bridge_relay()
@@ -140,7 +143,7 @@ deactivating_bridge_relay()
   	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
   	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
   	sleep 2
-      	echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
+    echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
   	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
   	sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
     sleep 2
@@ -156,10 +159,102 @@ restarting_tor()
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
   sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+  echo -e "    Ignore any error messages, just wait..."
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
   sleep 2
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
   sudo tail -f -n 0 /var/log/tor/notices.log
+}
+
+# connecting_to_VPN()
+# Used predefined variables: RED, WHITE, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
+# This function connects the TorBox to a VPN
+connecting_to_VPN()
+{
+  clear
+  readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
+  if [ "${ovpnlist[0]}" = "" ] ; then
+    whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    trap "bash menu; exit 0" EXIT
+    exit 0
+  fi
+  ovpnlist_anzahl=${#ovpnlist[*]}
+  anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
+  menu_content=""
+  for (( i=0; i<=$anzahl_loops; i++ ))
+  do
+    menu_item=$(( $i + 1 ))
+    menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
+  done
+  clear
+  echo -e "${WHITE}Choose an OpenVPN configuration:${NOCOLOR}"
+  echo ""
+  echo -e "$menu_content"
+  echo ""
+  read -r -p $'\e[1;37mWhich OpenVPN configuration (number) would you like to use? -> \e[0m'
+  echo
+  if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+    CHOICE_OVPN=$(( $REPLY - 1 ))
+    clear
+    echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
+    echo ""
+    ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+    sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
+    sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
+    echo ""
+    echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+    sleep 15
+  else
+    sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+    trap "bash menu; exit 0" EXIT
+    exit 0
+  fi
+}
+
+# recommended_reboot(<trap-destination>)
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
+# This function strongly recommends a reboot
+recommended_reboot()
+{
+  TRAP_DESTINATION=$1
+  if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
+    clear
+    echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+    sleep 2
+    sudo reboot
+  else
+    if [ "$TRAP_DESTINATION" = "" ] ; then
+      clear
+      exit 0
+    else
+      trap "cd ~/torbox; bash $TRAP_DESTINATION; exit 0" SIGINT
+    fi
+  fi
+}
+
+# number_of_bridges()
+# How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+# Following variables can be used:
+# $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
+# $configured_bridges_activated -> An array with all activated OBFS4 bridges
+# $number_configured_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_bridges_activated -> Number of activated bridges
+# $number_configured_bridges_total -> Total number of bridges
+number_of_bridges()
+{
+  readarray -t configured_bridges_deactivated < <(grep "^#Bridge obfs4 " ${TORRC})
+  readarray -t configured_bridges_activated < <(grep "^Bridge obfs4 " ${TORRC})
+  if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
+    number_configured_bridges_deactivated=0
+  else
+    number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
+  fi
+  if [ ${#configured_bridges_activated[0]} = 0 ]; then
+    number_configured_bridges_activated=0
+  else
+    number_configured_bridges_activated=${#configured_bridges_activated[*]}
+  fi
+  number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
 }

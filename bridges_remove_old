@@ -2,7 +2,7 @@
 
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,6 @@
 # <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/torrc.
 #
 # Possible values for <show when zero bridges>:
-#
 # 0	->	No message is shown.
 # 1	->	Message is shown.
 #
@@ -63,30 +62,24 @@ TMP="/tmp/torrc.tmp"
 show_when_zero_bridges=$1
 i=0
 
-##############################
+###########################
 ######## FUNCTIONS ########
 
-# NONE YET
-
+#include lib
+.  lib/torbox.lib
 
 
 ######## PREPARATIONS ########
 #
-# HOW MANY CONFIGURED BRIDGES DO WE HAVE?
-# readarray reads into an array beginning with index 0
-readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
-readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
-if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
-  number_configured_bridges_deactivated=0
-else
-  number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
-fi
-if [ ${#configured_bridges_activated[0]} = 0 ]; then
-  number_configured_bridges_activated=0
-else
-  number_configured_bridges_activated=${#configured_bridges_activated[*]}
-fi
-number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+# number_of_bridges()
+# How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+# Following variables can be used:
+# $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
+# $configured_bridges_activated -> An array with all activated OBFS4 bridges
+# $number_configured_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_bridges_activated -> Number of activated bridges
+# $number_configured_bridges_total -> Total number of bridges
+number_of_bridges
 
 ###########################
 
@@ -99,7 +92,7 @@ if [ $number_configured_bridges_total = 0 ]; then
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
   "===" "==============================================================" \
   "  1" "Remove ALL configured bridges"  \
@@ -116,8 +109,8 @@ else
         INPUT=$(cat text/delete-all-bridges-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             sudo cp ${TORRC} ${BAK}
-            sudo sed -i "/^#Bridge /d" ${TORRC}
-            sudo sed -i "/^Bridge /d" ${TORRC}
+            sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
+            sudo sed -i "/^Bridge obfs4 /d" ${TORRC}
             INPUT=$(cat text/restart-tor-text)
             if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
               clear
@@ -173,8 +166,8 @@ else
           fi
         else
           echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-          echo -e "${WHITE}[+] Cant fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 2
+          echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+          sleep 3
         fi
 
     # Deactivate only selected bridges

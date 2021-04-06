@@ -1,10 +1,12 @@
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
 # This file manages global variables -- please don't change the entries and don't remove the file
 
+FRESH_INSTALLED=0
 EXITID=0
-PING=OFF
+BLOCK_HTTP=0
+SSH_FROM_INTERNET=0

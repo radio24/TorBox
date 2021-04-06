@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -59,8 +59,6 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
-WLAN_MANAGER="/usr/bin/wicd-curses"
-WLAN_MANAGER_DAEMON_NAME="wicd"
 MY_OWN_IP1="192.168.42.1"
 MY_OWN_IP2="192.168.43.1"
 INT_NET1="$MY_OWN_IP1/8"
@@ -69,6 +67,7 @@ O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
 CAPTIVE=$4
+RUNFILE="run/torbox.run"
 
 
 ##############################
@@ -93,27 +92,18 @@ elif [ "$O_DEVICE" = "eth1" ]; then
 	fi
 elif [ "$O_DEVICE" = "wlan0" ]; then
 	clear
-	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
-	sudo sed -i "s/^wireless_interface = wlan1/wireless_interface = wlan0/" /etc/wicd/manager-settings.conf
-	clear
-	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
-	sleep 5
-	$WLAN_MANAGER
-	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
+	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
+	sleep 2
+	sudo ./torbox_wireless_manager.py -i $O_DEVICE
 	clear
 	if [ $CAPTIVE = 1 ]; then
 	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	fi
 elif [ "$O_DEVICE" = "wlan1" ]; then
 	clear
-	whiptail --title "TorBox - INFO (scroll down!)" --textbox text/wicd-text --scrolltext $MENU_HEIGHT_25 $MENU_WIDTH
-	sudo sed -i "s/^wireless_interface = wlan0/wireless_interface = wlan1/" /etc/wicd/manager-settings.conf
-	clear
-	echo -e "${RED}[+] Waiting for the WLAN Manager...${NOCOLOR}"
-	sudo systemctl restart $WLAN_MANAGER_DAEMON_NAME
-	sleep 5
-	$WLAN_MANAGER
+	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
+	sleep 2
+	sudo ./torbox_wireless_manager.py -i $O_DEVICE
 	clear
 	if [ $CAPTIVE = 1 ]; then
 	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
@@ -186,6 +176,26 @@ $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
 ## Masquerading
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
+
+###### SSH access through Internet ######
+if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
+else
+	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+fi
+
+###### HTTP plain text traffic blocker ######
+if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
+	$IPTABLES -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options
+	$IPTABLES -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
+	$IPTABLES -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0
+	$IPTABLES -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0
+else
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+fi
 
 ###### FINISH ######
 echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -54,6 +54,7 @@ CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 
 
 ##############################
@@ -88,20 +89,19 @@ change_crda()
 }
 
 # This function imports the configuration and makes some preparations
-# TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
   # TOGGLE03 / TOGGLE04 represents the extent of logging
   LOG_STATUS=$(sudo systemctl is-active rsyslog)
   if [ $LOG_STATUS = inactive ]; then
-      TOGGLE03="LOW]====="
+      TOGGLE03="LOW✔︎]==="
       TOGGLE03b="LOW"
-      TOGGLE04="HIGH]===="
+      TOGGLE04="HIGH]==="
       TOGGLE04b="HIGH"
   else
-      TOGGLE03="HIGH]===="
+      TOGGLE03="HIGH]==="
       TOGGLE03b="HIGH"
-      TOGGLE04="LOW]====="
+      TOGGLE04="LOW✔︎]==="
       TOGGLE04b="LOW"
   fi
 
@@ -124,7 +124,7 @@ read_config()
 
   # TOGGLE08 shows if the SSID is hidden or not
   if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
-    TOGGLE08="Unide"
+    TOGGLE08="Unhide"
   else
     TOGGLE08="Hide"
   fi
@@ -137,6 +137,32 @@ read_config()
   else
     TOGGLE09="Disable"
   fi
+
+  # TOGGLE10 / TOGGLE11 shows if TorBox can be accessed from the Internet
+  RULE_CHECK=0
+  (sudo iptables -C INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+  RULE_CHECK=$?
+  if [ $RULE_CHECK = 1 ]; then
+    TOGGLE10="Enable"
+    TOGGLE11="(not recommended)"
+  else
+    TOGGLE10="Disable"
+    TOGGLE11=""
+  fi
+
+  # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
+  # (sudo iptables -t nat -C PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+  RULE_CHECK=0
+  (sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+  RULE_CHECK=$?
+  if [ $RULE_CHECK = 1 ]; then
+    TOGGLE12="Enable"
+    TOGGLE13=""
+  else
+    TOGGLE12="Disable"
+    TOGGLE13=""
+  fi
+
 }
 
 ######## PREPARATIONS ########
@@ -145,25 +171,29 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
-"===" "===========================================[Configuration]===" \
+"===" "===============================================[Passwords]===" \
 "  1" "Change admin (user torbox) password"  \
-"  2" "Change the name of TorBox's WLAN"  \
-"  3" "Change the password of TorBox's WLAN (reboot required)"  \
-"  4" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
-"  5" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
-"  6" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-"  7" "$TOGGLE08 TorBox's WLAN"  \
-"  8" "$TOGGLE09 TorBox's WLAN"  \
-"  9" "Change the password of your Tor control port (restarts Tor!)"  \
-"===" "===========================================[Logging "$TOGGLE03 \
-" 10" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
-" 11" "Erase all log files" \
-"===" "===========================================[Features]========" \
-" 12" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 13" "Support for 3.5\" no-name TFT displays (reboot required)" \
-" 14" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+"  2" "Change the password of TorBox's WLAN (reboot required)"  \
+"  3" "Change the password of your Tor control port (restarts Tor!)"  \
+"===" "=================================================[Network]===" \
+"  4" "Change the name of TorBox's WLAN"  \
+"  5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
+"  6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
+"  7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
+"  8" "$TOGGLE08 TorBox's WLAN"  \
+"  9" "$TOGGLE09 TorBox's WLAN"  \
+"===" "================================================[Security]===" \
+" 10" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+" 11" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"===" "============================================[Logging "$TOGGLE03 \
+" 12" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
+" 13" "Erase all log files" \
+"===" "============================================[Add Features]===" \
+" 14" "Support for Adafruit's PiTFT displays (reboot required)" \
+" 15" "Support for 3.5\" no-name TFT displays (reboot required)" \
+" 16" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -174,8 +204,48 @@ if [ $exitstatus = 0 ]; then
 			whiptail --title "TorBox - INFO" --msgbox "\n\nYou will now be asked to enter a new admin password." $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
   		passwd
 
+#This changes the password of the WLAN
+    elif [ $CHOICE = 2 ]; then
+      INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      if [ "$INPUT" != "" ]; then
+        if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+          clear
+          echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+          echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
+          sleep 5
+        else
+          clear
+          echo -e "${RED}[+] Changing password...${NOCOLOR}"
+          SSID_PW=wpa_passphrase=$INPUT
+          sudo sed -i "s/^wpa_passphrase=.*/${SSID_PW}/" ${HOSTAPD}
+          sleep 2
+      		if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox and use the onboard wireless chip as AP)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+            clear
+      		  echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
+            echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+            sudo reboot
+      			exit 0
+          fi
+      	fi
+      fi
+
+#This changes the password of the Tor control port
+    elif [ $CHOICE = 3 ]; then
+      INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      if [ "$INPUT" != "" ]; then
+        INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
+      	INPUT=PASSWORD=\"$INPUT\"
+      	if grep -q "^HashedControlPassword\ " ${TORRC}; then
+          sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
+      	else
+          sudo echo ${INPUTHASH} >> ${TORRC}
+      	fi
+      	sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
+      	restarting_tor menu-config
+      fi
+
 #This changes the name of the WLAN
-		elif [ $CHOICE = 2 ]; then
+    elif [ $CHOICE = 4 ]; then
 			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter the new name for TorBox's WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ "$INPUT" != "" ]; then
         clear
@@ -193,33 +263,8 @@ if [ $exitstatus = 0 ]; then
 				fi
 			fi
 
-#This changes the password of the WLAN
-		elif [ $CHOICE = 3 ]; then
-			INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-			if [ "$INPUT" != "" ]; then
-        if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
-          clear
-          echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
-          echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
-          sleep 5
-        else
-          clear
-          echo -e "${RED}[+] Changing password...${NOCOLOR}"
-          SSID_PW=wpa_passphrase=$INPUT
-          sudo sed -i "s/^wpa_passphrase=.*/${SSID_PW}/" ${HOSTAPD}
-          speed 2
-				  if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox and use the onboard wireless chip as AP)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-	          clear
-					  echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-            sudo reboot
-					  exit 0
-          fi
-				fi
-			fi
-
 #This sets the WLAN regulatory domain.
-    elif [ $CHOICE = 4 ]; then
+    elif [ $CHOICE = 5 ]; then
       REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
       TLC=$(echo "$REGDOMAIN"|cut -c11-12)
       if [ "$TLC" != "00" ] && [ "$TLC" != "" ]; then
@@ -233,8 +278,9 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This changes the frequency band
-    elif [ $CHOICE = 5 ]; then
+    elif [ $CHOICE = 6 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
+        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
         if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
           clear
           echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
@@ -283,8 +329,9 @@ if [ $exitstatus = 0 ]; then
       read_config
 
 #Change the WLAN channel
-    elif [ $CHOICE = 6 ]; then
+    elif [ $CHOICE = 7 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
+        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
         if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
           "A" "Channel  1 at 20 MHz" OFF \
@@ -513,7 +560,7 @@ if [ $exitstatus = 0 ]; then
       read_config
 
 #This hides / unhides the WLAN
-    elif [ $CHOICE = 7 ]; then
+    elif [ $CHOICE = 8 ]; then
       if [ "$TOGGLE08" = "Hide" ]; then
         INPUT=$(cat text/hide_wlan-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -547,7 +594,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This disables / enables the WLAN
-    elif [ $CHOICE = 8 ]; then
+    elif [ $CHOICE = 9 ]; then
       if [ "$TOGGLE09" = "Disable" ]; then
         CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
         if [ -z "$CABLE" ]; then
@@ -595,23 +642,72 @@ if [ $exitstatus = 0 ]; then
       fi
       read_config
 
-#This changes the password of the Tor control port
-    elif [ $CHOICE = 9 ]; then
-			INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-			if [ "$INPUT" != "" ]; then
-				INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
-				INPUT=PASSWORD=\"$INPUT\"
-				if grep -q "^HashedControlPassword\ " ${TORRC}; then
-      	  sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
-				else
-        	sudo echo ${INPUTHASH} >> ${TORRC}
-				fi
-				sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
-				restarting_tor menu-config
-			fi
+#This disables / enables SSH access through Internet
+    elif [ $CHOICE = 10 ]; then
+      if [ "$TOGGLE10" = "Enable" ]; then
+        INPUT=$(cat text/ssh_i_access-on-txt)
+        ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
+        "1" "Temporary until reconfiguration or restart" OFF \
+        "2" "Permanently until disabled again" OFF 3>&1 1>&2 2>&3)
+        exitstatus=$?
+        if [ $exitstatus = 0 ]; then
+          INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g)
+          clear
+          echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
+          echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
+          echo ""
+          echo -e "${WHITE}[!] $INTERNET_IP"
+          echo ""
+          read -n 1 -s -r -p "Press any key to continue"
+          sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+          if [ $ENABLED_CHOICE = 1 ]; then
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+            sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
+          fi
+        fi
+      fi
+      if [ "$TOGGLE10" = "Disable" ]; then
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to disable SSH access from the Internet (this is the default)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
+          sudo iptables -D INPUT -p tcp --dport 22 -j ACCEPT
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
+
+#THis disables / enables HTTP plain text traffic block
+    elif [ $CHOICE = 11 ]; then
+      if [ "$TOGGLE12" = "Enable" ]; then
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
+          (sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo iptables -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
+      if [ "$TOGGLE12" = "Disable" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          clear
+          echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
+          (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo iptables -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=0/" ${RUNFILE}
+          sleep 2
+        fi
+      fi
 
 #This changes the extent of the logging
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 12 ]; then
 			if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 				LOG_STATUS=$(sudo systemctl is-active rsyslog)
 				if [ $LOG_STATUS = inactive ]; then
@@ -629,41 +725,43 @@ if [ $exitstatus = 0 ]; then
 		  	clear
 				echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
 				sudo systemctl stop rsyslog
+        echo ""
 				echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
 	      #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
 				sudo systemctl disable rsyslog
+        echo ""
         erase_logs
         sleep 2
 			fi
       read_config
 
 #This erases all log files
-    elif [ $CHOICE = 11 ]; then
+    elif [ $CHOICE = 13 ]; then
 			clear
 			erase_logs
 			sleep 2
 
 #This is the support for Adafruit's PiTFT displays
-    elif [ $CHOICE = 12 ]; then
+    elif [ $CHOICE = 14 ]; then
       INPUT=$(cat text/pitft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
-        cd
         sudo apt-get -y install python3-dev
-        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/converted_shell_scripts/adafruit-pitft.sh
-        chmod +x adafruit-pitft.sh
-        sudo ./adafruit-pitft.sh -u /home/torbox
+        # This is the older version of the installation script - https://github.com/adafruit/Raspberry-Pi-Installer-Scripts/blob/master/converted_shell_scripts/adafruit-pitft.sh
+        # wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/converted_shell_scripts/adafruit-pitft.sh
+        # chmod +x adafruit-pitft.sh
+        sudo bash install/adafruit-pitft.sh -u /home/torbox
       fi
 
 #This is the support for 3.5" no-name TFT displays
-    elif [ $CHOICE = 13 ]; then
+    elif [ $CHOICE = 15 ]; then
       INPUT=$(cat text/nonametft-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         online_check menu-config
         cd
         sudo rm -rf LCD-show
-        # This is the original repository, but doesn't worl with kernel 5.4.*, yet
+        # This is the original repository, but doesn't work with kernel 5.4.*, yet
         # git clone https://github.com/goodtft/LCD-show.git
         git clone https://github.com/MrYacha/LCD-show.git
         cp torbox/install/LCD-show/LCD35-show LCD-show/
@@ -705,16 +803,18 @@ if [ $exitstatus = 0 ]; then
       fi
 
 #This is the support for Sixfab Shields/HATs for cellular connections
-    elif [ $CHOICE = 14 ]; then
+#Remark for TorBox v.0.4.0 - we try to do it without an online connection.
+#Preinstalled packages needed: ppp wiringpi
+    elif [ $CHOICE = 16 ]; then
       INPUT=$(cat text/sixfab-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        online_check menu-config
-        cd
-        wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
-        mv install.sh sixfab_install.sh
-        chmod +x sixfab_install.sh
-        sudo ./sixfab_install.sh
-        trap "cd torbox; bash menu-config; exit 0" SIGINT
+#        online_check menu-config
+        cd install/Sixfab_PPP_Installer-master/ppp_installer
+#        wget https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
+#        mv install.sh sixfab_install.sh
+        chmod +x install.sh
+        sudo ./install.sh
+        recommended_reboot menu-config
       fi
 
 #Finish

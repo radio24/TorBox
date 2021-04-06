@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -63,8 +63,8 @@ BAK="/etc/tor/torrc.bak"
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
 read_config()
 {
-MODE_BR=$(grep "BridgeRelay" ${TORRC})
-MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
+MODE_BR=$(grep "^BridgeRelay" ${TORRC})
+MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
 if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     TOGGLE07="YES]==="
     TOGGLE07b="ON"
@@ -120,7 +120,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
@@ -130,10 +130,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - DEFEND THE OP
 "  5" "Show me my personal bridge address"  \
 "  6" "Enter the advanced configuration editor"  \
 "  7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"===" "====================================[Backup & Restore     ]===" \
+"===" "=========================================[Backup & Restore]===" \
 "  8" "Backup the Bridge Relay configuration"  \
 "  9" "Restore the Bridge Relay configuration"  \
-"===" "====================================[How can I support?   ]===" \
+"===" "=======================================[How can I support?]===" \
 " 10" "PLEASE SUPPORT THE TOR PROJECT!" \
 " 11" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
 
@@ -158,7 +158,6 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
             sudo sed -i "s/^#ORPort/ORPort/g" ${TORRC}
             sudo sed -i "s/^#ExtORPort/ExtORPort/g" ${TORRC}
-            #Currently, we support only OBFS4 bridges
             sudo sed -i "s/^#ServerTransportPlugin/ServerTransportPlugin/g" ${TORRC}
             sudo sed -i "s/^#ServerTransportListenAddr/ServerTransportListenAddr/g" ${TORRC}
             sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
@@ -212,7 +211,7 @@ if [ $exitstatus = 0 ]; then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
-        nNICK="TorBox032"
+        nNICK="TorBox040"
         change_config
         read_config
       fi

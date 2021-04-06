@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Raspbian lite.
+# Raspberry Pi OS lite.
 #
 # SYNTAX
 # ./run_install.sh
@@ -38,14 +38,16 @@
 #  3. Updating the system
 #  4. Adding the Tor repository to the source list.
 #  5. Installing all necessary packages
-#  6. Configuring Tor and obfs4proxy
-#  7. Re-checking Internet connectivity
-#  8. Downloading and installing the latest version of TorBox
-#  9. Installing all configuration files
-# 10. Disabling Bluetooth
-# 11. Configure the system services
-# 12. Adding and implementing the user torbox
-# 13. Finishing, cleaning and booting
+#  6. Compile and install the newest version of Tor
+#  7. Configuring Tor with the pluggable transports
+#  8. Re-checking Internet connectivity
+#  9. Downloading and installing the latest version of TorBox
+# 10. Installing all configuration files
+# 11. Disabling Bluetooth
+# 12. Configure the system services
+# 13. Installing additional network drivers
+# 14. Adding and implementing the user torbox
+# 15. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -73,12 +75,44 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Connectivity check
+CHECK_URL1="http://ubuntu.com"
+CHECK_URL2="https://google.com"
 
+#Other variables
+RUNFILE="torbox/run/torbox.run"
+
+##############################
+######## FUNCTIONS ###########
+
+# This function downloads, unpacks and installs the network drivers
+# Syntax install_network_drivers <path> <filename> <text_message>
+install_network_drivers()
+{
+	path=$1
+  filename=$2
+  text_message=$3
+	clear
+  echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+  echo -e " "
+	cd ~
+	mkdir install_network_driver
+	cd install_network_driver
+	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
+	wget http://downloads.fars-robotics.net/wifi-drivers/$path$filename
+	echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
+	tar xzf $filename
+	chmod a+x install.sh
+	echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
+	sudo ./install.sh
+	cd ~
+	rm -r install_network_driver
+	sleep 2
+}
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also disable the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n            WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also remove the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -88,16 +122,22 @@ clear
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
-wget -q --spider http://google.com
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
+echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
+sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+sleep 5
+wget -q --spider $CHECK_URL1
+OCHECK=$?
+echo ""
+if [ $OCHECK -eq 0 ]; then
+  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -109,27 +149,13 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf) 2>&1
-      sleep 15
-      echo ""
-      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
+			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+			exit 1
     fi
   fi
 fi
@@ -169,40 +195,92 @@ echo ""
 sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
 sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-sudo apt-get update
+sudo apt-get -y update
 
 # 5. Installing all necessary packages
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd wicd-curses dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn
-sudo apt-get -y install tor deb.torproject.org-keyring
+#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb
+
+#Install wiringpi
+wget https://project-downloads.drogon.net/wiringpi-latest.deb
+sudo dpkg -i wiringpi-latest.deb
+
+# sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install urwid
 
-# 6. Configuring Tor and obfs4proxy
+# Additional installation for GO
+cd ~
+sudo rm -rf /usr/local/go
+wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
+sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
+sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+export PATH=$PATH:/usr/local/go/bin
+
+# 6. Compile and install the newest version of Tor
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Configuring Tor and obfs4proxy....${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Compile and install the newest version of Tor....${NOCOLOR}"
+mkdir ~/debian-packages; cd ~/debian-packages
+apt source tor
+# IMPORTANT: build-essential is also necessary for the installation of network driver further below
+sudo apt-get -y install build-essential fakeroot devscripts
+sudo apt-get -y upgrade tor deb.torproject.org-keyring
+sudo apt-get -y build-dep tor deb.torproject.org-keyring
+cd tor-*
+sudo debuild -rfakeroot -uc -us
+cd ..
+sudo dpkg -i tor_*.deb
+cd
+sudo rm -r ~/debian-packages
+
+# 7. Configuring Tor with the pluggable transports
+sleep 10
+clear
+echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
+sudo cp /usr/share/tor/geoip* /usr/bin
+sudo chmod a+x /usr/bin/geoip*
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
-# 7 Again checking connectivity
+# Additional installation for Snowflake
+cd ~
+git clone https://git.torproject.org/pluggable-transports/snowflake.git
+export GO111MODULE="on"
+cd ~/snowflake/proxy
+go get
+go build
+sudo cp proxy /usr/bin/snowflake-proxy
+
+cd ~/snowflake/client
+go get
+go build
+sudo cp client /usr/bin/snowflake-client
+
+cd ~
+sudo rm -rf snowflake
+sudo rm -rf go*
+
+# 8. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider http://google.com
+echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
+wget -q --spider $CHECK_URL1
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+]          Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
   sleeo 30
   echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -213,20 +291,20 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]          We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-      sudo printf "\n# Added by TorBox install script\nnameserver 8.8.8.8\n" | sudo tee /etc/resolv.conf
-      sleep 15
+			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
+			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+			(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+      sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
+      wget -q --spider $CHECK_URL1
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -238,13 +316,13 @@ else
   fi
 fi
 
-# 8. Downloading and installing the latest version of TorBox
+# 9. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
-echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
-wget https://github.com/radio24/TorBox/archive/master.zip
+#echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
+wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
@@ -259,17 +337,17 @@ if [ -e master.zip ]; then
 else
   echo -e "${RED} ${NOCOLOR}"
   echo -e "${WHITE}[!]      Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-  echo -e "${WHITE}[!]      I'can't update TorBox menu !!${NOCOLOR}"
+  echo -e "${WHITE}[!]      I can't update TorBox menu !!${NOCOLOR}"
   echo -e "${WHITE}[!]      You may try it later or manually !!${NOCOLOR}"
   sleep 2
   exit 1
 fi
 
-# 9. Installing all configuration files
+# 10. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
@@ -305,26 +383,16 @@ fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-(sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/manager-settings.conf /etc/wicd/
-echo -e "${RED}[+] Copied /etc/wicd/manager-settings.conf -- backup done${NOCOLOR}"
-(sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/wired-settings.conf /etc/wicd/
-echo -e "${RED}[+] Copied /etc/wicd/wired-settings.conf -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+echo -e "${RED}[+] Changing .profile${NOCOLOR}"
 cd
-if ! grep "# Added by TorBox" .profile ; then
-  sudo cp .profile .profile.bak
-  sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
-fi
-cd
+sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
-# 10. Disabling Bluetooth
+# 11. Disabling Bluetooth
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
@@ -334,10 +402,10 @@ if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo apt-get -y autoremove
 fi
 
-# 11. Configure the system services
+# 12. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
 sudo systemctl start hostapd
@@ -353,17 +421,114 @@ sudo systemctl start ssh
 sudo systemctl disable dhcpcd
 sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
-sudo systemctl daemon-reload
 echo ""
 echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
+sudo systemctl daemon-reload
 echo""
 
-# 12. Adding the user torbox
+# 13. Installing additional network drivers
+kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
+
+path_8188eu="8188eu-drivers/"
+filename_8188eu="8188eu-"$kernelversion".tar.gz"
+text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
+install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
+
+path_8188fu="8188fu-drivers/"
+filename_8188fu="8188fu-"$kernelversion".tar.gz"
+text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
+install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
+
+path_8192eu="8192eu-drivers/"
+filename_8192eu="8192eu-"$kernelversion".tar.gz"
+text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
+install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
+
+# Deactivated because no driver for new kernels available
+#path_8192su="8192su-drivers/"
+#filename_8192su="8192su-"$kernelversion".tar.gz"
+#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
+#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
+
+path_8812au="8812au-drivers/"
+filename_8812au="8812au-"$kernelversion".tar.gz"
+text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
+install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
+
+path_8821cu="8821cu-drivers/"
+filename_8821cu="8821cu-"$kernelversion".tar.gz"
+text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
+install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
+
+path_8822bu="8822bu-drivers/"
+filename_8822bu="8822bu-"$kernelversion".tar.gz"
+text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
+install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
+
+# Deactivated because no driver for new kernels available
+#path_mt7610="mt7610-drivers/"
+#filename_mt7610="mt7610-"$kernelversion".tar.gz"
+#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
+#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
+
+# Deactivated because no driver for new kernels available
+#path_mt7612="mt7612-drivers/"
+#filename_mt7612="mt7612-"$kernelversion".tar.gz"
+#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
+#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
+
+sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+cd ~
+
+# Installing the RTL8814AU
+clear
+echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8814au.git
+cd 8814au
+cp ~/torbox/install/Network/install-rtl8814au.sh .
+chmod a+x install-rtl8814au.sh
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	#This has to be checked
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+./install-rtl8814au.sh
+cd ~
+rm -r 8814au
+sleep 2
+
+# Installing the RTL8821AU
+clear
+echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8821au.git
+cd 8821au
+cp ~/torbox/install/Network/install-rtl8821au.sh .
+chmod a+x install-rtl8821au.sh
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+./install-rtl8821au.sh
+cd ~
+rm -r 8821au
+sleep 2
+
+# 14. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 12: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 14: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -388,10 +553,10 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 13. Finishing, cleaning and booting
+# 15. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
 echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"
@@ -419,10 +584,10 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo cp /etc/hostname /etc/hostname.bak
+(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
 sudo cp torbox/etc/hostname /etc/
 echo -e "${RED}[+]Copied /etc/hostname -- backup done${NOCOLOR}"
-sudo cp /etc/hosts /etc/hosts.bak
+(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
@@ -430,9 +595,9 @@ echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    TorBox has to be rebooted manually.${NOCOLOR}"
+echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 (sudo chage -E0 pi) 2> /dev/null

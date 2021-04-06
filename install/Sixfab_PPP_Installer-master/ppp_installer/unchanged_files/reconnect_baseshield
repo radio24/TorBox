@@ -1,0 +1,13 @@
+#!/bin/sh
+
+while true; do
+
+	ping -q -I ppp0 -c 1 8.8.8.8 -s 0 >/dev/null
+
+	if [ $? -ne 0 ]; then
+		echo "Connection down, reconnecting..."
+		sudo pon
+	fi
+
+	sleep 10
+done

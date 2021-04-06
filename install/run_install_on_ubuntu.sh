@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -38,15 +38,14 @@
 #  1. Checking for Internet connection
 #  2. Updating the system
 #  3. Installing all necessary packages
-#  4. Installing wicd
-#  5. Configuring Tor and obfs4proxy
-#  6. Re-checking Internet connectivity
-#  7. Downloading and installing the latest version of TorBox
-#  8. Installing all configuration files
-#  9. Disabling Bluetooth
-# 10. Configure the system services
-# 11. Adding and implementing the user torbox
-# 12. Finishing, cleaning and booting
+#  4. Configuring Tor with the pluggable transports
+#  5. Re-checking Internet connectivity
+#  6. Downloading and installing the latest version of TorBox
+#  7. Installing all configuration files
+#  8. Disabling Bluetooth
+#  9. Configure the system services
+# 10. Adding and implementing the user torbox
+# 11. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -74,14 +73,19 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+#Connectivity check
+CHECK_URL1="http://ubuntu.com"
+CHECK_URL2="https://google.com"
+
 #Other variables
+RUNFILE="torbox/run/torbox.run"
 
 
 ###### DISPLAY THE INTRO ######
 clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
-whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n             WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nThis installation runs without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
+whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n            WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_on_ubuntu\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
 clear
 
 # 1. Checking for Internet connection
@@ -91,16 +95,22 @@ clear
 
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
-wget -q --spider http://ubuntu.com
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have! :-)${NOCOLOR}"
+echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
+sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
+(sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
+sudo systemctl restart systemd-resolved
+wget -q --spider $CHECK_URL1
+OCHECK=$?
+echo ""
+if [ $OCHECK -eq 0 ]; then
+  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo ""
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider http://ubuntu.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -112,28 +122,13 @@ else
     sleep 30
     echo ""
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider http://ubuntu.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
-      echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
-      sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
-      sudo systemctl restart systemd-resolved
-      sleep 15
-      echo ""
-      echo -e "${RED}[+]         Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-      wget -q --spider http://ubuntu.com
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
+      echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+      echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+      exit 1
     fi
   fi
 fi
@@ -163,73 +158,66 @@ sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
 # 3. Installing all necessary packages
-# The problem with Ubuntu 20.04 is that they removed the support for python2 which is necessary for wicd
 sleep 10
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 
-sudo apt-get -y install python2 hostapd isc-dhcp-server tor obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn
-curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
-sudo python2 get-pip.py
+# Check the availability of the following packages: snowflake, wiringpi / Also, check the version of go
 
-# Additional installations for Python 3
+# wiringpi is not available for Debian -> that could be problematic for Sixfab Shields/HATs support
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb tor golang
+
+#Install wiringpi
+wget https://project-downloads.drogon.net/wiringpi-latest.deb
+sudo dpkg -i wiringpi-latest.deb
+
+# Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install urwid
 
-# urwid for Python 2, which is necessary for wicd-curse
-sudo pip install urwid
-
-# 4. Installing wicd (this is necessary because starting with Ubuntu 20.04, they
-#    kicked the package out of their repository; see also here:
-#    https://askubuntu.com/questions/1240154/how-to-install-wicd-on-ubuntu-20-04)
+# 4. Configuring Tor with the pluggable transports
 sleep 10
 clear
-echo -e "${RED}[+] Step 4: Installing wicd....${NOCOLOR}"
-mkdir -p ~/Downloads/wicd
-cd ~/Downloads/wicd
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/python-wicd_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-curses_1.7.4+tb2-6_all.deb
-wget http://archive.ubuntu.com/ubuntu/pool/universe/w/wicd/wicd-cli_1.7.4+tb2-6_all.deb
-cd
-sudo apt-get -y install ./Downloads/wicd/python-wicd_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd-daemon_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd-cli_1.7.4+tb2-6_all.deb
-sudo apt-get -y install ./Downloads/wicd/wicd_1.7.4+tb2-6_all.deb
-
-# Creating a dependency-dummy for wicd-curses (based on
-# https://unix.stackexchange.com/questions/404444/how-to-make-apt-ignore-unfulfilled-dependencies-of-installed-package)
-equivs-control python-urwid.control
-sed -i "s/Package: <package name; defaults to equivs-dummy>/Package: python-urwid/g" python-urwid.control
-sed -i "s/^# Version: <enter version here; defaults to 1.0>/Version: 1.2/g" python-urwid.control
-equivs-build python-urwid.control
-sudo dpkg -i python-urwid_1.2_all.deb
-
-# Finally !!!
-sudo apt-get -y install ./Downloads/wicd/wicd-curses_1.7.4+tb2-6_all.deb
-
-# 5. Configuring Tor and obfs4proxy
-sleep 10
-clear
-echo -e "${RED}[+] Step 5: Configuring Tor and obfs4proxy....${NOCOLOR}"
+echo -e "${RED}[+] Step 4: Configuring Tor with the pluggable transports....${NOCOLOR}"
+# Check if the line below is necessary
+# sudo cp /usr/share/tor/geoip* /usr/bin
+# sudo chmod a+x /usr/bin/geoip*
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
-# 6. Again checking connectivity
+# Additional installation for Snowflake
+cd ~
+git clone https://git.torproject.org/pluggable-transports/snowflake.git
+export GO111MODULE="on"
+cd ~/snowflake/proxy
+go get
+go build
+sudo cp proxy /usr/bin/snowflake-proxy
+
+cd ~/snowflake/client
+go get
+go build
+sudo cp client /usr/bin/snowflake-client
+
+cd ~
+sudo rm -rf snowflake
+sudo rm -rf go*
+
+# 5. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Re-checking Internet connectivity...${NOCOLOR}"
-wget -q --spider http://google.com
+echo -e "${RED}[+] Step 5: Re-checking Internet connectivity...${NOCOLOR}"
+wget -q --spider $CHECK_URL1
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
 else
-  echo -e "${RED}[+]         Hmmm, no we don't have... :-(${NOCOLOR}"
+  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
   echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
   sleep 30
   echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider https://google.com
+  wget -q --spider $CHECK_URL2
   if [ $? -eq 0 ]; then
     echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
   else
@@ -240,21 +228,21 @@ else
     sudo dhclient &>/dev/null &
     sleep 30
     echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider https://google.com
+    wget -q --spider $CHECK_URL1
     if [ $? -eq 0 ]; then
       echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
     else
       echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-      echo -e "${RED}[+]         We will add a Google nameserver (8.8.8.8) to /etc/resolv.conf and try again...${NOCOLOR}"
+      echo -e "${RED}[+]         Let's add some open nameservers and try again...${NOCOLOR}"
       sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nDNS=8.8.8.8\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
+      (sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
       sudo systemctl restart systemd-resolved
       sleep 15
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
       echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider https://google.com
+      wget -q --spider $CHECK_URL1
       if [ $? -eq 0 ]; then
         echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
       else
@@ -266,13 +254,13 @@ else
   fi
 fi
 
-# 7. Downloading and installing the latest version of TorBox
+# 6. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 7: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
-wget https://github.com/radio24/TorBox/archive/master.zip
+wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
 if [ -e master.zip ]; then
   echo -e "${RED}[+]       Unpacking TorBox menu...${NOCOLOR}"
   unzip master.zip
@@ -287,17 +275,17 @@ if [ -e master.zip ]; then
 else
   echo -e "${RED} ${NOCOLOR}"
   echo -e "${WHITE}[!]      Downloading TorBox menu from GitHub failed !!${NOCOLOR}"
-  echo -e "${WHITE}[!]      I'can't update TorBox menu !!${NOCOLOR}"
+  echo -e "${WHITE}[!]      I can't update TorBox menu !!${NOCOLOR}"
   echo -e "${WHITE}[!]      You may try it later or manually !!${NOCOLOR}"
   sleep 2
   exit 1
 fi
 
-# 8. Installing all configuration files
+# 7. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 8: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Installing all configuration files....${NOCOLOR}"
 echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
@@ -351,34 +339,24 @@ fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
-(sudo cp /etc/wicd/manager-settings.conf /etc/wicd/manager-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/manager-settings.conf /etc/wicd/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/manager-settings.conf -- backup done"
-(sudo cp /etc/wicd/wired-settings.conf /etc/wicd/wired-settings.conf.bak) 2> /dev/null
-sudo cp etc/wicd/wired-settings.conf /etc/wicd/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/wicd/wired-settings.conf -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR}         Changing .profile if necessary"
+echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
-if ! grep "# Added by TorBox" .profile ; then
-  sudo cp .profile .profile.bak
-  sudo printf "\n# Added by TorBox\ncd torbox\nsleep 2\n./menu\n" | sudo tee -a .profile
-fi
-cd
+sudo printf "\n\ncd torbox\n./menu\n" | sudo tee -a .profile
 
-# 9. Disabling Bluetooth
+# 8. Disabling Bluetooth
 sleep 10
 clear
-echo -e "${RED}[+] Step 9: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
 
-# 10. Configure the system services
+# 9. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Configure the system services...${NOCOLOR}"
 
 # Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
@@ -418,10 +396,10 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 11. Adding the user torbox
+# 10. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -447,10 +425,10 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 12. Finishing, cleaning and booting
+# 11. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 13: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 11: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -480,10 +458,10 @@ sudo rm -r python-urwid*
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo cp /etc/hostname /etc/hostname.bak
+(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
 sudo cp torbox/etc/hostname /etc/
 echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
-sudo cp /etc/hosts /etc/hosts.bak
+(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"

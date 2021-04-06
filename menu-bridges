@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=10
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -40,6 +40,7 @@ NO_SPACER=4
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
@@ -51,6 +52,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+PING_SERVER="google.com"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
@@ -66,44 +68,68 @@ j=0
 .  lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
-# TOGGLE05 / TOGGLE06 represents the status of the bridging mode
 read_config()
 {
-  MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
-  if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-      TOGGLE05="ON]==="
+  # MEEKSTRING represents the status of the Meek-Azure bridging mode
+    MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC})
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
+        MEEKSTRING="ON!"
+    else
+        MEEKSTRING="OFF"
+    fi
+
+  # SNOWSTRING represents the status of the Snowflake bridging mode
+    MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC})
+    if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+        SNOWSTRING="ON!"
+    else
+        SNOWSTRING="OFF"
+    fi
+
+  # TOGGLE05 / TOGGLE06 represents the status of the bridging mode
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+  if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$MODE_MEEK" != "Bridge meek_lite " ] && [ "$MODE_SNOW" != "Bridge snowflake " ]; then
+      TOGGLE05="ON!]==="
       TOGGLE05b="ON"
-      TOGGLE06="OFF]=="
+      TOGGLE06="OFF]==="
       TOGGLE06b="OFF"
   else
-      TOGGLE05="OFF]=="
+      TOGGLE05="OFF]==="
       TOGGLE05b="OFF"
-      TOGGLE06="ON]==="
+      TOGGLE06="ON!]==="
       TOGGLE06b="ON"
   fi
 
-  if grep -q "^PING=OFF" ${RUNFILE} ; then PING="OFF" ; fi
-  if grep -q "^PING=ON" ${RUNFILE} ; then PING="ON" ; fi
+  # Is TorBox connected to a VPN?
+  tun0up=$(ip link | grep tun0)
+  if [ "$tun0up" = "" ]; then
+    VPNSTRING1="Connect"
+    VPNSTRING2="to"
+  else
+    VPNSTRING1="Disconnect"
+    VPNSTRING2="from"
+  fi
+
+  # Is the Countermeasure against a disconnection when idle feature active?
+    if ps -ax | grep "[p]ing -q $PING_SERVER" ; then
+      PING="ON"
+    else
+      PING="OFF"
+    fi
 
   # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
   sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
   sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 
-  # HOW MANY CONFIGURED BRIDGES DO WE HAVE?
-  # readarray reads into an array beginning with index 0
-  readarray -t configured_bridges_deactivated < <(grep "^#Bridge " ${TORRC})
-  readarray -t configured_bridges_activated < <(grep "^Bridge " ${TORRC})
-  if [ ${#configured_bridges_deactivated[0]} = 0 ]; then
-    number_configured_bridges_deactivated=0
-  else
-    number_configured_bridges_deactivated=${#configured_bridges_deactivated[*]}
-  fi
-  if [ ${#configured_bridges_activated[0]} = 0 ]; then
-    number_configured_bridges_activated=0
-  else
-    number_configured_bridges_activated=${#configured_bridges_activated[*]}
-  fi
-  number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+  # number_of_bridges()
+  # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+  # Following variables can be used:
+  # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
+  # $configured_bridges_activated -> An array with all activated OBFS4 bridges
+  # $number_configured_bridges_deactivated -> Number of deactivated bridges
+  # $number_configured_bridges_activated -> Number of activated bridges
+  # $number_configured_bridges_total -> Total number of bridges
+  number_of_bridges
 }
 
 ######## PREPARATIONS ########
@@ -112,11 +138,11 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
-"===" "===================[Bypass Tor blocking with bridges -> "$TOGGLE05 \
-"  1" "ALL ABOUT BRIDGES - READ ME FIRST"  \
-"  2" "Toggle Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
+"===" "============[Bypass Tor blocking with OBFS4 bridges -> "$TOGGLE05 \
+"  1" "ALL ABOUT OBFS4 BRIDGES - READ ME FIRST"  \
+"  2" "Toggle OBFS4 Bridge Mode from "$TOGGLE05b" to "$TOGGLE06b  \
 "  3" "List all "$number_configured_bridges_total" bridges"  \
 "  4" "Add additional bridges"  \
 "  5" "Activate configured bridges"  \
@@ -125,7 +151,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.3.2 - COUNTERMEASUR
 "  8" "Enter the advanced configuration editor"  \
 "  9" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 10" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
+" 10" "Use SNOWFLAKE to circumvent censorship -> "$SNOWSTRING  \
+" 11" "Use MEEK-AZURE to circumvent censorship -> "$MEEKSTRING  \
+" 12" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
+" 13" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -141,33 +170,34 @@ if [ $exitstatus = 0 ]; then
 
 # Toggle Bridge Mode ON or OFF
 		elif [ $CHOICE = 2 ]; then
-      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-        INPUT=$(cat text/activate-bridges-text)
-        if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          deactivating_bridge_relay
-          sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-          sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-          #Currently, we support only OBFS4 bridges
-          sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
-          sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
-          if [ $number_configured_bridges_total = 0]; then
-            INPUT=$(cat text/add-bridges-first-text)
-            if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
-              sudo bash bridges_add_old
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      else
+        if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+          INPUT=$(cat text/activate-bridges-text)
+          if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            deactivating_bridge_relay
+            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
+            sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
+            if [ $number_configured_bridges_total = 0]; then
+              INPUT=$(cat text/add-bridges-first-text)
+              if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
+                sudo bash bridges_add_old
+              fi
             fi
           fi
-        fi
-      else
-        INPUT=$(cat text/deactivate-bridges-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE BRIDGE MODE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-          sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-          #Currently, we support only OBFS4 bridges
-          sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-          sudo sed -i "s/^Bridge /#Bridge /g" ${TORRC}
-          restarting_tor menu-bridges
-#          sudo systemctl restart tor
+        else
+          INPUT=$(cat text/deactivate-bridges-text)
+          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+            sudo sed -i "s/^Bridge obfs4 /#Bridge  obfs4 /g" ${TORRC}
+            restarting_tor menu-bridges
+          fi
         fi
       fi
       read_config
@@ -247,7 +277,11 @@ if [ $exitstatus = 0 ]; then
 
 # Activate bridges
     elif [ $CHOICE = 5 ]; then
-      sudo bash bridges_activate_old 1
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      else
+        sudo bash bridges_activate_old 1
+      fi
       read_config
 
 # Deactivate bridges
@@ -277,21 +311,58 @@ if [ $exitstatus = 0 ]; then
         restarting_tor menu-bridges
       fi
 
+# Use Snowflake to circumvent censorship
+  elif [ $CHOICE = 10 ]; then
+    sudo bash snowflake $SNOWSTRING $MEEKSTRING
+    read_config
+
+# Use Meek-Azure to circumvent censorship
+  elif [ $CHOICE = 11 ]; then
+    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
+    read_config
+
+# Connect/Disconnect TorBox to/from VPN
+  elif [ $CHOICE = 12 ]; then
+    if [ "$tun0up" = "" ] ; then
+      INPUT=$(cat text/connecting-VPN-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        connecting_to_VPN
+        sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+        echo ""
+        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
+        echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+        sleep 5
+        tun0up=$(ip link | grep tun0)
+      fi
+    else
+      INPUT=$(cat text/disconnecting-VPN-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        clear
+        echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
+        sudo killall openvpn
+        echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+        sleep 15
+        echo ""
+        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
+        echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+        sleep 5
+        tun0up=$(ip link | grep tun0)
+      fi
+    fi
+
 # Countermeasure against a disconnection when idle feature
-  elif [ $CHOICE = 10 ] ; then
+  elif [ $CHOICE = 13 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-			  ping -q google.com >/dev/null &
+			  ping -q $PING_SERVER >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
 			  echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-        sudo sed -i "s/^PING=.*/PING=ON/" ${RUNFILE}
 			  sleep 2
       fi
       if [ "$PING" = "ON" ]; then
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo killall ping
           echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
-          sudo sed -i "s/^PING=.*/PING=OFF/" ${RUNFILE}
           sleep 2
         fi
       fi

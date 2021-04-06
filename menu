@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -49,11 +49,13 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables (don't change them - this will probably break wlan0 <-> wlan1 !!)
+#Connectivity check
+CHECK_URL1="http://google.com"
+
+#Other variables
 TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
-WLANMANGERCONF="/etc/wicd/manager-settting.conf"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
@@ -63,6 +65,22 @@ EXITID="EXITID=0"
 
 #include lib
 .  lib/torbox.lib
+
+# This function check if TorBox is freshly installed by the install script
+# If yes, then it removes the user "pi" and restart TorBox
+check_fresh_install()
+{
+  FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
+  if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
+    if [ -d "/home/pi" ]; then
+      sudo userdel -r pi
+    fi
+    clear
+    echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
+    sleep 5
+    sudo reboot
+  fi
+}
 
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
@@ -76,8 +94,11 @@ check_bridge_relay()
     (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
     RULE_CHECK=$?
     if [ $RULE_CHECK = 1 ]; then
-      sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
-      sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+      (sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+      (sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+    else
+      (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+      (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
     fi
   fi
 }
@@ -87,9 +108,16 @@ check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
-IINTERFACE=$(route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ "$IINTERFACE" = "0.0.0.0" ] ; then FLASH_TUN0="<--" ; else
-  IINTERFACE=$(route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+IINTERFACE=$(timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+if [ "$IINTERFACE" != "" ] ; then
+  VPN_STATUS="VPN is up"
+  IIPTABLES=""
+  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
+else
+  VPN_STATUS=""
+fi
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
+  IINTERFACE=$(timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
   if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
@@ -104,12 +132,19 @@ fi
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 
+check_fresh_install
 check_bridge_relay
 check_interface_with_internet
 check_tor
 
+if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="VPN is up & TOR working"
+elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ] ; then TOR_STATUS="         TOR is working"
+elif [ "$TOR_STATUS" = "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="              VPN is up"
+else TOR_STATUS=""
+fi
+
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.3.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)                      $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
@@ -487,9 +522,13 @@ if [ $exitstatus = 0 ]; then
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
         else
-          # pon is installed by Sixfab Shields/HATs for cellular connections software support. It is part of the ppp package, which we didn't install by default.
-          sudo pon > /dev/null
-          sleep 5
+          echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
+          echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
+          echo ""
+          sudo pon
+          echo ""
+          sleep 2
+          read -n 1 -s -r -p "Press any key to continue"
           if ip link | grep ppp0 > /dev/null; then
             if ip link | grep wlan0 | grep "state UP" ; then
               WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -667,48 +706,13 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         tun0up=$(ip link | grep tun0)
         if [ "$tun0up" = "" ] ; then
-          readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
-          if [ "${ovpnlist[0]}" = "" ] ; then
-            whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-            trap "bash menu; exit 0" EXIT
-            exit 0
-          fi
-          ovpnlist_anzahl=${#ovpnlist[*]}
-          anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
-          menu_content=""
-          for (( i=0; i<=$anzahl_loops; i++ ))
-          do
-            menu_item=$(( $i + 1 ))
-            menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
-          done
-          clear
-          echo -e "${WHITE}Choose an OpenVPN configuration${NOCOLOR}"
-          echo ""
-          echo -e "$menu_content"
-          echo ""
-          read -r -p $'\e[1;37mWhich OpenVPN configuration would you like to use? -> \e[0m'
-          echo
-          if [[ $REPLY =~ ^[1234567890]$ ]] ; then
-            CHOICE_OVPN=$(( $REPLY - 1 ))
-            clear
-            echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
-            echo ""
-            ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
-            sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
-            sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
-            echo ""
-            echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
-            sleep 15
-            tun0up=$(ip link | grep tun0)
-          else
-            trap "bash menu; exit 0" EXIT
-            exit 0
-          fi
+          connecting_to_VPN
+          tun0up=$(ip link | grep tun0)
         fi
         if [ "$tun0up" != "" ] ; then
           clear
           echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-          wget -q --spider http://google.com
+          wget -q --spider $CHECK_URL1
           if [ $? -eq 0 ]; then
             echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
           else
@@ -790,7 +794,7 @@ if [ $exitstatus = 0 ]; then
 
 # Reboot or Shotdown TorBox
     elif [ $CHOICE = 14 ]; then
-      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.3.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.0 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
       "  1" "REBOOT   TorBox" \
       "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)
       exitstatus=$?
@@ -820,10 +824,10 @@ if [ $exitstatus = 0 ]; then
     fi
   fi
 else
- clear
+clear
 	PROMPTTEXT=$(cat text/prompt-text)
 	echo -e "$PROMPTTEXT"
 	echo " "
 	exit 0
 fi
-bash menu
+./menu

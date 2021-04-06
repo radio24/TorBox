@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2020 Patrick Truffer
+# Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -69,13 +69,11 @@ fi
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	sudo systemctl stop wicd
 	sudo ifdown $INTERFACE1
 	INTERFACE1_DOWN=1
 fi
 if ps -ax | grep "[d]hclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
-	sudo systemctl stop wicd
 	sudo ifdown $INTERFACE2
 	INTERFACE2_DOWN=1
 fi
@@ -145,6 +143,8 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	fi
 else
 		sudo ifdown $INTERFACE3
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $INTERFACE3
 		sudo ifup $INTERFACE3 &>/dev/null &
 fi
 
@@ -166,6 +166,8 @@ if ip link | grep $INTERFACE4 | grep "state UP" ; then
 	fi
 else
 		sudo ifdown $INTERFACE4
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 fi
 
