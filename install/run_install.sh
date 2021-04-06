@@ -45,8 +45,8 @@
 # 10. Installing all configuration files
 # 11. Disabling Bluetooth
 # 12. Configure the system services
-# 13. Adding and implementing the user torbox
-# 14. Installing additional network drivers
+# 13. Installing additional network drivers
+# 14. Adding and implementing the user torbox
 # 15. Finishing, cleaning and booting
 
 ##########################################################
@@ -75,9 +75,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Connectivity check
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
+
+#Other variables
 RUNFILE="torbox/run/torbox.run"
 
 ##############################
@@ -123,7 +125,7 @@ echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 sudo cp /etc/resolv.conf /etc/resolv.conf.bak
 (sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
-sleep 15
+sleep 5
 wget -q --spider $CHECK_URL1
 OCHECK=$?
 echo ""
@@ -218,8 +220,8 @@ cd ~
 sudo rm -rf /usr/local/go
 wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
 sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
+sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
 export PATH=$PATH:/usr/local/go/bin
-#sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
 
 # 6. Compile and install the newest version of Tor
 sleep 10
@@ -297,7 +299,7 @@ else
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
 			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
 			(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
-      sleep 15
+      sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
@@ -373,11 +375,6 @@ echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
-(sudo cp /etc/resolvconf.conf /etc/resolvconf.conf.bak) 2> /dev/null
-sudo cp etc/resolvconf.conf /etc/
-# Update not overwrite
-sudo resolvconf -u
-echo -e "${RED}[+] Copied /etc/resolvconf.conf -- backup done${NOCOLOR}"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
@@ -390,7 +387,7 @@ echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+] Changing .profile${NOCOLOR}"
 cd
-sudo printf "\n\ncd torbox\n./menu\n" | sudo tee -a .profile
+sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
 # 11. Disabling Bluetooth
 sleep 10
@@ -431,35 +428,7 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 13. Adding the user torbox
-sleep 10
-clear
-echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
-echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
-echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
-echo ""
-echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
-echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-echo ""
-sudo adduser --disabled-password --gecos "" torbox
-echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
-sudo adduser torbox sudo
-sudo adduser torbox netdev
-sudo mv /home/pi/* /home/torbox/
-(sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
-sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
-if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
-  sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
-  (sudo visudo -c) 2> /dev/null
-fi
-cd /home/torbox/
-
-# 14. Installing additional network drivers
+# 13. Installing additional network drivers
 kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 path_8188eu="8188eu-drivers/"
@@ -511,19 +480,20 @@ install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
 #install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
 
 sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+cd ~
 
 # Installing the RTL8814AU
 clear
-echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8814au.git
 cd 8814au
-cp ../torbox/install/Network/install-rtl8814au.sh .
+cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
-if grep -q "Raspberry Pi" /proc/device-tree/model; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
 	#This has to be checked
-	if uname -s | grep -q "arm64"; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -541,10 +511,10 @@ echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821au.git
 cd 8821au
-cp ../torbox/install/Network/install-rtl8821au.sh .
+cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
-if grep -q "Raspberry Pi" /proc/device-tree/model; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -555,9 +525,33 @@ cd ~
 rm -r 8821au
 sleep 2
 
-
-
-
+# 14. Adding the user torbox
+sleep 10
+clear
+echo -e "${RED}[+] Step 14: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
+echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
+echo ""
+echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
+echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
+echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo ""
+sudo adduser --disabled-password --gecos "" torbox
+echo -e "CHANGE-IT\nCHANGE-IT\n" | sudo passwd torbox
+sudo adduser torbox sudo
+sudo adduser torbox netdev
+sudo mv /home/pi/* /home/torbox/
+(sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
+sudo mkdir /home/torbox/openvpn
+(sudo rm .bash_history) 2> /dev/null
+sudo chown -R torbox.torbox /home/torbox/
+if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
+  sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
+  (sudo visudo -c) 2> /dev/null
+fi
+cd /home/torbox/
 
 # 15. Finishing, cleaning and booting
 echo ""

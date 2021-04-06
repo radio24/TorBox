@@ -23,6 +23,9 @@
 # SYNTAX
 # ./install_network_drivers
 #
+# IMPORTANT
+# Don't execute this script as root.
+#
 #
 ##### SET VARIABLES ######
 #
@@ -33,6 +36,8 @@ NOCOLOR='\033[0m'
 
 #Other variables
 CHECK_OS="OTHER"
+CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
+CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 
 ##############################
 ######## FUNCTIONS ###########
@@ -47,7 +52,6 @@ install_network_drivers()
 	clear
 	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
-	cd ~
 	mkdir install_network_driver
 	cd install_network_driver
 	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
@@ -58,11 +62,12 @@ install_network_drivers()
 	echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
 	sudo ./install.sh
 	cd ~
-	rm -r install_network_driver
+	sudo rm -r install_network_driver
 	sleep 2
 }
 
 # We know that it is called Raspberry Pi OS, but we use the term Raspbian anyway
+cd ~
 if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
 if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
 
@@ -127,11 +132,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
-	cp install/Network/install-rtl8814au.sh .
+	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	chmod a+x install-rtl8814au.sh
-	if grep -q "Raspberry Pi" /proc/device-tree/model; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 		#This has to be checked
-		if uname -s | grep -q "arm64"; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -139,7 +144,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	fi
 		sudo ./install-rtl8814au.sh
 	cd ~
-	rm -r 8814au
+	sudo rm -r 8814au
 	sleep 2
 
 	# Installing the RTL8821AU
@@ -149,10 +154,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au.git
 	cd 8821au
-	cp install/Network/install-rtl8821au.sh .
+	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
-	if grep -q "Raspberry Pi" /proc/device-tree/model; then
-		if uname -s | grep -q "arm64"; then
+
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -160,7 +166,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	fi
 	 sudo ./install-rtl8821au.sh
 	cd ~
-	rm -r 8821au
+	sudo rm -r 8821au
 	sleep 2
 
 # For a Debian installation
@@ -187,7 +193,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	make all
 	sudo make install
 	cd ~
-	rm -r rtl8188eu
+	sudo rm -r rtl8188eu
 	sleep 2
 
 	# Installing the RTL8188FU
@@ -200,7 +206,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	sudo dkms build rtl8188fu/1.0
 	sudo dkms install rtl8188fu/1.0
 	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-	rm -r rtl8188fu
+	sudo rm -r rtl8188fu
 	sleep 2
 
 	# Installing the RTL8192EU
@@ -213,7 +219,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	sudo dkms add .
 	sudo dkms install rtl8192eu/1.0
 	cd ~
-	rm -r rtl8192eu-linux
+	sudo rm -r rtl8192eu-linux
 	sleep 2
 
 	# Installing the RTL8812AU
@@ -221,12 +227,12 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone git clone https://github.com/morrownr/8812au.git
+	git clone https://github.com/morrownr/8812au.git
 	cd 8812au
-	cp install/Network/install-rtl8812au.sh .
+	cp ~/torbox/install/Network/install-rtl8812au.sh .
 	chmod a+x install-rtl8812au.sh
-	if grep -q "Raspberry Pi" /proc/device-tree/model; then
-		if uname -s | grep -q "arm64"; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -234,7 +240,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	fi
 	sudo ./install-rtl8812au.sh
 	cd ~
-	rm -r 8812au
+	sudo rm -r 8812au
 	sleep 2
 
 	# Installing the RTL8814AU
@@ -244,10 +250,10 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
-	cp install/Network/install-rtl8814au.sh .
+	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	chmod a+x install-rtl8814au.sh
-	if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-		if uname -s | grep -q "arm64"; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -255,7 +261,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	fi
 	sudo ./install-rtl8814au.sh
 	cd ~
-	rm -r 8814au
+	sudo rm -r 8814au
 	sleep 2
 
 	# Installing the RTL8821AU
@@ -265,10 +271,10 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au.git
 	cd 8821au
-	cp install/Network/install-rtl8821au.sh .
+	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
-	if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-		if uname -s | grep -q "arm64"; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -276,7 +282,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	fi
 	sudo ./install-rtl8821au.sh
 	cd ~
-	rm -r 8821au
+	sudo rm -r 8821au
 	sleep 2
 
 	# Installing the RTL8821CU
@@ -286,10 +292,10 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821cu.git
 	cd 8821cu
-	cp install/Network/install-rtl8821cu.sh .
+	cp ~/torbox/install/Network/install-rtl8821cu.sh .
 	chmod a+x install-rtl8821cu.sh
-	if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-		if uname -s | grep -q "arm64"; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -297,7 +303,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	fi
 	sudo ./install-rtl8821cu.sh
 	cd ~
-	rm -r 8821cu
+	sudo rm -r 8821cu
 	sleep 2
 
 	# Installing the RTL88x2BU
@@ -307,10 +313,10 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/88x2bu.git
 	cd 88x2bu
-	cp install/Network/install-rtl88x2bu.sh .
+	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
-	if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-		if uname -s | grep -q "arm64"; then
+	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -318,7 +324,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	fi
 	sudo ./install-rtl88x2bu.sh
 	cd ~
-	rm -r 88x2bu
+	sudo rm -r 88x2bu
 	sleep 2
 
 elif [ "$CHECK_OS" == "OTHER" ]; then

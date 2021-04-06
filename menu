@@ -49,8 +49,10 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables (don't change them - this will probably break wlan0 <-> wlan1 !!)
+#Connectivity check
 CHECK_URL1="http://google.com"
+
+#Other variables
 TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -70,7 +72,7 @@ check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
-    if [ -d "/home/pi" ]; then 
+    if [ -d "/home/pi" ]; then
       sudo userdel -r pi
     fi
     clear
@@ -106,7 +108,7 @@ check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
-IINTERFACE=$(timeout 5 route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+IINTERFACE=$(timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
 if [ "$IINTERFACE" != "" ] ; then
   VPN_STATUS="VPN is up"
   IIPTABLES=""
@@ -115,7 +117,7 @@ else
   VPN_STATUS=""
 fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
-  IINTERFACE=$(timeout 5 route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  IINTERFACE=$(timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
   if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
@@ -822,10 +824,10 @@ if [ $exitstatus = 0 ]; then
     fi
   fi
 else
- clear
+clear
 	PROMPTTEXT=$(cat text/prompt-text)
 	echo -e "$PROMPTTEXT"
 	echo " "
 	exit 0
 fi
-bash menu
+./menu

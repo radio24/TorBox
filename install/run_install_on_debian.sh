@@ -73,9 +73,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Connectivity check
 CHECK_URL1="ubuntu.com"
 CHECK_URL2="google.com"
+
+#Other variables
 RUNFILE="torbox/run/torbox.run"
 
 ##############################
@@ -98,7 +100,7 @@ echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 cp /etc/resolv.conf /etc/resolv.conf.bak
 ( printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" |  tee /etc/resolv.conf) 2>&1
-sleep 15
+sleep 5
 # On some Debian systems, wget is not installed, yet
 ping -c 1 -q $CHECK_URL1 >&/dev/null
 OCHECK=$?
@@ -163,6 +165,9 @@ clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor tor-geoipdb
 
+# Additional installations for Debian systems
+apt-get -y install sudo net-tools resolvconf unzip
+
 #Install wiringpi - however, it is not sure if it works correctly under Debian
 cd ~
 git clone https://github.com/WiringPi/WiringPi.git
@@ -175,9 +180,6 @@ rm -r WiringPi
 echo ""
 read -n 1 -s -r -p "Press any key to continue"
 
-# Additional installations for Debian systems
-apt-get -y install sudo net-tools resolvconf
-
 # Additional installations for Python
 pip3 install pytesseract
 pip3 install mechanize
@@ -188,12 +190,9 @@ cd ~
 rm -rf /usr/local/go
 wget https://golang.org/dl/go1.16.3.linux-arm64.tar.gz
 tar -C /usr/local -xzvf go1.16.3.linux-arm64.tar.gz
+printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
 export PATH=$PATH:/usr/local/go/bin
-#printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
 
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # 5. Configuring Tor with the pluggable transports
 sleep 10
@@ -204,10 +203,6 @@ chmod a+x /usr/bin/geoip*
 setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # Additional installation for Snowflake
 cd ~
@@ -262,7 +257,7 @@ else
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
 			cp /etc/resolv.conf /etc/resolv.conf.bak
 			( printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" |  tee /etc/resolv.conf) 2>&1
-      sleep 15
+      sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
       sleep 15
@@ -306,6 +301,10 @@ else
   exit 1
 fi
 
+# TO BE REMOVED
+echo ""
+read -n 1 -s -r -p "Press any key to continue"
+
 # 8. Installing all configuration files
 sleep 10
 clear
@@ -340,13 +339,6 @@ cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
 echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
-(cp /etc/resolvconf.conf /etc/resolvconf.conf.bak) 2> /dev/null
-cp etc/resolvconf.conf /etc/
-# Seee here: https://www.aptgetlife.co.uk/solving-debian-8-jessie-resolv-conf-update-issues/
-cp etc/resolvconf/resolv.conf.d/head /etc/resolvconf/resolv.conf.d/
-# Update not overwrite
-resolvconf -u
-echo -e "${RED}[+] Copied /etc/resolvconf.conf -- backup done${NOCOLOR}"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
@@ -359,28 +351,15 @@ echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+] Changing .profile${NOCOLOR}"
 cd
-printf "\n\ncd torbox\n./menu\n" |  tee -a .profile
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
+printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
 # 9. Disabling Bluetooth
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
-   systemctl disable hciuart.service
-   systemctl disable bluealsa.service
-   systemctl disable bluetooth.service
-   apt-get -y purge bluez
-   apt-get -y autoremove
+   printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | tee -a /boot/firmware/config.txt
 fi
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # 10. Configure the system services
 sleep 10
@@ -411,10 +390,6 @@ systemctl disable rsyslog
 systemctl daemon-reload
 echo""
 
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
-
 # 11. Installing additional network drivers
 sleep 10
 clear
@@ -425,6 +400,7 @@ echo -e " "
 echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
 apt-get install -y linux-headers-$(uname -r)
 apt-get install -y firmware-realtek dkms libelf-dev build-essential
+cd ~
 sleep 2
 
 # Installing the RTL8188EU
@@ -472,12 +448,12 @@ clear
 echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-git clone git clone https://github.com/morrownr/8812au.git
+git clone https://github.com/morrownr/8812au.git
 cd 8812au
-cp ../torbox/install/Network/install-rtl8812au.sh .
+cp ~/torbox/install/Network/install-rtl8812au.sh .
 chmod a+x install-rtl8812au.sh
-if grep -q "Raspberry Pi" /proc/device-tree/model; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -495,10 +471,10 @@ echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8814au.git
 cd 8814au
-cp ../torbox/install/Network/install-rtl8814au.sh .
+cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
-if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -516,10 +492,10 @@ echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821au.git
 cd 8821au
-cp ../torbox/install/Network/install-rtl8821au.sh .
+cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
-if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -537,10 +513,10 @@ echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821cu.git
 cd 8821cu
-cp ../torbox/install/Network/install-rtl8821cu.sh .
+cp ~/torbox/install/Network/install-rtl8821cu.sh .
 chmod a+x install-rtl8821cu.sh
-if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -558,10 +534,10 @@ echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
-cp ../torbox/install/Network/install-rtl88x2bu.sh .
+cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 chmod a+x install-rtl88x2bu.sh
-if [ grep -q "Raspberry Pi" /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
-	if uname -s | grep -q "arm64"; then
+if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -604,15 +580,12 @@ if !  grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
-
 # 13. Setting/changing root password
 sleep 10
 clear
 echo -e "${RED}[+] Step 12: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
+echo ""
 passwd
 
 # 14. Finishing, cleaning and booting

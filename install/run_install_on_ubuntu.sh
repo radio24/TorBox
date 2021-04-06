@@ -73,9 +73,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Connectivity check
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
+
+#Other variables
 RUNFILE="torbox/run/torbox.run"
 
 

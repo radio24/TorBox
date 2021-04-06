@@ -39,8 +39,10 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+#Connectivity check
 CHECK_URL1="http://google.com"
+
+#Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 

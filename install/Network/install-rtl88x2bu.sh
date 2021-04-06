@@ -23,8 +23,6 @@ fi
 # check for previous installation
 if [[ -d "/usr/src/${DRV_NAME}-${DRV_VERSION}" ]]; then
 	echo "It appears that this driver may already be installed."
-	echo "You will need to run the following before installing."
-	echo "$ sudo ./remove-driver.sh"
 	exit 1
 fi
 
