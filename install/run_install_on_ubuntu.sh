@@ -44,8 +44,9 @@
 #  7. Installing all configuration files
 #  8. Disabling Bluetooth
 #  9. Configure the system services
-# 10. Adding and implementing the user torbox
-# 11. Finishing, cleaning and booting
+# 10. Installing additional network drivers
+# 11. Adding and implementing the user torbox
+# 12. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -79,6 +80,8 @@ CHECK_URL2="https://google.com"
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
+CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
+CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 
 
 ###### DISPLAY THE INTRO ######
@@ -89,10 +92,6 @@ whiptail --title "TorBox Installation on Ubuntu" --msgbox "\n\n            WELCO
 clear
 
 # 1. Checking for Internet connection
-# Currently a working Internet connection is mandatory. Probably in a later
-# version, we will include an option to install the TorBox from a compressed
-# file.
-
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
@@ -165,16 +164,33 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 # Check the availability of the following packages: snowflake, wiringpi / Also, check the version of go
 
 # wiringpi is not available for Debian -> that could be problematic for Sixfab Shields/HATs support
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb tor golang
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor tor-geoipdb
 
 #Install wiringpi
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
+sudo rm wiringpi-latest.deb
 
 # Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install urwid
+
+# Additional installation for GO
+cd ~
+sudo rm -rf /usr/local/go
+
+printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
+export PATH=$PATH:/usr/local/go/bin
+
+# Have to be tested
+if uname -r | grep -q "arm64"; then
+  wget https://golang.org/dl/go1.16.3.linux-arm64.tar.gz
+  sudo tar -C /usr/local -xzvf go1.16.3.linux-arm64.tar.gz
+else
+  wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
+  sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
+fi
 
 # 4. Configuring Tor with the pluggable transports
 sleep 10
@@ -319,7 +335,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
-cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local.ubuntu /etc/rc.local
 sudo chmod u+x /etc/rc.local
@@ -329,7 +345,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 # To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
 # LLMNR=yes / MulticastDNS=yes / Chache=no
 (sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
-sudo sp etc/systemd/resolved.conf /etc/systemd/
+sudo cp etc/systemd/resolved.conf /etc/systemd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
@@ -343,7 +359,7 @@ echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
-sudo printf "\n\ncd torbox\n./menu\n" | sudo tee -a .profile
+sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
 # 8. Disabling Bluetooth
 sleep 10
@@ -396,10 +412,175 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 10. Adding the user torbox
+# 10. Installing additional network drivers
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+
+# Update kernel headers - important: this has to be done every time after upgrading the kernel
+echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+sudo apt-get install -y linux-headers-$(uname -r)
+# firmware-realtek is missing on ubuntu, but it should work without it
+sudo apt-get install -y dkms libelf-dev build-essential
+cd ~
+sleep 2
+
+# TO BE REMOVED
+ echo ""
+ read -n 1 -s -r -p "Press any key to continue"
+
+# Installing the RTL8188EU
+# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+# clear
+# echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+# echo -e " "
+# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+# cd ~
+# git clone https://github.com/lwfinger/rtl8188eu.git
+# cd rtl8188eu
+# make all
+# sudo make install
+# cd ~
+# sudo rm -r rtl8188eu
+# sleep 2
+
+# Installing the RTL8188FU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/kelebek333/rtl8188fu
+sudo dkms add ./rtl8188fu
+sudo dkms build rtl8188fu/1.0
+sudo dkms install rtl8188fu/1.0
+sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+sudo rm -r rtl8188fu
+sleep 2
+
+# Installing the RTL8192EU
+# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+# clear
+# echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+# echo -e " "
+# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+# git clone https://github.com/clnhub/rtl8192eu-linux.git
+# cd rtl8192eu-linux
+# sudo dkms add .
+# sudo dkms install rtl8192eu/1.0
+# cd ~
+# sudo rm -r rtl8192eu-linux
+# sleep 2
+
+# Installing the RTL8812AU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8812au.git
+cd 8812au
+cp ~/torbox/install/Network/install-rtl8812au.sh .
+sudo chmod a+x install-rtl8812au.sh
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl8812au.sh
+cd ~
+sudo rm -r 8812au
+sleep 2
+
+# Installing the RTL8814AU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8814au.git
+cd 8814au
+cp ~/torbox/install/Network/install-rtl8814au.sh .
+sudo chmod a+x install-rtl8814au.sh
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl8814au.sh
+cd ~
+sudo rm -r 8814au
+sleep 2
+
+# Installing the RTL8821AU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8821au.git
+cd 8821au
+cp ~/torbox/install/Network/install-rtl8821au.sh .
+sudo chmod a+x install-rtl8821au.sh
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl8821au.sh
+cd ~
+sudo rm -r 8821au
+sleep 2
+
+# Installing the RTL8821CU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/8821cu.git
+cd 8821cu
+cp ~/torbox/install/Network/install-rtl8821cu.sh .
+sudo chmod a+x install-rtl8821cu.sh
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl8821cu.sh
+cd ~
+sudo rm -r 8821cu
+sleep 2
+
+# Installing the RTL88x2BU
+clear
+echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/88x2bu.git
+cd 88x2bu
+cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+sudo chmod a+x install-rtl88x2bu.sh
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		./raspi64.sh
+	else
+	 ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl88x2bu.sh
+cd ~
+sudo rm -r 88x2bu
+sleep 2
+
+# 11. Adding the user torbox
+sleep 10
+clear
+echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -425,10 +606,10 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 11. Finishing, cleaning and booting
+# 12. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 11: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 12: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
@@ -452,9 +633,9 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 history -c
 echo ""
 echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
-sudo rm -r Downloads
-sudo rm -r get-pip.py
-sudo rm -r python-urwid*
+(sudo rm -r Downloads) 2> /dev/null
+(sudo rm -r get-pip.py) 2> /dev/null
+(sudo rm -r python-urwid*) 2> /dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages

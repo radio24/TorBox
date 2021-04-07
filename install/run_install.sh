@@ -118,10 +118,6 @@ whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n        
 clear
 
 # 1. Checking for Internet connection
-# Currently a working Internet connection is mandatory. Probably in a later
-# version, we will include an option to install the TorBox from a compressed
-# file.
-
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
@@ -209,6 +205,7 @@ sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsut
 #Install wiringpi
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
+sudo rm wiringpi-latest.deb
 
 # sudo apt-get -y install tor deb.torproject.org-keyring
 

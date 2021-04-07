@@ -21,7 +21,8 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Debian System (Tested on Bullseye - https://raspi.debian.net/tested-images/).
+# Debian System (Tested on Buster and Bullseye
+# - https://raspi.debian.net/tested-images/).
 #
 # SYNTAX
 # ./run_install_on_debian.sh
@@ -93,10 +94,6 @@ whiptail --title "TorBox Installation on Debian" --msgbox "\n\n            WELCO
 clear
 
 # 1. Checking for Internet connection
-# Currently a working Internet connection is mandatory. Probably in a later
-# version, we will include an option to install the TorBox from a compressed
-# file.
-
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
@@ -165,10 +162,10 @@ apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor tor-geoipdb
+apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools unzip git openvpn ppp tor tor-geoipdb
 
 # Additional installations for Debian systems
-apt-get -y install sudo net-tools resolvconf unzip
+apt-get -y install sudo resolvconf
 
 # Additional installations for Debian bullseye systems
 if hostnamectl | grep -q "bullseye" ; then
@@ -195,7 +192,6 @@ wget https://golang.org/dl/go1.16.3.linux-arm64.tar.gz
 tar -C /usr/local -xzvf go1.16.3.linux-arm64.tar.gz
 printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
 export PATH=$PATH:/usr/local/go/bin
-
 
 # 5. Configuring Tor with the pluggable transports
 sleep 10
