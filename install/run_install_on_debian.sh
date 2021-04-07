@@ -79,6 +79,8 @@ CHECK_URL2="google.com"
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
+CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
+CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 
 ##############################
 ######## FUNCTIONS ###########
@@ -176,10 +178,6 @@ cd WiringPi
 cd ~
 rm -r WiringPi
 
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
-
 # Additional installations for Python
 pip3 install pytesseract
 pip3 install mechanize
@@ -221,10 +219,6 @@ cp client /usr/bin/snowflake-client
 cd ~
 rm -rf snowflake
 rm -rf go*
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # 6. Again checking connectivity
 sleep 10
@@ -300,10 +294,6 @@ else
   sleep 2
   exit 1
 fi
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # 8. Installing all configuration files
 sleep 10
@@ -452,7 +442,7 @@ git clone https://github.com/morrownr/8812au.git
 cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 chmod a+x install-rtl8812au.sh
-if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -473,7 +463,7 @@ git clone https://github.com/morrownr/8814au.git
 cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
-if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -494,7 +484,7 @@ git clone https://github.com/morrownr/8821au.git
 cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
-if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -515,7 +505,7 @@ git clone https://github.com/morrownr/8821cu.git
 cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 chmod a+x install-rtl8821cu.sh
-if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -536,7 +526,7 @@ git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 chmod a+x install-rtl88x2bu.sh
-if [ grep -q --text 'Raspberry Pi' /proc/device-tree/model ] || [ grep -q "Raspberry Pi" /proc/cpuinfo ]; then
+if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -547,10 +537,6 @@ fi
 cd ~
 rm -r 88x2bu
 sleep 2
-
-# TO BE REMOVED
-echo ""
-read -n 1 -s -r -p "Press any key to continue"
 
 # 12. Adding the user torbox
 sleep 10
