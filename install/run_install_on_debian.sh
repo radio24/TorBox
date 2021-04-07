@@ -170,6 +170,11 @@ apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils t
 # Additional installations for Debian systems
 apt-get -y install sudo net-tools resolvconf unzip
 
+# Additional installations for Debian bullseye systems
+if hostnamectl | grep -q "bullseye" ; then
+  apt-get -y install iptables
+fi
+
 #Install wiringpi - however, it is not sure if it works correctly under Debian
 cd ~
 git clone https://github.com/WiringPi/WiringPi.git
