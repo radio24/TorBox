@@ -486,12 +486,15 @@ class wireless_manager:
 			self.loop.widget = self.last_widget
 
 		def connect_box_keypress(size, key):
+			"""
 			if key == 'tab' or key == 'shift tab':
 				if self.connect_box.focus_position == 'body':
 					self.connect_box.focus_position = 'footer'
 				else:
 					self.connect_box.focus_position = 'body'
 			elif key == 'esc':
+			"""
+			if key == 'esc':
 				self.loop.widget = self.last_widget
 			else:
 				return urwid.Frame.keypress(self.connect_box, size, key)
@@ -512,9 +515,16 @@ class wireless_manager:
 		_ask_pass = urwid.AttrMap(_ask_pass, 'connect_ask', 'connect_ask_focus')
 
 		# input
-		_input_pass_edit = urwid.Edit('', align="center")
+		_input_pass_edit = urwid.Edit('', align="center", multiline=True)
 		_input_pass = urwid.AttrMap(_input_pass_edit, "connect_input")
 		_input_pass = urwid.Padding(_input_pass, left=15, right=15, min_width=15)
+		# When press return, we connect
+		def _pass_edit_change(widget, text):
+			if text.endswith('\n'):
+				_input_pass_edit.set_edit_text(text.strip('\n'))
+				_button_connect_callback(_input_essid_edit, bssid, _input_pass_edit, _hidden_flag, self.loop.widget)
+				return
+		urwid.connect_signal(_input_pass_edit, 'change', _pass_edit_change)
 
 		body = urwid.Pile([
 			_ask_pass,
@@ -545,20 +555,20 @@ class wireless_manager:
 		body = urwid.AttrMap(body, 'connect_ask')
 
 		# buttons
-		_button_connect = urwid.Button('Connect')
-		_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
-		urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[_input_essid_edit, bssid, _input_pass_edit, _hidden_flag])
+		#_button_connect = urwid.Button('Connect')
+		#_button = urwid.AttrMap(_button_connect, "connect_buttons", "connect_button_connect")
+		#urwid.connect_signal(_button_connect, 'click', _button_connect_callback, user_args=[_input_essid_edit, bssid, _input_pass_edit, _hidden_flag])
 
 		#_button_cancel = urwid.Button('Cancel')
 		#_button = urwid.AttrMap(_button_cancel, "", "connect_button_cancel")
 		#urwid.connect_signal(_button_cancel, 'click', _button_cancel_callback)
 
 		#_button = urwid.GridFlow([_button_connect], 12, 1, 1, 'center')
-		_button = urwid.Padding(_button, align='center', left=38, right=38, min_width=15)
-		_button = urwid.AttrMap(_button, 'connect_buttons')
+		#_button = urwid.Padding(_button, align='center', left=38, right=38, min_width=15)
+		#_button = urwid.AttrMap(_button, 'connect_buttons')
 
 		_footer = urwid.Pile([
-			_button,
+		#	_button,
 			_divider
 		])
 
