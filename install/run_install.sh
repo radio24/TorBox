@@ -79,6 +79,9 @@ NOCOLOR='\033[0m'
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
+# Avoid cheap censorship mechanism
+RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
 CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
@@ -122,7 +125,7 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+(sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
 wget -q --spider $CHECK_URL1
 OCHECK=$?
@@ -190,8 +193,10 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOCOLOR}"
 echo ""
-sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+if ! grep "torproject" /etc/apt/sources.list ; then
+	sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+	sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+fi
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
 sudo apt-get -y update
 
@@ -206,8 +211,6 @@ sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsut
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
-
-# sudo apt-get -y install tor deb.torproject.org-keyring
 
 # Additional installations for Python
 sudo pip3 install pytesseract
@@ -230,7 +233,8 @@ mkdir ~/debian-packages; cd ~/debian-packages
 apt source tor
 # IMPORTANT: build-essential is also necessary for the installation of network driver further below
 sudo apt-get -y install build-essential fakeroot devscripts
-sudo apt-get -y upgrade tor deb.torproject.org-keyring
+sudo apt-get -y install tor deb.torproject.org-keyring
+# sudo apt-get -y upgrade tor deb.torproject.org-keyring
 sudo apt-get -y build-dep tor deb.torproject.org-keyring
 cd tor-*
 sudo debuild -rfakeroot -uc -us
@@ -297,7 +301,7 @@ else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
 			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-			(sudo printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+			(sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
       sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
@@ -347,44 +351,45 @@ sleep 10
 clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
+echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
 (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/isc-dhcp-server -- backup done"
 (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
 (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
 (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
 (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
 (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
-echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
-echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
 fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
-echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
+echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+] Changing .profile${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Changing .profile"
 cd
 sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
@@ -490,7 +495,7 @@ git clone https://github.com/morrownr/8814au.git
 cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	#This has to be checked
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
@@ -512,7 +517,7 @@ git clone https://github.com/morrownr/8821au.git
 cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -600,3 +605,8 @@ echo -e "${WHITE}    After rebooting, please, change the default passwords immed
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 (sudo chage -E0 pi) 2> /dev/null
+
+# NEW
+echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sleep 3
+sudo reboot

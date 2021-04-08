@@ -55,6 +55,11 @@ CHECK_URL1="http://google.com"
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
+# Identify the Operation System
+if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
+if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
+if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+
 #Other variables
 LOOP_NUMBER=0
 RECOMPILE=0
@@ -73,15 +78,13 @@ BOOTMSG=0
 #This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
 online_check_update()
 {
-#This is only for TorBox 0.3.2 ===
   clear
-  echo -e "${RED}[+] Let's add some open nameservers and try again...${NOCOLOR}"
+  echo -e "${RED}[+] Let's add some open nameservers...${NOCOLOR}"
   sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-  (sudo printf "\n# Added by TorBox update script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" | sudo tee /etc/resolv.conf) 2>&1
+  (sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
   echo " "
   echo -e "${RED}[+] Please wait...${NOCOLOR}"
   sleep 15
-#==================================
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   OCHECK=$(curl -m 5 -s $CHECK_URL1)
@@ -126,7 +129,11 @@ update_tor()
   clear
   if ! grep "torproject" /etc/apt/sources.list ; then
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+    if hostnamectl | grep -q "Ubuntu 20.10" ; then
+      sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org groovy main\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+    else
+      sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+    fi
   fi
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
@@ -193,67 +200,76 @@ update_torcfg()
 {
   clear
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
+  echo ""
   if ! grep "torproject" /etc/apt/sources.list ; then
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
     sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-    echo -e "${RED}[+] Changed /etc/apt/sources.list -- backup done${NOCOLOR}"
+    echo -e "${RED}[+]${NOCOLOR} Changed /etc/apt/sources.list -- backup done"
   fi
   (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
   sudo cp etc/default/hostapd /etc/default/
-  echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
   (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
   sudo cp etc/default/isc-dhcp-server /etc/default/
-  echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/isc-dhcp-server -- backup done"
   (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
-  echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
   (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
   sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
-  echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
   (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
-  echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
   (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
   sudo cp etc/iptables.ipv4.nat /etc/
-  echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
   (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
   sudo cp etc/motd /etc/
-  echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
   (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
   sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
-  if hostnamectl | grep -q "Debian" ; then
+  if [ "$CHECK_OS" == "Debian" ] || [ "$CHECK_OS" == "Ubuntu" ]; then
     sudo cp etc/rc.local.ubuntu /etc/rc.local
     sudo chmod a+x /etc/rc.local
   else
     sudo cp etc/rc.local /etc/
   fi
-  echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
+  if [ "$CHECK_OS" == "Ubuntu" ]; then
+    # Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).
+    # To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
+    # LLMNR=yes / MulticastDNS=yes / Chache=no
+    (sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
+    sudo cp etc/systemd/resolved.conf /etc/systemd/
+    echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
+  fi
   if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
     sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
     sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-    echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
+    echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
   fi
   (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
-  echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-  echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
+  echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-  echo -e "${RED}[+] Changing .profile if necessary${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Changing .profile if necessary"
   if ! grep "# Added by TorBox" ../.profile ; then
     sudo cp ../.profile ../.profile.bak
     sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a ../.profile
   fi
   sudo cp etc/new_ident .
-  echo -e "${RED}[+] Copied new_ident -- backup not necessary${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied new_ident -- backup not necessary"
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
   sudo cp etc/hostname /etc/
-  echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostname -- backup done"
   sudo cp /etc/hosts /etc/hosts.bak
   sudo cp etc/hosts /etc/
-  echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
   echo ""
   echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
   sleep 5

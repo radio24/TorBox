@@ -78,6 +78,9 @@ NOCOLOR='\033[0m'
 CHECK_URL1="ubuntu.com"
 CHECK_URL2="google.com"
 
+# Avoid cheap censorship mechanism
+RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
 CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
@@ -98,7 +101,7 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 cp /etc/resolv.conf /etc/resolv.conf.bak
-( printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" |  tee /etc/resolv.conf) 2>&1
+( printf $RESOLVCONF |  tee /etc/resolv.conf) 2>&1
 sleep 5
 # On some Debian systems, wget is not installed, yet
 ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -153,8 +156,10 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 3: Adding the Tor repository to the source list....${NOCOLOR}"
 echo ""
-cp /etc/apt/sources.list /etc/apt/sources.list.bak
-printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" |  tee -a /etc/apt/sources.list
+if ! grep "torproject" /etc/apt/sources.list ; then
+  cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" |  tee -a /etc/apt/sources.list
+fi
 curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc |  apt-key add -
 apt-get -y update
 
@@ -251,7 +256,7 @@ else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
 			cp /etc/resolv.conf /etc/resolv.conf.bak
-			( printf "\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n" |  tee /etc/resolv.conf) 2>&1
+			( printf $RESOLVCONF |  tee /etc/resolv.conf) 2>&1
       sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
@@ -301,46 +306,47 @@ sleep 10
 clear
 cd torbox
 echo -e "${RED}[+] Step 8: Installing all configuration files....${NOCOLOR}"
+echo ""
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+] Copied /etc/default/hostapd -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
 (cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+] Copied /etc/default/isc-dhcp-server -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/isc-dhcp-server -- backup done"
 (cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhclient.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
 (cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+] Copied /etc/dhcp/dhcpd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
 (cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+] Copied /etc/hostapd/hostapd.conf -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
 (cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+] Copied /etc/iptables.ipv4.nat -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
 (cp /etc/motd /etc/motd.bak) 2> /dev/null
 cp etc/motd /etc/
-echo -e "${RED}[+] Copied /etc/motd -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
 (cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+] Copied /etc/network/interfaces -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
-echo -e "${RED}[+] Copied /etc/rc.local -- backup done${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+] Changed /etc/sysctl.conf -- backup done${NOCOLOR}"
+  echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
 fi
 (cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 cp etc/tor/torrc /etc/tor/
-echo -e "${RED}[+] Copied /etc/tor/torrc -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Activating IP forwarding${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
+echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+] Changing .profile${NOCOLOR}"
+echo -e "${RED}[+]${NOCOLOR} Changing .profile"
 cd
 printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
@@ -371,8 +377,10 @@ systemctl start ssh
 # sudo systemctl disable dhcpcd - not installed on Debian
 systemctl stop dnsmasq
 systemctl disable dnsmasq
+systemctl unmask resolvconf
 systemctl enable resolvconf
 systemctl start resolvconf
+systemctl unmask rc-local
 systemctl enable rc-local
 echo ""
 echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
@@ -443,7 +451,7 @@ git clone https://github.com/morrownr/8812au.git
 cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 chmod a+x install-rtl8812au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -464,7 +472,7 @@ git clone https://github.com/morrownr/8814au.git
 cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -485,7 +493,7 @@ git clone https://github.com/morrownr/8821au.git
 cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -506,7 +514,7 @@ git clone https://github.com/morrownr/8821cu.git
 cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 chmod a+x install-rtl8821cu.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -527,7 +535,7 @@ git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 chmod a+x install-rtl88x2bu.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else

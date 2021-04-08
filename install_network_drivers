@@ -70,6 +70,7 @@ install_network_drivers()
 cd ~
 if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
 if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
+if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
 
 # For a Raspberry Pi OS installation
 if [ "$CHECK_OS" == "Raspbian" ]; then
@@ -134,7 +135,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	cd 8814au
 	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	chmod a+x install-rtl8814au.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		#This has to be checked
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
@@ -157,7 +158,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
@@ -171,7 +172,6 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 
 # For a Debian installation
 elif [ "$CHECK_OS" == "Debian" ]; then
-	# 11. Installing additional network drivers
 	clear
 	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
@@ -231,7 +231,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd 8812au
 	cp ~/torbox/install/Network/install-rtl8812au.sh .
 	chmod a+x install-rtl8812au.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
@@ -252,7 +252,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd 8814au
 	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	chmod a+x install-rtl8814au.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
@@ -273,7 +273,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd 8821au
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
@@ -294,7 +294,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd 8821cu
 	cp ~/torbox/install/Network/install-rtl8821cu.sh .
 	chmod a+x install-rtl8821cu.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
@@ -315,11 +315,168 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd 88x2bu
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
-	if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -r | grep -q "arm64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
+	 fi
+	fi
+	sudo ./install-rtl88x2bu.sh
+	cd ~
+	sudo rm -r 88x2bu
+	sleep 2
+
+# For a Ubuntu installation
+elif [ "$CHECK_OS" == "Ubuntu" ]; then
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	sudo apt-get install -y linux-headers-$(uname -r)
+	# firmware-realtek is missing on ubuntu, but it should work without it
+	sudo apt-get install -y dkms libelf-dev build-essential
+	cd ~
+	sleep 2
+
+	# Installing the RTL8188EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	# cd ~
+	# git clone https://github.com/lwfinger/rtl8188eu.git
+	# cd rtl8188eu
+	# make all
+	# sudo make install
+	# cd ~
+	# sudo rm -r rtl8188eu
+	# sleep 2
+
+	# Installing the RTL8188FU
+	clear
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	sudo dkms add ./rtl8188fu-arm
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu
+	sleep 2
+
+	# Installing the RTL8192EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	# git clone https://github.com/clnhub/rtl8192eu-linux.git
+	# cd rtl8192eu-linux
+	# sudo dkms add .
+	# sudo dkms install rtl8192eu/1.0
+	# cd ~
+	# sudo rm -r rtl8192eu-linux
+	# sleep 2
+
+	# Installing the RTL8812AU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au.git
+	cd 8812au
+	cp ~/torbox/install/Network/install-rtl8812au.sh .
+	sudo chmod a+x install-rtl8812au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			./raspi64.sh
+		else
+		 ./raspi32.sh
+	 fi
+	fi
+	sudo ./install-rtl8812au.sh
+	cd ~
+	sudo rm -r 8812au
+	sleep 2
+
+	# Installing the RTL8814AU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	cp ~/torbox/install/Network/install-rtl8814au.sh .
+	sudo chmod a+x install-rtl8814au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			./raspi64.sh
+		else
+		 ./raspi32.sh
+	 fi
+	fi
+	sudo ./install-rtl8814au.sh
+	cd ~
+	sudo rm -r 8814au
+	sleep 2
+
+	# Installing the RTL8821AU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au.git
+	cd 8821au
+	cp ~/torbox/install/Network/install-rtl8821au.sh .
+	sudo chmod a+x install-rtl8821au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			./raspi64.sh
+		else
+		 ./raspi32.sh
+	 fi
+	fi
+	sudo ./install-rtl8821au.sh
+	cd ~
+	sudo rm -r 8821au
+	sleep 2
+
+	# Installing the RTL8821CU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821cu.git
+	cd 8821cu
+	cp ~/torbox/install/Network/install-rtl8821cu.sh .
+	sudo chmod a+x install-rtl8821cu.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			./raspi64.sh
+		else
+		 ./raspi32.sh
+	 fi
+	fi
+	sudo ./install-rtl8821cu.sh
+	cd ~
+	sudo rm -r 8821cu
+	sleep 2
+
+	# Installing the RTL88x2BU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu.git
+	cd 88x2bu
+	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+	sudo chmod a+x install-rtl88x2bu.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			./raspi64.sh
+		else
+		 ./raspi32.sh
 	 fi
 	fi
 	sudo ./install-rtl88x2bu.sh

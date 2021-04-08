@@ -37,16 +37,18 @@
 # Table of contents for this script:
 #  1. Checking for Internet connection
 #  2. Updating the system
-#  3. Installing all necessary packages
-#  4. Configuring Tor with the pluggable transports
-#  5. Re-checking Internet connectivity
-#  6. Downloading and installing the latest version of TorBox
-#  7. Installing all configuration files
-#  8. Disabling Bluetooth
-#  9. Configure the system services
-# 10. Installing additional network drivers
-# 11. Adding and implementing the user torbox
-# 12. Finishing, cleaning and booting
+#  3. Adding the Tor repository to the source list.
+#  4. Installing all necessary packages
+#  5. Compile and install the newest version of Tor
+#  6. Configuring Tor with the pluggable transports
+#  7. Re-checking Internet connectivity
+#  8. Downloading and installing the latest version of TorBox
+#  9. Installing all configuration files
+# 10. Disabling Bluetooth
+# 12. Configure the system services
+# 13. Installing additional network drivers
+# 14. Adding and implementing the user torbox
+# 15. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -78,10 +80,33 @@ NOCOLOR='\033[0m'
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
+# Avoid cheap censorship mechanism
+RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n"
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
 CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
 CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
+
+##############################
+######## FUNCTIONS ###########
+
+# This function installs the packages in a controlled way, so that the correct
+# installation can be checked.
+# Syntax install_network_drivers <packagenames>
+check_install_packages()
+{
+  packagenames=$1
+  for packagename in $packagenames; do
+    clear
+    echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+    echo ""
+    echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+    sudo apt-get -y install $packagename
+#    echo ""
+#    read -n 1 -s -r -p "Press any key to continue"
+  done
+}
 
 
 ###### DISPLAY THE INTRO ######
@@ -96,7 +121,7 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
 sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-(sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
+(sudo printf $RESOLVCONF | sudo tee /etc/systemd/resolved.conf) 2>&1
 sudo systemctl restart systemd-resolved
 wget -q --spider $CHECK_URL1
 OCHECK=$?
@@ -143,7 +168,7 @@ echo -e "${RED}[+]          Please wait...${NOCOLOR}"
 sleep 15
 sudo apt-get -y purge unattended-upgrades
 sudo dpkg --configure -a
-echo ""
+echo ""iptables
 
 echo -e "${RED}[+] Step 2b: Remove Ubuntu's cloud-init...${NOCOLOR}"
 sudo apt-get -y purge cloud-init
@@ -156,20 +181,41 @@ sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
-# 3. Installing all necessary packages
+# 3. Adding the Tor repository to the source list.
 sleep 10
 clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo -e "${RED}[+] Step 3: Adding the Tor repository to the source list....${NOCOLOR}"
+echo ""
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
 
-# Check the availability of the following packages: snowflake, wiringpi / Also, check the version of go
+if ! grep "torproject" /etc/apt/sources.list ; then
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  if hostnamectl | grep -q "Ubuntu 20.10" ; then
+    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org groovy main\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+  else
+    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
+fi
+sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
+sudo apt-get -y update
 
-# wiringpi is not available for Debian -> that could be problematic for Sixfab Shields/HATs support
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor tor-geoipdb
+# 4. Installing all necessary packages
+sleep 10
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+
+# For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
+#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
+
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb"
 
 #Install wiringpi
-wget https://project-downloads.drogon.net/wiringpi-latest.deb
-sudo dpkg -i wiringpi-latest.deb
-sudo rm wiringpi-latest.deb
+cd ~
+git clone https://github.com/WiringPi/WiringPi.git
+cd WiringPi
+sudo ./build
+cd ~
+sudo rm -r WiringPi
 
 # Additional installations for Python
 sudo pip3 install pytesseract
@@ -192,13 +238,30 @@ else
   sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
 fi
 
-# 4. Configuring Tor with the pluggable transports
+# 5. Compile and install the newest version of Tor
 sleep 10
 clear
-echo -e "${RED}[+] Step 4: Configuring Tor with the pluggable transports....${NOCOLOR}"
-# Check if the line below is necessary
-# sudo cp /usr/share/tor/geoip* /usr/bin
-# sudo chmod a+x /usr/bin/geoip*
+echo -e "${RED}[+] Step 5: Compile and install the newest version of Tor....${NOCOLOR}"
+mkdir ~/debian-packages; cd ~/debian-packages
+apt source tor
+# IMPORTANT: build-essential is also necessary for the installation of network driver further below
+sudo apt-get -y install build-essential fakeroot devscripts
+sudo apt-get -y install tor deb.torproject.org-keyring
+# sudo apt-get -y upgrade tor deb.torproject.org-keyring
+sudo apt-get -y build-dep tor deb.torproject.org-keyring
+cd tor-*
+sudo debuild -rfakeroot -uc -us
+cd ..
+sudo dpkg -i tor_*.deb
+cd
+sudo rm -r ~/debian-packages
+
+# 6. Configuring Tor with the pluggable transports
+sleep 10
+clear
+echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
+sudo cp /usr/share/tor/geoip* /usr/bin
+sudo chmod a+x /usr/bin/geoip*
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -221,10 +284,10 @@ cd ~
 sudo rm -rf snowflake
 sudo rm -rf go*
 
-# 5. Again checking connectivity
+# 7. Again checking connectivity
 sleep 10
 clear
-echo -e "${RED}[+] Step 5: Re-checking Internet connectivity...${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider $CHECK_URL1
 if [ $? -eq 0 ]; then
   echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
@@ -251,7 +314,7 @@ else
       echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]         Let's add some open nameservers and try again...${NOCOLOR}"
       sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf "\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n" | sudo tee /etc/systemd/resolved.conf) 2>&1
+      (sudo printf $RESOLVCONF | sudo tee /etc/systemd/resolved.conf) 2>&1
       sudo systemctl restart systemd-resolved
       sleep 15
       echo ""
@@ -270,10 +333,10 @@ else
   fi
 fi
 
-# 6. Downloading and installing the latest version of TorBox
+# 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
@@ -297,11 +360,11 @@ else
   exit 1
 fi
 
-# 7. Installing all configuration files
+# 9. Installing all configuration files
 sleep 10
 clear
 cd torbox
-echo -e "${RED}[+] Step 7: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
@@ -361,18 +424,19 @@ echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
 sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
 
-# 8. Disabling Bluetooth
+# 10. Disabling Bluetooth
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
 
-# 9. Configure the system services
+# 11. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 9: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
+echo ""
 
 # Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
 # on 127.0.0.53:53. This is where dnsmasq comes into play which generally responds to all port 53 requests and then resolves
@@ -404,6 +468,7 @@ sudo systemctl restart systemd-resolved
 # However, we don't want to start dnsmasq automatically after booting the system
 sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
 sudo systemctl disable dnsmasq
+sudo systemctl unmask rc-local
 sudo systemctl enable rc-local
 echo ""
 echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
@@ -412,10 +477,10 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 10. Installing additional network drivers
+# 12. Installing additional network drivers
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 
 # Update kernel headers - important: this has to be done every time after upgrading the kernel
@@ -426,14 +491,10 @@ sudo apt-get install -y dkms libelf-dev build-essential
 cd ~
 sleep 2
 
-# TO BE REMOVED
- echo ""
- read -n 1 -s -r -p "Press any key to continue"
-
 # Installing the RTL8188EU
 # Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
 # clear
-# echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 # echo -e " "
 # echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
 # cd ~
@@ -447,11 +508,12 @@ sleep 2
 
 # Installing the RTL8188FU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/kelebek333/rtl8188fu
-sudo dkms add ./rtl8188fu
+sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+sudo dkms add ./rtl8188fu-arm
 sudo dkms build rtl8188fu/1.0
 sudo dkms install rtl8188fu/1.0
 sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
@@ -461,7 +523,7 @@ sleep 2
 # Installing the RTL8192EU
 # Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
 # clear
-# echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 # echo -e " "
 # echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
 # git clone https://github.com/clnhub/rtl8192eu-linux.git
@@ -474,14 +536,14 @@ sleep 2
 
 # Installing the RTL8812AU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8812au.git
 cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 sudo chmod a+x install-rtl8812au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -495,14 +557,14 @@ sleep 2
 
 # Installing the RTL8814AU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8814au.git
 cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 sudo chmod a+x install-rtl8814au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -516,14 +578,14 @@ sleep 2
 
 # Installing the RTL8821AU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821au.git
 cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 sudo chmod a+x install-rtl8821au.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -537,14 +599,14 @@ sleep 2
 
 # Installing the RTL8821CU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821cu.git
 cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 sudo chmod a+x install-rtl8821cu.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -558,14 +620,14 @@ sleep 2
 
 # Installing the RTL88x2BU
 clear
-echo -e "${RED}[+] Step 11: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 sudo chmod a+x install-rtl88x2bu.sh
-if [ -z "$CHECK_HD1" ] || [ -z "$CHECK_HD2" ]; then
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 	if uname -r | grep -q "arm64"; then
 		./raspi64.sh
 	else
@@ -577,10 +639,10 @@ cd ~
 sudo rm -r 88x2bu
 sleep 2
 
-# 11. Adding the user torbox
+# 13. Adding the user torbox
 sleep 10
 clear
-echo -e "${RED}[+] Step 11: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
 echo ""
@@ -606,10 +668,10 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 12. Finishing, cleaning and booting
+# 14. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 12: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
