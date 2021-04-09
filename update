@@ -479,7 +479,8 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
         sudo touch /var/log/tor/notices.log
         sudo chown debian-tor /var/log/tor/notices.log
-        sleep 2
+        echo -e "${RED}[+] Done!${NOCOLOR}"
+        sleep 4
         restarting_tor update
       fi
 
@@ -495,7 +496,8 @@ if [ $exitstatus = 0 ]; then
         (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
         (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
         (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
-        sleep 2
+        echo -e "${RED}[+] Done!${NOCOLOR}"
+        sleep 4
         restarting_tor update
       fi
 
