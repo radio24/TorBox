@@ -117,8 +117,10 @@ install_network_drivers()
 
 ###### DISPLAY THE INTRO ######
 clear
-whiptail --title "TorBox Installation on Raspberry Pi OS" --msgbox "\n\n            WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction AND CHANGES/DELETES THE CURRENT CONFIGURATION. During the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu). We will also remove the user \"pi\"\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch" $MENU_HEIGHT_20 $MENU_WIDTH
-clear
+if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+	clear
+	exit
+fi
 
 # 1. Checking for Internet connection
 clear
@@ -234,7 +236,7 @@ apt source tor
 # IMPORTANT: build-essential is also necessary for the installation of network driver further below
 sudo apt-get -y install build-essential fakeroot devscripts
 sudo apt-get -y install tor deb.torproject.org-keyring
-# sudo apt-get -y upgrade tor deb.torproject.org-keyring
+sudo apt-get -y upgrade tor deb.torproject.org-keyring
 sudo apt-get -y build-dep tor deb.torproject.org-keyring
 cd tor-*
 sudo debuild -rfakeroot -uc -us
@@ -505,7 +507,7 @@ if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 fi
 ./install-rtl8814au.sh
 cd ~
-rm -r 8814au
+sudo rm -r 8814au
 sleep 2
 
 # Installing the RTL8821AU
@@ -526,7 +528,7 @@ if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 fi
 ./install-rtl8821au.sh
 cd ~
-rm -r 8821au
+sudo rm -r 8821au
 sleep 2
 
 # 14. Adding the user torbox
@@ -585,6 +587,7 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
@@ -603,10 +606,4 @@ echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 (sudo chage -E0 pi) 2> /dev/null
-
-# NEW
-echo -e "${RED}[+] Rebooting...${NOCOLOR}"
-sleep 3
-sudo reboot

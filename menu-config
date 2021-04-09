@@ -814,7 +814,6 @@ if [ $exitstatus = 0 ]; then
 #        mv install.sh sixfab_install.sh
         chmod +x install.sh
         sudo ./install.sh
-        recommended_reboot menu-config
       fi
 
 #Finish

@@ -72,6 +72,8 @@ check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
+    clear
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
       sudo userdel -r pi
     fi
