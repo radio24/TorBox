@@ -81,7 +81,7 @@ online_check_update()
   clear
   echo -e "${RED}[+] Let's add some open nameservers...${NOCOLOR}"
   sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-  (sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
+  (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
   echo " "
   echo -e "${RED}[+] Please wait...${NOCOLOR}"
   sleep 15
@@ -124,7 +124,7 @@ update_firmware()
 update_tor()
 {
   # Avoid cheap censorship mechanism
-  (sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
+  (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
   online_check_update
   clear
   if ! grep "torproject" /etc/apt/sources.list ; then

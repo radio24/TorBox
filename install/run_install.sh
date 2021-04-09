@@ -125,7 +125,7 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-(sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
+(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
 wget -q --spider $CHECK_URL1
 OCHECK=$?
@@ -301,7 +301,7 @@ else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
 			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-			(sudo printf $RESOLVCONF | sudo tee /etc/resolv.conf) 2>&1
+			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
       sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"

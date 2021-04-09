@@ -121,7 +121,7 @@ clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
 sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-(sudo printf $RESOLVCONF | sudo tee /etc/systemd/resolved.conf) 2>&1
+(sudo printf "$RESOLVCONF" | sudo tee /etc/systemd/resolved.conf) 2>&1
 sudo systemctl restart systemd-resolved
 wget -q --spider $CHECK_URL1
 OCHECK=$?
@@ -314,7 +314,7 @@ else
       echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
       echo -e "${RED}[+]         Let's add some open nameservers and try again...${NOCOLOR}"
       sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
-      (sudo printf $RESOLVCONF | sudo tee /etc/systemd/resolved.conf) 2>&1
+      (sudo printf "$RESOLVCONF" | sudo tee /etc/systemd/resolved.conf) 2>&1
       sudo systemctl restart systemd-resolved
       sleep 15
       echo ""
