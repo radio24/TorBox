@@ -29,10 +29,6 @@ COMMIT
 :INPUT ACCEPT [2303:137217]
 :POSTROUTING ACCEPT [81:6206]
 :OUTPUT ACCEPT [80:6038]
--A PREROUTING -p tcp -m tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-tcp-options --log-ip-options
--A PREROUTING -p udp -m udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
--A PREROUTING -p tcp -m tcp --dport 80 -j DNAT --to-destination 0.0.0.0
--A PREROUTING -p udp -m udp --dport 80 -j DNAT --to-destination 0.0.0.0
 -A PREROUTING -d 192.168.42.1/32 -i wlan0 -p tcp -j REDIRECT
 -A PREROUTING -d 192.168.43.1/32 -i eth1 -p tcp -j REDIRECT
 -A PREROUTING -i wlan0 -p tcp -j REDIRECT --to-ports 9040

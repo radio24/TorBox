@@ -50,6 +50,8 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+CHECK_HD1=$(grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model)
+CHECK_HD2=$(grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo)
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -155,7 +157,7 @@ read_config()
   RULE_CHECK=0
   (sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
   RULE_CHECK=$?
-  if [ $RULE_CHECK = 0 ]; then
+  if [ $RULE_CHECK = 1 ]; then
     TOGGLE12="Enable"
     TOGGLE13=""
   else
@@ -280,8 +282,9 @@ if [ $exitstatus = 0 ]; then
 #This changes the frequency band
     elif [ $CHOICE = 6 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
-        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
-        if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
+        #Check: it should be more interoperable
+  #     if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
+        if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
           clear
           echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
           echo -e "${WHITE}[!] We stay on the 2.5 GHz band!${NOCOLOR}"
@@ -331,8 +334,9 @@ if [ $exitstatus = 0 ]; then
 #Change the WLAN channel
     elif [ $CHOICE = 7 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
-        #Check: to be more interoperable, it could be better to use if [ grep -q "Raspberry Pi 3 Model B Rev" /proc/device-tree/model ] || [ grep -q Raspberry Pi 3 Model B Rev" /proc/cpuinfo ]; then
-        if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
+        #Check: it should be more interoperable
+  #     if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
+        if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
           "A" "Channel  1 at 20 MHz" OFF \
           "C" "Channel  2 at 20 MHz" OFF \
