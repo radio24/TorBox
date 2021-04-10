@@ -280,7 +280,11 @@ update_torbox_menu()
 {
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
+  echo ""
+  echo -e "${RED}[+] Reading configuration...${NOCOLOR}"
   PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
+  BLOCK_HTTP=$(grep "^BLOCK_HTTP=" ${RUNFILE})
+  SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=" ${RUNFILE})
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
@@ -296,7 +300,10 @@ update_torbox_menu()
     rm -r TorBox-master
     rm -r master.zip
     cd torbox
+    echo -e "${RED}[+] Writing configuration...${NOCOLOR}"
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
+    sudo sed -i "s/^BLOCK_HTTP=.*/${BLOCK_HTTP}/g" ${RUNFILE}
+    sudo sed -i "s/^SSH_FROM_INTERNET=.*/${SSH_FROM_INTERNET}/g" ${RUNFILE}
     echo -e "${RED} ${NOCOLOR}"
     echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
@@ -319,7 +326,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - UPDATE & RESET OPTIONS" -
 "5" "Update to the newest stable version of the TorBox menu" OFF \
 "6" "Erase all log files" OFF \
 "7" "Erase all passwords in the Torbox Wireless Manager" OFF \
-"8" "Update / Reset TorBox's configuration files (dangerous!)" OFF \
+"8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
 "9" "Reset Tor and force a change of the permanent entry node" OFF \
 "10" "Remove permanently Bridge Relay data" OFF \
 "11" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
