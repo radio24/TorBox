@@ -22,15 +22,15 @@ A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2020/08/TorBox-A5-RPI4-032.png)
+![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2021/04/TorBox-A5-RPI4-040.png)
 
 ### Features
-* TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. If wanted, all HTTP plain traffic can be blocked additionally.
+* TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. If wanted, all HTTP plain traffic [can be blocked](https://www.torbox.ch/?page_id=875) additionally.
 * With the SSH-accessible menu, TorBox provides a user-friendly interface.
 * TorBox supports Internet access via cable (Ethernet), WiFi, tethering devices, [cellular links](https://www.torbox.ch/?page_id=1030), USB dongles (wlan1/eth1/ppp0/usb0), and VPN connections (tun0).
 * Clients can connect TorBox via WiFi (in most cases, **an additional USB WiFi adapter is necessary**) and cable (simultaneously; see [here](https://www.torbox.ch/?page_id=775)).
 * It easily overcomes captive portals and offers, if necessary, measures against “disconnect when idle features” (sometimes seen with WiFis in airports, hotels, coffee houses).
-* TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html), [Meek-Azure and Snowflakes](https://tb-manual.torproject.org/circumvention/) bridges, which help overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=797)).
+* TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html), [Meek-Azure and Snowflake](https://tb-manual.torproject.org/circumvention/) bridges, which help overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=797)).
 * If you have a public IP address, 24/7 Internet connectivity over a long time, and a bandwidth of at least 1 Mbps, TorBox can provide a bridge relay, easily configurable via a user-friendly interface [to allow censored users access to the open Internet](https://blog.torproject.org/run-tor-bridges-defend-open-internet).
 * It provides [SOCKS v5 proxy functionality](https://en.wikipedia.org/wiki/SOCKS) on ports 9050 (standard) and 9051 (with [destination address stream isolation](https://tails.boum.org/contribute/design/stream_isolation/)).
 * It allows easy access to .onion websites without client configuration (Chrome) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
@@ -44,7 +44,7 @@ chmod a+x run_install.sh
 ./run_install.sh
 ```
 \
-We also offer [installation script for other systems](https://www.torbox.ch/?page_id=1168#others), which might run on other hardware platforms. However, TorBox’s implementation on other systems and hardware is "experimental" because we do not have the resources to check all details on all different installations. You can help us with reporting errors back to us.
+We also offer [installation scripts for other systems](https://www.torbox.ch/?page_id=1168#others), which might run on other hardware platforms. However, TorBox’s implementation on other systems and hardware is "experimental" because we do not have the resources to check all details on all different installations. You can help us with reporting errors back to us.
 
 ### Building from scratch
 All you need to run TorBox on your Raspberry Pi is the image file. However, if you want to build it from scratch, whether you like to implement it to an existing system, to another hardware, respectively another operating system, or you don’t trust an image file, which you didn’t bundle of your own, then check out our detailed manual [for a Raspberry Pi with Raspberry Pi OS Lite](https://www.torbox.ch/?page_id=205).
