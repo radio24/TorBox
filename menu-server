@@ -301,10 +301,10 @@ if [ $exitstatus = 0 ]; then
           sudo tar -xpzvf $INPUT -C backup.tbx
           sleep 1
           echo -e "${RED}[+] Removing old Bridge Relay data${NOCOLOR}"
-          sudo rm -r /var/lib/tor/keys
-          sudo rm /var/lib/tor/fingerprint
-          sudo rm /var/lib/tor/hashed-fingerprint
-          sudo rm -r /var/lib/tor/pt_state
+          (sudo rm -r /var/lib/tor/keys) 2> /dev/null
+          (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
+          (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
+          (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
           sleep 1
           echo -e "${RED}[+] Moving new Bridge Relay data to its place${NOCOLOR}"
           sudo mv backup.tbx/var/lib/tor/* /var/lib/tor/
