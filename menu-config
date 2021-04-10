@@ -155,7 +155,7 @@ read_config()
   RULE_CHECK=0
   (sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
   RULE_CHECK=$?
-  if [ $RULE_CHECK = 1 ]; then
+  if [ $RULE_CHECK = 0 ]; then
     TOGGLE12="Enable"
     TOGGLE13=""
   else

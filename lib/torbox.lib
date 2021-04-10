@@ -117,7 +117,7 @@ erase_logs()
   	sleep 1
   done
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  sudo rm ../.bash_history
+  (sudo rm ../.bash_history) 2> /dev/null
   history -c
 }
 
