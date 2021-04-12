@@ -87,7 +87,7 @@ check_fresh_install()
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
 {
-  MODE_BR=$(grep "BridgeRelay" ${TORRC})
+  MODE_BR=$(grep "^BridgeRelay" ${TORRC})
   if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     ORPORT=$(grep "^ORPort" ${TORRC})
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
@@ -98,10 +98,10 @@ check_bridge_relay()
     if [ $RULE_CHECK = 1 ]; then
       (sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
       (sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
-    else
-      (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
-      (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
     fi
+  else
+    (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+    (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
   fi
 }
 

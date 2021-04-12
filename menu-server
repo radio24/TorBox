@@ -162,6 +162,12 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#ServerTransportListenAddr/ServerTransportListenAddr/g" ${TORRC}
             sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
             sudo sed -i "s/^#Nickname/Nickname/g" ${TORRC}
+            (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+            RULE_CHECK=$?
+            if [ $RULE_CHECK = 1 ]; then
+              sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
+              sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
+            fi
           fi
         else
           INPUT="\n\nTo activate the Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. It makes no sense to use both at the same time!"
