@@ -1,0 +1,14 @@
+This menu entry will block HTTP plain text traffic by blocking port 80.
+
+WARNING!
+- This is only a very superficial block, which could help if, for example,
+  a browser requests an unencrypted Webpage (http://). Currently, it DOES
+  NOT block plain text traffic in general (for example, Telnet).
+- HTTP plain text traffic from clients using TorBox's SOCKS 5 functionality
+  or the Tor Browser CANNOT be blocked.
+- CHROM and CHROMIUM: .onion addresses using "http://" will be blocked.
+- It is possible because not only unencrypted Webpages but also other
+  traffic on port 80 are blocked, that some application will not work
+  correctly anymore.
+
+Would you like to enable the HTTP plain text traffic anyway?
