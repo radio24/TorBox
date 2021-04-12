@@ -458,7 +458,7 @@ if [ $exitstatus = 0 ]; then
       INPUT=$(cat text/tor-reset-text)
       if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
         clear
-        MODE_BRIDGES=$(grep "UseBridges" ${TORRC})
+        MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
         echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
         sudo systemctl stop tor
         sleep 2
