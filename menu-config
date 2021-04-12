@@ -159,7 +159,7 @@ read_config()
   RULE_CHECK=$?
   if [ $RULE_CHECK = 1 ]; then
     TOGGLE12="Enable"
-    TOGGLE13=""
+    TOGGLE13="(exept on SOCKS!)"
   else
     TOGGLE12="Disable"
     TOGGLE13=""
@@ -684,7 +684,7 @@ if [ $exitstatus = 0 ]; then
 #THis disables / enables HTTP plain text traffic block
     elif [ $CHOICE = 11 ]; then
       if [ "$TOGGLE12" = "Enable" ]; then
-        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to block HTTP plain text traffic?\n\nIMPORTANT: traffic through SOCKS 5 connection will not be blocked!!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
           (sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
