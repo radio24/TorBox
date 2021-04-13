@@ -130,9 +130,11 @@ update_tor()
   if ! grep "torproject" /etc/apt/sources.list ; then
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
     if hostnamectl | grep -q "Ubuntu 20.10" ; then
-      sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org groovy main\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
-    else
+      sudo printf "\n# Added by TorBox update script\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+    elif [ "$CHECK_OS" == "Debian" ]; then
       sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+    else
+      sudo printf "\n# Added by TorBox update script\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
     fi
   fi
   sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
@@ -169,7 +171,7 @@ update_tor()
   fi
   if [ $RECOMPILE = 1 ]; then
     sudo apt-get -y install build-essential fakeroot devscripts
-    sudo apt-get -y upgrade tor deb.torproject.org-keyring
+    # sudo apt-get -y upgrade tor deb.torproject.org-keyring
     sudo apt-get -y build-dep tor deb.torproject.org-keyring
     cd tor-*
     sudo debuild -rfakeroot -uc -us
@@ -184,7 +186,7 @@ update_tor()
     sudo systemctl enable tor
     sudo systemctl daemon-reload
     cd ~/torbox
-    sudo apt-get install tor-geoipdb
+    # sudo apt-get install tor-geoipdb
     echo ""
     echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
     sleep 5

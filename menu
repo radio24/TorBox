@@ -110,7 +110,7 @@ check_interface_with_internet()
 {
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 IINTERFACE=""
-IINTERFACE=$(timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
 if [ "$IINTERFACE" != "" ] ; then
   VPN_STATUS="VPN is up"
   IIPTABLES=""
@@ -119,7 +119,7 @@ else
   VPN_STATUS=""
 fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
-  IINTERFACE=$(timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
   if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi

@@ -197,7 +197,7 @@ echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOC
 echo ""
 if ! grep "torproject" /etc/apt/sources.list ; then
 	sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-	sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+	sudo printf "\n# Added by TorBox\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
 fi
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
 sudo apt-get -y update
@@ -206,7 +206,6 @@ sudo apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-setuptools python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp wiringpi tor-geoipdb
 sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb
 
 #Install wiringpi
@@ -235,8 +234,8 @@ mkdir ~/debian-packages; cd ~/debian-packages
 apt source tor
 # IMPORTANT: build-essential is also necessary for the installation of network driver further below
 sudo apt-get -y install build-essential fakeroot devscripts
-sudo apt-get -y install tor deb.torproject.org-keyring
-sudo apt-get -y upgrade tor deb.torproject.org-keyring
+#sudo apt-get -y install tor deb.torproject.org-keyring
+#sudo apt-get -y upgrade tor deb.torproject.org-keyring
 sudo apt-get -y build-dep tor deb.torproject.org-keyring
 cd tor-*
 sudo debuild -rfakeroot -uc -us

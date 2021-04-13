@@ -196,9 +196,9 @@ sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
 if ! grep "torproject" /etc/apt/sources.list ; then
   sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
   if hostnamectl | grep -q "Ubuntu 20.10" ; then
-    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org groovy main\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+    sudo printf "\n# Added by TorBox\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
   else
-    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+    sudo printf "\n# Added by TorBox\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
   fi
 fi
 sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
@@ -251,7 +251,7 @@ mkdir ~/debian-packages; cd ~/debian-packages
 apt source tor
 # IMPORTANT: build-essential is also necessary for the installation of network driver further below
 sudo apt-get -y install build-essential fakeroot devscripts
-sudo apt-get -y install tor deb.torproject.org-keyring
+# sudo apt-get -y install tor deb.torproject.org-keyring
 # sudo apt-get -y upgrade tor deb.torproject.org-keyring
 sudo apt-get -y build-dep tor deb.torproject.org-keyring
 cd tor-*
