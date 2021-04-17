@@ -2,8 +2,7 @@ This menu entry will connect the TorBox to a VPN so that the local
 network data from the command prompt is routed through VPN. However,
 this menu entry will not restart Tor, and your client network data will
 still be routed through Tor using the interface highlighted in the main
-menu. You have to restart Tor manually with menu entry 9 in this menu or
-in the main menu.
+menu.
 
 IMPORTANT
 - To use this menu entry, you have first to put one ore more *.ovpn
