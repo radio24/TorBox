@@ -295,7 +295,7 @@ update_torbox_menu()
     echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
     unzip master.zip
     echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
-    rm -r torbox/*
+    sudo rm -r torbox/*
     echo -e "${RED}[+] Moving the new one...${NOCOLOR}"
     mv TorBox-master/* torbox/
     echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
