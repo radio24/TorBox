@@ -148,6 +148,8 @@ fi
 ###### DISPLAY THE MENU ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
+"  0" "Disable / Bypass Tor" \
+"===" "==============================================================" \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
 "  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
@@ -170,10 +172,51 @@ exitstatus=$?
 if [ $exitstatus = 0 ]; then
 	if [ "$CHOICE" != " " ]; then
 
+# This disable TOR
+	if [ $CHOICE = 0 ]; then
+          echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+          echo -e "${RED}[+] TOR will be disabled and internet browsing will not be anonymous anymore!${NOCOLOR}"
+          echo -e "${RED}[+] Take care!!!${NOCOLOR}"
+	  echo ""
+	  sleep 5
+	  sudo systemctl stop tor
+	  sudo systemctl stop dnsmasq
+	  sudo killall -9 dnsmasq &> /dev/null
+	  sudo echo "*filter" > /tmp/iptables.ipv4.nat
+	  sudo echo ":INPUT DROP [738:52473]" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":FORWARD DROP [12:624]" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":OUTPUT ACCEPT [3322:377969]" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT -m state --state INVALID -j DROP" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT ! -s 192.0.0.0/8 -i wlan0 -j LOG --log-prefix \"SPOOFED PKT\"" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT ! -s 192.0.0.0/8 -i wlan0 -j DROP" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT -i lo -j ACCEPT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A INPUT -i wlan0 -j ACCEPT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A FORWARD -j ACCEPT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A FORWARD -m state --state INVALID -j DROP" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A OUTPUT -m conntrack --ctstate INVALID -j DROP" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A OUTPUT -m state --state INVALID -j DROP" >> /tmp/iptables.ipv4.nat
+	  sudo echo "COMMIT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "*nat" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":PREROUTING ACCEPT [21:3892]" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":INPUT ACCEPT [280:19796]" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":POSTROUTING ACCEPT [248:17998]" >> /tmp/iptables.ipv4.nat
+	  sudo echo ":OUTPUT ACCEPT [257:19111]" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A PREROUTING -d 192.168.42.1/32 -i wlan0 -p tcp -j REDIRECT" >> /tmp/iptables.ipv4.nat
+	  sudo echo "-A POSTROUTING -o wlan1 -j MASQUERADE" >> /tmp/iptables.ipv4.nat
+	  sudo echo "COMMIT" >> /tmp/iptables.ipv4.nat
+	  sudo iptables-restore < /tmp/iptables.ipv4.nat
+	  sudo cp /etc/dnsmasq.conf /tmp/dnsmasq.conf
+	  sudo sed -i "s/^#domain-needed/domain-needed/g" /tmp/dnsmasq.conf
+	  sudo sed -i "s/^#bogus-priv/bogus-priv/g" /tmp/dnsmasq.conf
+	  sudo sed -i "s/^#cache-size=150/cache-size=1000/g" /tmp/dnsmasq.conf
+	  sudo dnsmasq -C /tmp/dnsmasq.conf -n
+	  sleep 5
+
 # This starts nyx (Tor statistics)
-		if [ $CHOICE = 1 ]; then
-			clear
-			$TORSTATS
+	elif [ $CHOICE = 1 ]; then
+	  clear
+  	  $TORSTATS
 
 # This enforces a new exit node
     elif [ $CHOICE = 2 ]; then
