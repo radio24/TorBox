@@ -327,7 +327,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - UPDATE & RESET OPTIONS" -
 "4" "Update to the newest version of Tor" OFF \
 "5" "Update to the newest stable version of the TorBox menu" OFF \
 "6" "Erase all log files" OFF \
-"7" "Erase all passwords in the Torbox Wireless Manager" OFF \
+"7" "Erase all passwords in the TWM (reboot required!)" OFF \
 "8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
 "9" "Reset Tor and force a change of the permanent entry node" OFF \
 "10" "Remove permanently Bridge Relay data" OFF \
@@ -438,8 +438,13 @@ if [ $exitstatus = 0 ]; then
   elif [ $ARGUMENT = 7 ]; then
       INPUT=$(cat text/erase_TWM_pwd-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        (head -n 2 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
-        (head -n 2 /etc/wpa_supplicant/wpa_supplicant-wlan1.conf > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+        echo -e "${RED}[+] Erasing all passwords in the Torbox Wireless Manager...${NOCOLOR}"
+        (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
+        (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+        sleep 2
+        echo -e "${WHITE}[+] FINISHED!${NOCOLOR}"
+        BOOTMSG=1
+        sleep 2
       fi
 
 #This updates / resets TorBox's configuration files
