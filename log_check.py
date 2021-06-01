@@ -68,8 +68,14 @@ while True:
                         ts_diff = ts_end - ts_ini
 
                         if ts_diff <= match_time:
-                            # Execute command
+                            # We're in time, execute command
                             os.system(match_cmd)
                             m['count'] = []
+                        else:
+                            # We are outside of time, reset and count current
+                            m['count'] = []
+                            m['count'].append(match_info)
+
+
             
     time.sleep(config['check_interval'])
