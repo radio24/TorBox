@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 config = {
-    "check_interval": 1,  # seconds to wait before checking for matches again
+    "check_interval": 1,  # (seconds) wait before checking for matches again
 }
 
 matches = [
@@ -34,7 +34,7 @@ matches = [
     #    "file": '/var/log/tor/notices.log',
     #    "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # use * as wildcard
     #    "match_count": 3,  # min matches to execute command
-    #    "match_time": 60*60,  # (seconds)
+    #    "match_time": 60*60,  # (seconds) time range of match count to execute cmd
     #    "command": 'cat /etc/passwd > /tmp/executed.out',
     #},
 ]
