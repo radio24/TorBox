@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 config = {
-    "check_interval": 1,  # seconds to wait before checking for messages again
+    "check_interval": 1,  # seconds to wait before checking for matches again
 }
 
 matches = [
