@@ -38,7 +38,7 @@ while True:
         match_time = m['match_time']
         match_cmd = m['command']
 
-        c = ["tail", "-n", "3", file]
+        c = ["tail", "-n", "100", file]
         output = subprocess.check_output(c).decode('utf-8')
 
         for line in output.split("\n"):
