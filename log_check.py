@@ -17,7 +17,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
 
 import os
 import time
@@ -46,7 +45,7 @@ while True:
             if not line:
                 continue
             
-            dts = line[:15]  # :19 linux - :15 mac
+            dts = line[:15]  # :15 length of date in linux logs
             dts = f"{datetime.now().year} {dts}"
             d = datetime.strptime(dts, '%Y %b %d %H:%M:%S')
             line_ts = d.timestamp()
@@ -66,9 +65,9 @@ while True:
                         # Check if we are in time
                         ts_ini = m['count'][0]['ts']
                         ts_end = m['count'][match_count-1]['ts']
-                        ts_delta = ts_end - ts_ini
+                        ts_diff = ts_end - ts_ini
 
-                        if ts_delta <= match_time:
+                        if ts_diff <= match_time:
                             # Execute command
                             os.system(match_cmd)
                             m['count'] = []
