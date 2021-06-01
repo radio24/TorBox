@@ -25,14 +25,14 @@ config = {
 matches = [
     {
         "file": '/var/log/tor/notices.log',
-        "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # user * as wildcard
+        "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # use * as wildcard
         "match_count": 3,  # min matches to execute command
-        "match_time": 60*60,  # (seconds)
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
         "command": 'cat /etc/passwd > /tmp/executed.out',
     },
     #{
     #    "file": '/var/log/tor/notices.log',
-    #    "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # user * as wildcard
+    #    "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # use * as wildcard
     #    "match_count": 3,  # min matches to execute command
     #    "match_time": 60*60,  # (seconds)
     #    "command": 'cat /etc/passwd > /tmp/executed.out',
