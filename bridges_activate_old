@@ -19,12 +19,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file activates already configured bridges in /etc/torrc.
+# This file activates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
 # ./bridges_activate_old <show when zero bridges>
 #
-# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/torrc.
+# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
 #
 # Possible values for <show when zero bridges>:
 # 0	->	No message is shown.
