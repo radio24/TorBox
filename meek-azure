@@ -20,7 +20,7 @@
 # DESCRIPTION
 # This file activate or deactivate Meek-Azure to circumvent censorship.
 # Following variables can be used:
-# $MODE_SNOW -> return string of grep -o "^Bridge snowflake " ${TORRC}
+# $SNOWSTRING -> represents the status of the Snowflake bridging mode
 # $MEEKSTRING -> represents the status of the Meek-Azure bridging mode
 #
 #
