@@ -663,8 +663,8 @@ if [ $exitstatus = 0 ]; then
           echo -e "${WHITE}[!] $INTERNET_IP"
           echo ""
           read -n 1 -s -r -p "Press any key to continue"
-          sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-          if [ $ENABLED_CHOICE = 1 ]; then
+          (sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+          if [ $ENABLED_CHOICE = 2 ]; then
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
           fi

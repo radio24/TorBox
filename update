@@ -52,6 +52,9 @@ NOCOLOR='\033[0m'
 # Connectivity check
 CHECK_URL1="http://google.com"
 
+# Release Page of the Unofficial Tor repositories on GitHub
+TORURL="https://github.com/torproject/tor/releases"
+
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
@@ -68,6 +71,8 @@ TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 NEW_IDENT="new_ident"
 BOOTMSG=0
+i=0
+n=0
 
 ##############################
 ######## FUNCTIONS ###########
@@ -79,7 +84,7 @@ BOOTMSG=0
 online_check_update()
 {
   clear
-  echo -e "${RED}[+] Let's add some open nameservers...${NOCOLOR}"
+  echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanism...${NOCOLOR}"
   sudo cp /etc/resolv.conf /etc/resolv.conf.bak
   (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
   echo " "
@@ -123,9 +128,6 @@ update_firmware()
 # This function updates TOR
 update_tor()
 {
-  # Avoid cheap censorship mechanism
-  (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-  online_check_update
   clear
   if ! grep "torproject" /etc/apt/sources.list ; then
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
@@ -141,25 +143,24 @@ update_tor()
   if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
   sudo apt-get -y update
-  apt source tor
+  sudo apt source tor
   KERNEL_VERS=$(uname -s -r)
-  TOR_VERS=$(tor --version|rev|cut -c2-|rev)
-  TOR_VERS_NUMBER=$(tor --version|rev|cut -c2-|rev|cut -c13-)
-  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f10-|sed s/tor-//g)
-  if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS_NUMBER" ] ; then
-    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
+  TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+  SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f11-|sed s/tor-//g|sed s/.orig//g)
+  if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS" ] ; then
+    INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
     else
       RECOMPILE=0
     fi
   elif [ -z "$SOURCE_VERS_NUMBER" ] ; then
-    INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
+    INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nHowever, something went wrong! I couldn't download the Tor package. You may try it later or manually !!"
     whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     RECOMPILE=0
   else
     if [ $LOOP_NUMBER = 1 ]; then
-      INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (older stable version!)\n\nWould you like to update to the newest version ($SOURCE_VERS_NUMBER) of Tor?"
+      INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to change/update to Tor version $SOURCE_VERS_NUMBER?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         RECOMPILE=1
       else
@@ -170,6 +171,8 @@ update_tor()
     fi
   fi
   if [ $RECOMPILE = 1 ]; then
+    clear
+    echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
     sudo apt-get -y install build-essential fakeroot devscripts
     # sudo apt-get -y upgrade tor deb.torproject.org-keyring
     sudo apt-get -y build-dep tor deb.torproject.org-keyring
@@ -177,23 +180,106 @@ update_tor()
     sudo debuild -rfakeroot -uc -us
     cd ..
     sudo dpkg -i tor_*.deb
-    cd
-    sudo rm -r ~/debian-packages
-    sudo cp /usr/share/tor/geoip* /usr/bin
-    sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-    sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-    sudo systemctl enable tor
-    sudo systemctl daemon-reload
-    cd ~/torbox
-    # sudo apt-get install tor-geoipdb
-    echo ""
-    echo -e "${WHITE}[+] FINISHED! Tor is now updated!${NOCOLOR}"
-    sleep 5
-    #Return code for BOOTMSG / 1=reboot recommended / 0=no reboot needed
+    #read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
     return 1
+  fi
+}
+
+#With this function change/update of tor from a list of versions is possible
+select_and_install_tor()
+{
+  clear
+  echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
+  readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+
+  #How many tor version did we fetch?
+  if [ ${#torversion_datesorted[0]} = 0 ]; then number_torversion=0
   else
-    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+    number_torversion=${#torversion_datesorted[*]}
+
+    #The fetched tor versions are sorted by dates, but we need it sorted by version
+    IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
+
+    #We will build a new array with only the relevant tor versions
+    while [ $i -lt $number_torversion ]
+    do
+      if [ $n = 0 ] ; then
+        torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+        covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
+        i=$(( $i + 1 ))
+        n=$(( $n + 1 ))
+      else
+        actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
+        if [ "$actual_version" == "$covered_version" ] ; then i=$(( $i + 1 ))
+        else
+          torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+          covered_version=$actual_version
+          i=$(( $i + 1 ))
+          n=$(( $n + 1 ))
+        fi
+      fi
+    done
+    number_torversion=$n
+
+    #Display and chose a tor version
+    clear
+    echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
+    echo ""
+    for (( i=0; i<$number_torversion; i++ ))
+    do
+      menuitem=$(( $i + 1 ))
+      echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
+    done
+    echo ""
+    read -r -p $'\e[1;37mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
+    echo
+    if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+      if [ $REPLY = 0 ] ; then
+        number_torversion=0
+        #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
+        return 0
+      else
+        CHOICE_TOR=$(( $REPLY - 1 ))
+        #Download and install
+        clear
+        echo -e "${RED}[+] Install necessary packages... ${NOCOLOR}"
+        sudo apt-get -y update
+        sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
+        echo ""
+        echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
+        version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
+        download_tor_url="https://github.com/torproject/tor/archive/refs/tags/tor-$version_string.tar.gz"
+        filename="tor-$version_string.tar.gz"
+        if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+        mkdir ~/debian-packages; cd ~/debian-packages
+        wget $download_tor_url
+        clear
+        if [ $? -eq 0 ] ; then
+          echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+          tar xzf $filename
+          cd `ls -d */`
+          echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
+          ./autogen.sh
+          ./configure
+          make
+          sudo make install
+          #read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+          #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
+          return 1
+        else number_torversion=0 ; fi
+      fi
+    else number_torversion=0 ; fi
+  fi
+  if [ $number_torversion = 0 ]; then
+    echo ""
+    echo -e "${WHITE}[!] Something didn't go as expected or you chose to exit!${NOCOLOR}"
+    echo -e "${WHITE}[!] Try it again or chose the DEFAULT installation procedure!${NOCOLOR}"
+    echo ""
+    read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    clear
+    #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
+    return 0
   fi
 }
 
@@ -324,7 +410,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - UPDATE & RESET OPTIONS" -
 "1" "Update the base system (reboot recommended!)" OFF \
 "2" "Update additional network drivers (reboot required!)" OFF \
 "3" "Update the firmware of the RPI 4 (reboot required!)" OFF \
-"4" "Update to the newest version of Tor" OFF \
+"4" "Change/update the version of Tor" OFF \
 "5" "Update to the newest stable version of the TorBox menu" OFF \
 "6" "Erase all log files" OFF \
 "7" "Erase all passwords in the TWM (reboot required!)" OFF \
@@ -401,16 +487,40 @@ if [ $exitstatus = 0 ]; then
         LOOP_NUMBER=0
       fi
 
-#This updates TOR
+#This changes/updates the installed Tor version
   elif [ $ARGUMENT = 4 ]; then
-      if [ $LOOP_NUMBER = 1 ]; then
-        whiptail --title "TorBox - INFO" --textbox text/update-tor-text $MENU_HEIGHT_25 $MENU_WIDTH
-        update_tor
-        BOOTMSG=$?
-      else
-        update_tor
-        BOOTMSG=$?
-      fi
+    # Avoid cheap censorship mechanism
+    (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+    online_check_update
+    INPUT=$(cat text/update-tor-text)
+    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      select_and_install_tor
+      FINISHING=$?
+    else
+      update_tor
+      FINISHING=$?
+    fi
+    # Finishing
+    cd ~/torbox
+    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+    if [ $FINISHING = 1 ] ; then
+      (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+    # sudo apt-get install tor-geoipdb
+      (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+      sudo chmod a+x /usr/bin/geoip*
+      sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+      sudo systemctl stop tor
+      sudo systemctl enable tor
+      sudo systemctl daemon-reload
+      sudo systemctl start tor
+      TOR_VERS=""
+      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+      echo ""
+      echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
+      read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    fi
 
 #This updates the newest stable version of TorBox's menu
   elif [ $ARGUMENT = 5 ]; then
@@ -530,7 +640,6 @@ if [ $exitstatus = 0 ]; then
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
-  sudo cp /usr/share/tor/geoip* /usr/bin
   sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
   sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
   sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service

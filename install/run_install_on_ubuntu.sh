@@ -24,7 +24,10 @@
 # Ubuntu 20.04 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
-# ./run_install_on_ubuntu.sh
+# ./run_install_on_ubuntu.sh <--select-tor>
+#
+# The <--select-tor> options allows the user to select a specific tor version.
+# Without this option, the installation script installs the latest stable version.
 #
 # IMPORTANT
 # Start it as normal user (usually as ubuntu)!
@@ -39,7 +42,7 @@
 #  2. Updating the system
 #  3. Adding the Tor repository to the source list.
 #  4. Installing all necessary packages
-#  5. Compile and install the newest version of Tor
+#  5. Install Tor
 #  6. Configuring Tor with the pluggable transports
 #  7. Re-checking Internet connectivity
 #  8. Downloading and installing the latest version of TorBox
@@ -80,6 +83,13 @@ NOCOLOR='\033[0m'
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
+#Used go version
+GO_VERSION="go1.16.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.16.3.linux-arm64.tar.gz"
+
+# Release Page of the Unofficial Tor repositories on GitHub
+TORURL="https://github.com/torproject/tor/releases"
+
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n"
 
@@ -87,6 +97,9 @@ RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.
 RUNFILE="torbox/run/torbox.run"
 CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
 CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
+SELECT_TOR=$1
+i=0
+n=0
 
 ##############################
 ######## FUNCTIONS ###########
@@ -102,6 +115,7 @@ check_install_packages()
     echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
     echo ""
     echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+    echo ""
     sudo apt-get -y install $packagename
 #    echo ""
 #    read -n 1 -s -r -p "Press any key to continue"
@@ -115,7 +129,7 @@ clear
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
 
 
-if (whiptail --title "TorBox Installation on Ubuntu" --no-button "INSTALL" --yes-button "STOP!" --yesno "            WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_on_ubuntu\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction, IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION.\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "            WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_on_ubuntu\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction, IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION.\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -165,20 +179,34 @@ fi
 # 2. Updating the system
 sleep 10
 clear
-echo -e "${RED}[+] Step 2a: Remove Ubuntu's unattended update feature (this will take about 30 seconds)...${NOCOLOR}"
-(sudo killall unattended-upgr) 2> /dev/null
-sleep 15
-echo -e "${RED}[+]          Please wait...${NOCOLOR}"
-(sudo killall unattended-upgr) 2> /dev/null
-sleep 15
-sudo apt-get -y purge unattended-upgrades
+echo -e "${RED}[+] Step 2a: Remove Ubuntu's unattended update feature...${NOCOLOR}"
+echo -e "${RED}[+]          Next we start the Ubuntu configure tool for unattended updates.${NOCOLOR}"
+echo -e "${RED}[+]          In the tool, please select \"NO\" and press ENTER to continue!${NOCOLOR}"
+echo ""
+sleep 5
+(sudo dpkg-reconfigure unattended-upgrades) 2>&1
+clear
+while ps -ax | grep "[u]nattended-upgr" | grep -v "[s]hutdown" ;
+do
+  clear
+  echo -e "${RED}[+]         Ubuntu's unattended update feature is still aktiv! It has to be disabled!${NOCOLOR}"
+  echo -e "${RED}[+]         Next we start again the Ubuntu configure tool for unattended updates.${NOCOLOR}"
+  echo -e "${RED}[+]         In the tool, please select \"NO\" and press ENTER to continue!${NOCOLOR}"
+  echo ""
+  read -n 1 -s -r -p "Press any key to continue"
+  sudo dpkg-reconfigure unattended-upgrades
+  sleep 5
+done
+clear
+(sudo apt-get -y purge unattended-upgrades) 2>&1
 sudo dpkg --configure -a
-echo ""iptables
+echo ""
 
 echo -e "${RED}[+] Step 2b: Remove Ubuntu's cloud-init...${NOCOLOR}"
 sudo apt-get -y purge cloud-init
 sudo rm -Rf /etc/cloud
 echo ""
+
 echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
@@ -186,8 +214,20 @@ sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
+if uname -a | grep "[L]inux ubuntu 5.11" ; then
+  echo ""
+  echo -e "${RED}[+]         If this is the first time to got here with Ubuntu 21.04, most probably the system${NOCOLOR}"
+  echo -e "${RED}[+]         just updated the the kernel and we recommend to reboot the system and restart this${NOCOLOR}"
+  echo -e "${RED}[+]         installation again.${NOCOLOR}"
+  echo ""
+  read -r -p $'\e[1;37mWould you like to reboot the system now [Y/n]? -> \e[0m'
+  echo
+  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+    if [[ $REPLY =~ ^[Yy]$ ]] ; then reboot ; fi
+  else exit 0 ; fi
+fi
+
 # 3. Adding the Tor repository to the source list.
-sleep 10
 clear
 echo -e "${RED}[+] Step 3: Adding the Tor repository to the source list....${NOCOLOR}"
 echo ""
@@ -212,9 +252,14 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
 
-check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb"
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential"
 
 #Install wiringpi
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
+echo ""
 cd ~
 git clone https://github.com/WiringPi/WiringPi.git
 cd WiringPi
@@ -223,50 +268,150 @@ cd ~
 sudo rm -r WiringPi
 
 # Additional installations for Python
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
+echo ""
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install urwid
 
-# Additional installation for GO
+# Additional go
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo ""
 cd ~
 sudo rm -rf /usr/local/go
-
-printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
+if ! grep "# Added by TorBox (001)" .profile ; then
+  printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" |  tee -a .profile
+fi
 export PATH=$PATH:/usr/local/go/bin
 
 # Have to be tested
 if uname -r | grep -q "arm64"; then
-  wget https://golang.org/dl/go1.16.3.linux-arm64.tar.gz
-  sudo tar -C /usr/local -xzvf go1.16.3.linux-arm64.tar.gz
+  wget https://golang.org/dl/$GO_VERSION_64
+  sudo tar -C /usr/local -xzvf $GO_VERSION_64
+  rm $GO_VERSION_64
 else
-  wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
-  sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
+  wget https://golang.org/dl/$GO_VERSION
+  sudo tar -C /usr/local -xzvf $GO_VERSION
+  rm $GO_VERSION
 fi
 
-# 5. Compile and install the newest version of Tor
+# 5. Install Tor
 sleep 10
 clear
-echo -e "${RED}[+] Step 5: Compile and install the newest version of Tor....${NOCOLOR}"
-mkdir ~/debian-packages; cd ~/debian-packages
-apt source tor
-# IMPORTANT: build-essential is also necessary for the installation of network driver further below
-sudo apt-get -y install build-essential fakeroot devscripts
-# sudo apt-get -y install tor deb.torproject.org-keyring
-# sudo apt-get -y upgrade tor deb.torproject.org-keyring
-sudo apt-get -y build-dep tor deb.torproject.org-keyring
-cd tor-*
-sudo debuild -rfakeroot -uc -us
-cd ..
-sudo dpkg -i tor_*.deb
-cd
-sudo rm -r ~/debian-packages
+echo -e "${RED}[+] Step 5: Installing tor...${NOCOLOR}"
+
+# 5a. Select, compile and install Tor
+if [ "$SELECT_TOR" = "--select-tor" ] ; then
+	clear
+	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
+	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+
+	#How many tor version did we fetch?
+	if [ ${#torversion_datesorted[0]} = 0 ]; then number_torversion=0
+	else
+	  number_torversion=${#torversion_datesorted[*]}
+
+	  #The fetched tor versions are sorted by dates, but we need it sorted by version
+	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
+
+	  #We will build a new array with only the relevant tor versions
+	  while [ $i -lt $number_torversion ]
+	  do
+	    if [ $n = 0 ] ; then
+	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+	      covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
+	      i=$(( $i + 1 ))
+	      n=$(( $n + 1 ))
+	    else
+	      actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
+	      if [ "$actual_version" == "$covered_version" ] ; then i=$(( $i + 1 ))
+	      else
+	        torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+	        covered_version=$actual_version
+	        i=$(( $i + 1 ))
+	        n=$(( $n + 1 ))
+	      fi
+	    fi
+	  done
+	  number_torversion=$n
+
+	  #Display and chose a tor version
+	  clear
+	  echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
+	  echo ""
+	  for (( i=0; i<$number_torversion; i++ ))
+	  do
+	    menuitem=$(( $i + 1 ))
+	    echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
+	  done
+	  echo ""
+	  read -r -p $'\e[1;37mWhich tor version (number) would you like to use? -> \e[0m'
+	  echo
+	  if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+	    CHOICE_TOR=$(( $REPLY - 1 ))
+	  else number_torversion=0 ; fi
+
+	  #Download and install
+	  clear
+		echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
+	  version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
+	  download_tor_url="https://github.com/torproject/tor/archive/refs/tags/tor-$version_string.tar.gz"
+	  filename="tor-$version_string.tar.gz"
+	  mkdir ~/debian-packages; cd ~/debian-packages
+	  wget $download_tor_url
+	  clear
+	  if [ $? -eq 0 ] ; then
+	    echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+	    tar xzf $filename
+	    cd `ls -d */`
+			#The following packages are needed
+			sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
+			echo -e "${RED}[+]         Installing additianal packages... ${NOCOLOR}"
+			clear
+	    echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
+	    ./autogen.sh
+	    ./configure
+	    make
+	    sudo make install
+	    cd
+	    sudo rm -r ~/debian-packages
+	  else number_torversion=0 ; fi
+	fi
+	if [ $number_torversion = 0 ] ; then
+	  echo -e "${WHITE}[!]         Something didn't go as expected!${NOCOLOR}"
+	  echo -e "${WHITE}[!]         I will try to install the latest stable version.${NOCOLOR}"
+	fi
+else number_torversion=0 ; fi
+
+# 5b. Compile and install the latest stable Tor version
+if [ $number_torversion = 0 ] ; then
+	mkdir ~/debian-packages; cd ~/debian-packages
+	sudo apt source tor
+	sudo apt-get -y install fakeroot devscripts
+	#sudo apt-get -y install tor deb.torproject.org-keyring
+	#sudo apt-get -y upgrade tor deb.torproject.org-keyring
+	sudo apt-get -y build-dep tor deb.torproject.org-keyring
+	cd tor-*
+	sudo debuild -rfakeroot -uc -us
+	cd ..
+	sudo dpkg -i tor_*.deb
+	cd
+	sudo rm -r ~/debian-packages
+fi
 
 # 6. Configuring Tor with the pluggable transports
 sleep 10
 clear
 echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
-sudo cp /usr/share/tor/geoip* /usr/bin
-sudo chmod a+x /usr/bin/geoip*
+(sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+sudo chmod a+x /usr/share/tor/geoip*
+(sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -427,7 +572,9 @@ echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
-sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
+if ! grep "# Added by TorBox (002)" .profile ; then
+  sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+fi
 
 # 10. Disabling Bluetooth
 sleep 10
@@ -521,8 +668,8 @@ git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
 sudo dkms add ./rtl8188fu-arm
 sudo dkms build rtl8188fu/1.0
 sudo dkms install rtl8188fu/1.0
-sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-sudo rm -r rtl8188fu
+sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+sudo rm -r rtl8188fu*
 sleep 2
 
 # Installing the RTL8192EU

@@ -24,7 +24,10 @@
 # Raspberry Pi OS lite.
 #
 # SYNTAX
-# ./run_install.sh
+# ./run_install.sh <--select-tor>
+#
+# The <--select-tor> options allows the user to select a specific tor version.
+# Without this option, the installation script installs the latest stable version.
 #
 # IMPORTANT
 # Start it as normal user (usually as pi)!
@@ -38,7 +41,7 @@
 #  3. Updating the system
 #  4. Adding the Tor repository to the source list.
 #  5. Installing all necessary packages
-#  6. Compile and install the newest version of Tor
+#  6. Install Tor
 #  7. Configuring Tor with the pluggable transports
 #  8. Re-checking Internet connectivity
 #  9. Downloading and installing the latest version of TorBox
@@ -79,6 +82,12 @@ NOCOLOR='\033[0m'
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
+#Used go version
+GO_VERSION="go1.16.3.linux-armv6l.tar.gz"
+
+# Release Page of the Unofficial Tor repositories on GitHub
+TORURL="https://github.com/torproject/tor/releases"
+
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
@@ -86,6 +95,9 @@ RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1
 RUNFILE="torbox/run/torbox.run"
 CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
 CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
+SELECT_TOR=$1
+i=0
+n=0
 
 ##############################
 ######## FUNCTIONS ###########
@@ -117,7 +129,7 @@ install_network_drivers()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT: Internet connectivity is necessary for the installation.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -206,7 +218,7 @@ sudo apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb build-essential
 
 #Install wiringpi
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
@@ -221,35 +233,125 @@ sudo pip3 install urwid
 # Additional installation for GO
 cd ~
 sudo rm -rf /usr/local/go
-wget https://golang.org/dl/go1.16.3.linux-armv6l.tar.gz
-sudo tar -C /usr/local -xzvf go1.16.3.linux-armv6l.tar.gz
-sudo printf "\n# Added by TorBox\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+wget https://golang.org/dl/$GO_VERSION
+sudo tar -C /usr/local -xzvf $GO_VERSION
+if ! grep "# Added by TorBox (001)" .profile ; then
+	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+fi
 export PATH=$PATH:/usr/local/go/bin
+rm $GO_VERSION
 
-# 6. Compile and install the newest version of Tor
+# 6. Install Tor
 sleep 10
 clear
-echo -e "${RED}[+] Step 6: Compile and install the newest version of Tor....${NOCOLOR}"
-mkdir ~/debian-packages; cd ~/debian-packages
-apt source tor
-# IMPORTANT: build-essential is also necessary for the installation of network driver further below
-sudo apt-get -y install build-essential fakeroot devscripts
-#sudo apt-get -y install tor deb.torproject.org-keyring
-#sudo apt-get -y upgrade tor deb.torproject.org-keyring
-sudo apt-get -y build-dep tor deb.torproject.org-keyring
-cd tor-*
-sudo debuild -rfakeroot -uc -us
-cd ..
-sudo dpkg -i tor_*.deb
-cd
-sudo rm -r ~/debian-packages
+echo -e "${RED}[+] Step 6: Installing tor...${NOCOLOR}"
+
+# 6a. Select, compile and install Tor
+if [ "$SELECT_TOR" = "--select-tor" ] ; then
+	clear
+	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
+	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+
+	#How many tor version did we fetch?
+	if [ ${#torversion_datesorted[0]} = 0 ]; then number_torversion=0
+	else
+	  number_torversion=${#torversion_datesorted[*]}
+
+	  #The fetched tor versions are sorted by dates, but we need it sorted by version
+	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
+
+	  #We will build a new array with only the relevant tor versions
+	  while [ $i -lt $number_torversion ]
+	  do
+	    if [ $n = 0 ] ; then
+	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+	      covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
+	      i=$(( $i + 1 ))
+	      n=$(( $n + 1 ))
+	    else
+	      actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
+	      if [ "$actual_version" == "$covered_version" ] ; then i=$(( $i + 1 ))
+	      else
+	        torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+	        covered_version=$actual_version
+	        i=$(( $i + 1 ))
+	        n=$(( $n + 1 ))
+	      fi
+	    fi
+	  done
+	  number_torversion=$n
+
+	  #Display and chose a tor version
+	  clear
+	  echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
+	  echo ""
+	  for (( i=0; i<$number_torversion; i++ ))
+	  do
+	    menuitem=$(( $i + 1 ))
+	    echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
+	  done
+	  echo ""
+	  read -r -p $'\e[1;37mWhich tor version (number) would you like to use? -> \e[0m'
+	  echo
+	  if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+	    CHOICE_TOR=$(( $REPLY - 1 ))
+	  else number_torversion=0 ; fi
+
+	  #Download and install
+	  clear
+		echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
+	  version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
+	  download_tor_url="https://github.com/torproject/tor/archive/refs/tags/tor-$version_string.tar.gz"
+	  filename="tor-$version_string.tar.gz"
+	  mkdir ~/debian-packages; cd ~/debian-packages
+	  wget $download_tor_url
+	  clear
+	  if [ $? -eq 0 ] ; then
+	    echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+	    tar xzf $filename
+	    cd `ls -d */`
+			#The following packages are needed
+			sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
+			echo -e "${RED}[+]         Installing additianal packages... ${NOCOLOR}"
+			clear
+	    echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
+	    ./autogen.sh
+	    ./configure
+	    make
+	    sudo make install
+	    cd
+	    sudo rm -r ~/debian-packages
+	  else number_torversion=0 ; fi
+	fi
+	if [ $number_torversion = 0 ] ; then
+	  echo -e "${WHITE}[!]         Something didn't go as expected!${NOCOLOR}"
+	  echo -e "${WHITE}[!]         I will try to install the latest stable version.${NOCOLOR}"
+	fi
+else number_torversion=0 ; fi
+
+# 6b. Compile and install the latest stable Tor version
+if [ $number_torversion = 0 ] ; then
+	mkdir ~/debian-packages; cd ~/debian-packages
+	sudo apt source tor
+	sudo apt-get -y install fakeroot devscripts
+	#sudo apt-get -y install tor deb.torproject.org-keyring
+	#sudo apt-get -y upgrade tor deb.torproject.org-keyring
+	sudo apt-get -y build-dep tor deb.torproject.org-keyring
+	cd tor-*
+	sudo debuild -rfakeroot -uc -us
+	cd ..
+	sudo dpkg -i tor_*.deb
+	cd
+	sudo rm -r ~/debian-packages
+fi
 
 # 7. Configuring Tor with the pluggable transports
 sleep 10
 clear
 echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
-sudo cp /usr/share/tor/geoip* /usr/bin
-sudo chmod a+x /usr/bin/geoip*
+(sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+sudo chmod a+x /usr/share/tor/geoip*
+(sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -392,7 +494,9 @@ echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR} Changing .profile"
 cd
-sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a .profile
+if ! grep "# Added by TorBox (002)" .profile ; then
+	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+fi
 
 # 11. Disabling Bluetooth
 sleep 10

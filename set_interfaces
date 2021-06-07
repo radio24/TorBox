@@ -26,7 +26,7 @@
 # SYNTAX
 # ./set_interfaces <outgoing interface> <incoming interface> <captive portal>
 #
-## The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
+# The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
 # eth1  -> 	TorBox is connected to the Internet with a cable (USB ethernet adapter) or with a tethering device.
 # wlan0 ->  TorBox is connected to the Internet through a wireless network (onboard chip).
