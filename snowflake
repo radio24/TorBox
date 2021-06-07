@@ -71,7 +71,7 @@ else
 		readarray -t configured_snowflake_deactivated < <(grep "^#Bridge snowflake " ${TORRC})
 		if [ ${#configured_snowflake_deactivated[0]} = 0 ]; then
 			echo " "
-			echo -e "${WHITE}[!] There is no SNOWFLAKE configured! Did you change /etc/torrc ?${NOCOLOR}"
+			echo -e "${WHITE}[!] There is no SNOWFLAKE configured! Did you change /etc/tor/torrc ?${NOCOLOR}"
 			echo -e "${WHITE}[!] We cannot activate SNOWFLAKE! Contact anonym@torbox.ch for help!${NOCOLOR}"
 			read -n 1 -s -r -p "Press any key to continue"
 			exit 1

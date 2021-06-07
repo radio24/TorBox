@@ -19,12 +19,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file deactivates already configured bridges in /etc/torrc.
+# This file deactivates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
 # ./bridges_deactivate_old <show when zero bridges>
 #
-# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/torrc.
+# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
 #
 # Possible values for <show when zero bridges>:
 # 0	->	No message is shown.
@@ -94,7 +94,7 @@ else
   "===" "==============================================================" \
   "  1" "Deactivate ALL configured bridges"  \
   "  2" "Deactivate only bridges, which are not longer ONLINE"  \
-  "  3" "Deactivate only slected bridges"  \
+  "  3" "Deactivate only selected bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
