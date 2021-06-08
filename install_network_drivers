@@ -34,10 +34,15 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Other variables
+# Identify the Operation System
 CHECK_OS="OTHER"
-CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
-CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
+if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
+if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
+if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
+if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
 ##############################
 ######## FUNCTIONS ###########
@@ -66,11 +71,8 @@ install_network_drivers()
 	sleep 2
 }
 
-# We know that it is called Raspberry Pi OS, but we use the term Raspbian anyway
+######## PREPARATIONS ########
 cd ~
-if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
-if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
-if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
 
 # For a Raspberry Pi OS installation
 if [ "$CHECK_OS" == "Raspbian" ]; then

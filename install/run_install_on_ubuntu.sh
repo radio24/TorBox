@@ -93,10 +93,12 @@ TORURL="https://github.com/torproject/tor/releases"
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n"
 
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
+if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
-CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
-CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 SELECT_TOR=$1
 i=0
 n=0
