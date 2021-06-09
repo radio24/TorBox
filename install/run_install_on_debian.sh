@@ -413,6 +413,9 @@ echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
 (sudo cp /etc/default/shellinabox /etc/default/shellinabox.bak) 2> /dev/null
 sudo cp etc/default/shellinabox /etc/default/shellinabox
+sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
+sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
+sudo systemctl restart shellinabox.service
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 cp etc/default/hostapd /etc/default/
