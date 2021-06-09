@@ -18,7 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file add automatically or manually bridges to /etc/torrc.
+# This file add automatically or manually bridges to /etc/tor/torrc.
 #
 # SYNTAX
 # ./bridges_add_old <bridge mode>
@@ -60,7 +60,7 @@ number_bridges=0
 #include lib
 .  lib/torbox.lib
 
-
+###########################
 
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -74,7 +74,7 @@ exitstatus=$?
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
 
-# Add bridges automatically
+    # Add bridges automatically
     if [ $CHOICE = 1 ]; then
       clear
       echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
@@ -96,8 +96,8 @@ if [ $exitstatus = 0 ]; then
           read -n 1 -s -r -p "Press any key to continue"
         else
           if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
+            bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
+            bridge_address=$(echo -e "$bridge_address\n")
           else
             bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
             bridge_address=$(echo -e "$bridge_address\n")
@@ -105,6 +105,9 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
           echo -e "${RED}[+] Saved a valid bridge!${NOCOLOR}"
           sudo echo $bridge_address >> $TORRC
+          sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+          sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+          sudo sed -i "s/^#ClientTransport/ClientTransport/g" ${TORRC}
           echo " "
           read -n 1 -s -r -p "Press any key to continue"
           INPUT=$(cat text/restart-tor-text)
@@ -119,7 +122,7 @@ if [ $exitstatus = 0 ]; then
         read -n 1 -s -r -p "Press any key to continue"
       fi
 
-# Add bridges manually
+    # Add bridges manually
     elif [ $CHOICE = 2 ]; then
       clear
       whiptail --title "TorBox - INFO" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
@@ -149,6 +152,12 @@ if [ $exitstatus = 0 ]; then
             i=$(( $i+1 ))
           fi
         done
+        number_of_bridges
+        if [ $number_configured_bridges_activated -gt 0 ]; then
+          sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+          sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+          sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+        fi
         sleep 3
         if [ $j -gt 0 ]; then
           INPUT=$(cat text/restart-tor-text)

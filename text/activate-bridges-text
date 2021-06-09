@@ -1,19 +1,15 @@
 To circumvent sophisticated censorship, Tor introduced BRIDGES, which supports pluggable transports. These transports manipulate all Tor traffic between the client and its first hop such that it is not identifiable as a Tor connection.
 
 IMPORTANT
-- This menu entry activates the OBFS4 BRIDGE MODE of TorBox to bypass
+- This menu entry activates OBFS4 bridges of TorBox to bypass
   Tor blocking in a country. It helps to circumvent censorship; however,
   it doesn't help if a firewall blocks the network traffic.
 - If OBFS4 bridges don't help, try MEEK-AZURE or SNOWFLAKE (see menu
   entries below).
 - BRIDGE RELAY MODE will automatically be deactivated; the configuration
   will be kept for later re-activation.
+- You should only activate OBFS4 bridges if necessary. It could lead
+  to a less stable and slower data transfer speed. By default, the OBFS4
+  BRIDGE MODE is deactivated.
 
-You should only activate the OBFS4 BRIDGE MODE if necessary. It could lead
-to a less stable and slower data transfer speed. By default, the OBFS4
-BRIDGE MODE is deactivated.
-
-Furthermore, you have to activate already configured bridges or add additional bridges. To take effect, finally, you have to restart Tor (menu entry 9).
-More information on how to obtain bridges can you find in the "ALL ABOUT BRIDGES - READ ME FIRST" menu entry.
-
-Would you like to ACTIVATE the OBFS4 BRIDGE MODE of TorBox?
+Would you like to ACTIVATE OBFS4 bridges for TorBox?
