@@ -254,7 +254,7 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
 
-check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential"
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox"
 
 #Install wiringpi
 clear
@@ -518,6 +518,9 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
+(sudo cp /etc/default/shellinabox /etc/default/shellinabox.bak) 2> /dev/null
+sudo cp etc/default/shellinabox /etc/default/shellinabox
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"

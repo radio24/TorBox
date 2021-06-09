@@ -185,7 +185,7 @@ apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools unzip git openvpn ppp tor tor-geoipdb build-essential
+apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools unzip git openvpn ppp tor tor-geoipdb build-essential shellinabox
 
 # Additional installations for Debian systems
 apt-get -y install sudo resolvconf
@@ -411,6 +411,9 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
+(sudo cp /etc/default/shellinabox /etc/default/shellinabox.bak) 2> /dev/null
+sudo cp etc/default/shellinabox /etc/default/shellinabox
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
