@@ -102,8 +102,11 @@ else
   if [ $exitstatus = 0 ]; then
     if [ "$CHOICE" != " " ]; then
 
-    # Activate ALL configured bridges
-		  if [ $CHOICE = 1 ]; then
+      # Activate ALL configured bridges
+      if [ $CHOICE = 1 ]; then
+        sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+        sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+        sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
         sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
         INPUT=$(cat text/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -111,7 +114,7 @@ else
           restarting_tor menu-bridges
         fi
 
-    # Activate only bridges, which are ONLINE
+      # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
         clear
         echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
@@ -141,6 +144,12 @@ else
             fi
             i=$(( $i + 1 ))
           done
+          number_of_bridges
+          if [ $number_configured_bridges_activated -gt 0 ]; then
+            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+          fi
           sleep 3
           clear
           if [ $j -gt 0 ]; then
@@ -186,6 +195,12 @@ else
               activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
             fi
           done
+          number_of_bridges
+          if [ $number_configured_bridges_activated -gt 0 ]; then
+            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+          fi
           sleep 3
           clear
           if [ $j -gt 0 ]; then
