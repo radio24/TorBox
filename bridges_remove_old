@@ -104,11 +104,14 @@ else
   if [ $exitstatus = 0 ]; then
     if [ "$CHOICE" != " " ]; then
 
-    # Remove ALL configured bridges
-		  if [ $CHOICE = 1 ]; then
+      # Remove ALL configured bridges
+      if [ $CHOICE = 1 ]; then
         INPUT=$(cat text/delete-all-bridges-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             sudo cp ${TORRC} ${BAK}
+            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
             sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
             sudo sed -i "/^Bridge obfs4 /d" ${TORRC}
             INPUT=$(cat text/restart-tor-text)
@@ -118,7 +121,7 @@ else
             fi
         fi
 
-    # Remove only bridges, which do not exist anymore
+      # Remove only bridges, which do not exist anymore
       elif [ $CHOICE = 2 ]; then
         clear
         echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
@@ -156,6 +159,12 @@ else
             fi
             i=$(( $i + 1 ))
           done
+          number_of_bridges
+          if [ $number_configured_bridges_activated -eq 0 ]; then
+            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+          fi
           sleep 3
           clear
           if [ $j -gt 0 ]; then
@@ -170,7 +179,7 @@ else
           sleep 3
         fi
 
-    # Deactivate only selected bridges
+      # Remove only selected bridges
       elif [ $CHOICE = 3 ]; then
         INPUT=$(cat text/delete-selected-bridges-text)
         if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -201,6 +210,12 @@ else
               delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
             fi
           done
+          number_of_bridges
+          if [ $number_configured_bridges_activated -eq 0 ]; then
+            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+          fi
           sleep 3
           clear
           if [ $j -gt 0 ]; then
