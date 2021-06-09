@@ -4,9 +4,19 @@
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
-# This file manages global variables -- please don't change the entries and don't remove the file
+# This file manages global variables -- please don't remove the file
 
+# 1 - Delete pi after running run_install.sh
+# 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard
 FRESH_INSTALLED=0
-EXITID=0
+
+# 0 - HTTP plain text traffic can pass through tor (default)
+# 1 - HTTP plain text traffic is blocked
 BLOCK_HTTP=0
+
+# 0 - SSH access from the Internet is blocked HTTP (default)
+# 1 - SSH access from the Internet is allowed
 SSH_FROM_INTERNET=0
+
+# Used as a global variable - don't change it!!
+EXITID=0

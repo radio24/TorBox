@@ -66,11 +66,13 @@ EXITID="EXITID=0"
 #include lib
 .  lib/torbox.lib
 
-# This function check if TorBox is freshly installed by the install script
-# If yes, then it removes the user "pi" and restart TorBox
+# This function checks if TorBox is freshly installed by the install script
+# or run the first time after flashing the image file to a SD card.
 check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
+  # This will completely remove pi (only for Raspbian OS). The parameter
+  # will be set at the end of the run_install.sh
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
     clear
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
@@ -81,6 +83,18 @@ check_fresh_install()
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
     sudo reboot
+  fi
+  # This will genarate new unique SSH server keys
+  if [ $FRESHINSTALLED = "FRESH_INSTALLED=2" ]; then
+    clear
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
+    echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
+    (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
+    sudo ssh-keygen -A
+    echo ""
+    echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
+    sleep 10
   fi
 }
 
