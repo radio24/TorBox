@@ -1,50 +1,51 @@
-WHAT ARE BRIDGES AND PLUGGBLE TRANSPORT?
-- Bridges, unlike ordinary relays, however, they are not listed publicly, 
-  so an adversary cannot identify them easily.
-- Using bridges in combination with pluggable transports helps to disguise
-  the fact that you are using Tor, but may slow down the connection compared
-  to using ordinary Tor relays.
-- Direct access to the Tor network may sometimes be blocked by your Internet
-  Service Provider or by a government. Tor Browser includes some 
+WHAT ARE BRIDGES AND PLUGGABLE TRANSPORTS?
+- Direct access to the Tor network may sometimes be blocked by your
+  Internet Service Provider or government. Tor Browser includes some
   circumvention tools for getting around these blocks. These tools are
-  called “pluggable transports”.
-- TorBox only will use bridges with pluggable transport, as they help you
-  bypass censorship against Tor, being more secure than normal bridges.
+  called "bridges" and “pluggable transports”.
+- Bridges, unlike ordinary relays, are not listed publicly, so an adversary
+  cannot identify them easily.
+- Using bridges in combination with pluggable transports helps disguise the
+  fact that someone is using Tor but may slow down the connection compared
+  to ordinary Tor relays.
+- TorBox only uses bridges WITH pluggable transports, as they help you
+  bypass censorship and, at the same time, are being more secure than
+  ordinary bridges.
 
-PLUGGABLE TRANSPORTS BRIDGES:
-- OBFS4 is a randomizing transport, it adds an extra layer of specialized
-  encryption between you and your bridge that makes Tor traffic look like
-  random bytes. It also resists active-probing attacks, where the censor 
-  discovers bridges by trying to connect to them. obfs3 and scramblesuit 
-  are similar in nature to obfs4. 
+TYPE OF PLUGGABLE TRANSPORTS:
+- OBFS4 is a randomizing transport. It adds an extra layer of specialized
+  encryption that makes Tor traffic look like random bytes. It also resists
+  active-probing attacks, where the censor discovers bridges by trying to
+  connect to them. obfs3 and scramblesuit are similar in nature to obfs4
+  but less successful and therefore not integrated into TorBox.
 - MEEK makes Tor traffic look like a connection to an HTTPS website. Unlike
-  the other transports, it doesn't connect directly to a bridge. meek first
-  connects to a real HTTPS web server (in the Amazon cloud or the Microsoft
-  Azure cloud) and from there connects to the actual bridge. Censors cannot
+  the other transports, it doesn't connect directly to a bridge. Instead,
+  Meek first connects to a real HTTPS web server (in the Microsoft Azure
+  cloud) and from there connects to the actual bridge. Censors cannot
   easily block meek connections because the HTTPS servers also provide many
-  other useful services. 
+  other useful services.
 - SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
-  built-in NAT punching. For censored users, if your Snowflake proxy gets
-  blocked, the broker will find a new proxy for you, automatically.
+  built-in NAT punching. For censored users: If the Snowflake proxy gets
+  blocked, the broker will find a new proxy automatically.
 
-WHICH TRANSPORT SHOULD I USE?
-- Countries with moderate internet censorship: Use OBFS4
-- China or countries w/ similiar internet censorship: Use SNOWFLAKE or MEEK
+WHICH PLUGGABLE TRANSPORT SHOULD I USE?
+- Countries with moderate internet censorship: OBFS4
+- China or countries with similar internet censorship: SNOWFLAKE or MEEK
 
 HOW TO ACTIVATE OBFS4?
-Just use the menu entry 4.
+Just use menu entry 3 or 4.
 
 HOW TO ACTIVATE SNOWFLAKE?
-Just use the menu entry 9.
+Just use menu entry 9.
 
 HOW TO ACTIVATE MEEK-AZURE?
-Just use the menu entry 10.
+Just use menu entry 10.
 
-WHICH TRANSPORT I'M CURRENTLY USING?
-Check the top right corner of the screen, you should see 'Bridge mode transport ON/OFF'
+WHICH PLUGGABLE TRANSPORT I'M CURRENTLY USING?
+Check the top right corner of the menu. It should display "Bridge mode OFF!" if no bridges and pluggable transports are used or the name of the currently used pluggable transport.
 
 HOW CAN I CHECK THE VALIDITY OF A OBFS4 BRIDGE?
-Use menu entry 3 or go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number between the ip:port and cert=). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
+Use menu entry 2 or go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number between the ip:port and cert=). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
 
 HOW DO I KNOW IF IT IS WORKING?
-Just use menu entry 9 and follow the logs. PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network! In the end, you should see "Bootstrapped 100%: Done".
+Check the terminal output when tor is restarting or use menu entry 9 and follow the logs. PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network! In the end, you should see "Bootstrapped 100%: Done".
