@@ -107,7 +107,7 @@ read_config()
       SNOWSTRINGb="Activate"
   fi
 
-    if [ "${BRIDGESTRING}" = "" ]; then
+  if [ "${BRIDGESTRING}" = "" ]; then
     BRIDGESTRING="Bridge mode OFF!"
   fi
 
