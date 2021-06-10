@@ -22,13 +22,7 @@
 # This file deactivates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_deactivate_old <show when zero bridges>
-#
-# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
-#
-# Possible values for <show when zero bridges>:
-# 0	->	No message is shown.
-# 1	->	Message is shown.
+# ./bridges_deactivate_old
 #
 #
 ###### SET VARIABLES ######
@@ -57,7 +51,6 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-show_when_zero_bridges=$1
 i=0
 
 ###########################
@@ -81,13 +74,21 @@ number_of_bridges
 ###########################
 
 if [ $number_configured_bridges_activated = 0 ]; then
-  if [ $show_when_zero_bridges = 1 ]; then
-    clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO activated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-    fi
-  fi
+  clear
+  echo -e "${WHITE}[!] There are no activated OBFS4 bridges. ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Activate configured OBFS4 bridges...\". ${NOCOLOR}"
+  sleep 5
 else
+
+# ATTENTION! This case has to be covered in the menu-bridge script !!
+#  if [ $show_when_zero_bridges = 1 ]; then
+#    clear
+#    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO activated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
+#        clear
+#    fi
+#  fi
+#else
+
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " " " " \
@@ -95,6 +96,7 @@ else
   "  1" "Deactivate ALL configured bridges"  \
   "  2" "Deactivate only bridges, which are not longer ONLINE"  \
   "  3" "Deactivate only selected bridges"  \
+  "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
@@ -210,6 +212,10 @@ else
             fi
           fi
         fi
+
+      # List all bridges configured in torrc and if online display the status of the bridges
+      elif [ $CHOICE = 4 ]; then
+        list_all_obfs4_bridges  
       fi
     fi
   fi

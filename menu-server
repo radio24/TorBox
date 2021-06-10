@@ -123,7 +123,7 @@ clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 " " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
-"  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
+"  1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "  2" "Toggle Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
 "  3" "Check and/or change the configuration"  \
 "  4" "Reset configuration to default"  \

@@ -8,7 +8,7 @@ IMPORTANT
   a firewall blocks the network traffic.
 - OBFS4 BRIDGE and BRIDGE RELAY MODE will automatically be deactivated;
   the configuration will be kept for later re-activation.
-- Ignore all the error messages. In the end, you should see
+- Ignore all the error messages. At the end, you should see
   "Bootstrapped 100%: Done".
 - Tor Statistics (and probably some other tools) will not work under
   SNOWFLAKE.

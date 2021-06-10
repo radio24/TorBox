@@ -71,6 +71,9 @@ j=0
 # This function imports the configuration and makes some preparations
 read_config()
 {
+  # Is the bridge mode already turned on?
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+
   # OBFS4STRING represents the status of the Meek-Azure bridging mode
   MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC})
   if [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
@@ -180,97 +183,40 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 2 ]; then
       if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
         whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-      else
-        if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-          INPUT=$(cat text/activate-bridges-text)
-          if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-            deactivating_bridge_relay
-            sudo bash bridges_activate_old $configured_bridges_deactivated $number_configured_bridges_deactivated 0
-            if [ $number_configured_bridges_total = 0]; then
-              INPUT=$(cat text/add-bridges-first-text)
-              if (whiptail --title "TorBox - INFO" --yesno "$INPUT" 35 $MENU_WIDTH); then
-                sudo bash bridges_add_old
-              fi
-            else
-              sudo bash bridges_activate_old 1
-            fi
-          fi
+      fi
+      if [ $number_configured_bridges_total = 0 ]; then
+        INPUT=$(cat text/add-bridges-first-text)
+        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo bash bridges_add_old $MODE_BRIDGES
+        else
+          trap "bash menu-bridges; exit 0" EXIT
+          exit 0
         fi
+      fi
+      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+        INPUT=$(cat text/activate-bridges-text)
+        if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo bash bridges_activate_old
+        else
+          trap "bash menu-bridges; exit 0" EXIT
+          exit 0
+        fi
+      else
+        sudo bash bridges_activate_old
       fi
       read_config
 
     # Add bridges
     elif [ $CHOICE = 3 ]; then
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      fi
       sudo bash bridges_add_old $MODE_BRIDGES
       read_config
 
     # List all bridges configured in torrc and if online display the status of the bridges
     elif [ $CHOICE = 4 ]; then
-      clear
-      echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-      #-m 6 must not be lower, otherwise it looks like there is no connection!
-      OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-      if [ $? == 0 ]; then
-        OCHECK="0"
-        echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
-        sleep 2
-      else
-        OCHECK="1"
-        echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-        sleep 2
-      fi
-      if [ $number_configured_bridges_deactivated -gt 0 ]; then
-        clear
-        echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
-        echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
-        echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
-        echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
-        echo " "
-        trap "bash menu-bridge; exit 0" SIGINT
-        while [ $i -lt $number_configured_bridges_deactivated ]
-        do
-            bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
-            if [ $OCHECK == 0 ]; then
-              bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-              bridge_status=$(./bridges_check.py -f $bridge_hash)
-              if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
-              elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-              elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
-            else bridge_status=" "
-            fi
-            i=$(( $i + 1 ))
-            bridge_address="$i : $bridge_address $bridge_status"
-            echo -e $bridge_address
-        done
-        echo " "
-        echo " "
-      fi
-      if [ $number_configured_bridges_activated -gt 0 ]; then
-        echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
-        echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
-        echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
-        echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
-        echo " "
-        trap "bash menu-bridge; exit 0" SIGINT
-        while [ $j -lt $number_configured_bridges_activated ]
-        do
-            bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
-            if [ $OCHECK == 0 ]; then
-              bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-              bridge_status=$(./bridges_check.py -f $bridge_hash)
-              if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
-              elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-              elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
-            else bridge_status=" "
-            fi
-            j=$(( $j + 1 ))
-            n=$(( $i + $j ))
-            bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
-            echo -e "$bridge_address"
-        done
-      fi
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
+      list_all_obfs4_bridges
 
     # Remove bridges
     elif [ $CHOICE = 5 ]; then
@@ -363,4 +309,3 @@ else
   clear
   exit 0
 fi
-bash menu-bridges

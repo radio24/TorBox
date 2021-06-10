@@ -22,13 +22,7 @@
 # This file activates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_activate_old <show when zero bridges>
-#
-# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
-#
-# Possible values for <show when zero bridges>:
-# 0	->	No message is shown.
-# 1	->	Message is shown.
+# ./bridges_activate_old
 #
 #
 ###### SET VARIABLES ######
@@ -36,7 +30,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=3
+NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=3
@@ -57,7 +51,6 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-show_when_zero_bridges=$1
 i=0
 
 ###########################
@@ -82,12 +75,10 @@ number_of_bridges
 ###########################
 
 if [ $number_configured_bridges_deactivated = 0 ]; then
-  if [ $show_when_zero_bridges = 1 ]; then
-    clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO deactivated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
-      clear
-    fi
-  fi
+  clear
+  echo -e "${WHITE}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Deactivate configured OBFS4 bridges\". ${NOCOLOR}"
+  sleep 5
 else
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -96,6 +87,7 @@ else
   "  1" "Activate ALL configured bridges"  \
   "  2" "Activate only bridges, which are ONLINE"  \
   "  3" "Activate only selected bridges"  \
+  "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
@@ -104,15 +96,8 @@ else
 
       # Activate ALL configured bridges
       if [ $CHOICE = 1 ]; then
-        sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-        sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-        sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
         sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
-        INPUT=$(cat text/restart-tor-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          restarting_tor menu-bridges
-        fi
+        activate_obfs4_bridges
 
       # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
@@ -144,24 +129,19 @@ else
             fi
             i=$(( $i + 1 ))
           done
-          number_of_bridges
-          if [ $number_configured_bridges_activated -gt 0 ]; then
-            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-          fi
-          sleep 3
-          clear
           if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
-            fi
+            activate_obfs4_bridges
+          else
+            echo ""
+            echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
+            echo -e "${RED}[+] Please add some noew OBFS4 bridges first! ${NOCOLOR}"
+            sleep 5
           fi
         else
-          echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-          echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 3
+          echo ""
+          echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+          echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+          sleep 5
         fi
 
       # Activate only selected bridges
@@ -178,7 +158,8 @@ else
           do
             i=$(( $activate_number - 1 ))
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
-            bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+            # Row below is not necessary?
+            # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             j=$(($i + 1))
             echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
             #This is necessary to work with special characters in sed
@@ -195,21 +176,14 @@ else
               activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
             fi
           done
-          number_of_bridges
-          if [ $number_configured_bridges_activated -gt 0 ]; then
-            sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-            sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-          fi
-          sleep 3
-          clear
           if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
-            fi
+            activate_obfs4_bridges
           fi
         fi
+
+      # List all bridges configured in torrc and if online display the status of the bridges
+      elif [ $CHOICE = 4 ]; then
+        list_all_obfs4_bridges
       fi
     fi
   fi
