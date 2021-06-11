@@ -76,7 +76,7 @@ read_config()
   MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
 
   # OBFS4STRING represents the status of the Meek-Azure bridging mode
-  MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC})
+  MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
   if [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
       OBFS4STRING="ON!"
       OBFS4STRINGb="Deactivate"
@@ -87,7 +87,7 @@ read_config()
   fi
 
   # MEEKSTRING represents the status of the Meek-Azure bridging mode
-  MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC})
+  MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
   if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
       MEEKSTRING="ON!"
       MEEKSTRINGb="Deactivate"
@@ -98,7 +98,7 @@ read_config()
   fi
 
   # SNOWSTRING represents the status of the Snowflake bridging mode
-  MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC})
+  MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)
   if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
       SNOWSTRING="ON!"
       SNOWSTRINGb="Deactivate"
@@ -186,8 +186,9 @@ if [ $exitstatus = 0 ]; then
       if [ $number_configured_bridges_total = 0 ]; then
         INPUT=$(cat text/add-bridges-first-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo bash bridges_add_old $MODE_BRIDGES 0
+          sudo bash bridges_add_old "$MODE_BRIDGES" 0
         else
+          deactivate_obfs4_bridges
           trap "bash menu-bridges; exit 0" EXIT
           exit 0
         fi
@@ -210,7 +211,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
         whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
-      sudo bash bridges_add_old $MODE_BRIDGES 1
+      sudo bash bridges_add_old "$MODE_BRIDGES" 1
       read_config
 
     # List all bridges configured in torrc and if online display the status of the bridges
@@ -224,9 +225,26 @@ if [ $exitstatus = 0 ]; then
 
     # Deactivate bridges
     elif [ $CHOICE = 6 ]; then
-      INPUT=$(cat text/deactivate-bridges-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        sudo bash bridges_deactivate_old 1
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+        clear
+        echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
+        echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2.${NOCOLOR}"
+        sleep 5
+      else
+        INPUT=$(cat text/deactivate-bridges-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          sudo bash bridges_deactivate_old 1
+        fi
+        if [ $number_configured_bridges_total = 0 ]; then
+          INPUT=$(cat text/add-bridges-first-text)
+          if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+            sudo bash bridges_add_old "$MODE_BRIDGES" 0
+          else
+            deactivate_obfs4_bridges
+            clear
+            restarting_tor menu-bridges
+          fi
+        fi
       fi
       read_config
 

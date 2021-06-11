@@ -1,3 +1,6 @@
 With this menu entry, you can DELETE ALL OBFS4 BRIDGES. However, OBFS4 bridges are necessary for TorBox to bypass Tor blocking in a country. After deleting all OBFS4 bridges, you should add new OBFS4 bridges again.
 
+IMPORTANT
+If ALL OBFS4 bridges are removed, TorBox will directly connect to the Tor network, which is the default.
+
 Would you like to DELETE ALL OBFS4 BRIDGES?

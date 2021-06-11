@@ -69,8 +69,8 @@ number_bridges=0
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==============================================================" \
-"  1" "Add one bridge automatically (about one bridge every 24 hours)"  \
-"  2" "Add bridges manually"  \
+"  1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+"  2" "Add OBFS4 bridges manually"  \
 "===" "==============================================================" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
@@ -110,6 +110,8 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
           echo -e "${RED}[+] Saved a valid bridge!${NOCOLOR}"
           sudo echo $bridge_address >> $TORRC
+          sleep 5
+          clear
           if [ $STANDALONE = 1 ]; then
             activate_obfs4_bridges
             exit 0
@@ -160,4 +162,7 @@ if [ $exitstatus = 0 ]; then
       fi
     fi
   fi
+else
+  clear
+  exit 0
 fi

@@ -83,9 +83,9 @@ else
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "===" "==============================================================" \
-  "  1" "Activate ALL configured bridges"  \
-  "  2" "Activate only bridges, which are ONLINE"  \
-  "  3" "Activate only selected bridges"  \
+  "  1" "Activate ALL configured OBFS4 bridges"  \
+  "  2" "Activate only OBFS4 bridges, which are ONLINE"  \
+  "  3" "Activate only selected OBFS4 bridges"  \
   "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
@@ -138,7 +138,7 @@ else
           else
             echo ""
             echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
-            echo -e "${RED}[+] Please add some noew OBFS4 bridges first! ${NOCOLOR}"
+            echo -e "${RED}[+] Please add some new OBFS4 bridges first! ${NOCOLOR}"
             sleep 5
             clear
           fi
@@ -149,6 +149,7 @@ else
           sleep 5
           clear
         fi
+        exit 0
 
       # Activate only selected bridges
       elif [ $CHOICE = 3 ]; then
@@ -182,7 +183,8 @@ else
               activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
             fi
           done
-          sleep 5
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
           if [ $j -gt 0 ]; then
             activate_obfs4_bridges
@@ -195,5 +197,10 @@ else
         list_all_obfs4_bridges
       fi
     fi
+  else
+    clear
+    exit 0
   fi
 fi
+bash bridges_activate_old
+exit 0
