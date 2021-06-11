@@ -31,16 +31,17 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -175,7 +176,6 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "===" "===============================================[Passwords]===" \
 "  1" "Change admin (user torbox) password"  \
 "  2" "Change the password of TorBox's WLAN (reboot required)"  \

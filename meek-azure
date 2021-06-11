@@ -88,7 +88,7 @@ else
 		#-m 6 must not be lower, otherwise it looks like there is no connection!
 		OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
 		if [ $? == 0 ]; then
-			echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
+			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
 			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2

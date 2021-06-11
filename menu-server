@@ -34,13 +34,14 @@
 NO_ITEMS=11
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -121,7 +122,6 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
 "  1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "  2" "Toggle Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \

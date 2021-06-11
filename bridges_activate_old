@@ -33,13 +33,14 @@
 NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -58,7 +59,6 @@ i=0
 
 #include lib
 .  lib/torbox.lib
-
 
 ######## PREPARATIONS ########
 #
@@ -82,7 +82,6 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
 else
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  " " " " \
   "===" "==============================================================" \
   "  1" "Activate ALL configured bridges"  \
   "  2" "Activate only bridges, which are ONLINE"  \
@@ -98,6 +97,7 @@ else
       if [ $CHOICE = 1 ]; then
         sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
         activate_obfs4_bridges
+        exit 0
 
       # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
@@ -129,26 +129,32 @@ else
             fi
             i=$(( $i + 1 ))
           done
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          clear
           if [ $j -gt 0 ]; then
             activate_obfs4_bridges
+            exit 0
           else
             echo ""
             echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
             echo -e "${RED}[+] Please add some noew OBFS4 bridges first! ${NOCOLOR}"
             sleep 5
+            clear
           fi
         else
           echo ""
           echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
           sleep 5
+          clear
         fi
 
       # Activate only selected bridges
       elif [ $CHOICE = 3 ]; then
         INPUT=$(cat text/activate-selected-bridges-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          number_to_be_activated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to activate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          number_to_be_activated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to activate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           number_to_be_activated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_activated)
           activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
           clear
@@ -176,8 +182,11 @@ else
               activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
             fi
           done
+          sleep 5
+          clear
           if [ $j -gt 0 ]; then
             activate_obfs4_bridges
+            exit 0
           fi
         fi
 

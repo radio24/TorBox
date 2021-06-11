@@ -1,0 +1,5 @@
+You can (re)start Tor and check the progress of building circuits. Depending on your network and the contacted bridge relay, this could last for several minutes. Ignore all the error messages. At the end of that process, you should see "Bootstrapped 100%: Done". You can leave the progress report with CTRL-C.
+
+ATTENTION: If you chose NO, all bridges would be deactivated, and TorBox switches back using the Tor network without bridges!!
+
+Are you ready to (re)start Tor now?

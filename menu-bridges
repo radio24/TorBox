@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=11
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -42,6 +42,7 @@ MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -150,7 +151,6 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "===" "============================================[Informational]===" \
 "  1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "===" "============================================[OBFS4 bridges]==="  \
@@ -160,12 +160,11 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASUR
 "  5" "Remove configured OBFS4 bridges"  \
 "  6" "Deactivate configured OBFS4 bridges"  \
 "  7" "Enter the advanced configuration editor"  \
-"  8" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-"  9" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
-" 10" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
-" 11" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
-" 12" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
+"  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
+"  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
+" 10" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
+" 11" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -187,7 +186,7 @@ if [ $exitstatus = 0 ]; then
       if [ $number_configured_bridges_total = 0 ]; then
         INPUT=$(cat text/add-bridges-first-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo bash bridges_add_old $MODE_BRIDGES
+          sudo bash bridges_add_old $MODE_BRIDGES 0
         else
           trap "bash menu-bridges; exit 0" EXIT
           exit 0
@@ -211,7 +210,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
         whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
-      sudo bash bridges_add_old $MODE_BRIDGES
+      sudo bash bridges_add_old $MODE_BRIDGES 1
       read_config
 
     # List all bridges configured in torrc and if online display the status of the bridges
@@ -240,26 +239,18 @@ if [ $exitstatus = 0 ]; then
         read_config
       fi
 
-    # Restart Tor and check the progress
-    elif [ $CHOICE = 8 ]; then
-      INPUT=$(cat text/restart-tor-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-        restarting_tor menu-bridges
-      fi
-
     # Use Snowflake to circumvent censorship
-    elif [ $CHOICE = 9 ]; then
+    elif [ $CHOICE = 8 ]; then
       sudo bash snowflake $SNOWSTRING $MEEKSTRING
       read_config
 
     # Use Meek-Azure to circumvent censorship
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 8 ]; then
       sudo bash meek-azure $MEEKSTRING $SNOWSTRING
       read_config
 
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 11 ]; then
+    elif [ $CHOICE = 10 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -288,7 +279,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
     # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 12 ] ; then
+    elif [ $CHOICE = 11 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
         ping -q $PING_SERVER >/dev/null &
@@ -309,3 +300,5 @@ else
   clear
   exit 0
 fi
+bash menu-bridges
+exit 0

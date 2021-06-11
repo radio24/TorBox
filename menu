@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -41,6 +41,7 @@ MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -161,24 +162,24 @@ fi
 
 ###### DISPLAY THE MENU ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
-"  3" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
+"  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+"  4" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
-"  4" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-"  5" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-"  6" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-"  7" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-"  8" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-"  9" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+"  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+"  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+"  7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+"  8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+"  9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+" 10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
 "===" "===============================================[Sub-Menues]===" \
-" 10" "Go to the countermeasure sub-menu..." \
-" 11" "Go to the configuration sub-menu..." \
-" 12" "Go to defend the open internet..." \
-" 13" "Go to the update and reset sub-menu..." \
+" 11" "Go to the countermeasure sub-menu..." \
+" 12" "Go to the configuration sub-menu..." \
+" 13" "Go to defend the open internet..." \
+" 14" "Go to the update and reset sub-menu..." \
 "===" "========================================[Reboot & Shutdown]===" \
-" 14" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
+" 15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
@@ -194,14 +195,22 @@ if [ $exitstatus = 0 ]; then
       clear
       sudo bash new_ident
 
-# This displays the Tor LOG file (quick and dirty)
+# Restart Tor and check the progress
     elif [ $CHOICE = 3 ]; then
+      INPUT=$(cat text/restart-tor-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        clear
+        restarting_tor menu
+      fi
+
+# This displays the Tor LOG file (quick and dirty)
+    elif [ $CHOICE = 4 ]; then
       clear
       trap "bash menu; exit 0" SIGINT
       sudo tail -f -n 25 /var/log/tor/notices.log
 
 # Ethernet cable internet eth0 --> wlan0 / eth1
-    elif [ $CHOICE = 4 ]; then
+    elif [ $CHOICE = 5 ]; then
       INPUT=$(cat text/cable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
@@ -290,7 +299,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Wireless network (through an USB adapter; wlan1 --> wlan0 / eth0)
-    elif [ $CHOICE = 5 ]; then
+    elif [ $CHOICE = 6 ]; then
       INPUT=$(cat text/wlan1-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         if ip link | grep wlan1; then
@@ -383,7 +392,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0)
-    elif [ $CHOICE = 6 ]; then
+    elif [ $CHOICE = 7 ]; then
       INPUT=$(cat text/wlan0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         # This temporary restores the wlan1 / eth0 configuration, which does not survive a reboot!
@@ -474,7 +483,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Cellular or other connections (ppp0; usb0 --> wlan0 / eth0)
-    elif [ $CHOICE = 7 ]; then
+    elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/ppp0-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
@@ -634,7 +643,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0)
-    elif [ $CHOICE = 8 ]; then
+    elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/tethering-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         if ip link | grep eth1 ; then
@@ -727,7 +736,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Over a VPN connection (tun0)
-    elif [ $CHOICE = 9 ]; then
+    elif [ $CHOICE = 10 ]; then
       INPUT=$(cat text/tun0-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
@@ -838,20 +847,20 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Sub-menues
-    elif [ $CHOICE = 10 ]; then
-      bash menu-bridges
     elif [ $CHOICE = 11 ]; then
-      bash menu-config
+      bash menu-bridges
     elif [ $CHOICE = 12 ]; then
-      bash menu-server
+      bash menu-config
     elif [ $CHOICE = 13 ]; then
+      bash menu-server
+    elif [ $CHOICE = 14 ]; then
       screen bash update
       clear
       cd
       cd torbox
 
 # Reboot or Shotdown TorBox
-    elif [ $CHOICE = 14 ]; then
+    elif [ $CHOICE = 15 ]; then
       CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.0 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
       "  1" "REBOOT   TorBox" \
       "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)

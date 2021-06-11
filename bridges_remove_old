@@ -36,16 +36,17 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=3
+NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -93,11 +94,11 @@ if [ $number_configured_bridges_total = 0 ]; then
 else
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  " " " " \
   "===" "==============================================================" \
   "  1" "Remove ALL configured bridges"  \
   "  2" "Remove only bridges, which do not exist anymore"  \
   "  3" "Remove only selected bridges"  \
+  "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
@@ -225,6 +226,10 @@ else
             fi
           fi
         fi
+
+      # List all bridges configured in torrc and if online display the status of the bridges
+      elif [ $CHOICE = 4 ]; then
+        list_all_obfs4_bridges
       fi
     fi
   fi
