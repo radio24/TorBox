@@ -18,11 +18,11 @@ TYPE OF PLUGGABLE TRANSPORTS:
   active-probing attacks, where the censor discovers bridges by trying to
   connect to them. obfs3 and scramblesuit are similar in nature to obfs4
   but less successful and therefore not integrated into TorBox.
-- MEEK makes Tor traffic look like a connection to an HTTPS website. Unlike
-  the other transports, it doesn't connect directly to a bridge. Instead,
-  Meek first connects to a real HTTPS web server (in the Microsoft Azure
-  cloud) and from there connects to the actual bridge. Censors cannot
-  easily block meek connections because the HTTPS servers also provide many
+- MEEK-AZURE makes Tor traffic look like a connection to an HTTPS website.
+  Unlike the other transports, it doesn't connect directly to a bridge.
+  Instead, Meek first connects to a real HTTPS web server (in the Microsoft
+  Azure cloud) and from there connects to the actual bridge. Censors cannot
+  easily block Meek connections because the HTTPS servers also provide many
   other useful services.
 - SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
   built-in NAT punching. For censored users: If the Snowflake proxy gets

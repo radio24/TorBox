@@ -67,9 +67,6 @@ i=0
 ######## PREPARATIONS ########
 ###########################
 
-if [ "$SNOWSTRING" = "ON!" ]; then
-	whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-else
 	if [ "$MEEKSTRING" = "OFF" ]; then
 		clear
 		echo -e "${WHITE}[!] Let's first check, if MEEK-AZURE could work for you!${NOCOLOR}"
@@ -118,11 +115,12 @@ else
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
+			deactivate_obfs4_bridges
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
 			sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
 			sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-			sudo sed -i "s/#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
+			sudo sed -i "s/^#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
 			clear
 			restarting_tor menu-bridges
 		fi
@@ -139,4 +137,3 @@ else
 			restarting_tor menu-bridges
 		fi
 	fi
-fi

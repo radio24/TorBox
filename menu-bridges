@@ -260,11 +260,17 @@ if [ $exitstatus = 0 ]; then
 
     # Use Snowflake to circumvent censorship
     elif [ $CHOICE = 8 ]; then
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      fi
       sudo bash snowflake $SNOWSTRING $MEEKSTRING
       read_config
 
     # Use Meek-Azure to circumvent censorship
     elif [ $CHOICE = 8 ]; then
+      if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+        whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      fi
       sudo bash meek-azure $MEEKSTRING $SNOWSTRING
       read_config
 

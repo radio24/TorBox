@@ -58,13 +58,9 @@ i=0
 #include lib
 .  lib/torbox.lib
 
-
 ######## PREPARATIONS ########
 ###########################
 
-if [ "$MEEKSTRING" = "ON!" ]; then
-	whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-else
 	if [ "$SNOWSTRING" = "OFF" ]; then
 		clear
 		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
@@ -113,11 +109,12 @@ else
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
+			deactivate_obfs4_bridges
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
 			sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
 			sudo sed -i "s/^#ClientTransportPlugin snowflake/ClientTransportPlugin snowflake/g" ${TORRC}
-			sudo sed -i "s/#Bridge snowflake /Bridge snowflake /g" ${TORRC}
+			sudo sed -i "s/^#Bridge snowflake /Bridge snowflake /g" ${TORRC}
 			clear
 			restarting_tor menu-bridges
 		fi
@@ -134,4 +131,3 @@ else
 			restarting_tor menu-bridges
 		fi
 	fi
-fi
