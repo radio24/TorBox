@@ -96,6 +96,11 @@ i=0
 				bridge_address="$i : $bridge_address $bridge_status"
 				echo -e $bridge_address
 			done
+			if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+				echo " "
+				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
+				echo -e "${RED}[+] We try to use it anyway, but must likely it will not work :(${NOCOLOR}"
+			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
