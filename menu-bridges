@@ -240,7 +240,7 @@ if [ $exitstatus = 0 ]; then
         if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
           clear
           echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
-          echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2.${NOCOLOR}"
+          echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
           sleep 5
         else
           whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
@@ -277,7 +277,7 @@ if [ $exitstatus = 0 ]; then
           sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
           echo ""
           echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-          echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+          echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
           sleep 5
           tun0up=$(ip link | grep tun0)
         fi
@@ -291,7 +291,7 @@ if [ $exitstatus = 0 ]; then
           sleep 15
           echo ""
           echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-          echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+          echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
           sleep 5
           tun0up=$(ip link | grep tun0)
         fi
