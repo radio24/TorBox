@@ -52,6 +52,8 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
+EXITID=$(grep "^EXITID=" ${RUNFILE})
 i=0
 
 ###########################
@@ -74,14 +76,19 @@ number_of_bridges
 
 ###########################
 
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
 if [ $number_configured_bridges_activated = 0 ]; then
   clear
   echo -e "${WHITE}[!] There are no activated OBFS4 bridges. ${NOCOLOR}"
   echo -e "${RED}[+] You may use the menu entry \"Activate configured OBFS4 bridges...\". ${NOCOLOR}"
   sleep 5
+  exit 0
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "===" "==============================================================" \
   "  1" "Deactivate ALL configured OBFS4 bridges and directly connect tor"  \
   "  2" "Deactivate only OBFS4 bridges, which are not longer ONLINE"  \
@@ -97,7 +104,8 @@ else
       if [ $CHOICE = 1 ]; then
         deactivate_obfs4_bridges
         clear
-        restarting_tor bridges_deactivate_old menu-bridges
+        sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+        restarting_tor bridges_deactivate_old
         exit 0
 
       # Deactivate only bridges, which are OFFLINE or do not exist anymore
@@ -143,7 +151,8 @@ else
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear
-              restarting_tor bridges_deactivate_old menu-bridges
+              sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+              restarting_tor bridges_deactivate_old
             else
               activate_obfs4_bridges bridges_deactivate_old
               exit 0
@@ -197,7 +206,8 @@ else
           if [ $number_configured_bridges_activated = 0 ]; then
             deactivate_obfs4_bridges
             clear
-            restarting_tor bridges_deactivate_old menu-bridges
+            sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+            restarting_tor bridges_deactivate_old
           else
             if [ $j -gt 0 ]; then
               activate_obfs4_bridges bridges_deactivate_old

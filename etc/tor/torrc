@@ -31,7 +31,7 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy
 #ServerTransportListenAddr obfs4 0.0.0.0:443
 #ContactInfo <address@email.com>
-#Nickname TorBox040
+#Nickname TorBox041
 
 ## TO OVERCOME A FIREWALL, START HERE!
 ## HOWEVER, USE IT ONLY, IF REALLY NECESSARY!
@@ -56,7 +56,7 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #UseBridges 1
 #UpdateBridgesFromAuthority 1
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
-#ClientTransportPlugin snowflake exec snowflake-client -url https://snowflake-broker.azureedge.net/ -front ajax.aspnetcdn.com -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478
+#ClientTransportPlugin snowflake exec PluggableTransports/snowflake-client -url https://snowflake-broker.azureedge.net/ -front ajax.aspnetcdn.com -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478
 
 ## Meek-Azure
 #Bridge meek_lite 0.0.2.0:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
@@ -94,3 +94,16 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #Bridge obfs4 216.252.162.21:46089 0DB8799466902192B6C7576D58D4F7F714EC87C1 cert=XPUwcQPxEXExHfJYX58gZXN7mYpos7VNAHbkgERNFg+FCVNzuYo1Wp+uMscl3aR9hO2DRQ iat-mode=0
 #Bridge obfs4 76.230.156.129:5002 B37BC162454314B6572F9A3A79A1C92BB9E63809 cert=IIJMWkUUmzRbS78LCm8znYKvMf/mmcWIM5ZNyzwl1gHxKievV4h1NKdlVkRH3KpZH/fmbg iat-mode=0
 #Bridge obfs4 95.31.12.22:5010 5721D25FA2D0194E698EC46AC4703F24DE82829F cert=whNT5Nx/k1fZL4MQu99SIl+5OXccyAlMKwjKmjoTGTgPTdVSNeMnh6lPBxcqbx4vMdRTTQ iat-mode=0
+#Bridge obfs4 185.185.251.132:443 91C99EA7DD3851DC18F40D66D9283829AECC95C3 cert=i9dbEJaVF+4Keam69Bg5lbtfDiITFc2i7Otly9OEBmxBPq8xk2Nr5BWOOYlslTFdfPKFfg iat-mode=0
+#Bridge obfs4 76.217.52.130:9030 D3D09370EB7F0988D0E7C8B4C495C2B015E7375C cert=NjQZ25njAQxVx3Z3WLzEyop7NemZs/YZZ7UCJDI/4pvJJPPeMrScI1N3TbcY1g0l8mC9DQ iat-mode=0
+#Bridge obfs4 70.134.63.129:7005 1259A98554879633891EA67A3D8DCF8E7C6F87C2 cert=2kM4mcKyRdIhxzB9Pc9SdcXCE7j49nASJhrhxUi+PzBATuODugh36GHijWaZf01/ACEGaA iat-mode=0
+#Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
+#Bridge obfs4 209.148.46.65:443 74FAD13168806246602538555B5521A0383A1875 cert=ssH+9rP8dG2NLDN2XuFw63hIO/9MNNinLmxQDpVa+7kTOa9/m+tGWT1SmSYpQ9uTBGa6Hw iat-mode=0
+#Bridge obfs4 146.57.248.225:22 10A6CD36A537FCE513A322361547444B393989F0 cert=K1gDtDAIcUfeLqbstggjIw2rtgIKqdIhUlHp82XRqNSq/mtAjp1BIC9vHKJ2FAEpGssTPw iat-mode=0
+#Bridge obfs4 45.145.95.6:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
+#Bridge obfs4 [2a0c:4d80:42:702::1]:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
+#Bridge obfs4 51.222.13.177:80 5EDAC3B810E12B01F6FD8050D2FD3E277B289A08 cert=2uplIpLQ0q9+0qMFrK5pkaYRDOe460LL9WHBvatgkuRr/SL31wBOEupaMMJ6koRE6Ld0ew iat-mode=0
+#Bridge obfs4 38.229.1.78:80 C8CBDB2464FC9804A69531437BCF2BE31FDD2EE4 cert=Hmyfd2ev46gGY7NoVxA9ngrPF2zCZtzskRTzoWXbxNkzeVnGFPWmrTtILRyqCTjHR+s9dg iat-mode=1
+#Bridge obfs4 38.229.33.83:80 0BAC39417268B96B9F514E7F63FA6FBA1A788955 cert=VwEFpk9F/UN9JED7XpG1XOjm/O8ZCXK80oPecgWnNDZDv5pdkhq1OpbAH0wNqOT6H6BmRQ iat-mode=1
+#Bridge obfs4 193.11.166.194:27015 2D82C2E354D531A68469ADF7F878FA6060C6BACA cert=4TLQPJrTSaDffMK7Nbao6LC7G9OW/NHkUwIdjLSS3KYf0Nv4/nQiiI8dY2TcsQx01NniOg iat-mode=0
+#Bridge obfs4 193.11.166.194:27020 86AC7B8D430DAC4117E9F42C9EAED18133863AAF cert=0LDeJH4JzMDtkJJrFphJCiPqKx7loozKN7VNfuukMGfHO0Z8OGdzHVkhVAOfo1mUdv9cMg iat-mode=0

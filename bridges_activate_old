@@ -77,11 +77,12 @@ number_of_bridges
 if [ $number_configured_bridges_deactivated = 0 ]; then
   clear
   echo -e "${WHITE}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
-  echo -e "${RED}[+] You may use the menu entry \"Deactivate configured OBFS4 bridges\". ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Deactivate OBFS4...\". ${NOCOLOR}"
   sleep 5
+  exit 0
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "===" "==============================================================" \
   "  1" "Activate ALL configured OBFS4 bridges"  \
   "  2" "Activate only OBFS4 bridges, which are ONLINE"  \

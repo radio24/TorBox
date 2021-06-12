@@ -121,7 +121,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "============================================[Informational]===" \
 "  1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "===" "======================================[OBFS4 bridges relay]==="  \
@@ -218,7 +218,7 @@ if [ $exitstatus = 0 ]; then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
-        nNICK="TorBox040"
+        nNICK="TorBox041"
         change_config
         read_config
       fi
