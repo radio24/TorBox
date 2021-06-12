@@ -95,17 +95,17 @@ i=0
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				bridge_status=$(./bridges_check.py -f $bridge_hash)
-				if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
-				elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-				elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+				if [ $bridge_status == 1 ]; then bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+			elif [ $bridge_status == 0 ]; then bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
+		elif [ $bridge_status == 2 ]; then bridge_status_txt="- DOESN'T EXIST" ; fi
 				i=$(( $i + 1 ))
-				bridge_address="$i : $bridge_address $bridge_status"
+				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e $bridge_address
 			done
 			if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
 				echo " "
 				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
-				echo -e "${RED}[+] We try to use it anyway, but must likely it will not work :(${NOCOLOR}"
+				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
 			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
