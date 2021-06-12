@@ -1,6 +1,6 @@
 All of the relays that make up the Tor network are publicly listed. One way to try to prevent people from using Tor is to blacklist the public IP addresses of all of the thousands of Tor relays. However, thanks to BRIDGES, Tor users are still able to connect to the network when the public Tor relays are blocked. Not only are bridges private, they can also modify their network packets in a way that it's difficult for an observer to conclude that somebody is using Tor. Unfortunately, the number of bridges have been stagnant for a while. The Tor network needs a constant trickle of new bridges that aren't blocked anywhere yet -- and you can help with that!
 
-By setting up a bridge relay, you can help censored users connect to the open internet through Tor.
+By setting up a OBFS4 BRIDGE RELAY, you can help censored users connect to the open internet through Tor.
 
 REQUIREMENTS
 - At least 1 Mbit/s down-/upload bandwidth
@@ -10,10 +10,10 @@ REQUIREMENTS
   forwarding; make sure that NAT doesn't get in the way)
 
 3-STEP PROCEDURE
-To get your bridge relay working in TorBox, you have to follow a 3-step procedure:
+To get TorBox's OBFS4 BRIDGE RELAY working, you have to follow a 3-step procedure:
 1. Check and/or change the configuration (menu entry 3).
-2. Activate the BRIDGE RELAY MODE (menu entry 2).
+2. Activate TorBox's OBFS4 BRIDGE RELAY (menu entry 2).
 3. Restart Tor (menu entry 7) or check Tor log (menu entry 8).
 
 IMPORTANT
-Changing your connection settings in the main menu, activating bridge mode or resetting Tor deactivates the Bridge Relay Mode automatically. However, all the configurations are saved so that it is easy to restart the Bridge Relay Mode again.
+Changing your connection settings in the main menu, activating bridge mode or resetting Tor deactivates the OBFS4 BRIDGE RELAY automatically. However, all the configurations are saved so that it is easy to restart the OBFS4 BRIDGE RELAY again.

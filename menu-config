@@ -31,16 +31,17 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -49,9 +50,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
+if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
+
 #Other variables
-CHECK_HD1=$(grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model)
-CHECK_HD2=$(grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo)
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -153,7 +156,6 @@ read_config()
   fi
 
   # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
-  # (sudo iptables -t nat -C PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
   RULE_CHECK=0
   (sudo iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
   RULE_CHECK=$?
@@ -174,7 +176,6 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "===" "===============================================[Passwords]===" \
 "  1" "Change admin (user torbox) password"  \
 "  2" "Change the password of TorBox's WLAN (reboot required)"  \
@@ -282,8 +283,6 @@ if [ $exitstatus = 0 ]; then
 #This changes the frequency band
     elif [ $CHOICE = 6 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
-        #Check: it should be more interoperable
-  #     if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
         if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
           clear
           echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
@@ -334,8 +333,6 @@ if [ $exitstatus = 0 ]; then
 #Change the WLAN channel
     elif [ $CHOICE = 7 ]; then
       if [ "$TOGGLE05" = "2.5 GHz" ]; then
-        #Check: it should be more interoperable
-  #     if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then
         if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
           CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
           "A" "Channel  1 at 20 MHz" OFF \

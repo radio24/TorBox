@@ -21,9 +21,11 @@
 # This file add automatically or manually bridges to /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_add_old <bridge mode>
+# ./bridges_add_old <bridge mode> <standalone>
 #
 # <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
+# <standalone>: 0 - bridges_add_old was executed as part of the activation process, when no bridges were found
+#               1 - bridges_add_old was directly executed
 #
 ###### SET VARIABLES ######
 #
@@ -33,13 +35,14 @@
 NO_ITEMS=2
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -52,7 +55,9 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 MODE_BRIDGES=$1
+STANDALONE=$2
 number_bridges=0
+i=0
 
 ###########################
 ######## FUNCTIONS ########
@@ -60,56 +65,57 @@ number_bridges=0
 #include lib
 .  lib/torbox.lib
 
-
+###########################
 
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
 "===" "==============================================================" \
-"  1" "Add one bridge automatically (about one bridge every 24 hours)"  \
-"  2" "Add bridges manually"  \
+"  1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+"  2" "Add OBFS4 bridges manually"  \
 "===" "==============================================================" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
   if [ "$CHOICE" != " " ]; then
 
-# Add bridges automatically
+    # Add bridges automatically
     if [ $CHOICE = 1 ]; then
       clear
       echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
       #-m 6 must not be lower, otherwise it looks like there is no connection!
       OCHECK=$(curl -m 6 -s https://bridges.torproject.org)
       if [ $? == 0 ]; then
-        echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
+        echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
         sleep 3
         clear
-        whiptail --title "TorBox - INFO" --textbox text/add-bridges-automatically-text $MENU_HEIGHT_25 $MENU_WIDTH
+        whiptail --title "TorBox - INFO" --textbox text/add-bridges-automatically-text $MENU_HEIGHT_15 $MENU_WIDTH
         clear
         echo -e "${RED}[+] Fetching a bridge... this may take some time, please wait!${NOCOLOR}"
-        trap "bash bridges_add_old; exit 0" SIGINT
+        trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
         bridge_address=$(sudo python3 bridges_get.py)
         if grep -q "$bridge_address" $TORRC ; then
-          echo -e "${WHITE}[+] This bridge is already added!${NOCOLOR}"
-          echo -e "${WHITE}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
+          echo -e "${WHITE}[!] This bridge is already added!${NOCOLOR}"
+          echo -e "${RED}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
           echo " "
           read -n 1 -s -r -p "Press any key to continue"
+          clear
         else
           if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
+            bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
+            bridge_address=$(echo -e "$bridge_address\n")
           else
             bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
             bridge_address=$(echo -e "$bridge_address\n")
           fi
+          echo ""
           echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
           echo -e "${RED}[+] Saved a valid bridge!${NOCOLOR}"
           sudo echo $bridge_address >> $TORRC
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          INPUT=$(cat text/restart-tor-text)
-          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            restarting_tor menu-bridges
+          sleep 5
+          clear
+          if [ $STANDALONE = 1 ]; then
+            activate_obfs4_bridges bridges_add_old
+            exit 0
           fi
         fi
       else
@@ -117,26 +123,24 @@ if [ $exitstatus = 0 ]; then
         echo -e "${WHITE}[!] SORRY! - no connection with the bridge database! Please, try again later!${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p "Press any key to continue"
+        clear
       fi
 
-# Add bridges manually
+    # Add bridges manually
     elif [ $CHOICE = 2 ]; then
       clear
       whiptail --title "TorBox - INFO" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
-      number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       if [ $number_bridges > 0 ]; then
         i=1
-        j=0
         while [ $i -le $number_bridges ]
         do
-          bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           bridge_address="$(<<< "$bridge_address" sed -e 's/[[:blank:]]*$//')"
           if grep -q "$bridge_address" $TORRC ; then
-            clear
-            if (whiptail --title "TorBox - INFO" --msgbox "\n\nThis bridge is already added!" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              i=$(( $i+1 ))
-              clear
-            fi
+            echo -e "${WHITE}[!] Bridge number $i is already added!${NOCOLOR}"
+            sleep 3
+            i=$(( $i+1 ))
           else
             if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
               bridge_address="Bridge $bridge_address"
@@ -145,20 +149,23 @@ if [ $exitstatus = 0 ]; then
             fi
             echo -e "${RED}[+] Saved bridge number $i!${NOCOLOR}"
             sudo echo $bridge_address >> $TORRC
-            j=$(( $j+1 ))
             i=$(( $i+1 ))
           fi
         done
-        sleep 3
-        if [ $j -gt 0 ]; then
-          INPUT=$(cat text/restart-tor-text)
-          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            restarting_tor menu-bridges
-          fi
+        sleep 5
+        clear
+        if [ $STANDALONE = 1 ]; then
+          activate_obfs4_bridges bridges_add_old
+          exit 0
         fi
       else
         exit 0
       fi
     fi
   fi
+else
+  clear
+  exit 0
 fi
+bash bridges_add_old
+exit 0

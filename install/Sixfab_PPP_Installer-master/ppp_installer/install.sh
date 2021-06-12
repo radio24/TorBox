@@ -177,7 +177,7 @@ fi
 #            break;;
 #
 #		[Nn]* ) echo -e ""
-#            echo -e "${WHITE}To connect to internet use main menu entry 7${SET}"
+#            echo -e "${WHITE}To connect to internet use main menu entry 8${SET}"
 #			  break;;
 #		*)   echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
 #	esac
@@ -188,6 +188,6 @@ fi
 sleep 2
 clear
 echo -e "${WHITE}The installation of the Sixfab Shield/HATs support is done!${SET}"
-echo -e "${RED}To connect to internet use main menu entry 7${SET}"
+echo -e "${RED}To connect to internet use main menu entry 8${SET}"
 echo -e ""
 read -n 1 -s -r -p "Press any key to continue"

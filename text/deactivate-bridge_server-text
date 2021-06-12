@@ -1,7 +1,7 @@
-This menu entry deactivates the BRIDGE RELAY MODE of TorBox. This is the default.
+This menu entry deactivates TorBox's OBFS4 BRIDGE RELAY, which is the default.
 
-However, the used configuration will not be deleted. If you activate the BRIDGE RELAY MODE again, the same configuration is applied -- no need to worry ;-)
+However, the used configuration will not be deleted. If you activate the OBFS4 BRIDGE RELAY again, the same configuration will be applied -- no need to worry ;-)
 
-In the end, Tor automatically restarts.
+At the end, Tor automatically restarts.
 
-Would you like to DEACTIVATE the BRIDGE RELAY MODE of TorBox?
+Would you like to DEACTIVATE the OBFS4 BRIDGE RELAY of TorBox?

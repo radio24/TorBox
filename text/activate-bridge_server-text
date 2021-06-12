@@ -1,4 +1,4 @@
-By setting up a bridge relay, you can help censored users connect to the open internet through Tor. To successfully set up a bridge relay, you have to meet some requirements:
+By setting up a OBFS4 bridge relay, you can help censored users connect to the open internet through Tor. To successfully set up a OBFS4 bridge relay, you have to meet some requirements:
 
 - At least 1 Mbit/s down-/upload bandwidth
   (check here: http://beta.speedtest.net)
@@ -7,6 +7,6 @@ By setting up a bridge relay, you can help censored users connect to the open in
   NAT doesn't get in the way)
 
 Furthermore, you probably wish to change the configuration (menu entry 3). To take effect, finally, you have to restart Tor (menu entry 7).
-More information can you find in the "RUN A TOR BRIDGE RELAY - READ ME FIRST" menu entry.
+More information can you find in the "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST" menu entry.
 
-Would you like to ACTIVATE the OBFS4 BRIDGE MODE of TorBox?
+Would you like to ACTIVATE TorBox's OBFS4 BRIDGE RELAY?

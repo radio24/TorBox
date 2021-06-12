@@ -22,13 +22,7 @@
 # This file deactivates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_deactivate_old <show when zero bridges>
-#
-# <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
-#
-# Possible values for <show when zero bridges>:
-# 0	->	No message is shown.
-# 1	->	Message is shown.
+# ./bridges_deactivate_old
 #
 #
 ###### SET VARIABLES ######
@@ -36,16 +30,17 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=3
+NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -57,7 +52,6 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-show_when_zero_bridges=$1
 i=0
 
 ###########################
@@ -81,36 +75,32 @@ number_of_bridges
 ###########################
 
 if [ $number_configured_bridges_activated = 0 ]; then
-  if [ $show_when_zero_bridges = 1 ]; then
-    clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO activated bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-    fi
-  fi
+  clear
+  echo -e "${WHITE}[!] There are no activated OBFS4 bridges. ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Activate configured OBFS4 bridges...\". ${NOCOLOR}"
+  sleep 5
 else
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  " " " " \
   "===" "==============================================================" \
-  "  1" "Deactivate ALL configured bridges"  \
-  "  2" "Deactivate only bridges, which are not longer ONLINE"  \
-  "  3" "Deactivate only selected bridges"  \
+  "  1" "Deactivate ALL configured OBFS4 bridges and directly connect tor"  \
+  "  2" "Deactivate only OBFS4 bridges, which are not longer ONLINE"  \
+  "  3" "Deactivate only selected OBFS4 bridges"  \
+  "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
   exitstatus=$?
 
   if [ $exitstatus = 0 ]; then
     if [ "$CHOICE" != " " ]; then
 
-    # Deactivate ALL configured bridges
-		  if [ $CHOICE = 1 ]; then
-        sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-        INPUT=$(cat text/restart-tor-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          restarting_tor menu-bridges
-        fi
+      # Deactivate ALL configured bridges
+      if [ $CHOICE = 1 ]; then
+        deactivate_obfs4_bridges
+        clear
+        restarting_tor bridges_deactivate_old menu-bridges
+        exit 0
 
-    # Deactivate only bridges, which are OFFLINE or do not exist anymore
+      # Deactivate only bridges, which are OFFLINE or do not exist anymore
       elif [ $CHOICE = 2 ]; then
         clear
         echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
@@ -121,12 +111,12 @@ else
           echo " "
           echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
           trap "bash bridges_deactivate_old; exit 0" SIGINT
+          j=0
           while [ $i -lt $number_configured_bridges_activated ]
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-            j=0
             if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
               j=$(($j + 1))
               echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
@@ -140,21 +130,34 @@ else
             fi
             i=$(( $i + 1 ))
           done
-          sleep 3
-          clear
-          if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
+          if [ $j = 0 ]; then
+            echo " "
+            echo -e "${WHITE}[!] All checked OBFS4 do exist and are online -> nothing to deactivate!${NOCOLOR}"
+            sleep 5
+            clear
+          else
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+            clear
+            number_of_bridges
+            if [ $number_configured_bridges_activated = 0 ]; then
+              deactivate_obfs4_bridges
+              clear
+              restarting_tor bridges_deactivate_old menu-bridges
+            else
+              activate_obfs4_bridges bridges_deactivate_old
+              exit 0
             fi
           fi
         else
           echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 3
+          sleep 5
+          clear
         fi
+        exit 0
 
-    # Deactivate only selected bridges
+      # Deactivate only selected bridges
       elif [ $CHOICE = 3 ]; then
         INPUT=$(cat text/deactivate-selected-bridges-text)
         if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -169,7 +172,8 @@ else
           do
             i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
-            bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+            # Row below is not necessary?
+            # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             j=$(($j + 1))
             echo -e "${RED}[+] Dectivating bridge number $deactivate_number${NOCOLOR}"
             #This is necessary to work with special characters in sed
@@ -186,16 +190,31 @@ else
               deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
             fi
           done
-          sleep 3
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
-          if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
+          number_of_bridges
+          if [ $number_configured_bridges_activated = 0 ]; then
+            deactivate_obfs4_bridges
+            clear
+            restarting_tor bridges_deactivate_old menu-bridges
+          else
+            if [ $j -gt 0 ]; then
+              activate_obfs4_bridges bridges_deactivate_old
+              exit 0
             fi
           fi
         fi
+
+      # List all bridges configured in torrc and if online display the status of the bridges
+      elif [ $CHOICE = 4 ]; then
+        list_all_obfs4_bridges
       fi
     fi
+  else
+    clear
+    exit 0
   fi
 fi
+bash bridges_deactivate_old
+exit 0

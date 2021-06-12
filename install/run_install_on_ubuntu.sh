@@ -93,10 +93,12 @@ TORURL="https://github.com/torproject/tor/releases"
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n"
 
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
+if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
-CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
-CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 SELECT_TOR=$1
 i=0
 n=0
@@ -252,7 +254,7 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
 
-check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential"
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox"
 
 #Install wiringpi
 clear
@@ -516,6 +518,12 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
+(sudo cp /etc/default/shellinabox /etc/default/shellinabox.bak) 2> /dev/null
+sudo cp etc/default/shellinabox /etc/default/shellinabox
+sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
+sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
+sudo systemctl restart shellinabox.service
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"

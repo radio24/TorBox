@@ -1,9 +1,4 @@
-With this menu entry, you can deactivate the OBFS4 BRIDGE MODE of TorBox.
-This is the default.
+This menu entry DEACTIVATES the OBFS4 BRIDGES for TorBox. However, the OBFS4 bridges will not be deleted, you can activate these bridges later again -- no need to worry ;-)
 
-Furthermore, in the end, all configured bridges are deactivated.
-However, the bridges will not be deleted. If you activate the OBFS4 BRIDGE MODE again, you can activate again these bridges -- no need to worry ;-)
-
-In the end, Tor automatically restarts - no need to do it again.
-
-Would you like to DEACTIVATE the OBFS4 BRIDGE MODE of TorBox?
+IMPORTANT
+Only when ALL OBFS4 bridges are disabled, TorBox will directly connect to the Tor network, which is the default.
