@@ -37,8 +37,6 @@ MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -48,8 +46,10 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 SNOWSTRING=$1
 MEEKSTRING=$2
+EXITID=$(grep "^EXITID=" ${RUNFILE})
 i=0
 
 ###########################
@@ -61,6 +61,10 @@ i=0
 ######## PREPARATIONS ########
 ###########################
 
+	if [ $EXITID = "EXITID=1" ]; then
+		sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+		exit 0
+	fi
 	if [ "$SNOWSTRING" = "OFF" ]; then
 		clear
 		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
@@ -116,12 +120,14 @@ i=0
 			deactivating_bridge_relay
 			deactivate_obfs4_bridges
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+			sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
 			sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
 			sudo sed -i "s/^#ClientTransportPlugin snowflake/ClientTransportPlugin snowflake/g" ${TORRC}
 			sudo sed -i "s/^#Bridge snowflake /Bridge snowflake /g" ${TORRC}
+			sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
 			clear
-			restarting_tor menu-bridges
+			restarting_tor snowflake
 		fi
 	else
 		INPUT=$(cat text/deactivate-snowflake-text)
@@ -132,7 +138,8 @@ i=0
 			sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
 			sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
 			sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-			sudo sed -i "s/^Bridge obfs4 /#Bridge  obfs4 /g" ${TORRC}
-			restarting_tor menu-bridges
+			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+			sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+			restarting_tor snowflake
 		fi
 	fi

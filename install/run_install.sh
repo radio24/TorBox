@@ -83,7 +83,7 @@ CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
 #Used go version
-GO_VERSION="go1.16.3.linux-armv6l.tar.gz"
+GO_VERSION="go1.16.5.linux-armv6l.tar.gz"
 
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"

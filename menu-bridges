@@ -150,7 +150,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "============================================[Informational]===" \
 "  1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "===" "============================================[OBFS4 bridges]==="  \
@@ -158,7 +158,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASUR
 "  3" "Add additional OBFS4 bridges"  \
 "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
 "  5" "Remove configured OBFS4 bridges"  \
-"  6" "Deactivate configured OBFS4 bridges"  \
+"  6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
 "  7" "Enter the advanced configuration editor"  \
 "===" "=====================================[More Countermeasures]===" \
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
@@ -267,7 +267,7 @@ if [ $exitstatus = 0 ]; then
       read_config
 
     # Use Meek-Azure to circumvent censorship
-    elif [ $CHOICE = 8 ]; then
+    elif [ $CHOICE = 9 ]; then
       if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
         whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi

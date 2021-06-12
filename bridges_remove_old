@@ -55,10 +55,12 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
 MODE_BRIDGES=$1
 number_bridges=0
+EXITID=$(grep "^EXITID=" ${RUNFILE})
 i=0
 
 ###########################
@@ -81,8 +83,13 @@ number_of_bridges
 
 ###########################
 
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
+
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==============================================================" \
 "  1" "Remove ALL configured OBFS4 bridges and directly connect tor"  \
 "  2" "Remove only OBFS4 bridges, which do not exist anymore"  \
@@ -101,6 +108,7 @@ if [ $exitstatus = 0 ]; then
           sudo cp ${TORRC} ${BAK}
           deactivate_obfs4_bridges
           sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
+          sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
           clear
           restarting_tor bridges_remove_old
       fi
@@ -166,8 +174,10 @@ if [ $exitstatus = 0 ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear
+              sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
               restarting_tor bridges_remove_old
             else
+			        sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
               restarting_tor bridges_remove_old
             fi
           fi
@@ -234,8 +244,10 @@ if [ $exitstatus = 0 ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear
+              sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
               restarting_tor bridges_remove_old
             else
+              sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
               restarting_tor bridges_remove_old
             fi
           fi

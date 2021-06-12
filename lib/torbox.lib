@@ -359,6 +359,7 @@ activate_obfs4_bridges()
     sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
     sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
     sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+    sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
     sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
     sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
     INPUT=$(cat text/restart-tor-bridges-text)
