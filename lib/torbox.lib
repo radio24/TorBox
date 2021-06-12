@@ -329,6 +329,11 @@ list_all_obfs4_bridges()
         echo -e "$bridge_address"
     done
   fi
+  if [ $number_configured_bridges_total = 0 ]; then
+    echo " "
+    echo " "
+    echo -e "${WHITE}[!] SORRY! - there are no configured OBFS4 bridges!${NOCOLOR}"
+  fi
   echo " "
   read -n 1 -s -r -p "Press any key to continue"
 }
@@ -343,10 +348,11 @@ deactivate_obfs4_bridges()
   sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 }
 
-# activate_obfs4_bridges()
+# activate_obfs4_bridges(<source script>)
 # Activates OBFS4 if the number of activated obfs4 bridge entries in torrc is >0
 activate_obfs4_bridges()
 {
+  SOURCE_SCRIPT=$1
   number_of_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
     deactivating_bridge_relay
@@ -357,7 +363,7 @@ activate_obfs4_bridges()
     sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
     INPUT=$(cat text/restart-tor-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      restarting_tor menu-bridges
+      restarting_tor $SOURCE_SCRIPT
     else
       deactivate_obfs4_bridges
     fi

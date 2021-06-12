@@ -57,6 +57,7 @@ TORRC="/etc/tor/torrc"
 MODE_BRIDGES=$1
 STANDALONE=$2
 number_bridges=0
+i=0
 
 ###########################
 ######## FUNCTIONS ########
@@ -113,7 +114,7 @@ if [ $exitstatus = 0 ]; then
           sleep 5
           clear
           if [ $STANDALONE = 1 ]; then
-            activate_obfs4_bridges
+            activate_obfs4_bridges bridges_add_old
             exit 0
           fi
         fi
@@ -154,7 +155,7 @@ if [ $exitstatus = 0 ]; then
         sleep 5
         clear
         if [ $STANDALONE = 1 ]; then
-          activate_obfs4_bridges
+          activate_obfs4_bridges bridges_add_old
           exit 0
         fi
       else
@@ -166,3 +167,5 @@ else
   clear
   exit 0
 fi
+bash bridges_add_old
+exit 0

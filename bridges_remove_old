@@ -22,14 +22,11 @@
 # This file removes already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_remove_old <show when zero bridges>
+# ./bridges_remove_old <bridge mode>
 #
 # <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
 #
-# Possible values for <show when zero bridges>:
-# 0	->	No message is shown.
-# 1	->	Message is shown.
-#
+# <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
 #
 ###### SET VARIABLES ######
 #
@@ -60,7 +57,8 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
-show_when_zero_bridges=$1
+MODE_BRIDGES=$1
+number_bridges=0
 i=0
 
 ###########################
@@ -68,7 +66,6 @@ i=0
 
 #include lib
 .  lib/torbox.lib
-
 
 ######## PREPARATIONS ########
 #
@@ -84,156 +81,175 @@ number_of_bridges
 
 ###########################
 
-if [ $number_configured_bridges_total = 0 ]; then
-  if [ $show_when_zero_bridges = 1 ]; then
-    clear
-    if (whiptail --title "TorBox - INFO" --msgbox "\n\nThere are NO configured bridges, yet!" $MENU_HEIGHT_15 $MENU_WIDTH); then
+clear
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"===" "==============================================================" \
+"  1" "Remove ALL configured OBFS4 bridges and directly connect tor"  \
+"  2" "Remove only OBFS4 bridges, which do not exist anymore"  \
+"  3" "Remove only selected OBFS4 bridges"  \
+"  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
+"===" "==============================================================" 3>&1 1>&2 2>&3)
+exitstatus=$?
+
+if [ $exitstatus = 0 ]; then
+  if [ "$CHOICE" != " " ]; then
+
+    # Remove ALL configured bridges
+    if [ $CHOICE = 1 ]; then
+      INPUT=$(cat text/delete-all-bridges-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "REMOVE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo cp ${TORRC} ${BAK}
+          deactivate_obfs4_bridges
+          sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
+          clear
+          restarting_tor bridges_remove_old
+      fi
+      exit 0
+
+    # Remove only bridges, which do not exist anymore
+    elif [ $CHOICE = 2 ]; then
+      clear
+      echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
+      OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
+      if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+      if [ $OCHECK == 0 ]; then
+        echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+        echo " "
+        echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
+        sudo cp ${TORRC} ${BAK}
+        trap "bash bridges_remove_old; exit 0" SIGINT
+        j=0
+        while [ $i -lt $number_configured_bridges_deactivated ]
+        do
+          bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
+          bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $bridge_status == 2 ]; then
+            j=$(($j + 1))
+            echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
+            #This is necessary to work with special characters in sed
+            ORIGINAL_STR="${configured_bridges_deactivated[$i]}"
+            ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+            ORIGINAL_STR="^$ORIGINAL_STR"
+            sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
+          fi
+          i=$(( $i + 1 ))
+        done
+        i=0
+        while [ $i -lt $number_configured_bridges_activated ]
+        do
+          bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
+          bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $bridge_status == 2 ]; then
+            j=$(($j + 1))
+            echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
+            #This is necessary to work with special characters in sed
+            ORIGINAL_STR="${configured_bridges_activated[$i]}"
+            ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+            ORIGINAL_STR="^$ORIGINAL_STR"
+            sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
+          fi
+          i=$(( $i + 1 ))
+        done
+        if [ $j = 0 ]; then
+          echo " "
+          echo -e "${WHITE}[!] All checked OBFS4 do exist -> nothing to remove!${NOCOLOR}"
+          sleep 5
+          clear
+        else
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          clear
+          number_of_bridges
+          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+            if [ $number_configured_bridges_activated = 0 ]; then
+              deactivate_obfs4_bridges
+              clear
+              restarting_tor bridges_remove_old
+            else
+              restarting_tor bridges_remove_old
+            fi
+          fi
+        fi
+      else
+        echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+        echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+        sleep 5
         clear
+      fi
+      exit 0
+
+    # Remove only selected bridges
+    elif [ $CHOICE = 3 ]; then
+      INPUT=$(cat text/delete-selected-bridges-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
+        delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
+        clear
+        echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
+        sudo cp ${TORRC} ${BAK}
+        j=0
+        while [[ "$delete_number" != " " && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
+        do
+          if [ $delete_number -gt $number_configured_bridges_deactivated ]; then
+            echo -e "${RED}[+] Removing bridge number $delete_number${NOCOLOR}"
+            j=$(($j + 1))
+            i=$(( $delete_number - $number_configured_bridges_deactivated - 1 ))
+            #This is necessary to work with special characters
+            ORIGINAL_STR="${configured_bridges_activated[$i]}"
+            ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+            ORIGINAL_STR="^$ORIGINAL_STR"
+            sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
+          else
+            echo -e "${RED}[+] Removing bridge number $delete_number${NOCOLOR}"
+            j=$(($j + 1))
+            i=$(( $delete_number - 1 ))
+            #This is necessary to work with special characters
+            ORIGINAL_STR="${configured_bridges_deactivated[$i]}"
+            ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+            ORIGINAL_STR="^$ORIGINAL_STR"
+            sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
+          fi
+          if [ "$delete_number" = "$number_to_be_deleted" ]; then
+            delete_number=0
+          else
+            number_to_be_deleted=$(cut -d ' ' -f2- <<< $number_to_be_deleted)
+            delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
+          fi
+        done
+        number_of_bridges
+        if [ $j = 0 ]; then
+          echo " "
+          echo -e "${WHITE}[!] We had nothing to remove! Did we?${NOCOLOR}"
+          sleep 5
+          clear
+        else
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          clear
+          number_of_bridges
+          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+            if [ $number_configured_bridges_activated = 0 ]; then
+              deactivate_obfs4_bridges
+              clear
+              restarting_tor bridges_remove_old
+            else
+              restarting_tor bridges_remove_old
+            fi
+          fi
+        fi
+      fi
+
+    # List all bridges configured in torrc and if online display the status of the bridges
+    elif [ $CHOICE = 4 ]; then
+      list_all_obfs4_bridges
     fi
   fi
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  "===" "==============================================================" \
-  "  1" "Remove ALL configured OBFS4 bridges and directly connect tor"  \
-  "  2" "Remove only OBFS4 bridges, which do not exist anymore"  \
-  "  3" "Remove only selected OBFS4 bridges"  \
-  "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
-  "===" "==============================================================" 3>&1 1>&2 2>&3)
-  exitstatus=$?
-
-  if [ $exitstatus = 0 ]; then
-    if [ "$CHOICE" != " " ]; then
-
-      # Remove ALL configured bridges
-      if [ $CHOICE = 1 ]; then
-        INPUT=$(cat text/delete-all-bridges-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            sudo cp ${TORRC} ${BAK}
-            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-            sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
-            sudo sed -i "/^Bridge obfs4 /d" ${TORRC}
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              clear
-              restarting_tor menu-bridges
-            fi
-        fi
-
-      # Remove only bridges, which do not exist anymore
-      elif [ $CHOICE = 2 ]; then
-        clear
-        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-        if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
-        if [ $OCHECK == 0 ]; then
-          echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-          echo " "
-          echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
-          sudo cp ${TORRC} ${BAK}
-          trap "bash bridges_remove_old; exit 0" SIGINT
-          j=0
-          while [ $i -lt $number_configured_bridges_deactivated ]
-          do
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
-            bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
-            if [ $bridge_status == 2 ]; then
-              j=$(($j + 1))
-              echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
-              sudo grep -v "^${configured_bridges_deactivated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-            fi
-            i=$(( $i + 1 ))
-          done
-          i=0
-          while [ $i -lt $number_configured_bridges_activated ]
-          do
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
-            bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
-            if [ $bridge_status == 2 ]; then
-              j=$(($j + 1))
-              echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
-              sudo grep -v "^${configured_bridges_activated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-            fi
-            i=$(( $i + 1 ))
-          done
-          number_of_bridges
-          if [ $number_configured_bridges_activated -eq 0 ]; then
-            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-          fi
-          sleep 3
-          clear
-          if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
-            fi
-          fi
-        else
-          echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-          echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 3
-        fi
-
-      # Remove only selected bridges
-      elif [ $CHOICE = 3 ]; then
-        INPUT=$(cat text/delete-selected-bridges-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to delete? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
-          delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
-          clear
-          echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
-          sudo cp ${TORRC} ${BAK}
-          j=0
-          while [[ "$delete_number" != " " && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
-          do
-            if [ $delete_number -gt $number_configured_bridges_deactivated ]; then
-              echo -e "${RED}[+] Removing bridge number $delete_number${NOCOLOR}"
-              j=$(($j + 1))
-              i=$(( $delete_number - $number_configured_bridges_deactivated - 1 ))
-              sudo grep -v "^${configured_bridges_activated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-            else
-              echo -e "${RED}[+] Removing bridge number $delete_number${NOCOLOR}"
-              j=$(($j + 1))
-              i=$(( $delete_number - 1 ))
-              sudo grep -v "^${configured_bridges_deactivated[$i]}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
-            fi
-            if [ "$delete_number" = "$number_to_be_deleted" ]; then
-              delete_number=0
-            else
-              number_to_be_deleted=$(cut -d ' ' -f2- <<< $number_to_be_deleted)
-              delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
-            fi
-          done
-          number_of_bridges
-          if [ $number_configured_bridges_activated -eq 0 ]; then
-            sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-            sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-            sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-          fi
-          sleep 3
-          clear
-          if [ $j -gt 0 ]; then
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              restarting_tor menu-bridges
-            fi
-          fi
-        fi
-
-      # List all bridges configured in torrc and if online display the status of the bridges
-      elif [ $CHOICE = 4 ]; then
-        list_all_obfs4_bridges
-      fi
-    fi
-  else
-    clear
-    exit 0
-  fi
+  exit 0
 fi
+bash bridges_remove_old
+exit 0

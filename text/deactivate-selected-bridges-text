@@ -8,6 +8,6 @@ To deactivate selected OBFS4 bridges, you have to follow a 2-step procedure:
    by a comma, which you want to deactivate (for example 1,2,3,10)
 
 IMPORTANT
-If ALL OBFS4 bridges are removed, TorBox will directly connect to the Tor network, which is the default.
+If ALL OBFS4 bridges are deactivated, TorBox will directly connect to the Tor network, which is the default.
 
 Would you like to CONTINUE?

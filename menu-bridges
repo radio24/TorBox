@@ -220,33 +220,34 @@ if [ $exitstatus = 0 ]; then
 
     # Remove bridges
     elif [ $CHOICE = 5 ]; then
-      sudo bash bridges_remove_old 1
-      read_config
+      if [ $number_configured_bridges_total = 0 ]; then
+        clear
+        echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
+        sleep 5
+      else
+        whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
+        sudo bash bridges_remove_old "$MODE_BRIDGES"
+        read_config
+      fi
 
     # Deactivate bridges
     elif [ $CHOICE = 6 ]; then
-      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+      if [ $number_configured_bridges_total = 0 ]; then
         clear
-        echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
-        echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2.${NOCOLOR}"
+        echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
         sleep 5
       else
-        INPUT=$(cat text/deactivate-bridges-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          sudo bash bridges_deactivate_old 1
-        fi
-        if [ $number_configured_bridges_total = 0 ]; then
-          INPUT=$(cat text/add-bridges-first-text)
-          if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-            sudo bash bridges_add_old "$MODE_BRIDGES" 0
-          else
-            deactivate_obfs4_bridges
-            clear
-            restarting_tor menu-bridges
-          fi
+        if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+          clear
+          echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
+          echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2.${NOCOLOR}"
+          sleep 5
+        else
+          whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+          sudo bash bridges_deactivate_old
+          read_config
         fi
       fi
-      read_config
 
     # Enter the advanced configuration editor
     elif [ $CHOICE = 7 ]; then

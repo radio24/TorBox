@@ -97,7 +97,8 @@ else
       if [ $CHOICE = 1 ]; then
         deactivate_obfs4_bridges
         clear
-        restarting_tor menu-bridges
+        restarting_tor bridges_deactivate_old menu-bridges
+        exit 0
 
       # Deactivate only bridges, which are OFFLINE or do not exist anymore
       elif [ $CHOICE = 2 ]; then
@@ -110,12 +111,12 @@ else
           echo " "
           echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
           trap "bash bridges_deactivate_old; exit 0" SIGINT
+          j=0
           while [ $i -lt $number_configured_bridges_activated ]
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-            j=0
             if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
               j=$(($j + 1))
               echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
@@ -129,17 +130,22 @@ else
             fi
             i=$(( $i + 1 ))
           done
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          clear
-          number_of_bridges
-          if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges
+          if [ $j = 0 ]; then
+            echo " "
+            echo -e "${WHITE}[!] All checked OBFS4 do exist and are online -> nothing to deactivate!${NOCOLOR}"
+            sleep 5
             clear
-            restarting_tor menu-bridges
           else
-            if [ $j -gt 0 ]; then
-              activate_obfs4_bridges
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+            clear
+            number_of_bridges
+            if [ $number_configured_bridges_activated = 0 ]; then
+              deactivate_obfs4_bridges
+              clear
+              restarting_tor bridges_deactivate_old menu-bridges
+            else
+              activate_obfs4_bridges bridges_deactivate_old
               exit 0
             fi
           fi
@@ -191,10 +197,10 @@ else
           if [ $number_configured_bridges_activated = 0 ]; then
             deactivate_obfs4_bridges
             clear
-            restarting_tor menu-bridges
+            restarting_tor bridges_deactivate_old menu-bridges
           else
             if [ $j -gt 0 ]; then
-              activate_obfs4_bridges
+              activate_obfs4_bridges bridges_deactivate_old
               exit 0
             fi
           fi
