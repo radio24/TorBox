@@ -334,7 +334,7 @@ else number_torversion=0 ; fi
 # 6b. Compile and install the latest stable Tor version
 if [ $number_torversion = 0 ] ; then
 	mkdir ~/debian-packages; cd ~/debian-packages
-	sudo apt source tor
+	apt source tor
 	sudo apt-get -y install fakeroot devscripts
 	#sudo apt-get -y install tor deb.torproject.org-keyring
 	#sudo apt-get -y upgrade tor deb.torproject.org-keyring
