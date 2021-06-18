@@ -307,6 +307,7 @@ clear
 echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
 (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 sudo chmod a+x /usr/share/tor/geoip*
+# Copy not moving!
 (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
 setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
