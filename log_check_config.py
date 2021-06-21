@@ -25,10 +25,10 @@ config = {
 matches = [
     {
         "file": '/var/log/tor/notices.log',
-        "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # use * as wildcard
-        "match_count": 3,  # min matches to execute command
+        "match": "Most likely this means the Tor network is overloaded",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'cat /etc/passwd > /tmp/executed.out',
+        "command": 'sudo bash automat 1',
     },
     #{
     #    "file": '/var/log/tor/notices.log',
