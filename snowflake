@@ -67,6 +67,7 @@ i=0
 	fi
 	if [ "$SNOWSTRING" = "OFF" ]; then
 		clear
+		trap "bash snowflake; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
 		readarray -t configured_snowflake_deactivated < <(grep "^#Bridge snowflake " ${TORRC})
 		if [ ${#configured_snowflake_deactivated[0]} = 0 ]; then
@@ -130,16 +131,18 @@ i=0
 			restarting_tor snowflake
 		fi
 	else
-		INPUT=$(cat text/deactivate-snowflake-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-			clear
-			sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-			sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-			sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-			sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-			sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-			sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-			restarting_tor snowflake
+		if [ "$SNOWSTRING" = "ON!" ]; then
+			INPUT=$(cat text/deactivate-snowflake-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				clear
+				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+				sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+				restarting_tor snowflake
+			fi
 		fi
 	fi
