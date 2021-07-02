@@ -17,6 +17,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# DESCRIPTION
+# This script checks /var/log/tor/notices.log for error messages and executes
+# the sccript automat to automatically restor the tor functionality.
+# The script is configured by log_check_config.py
+#
+# SYNTAX
+# sudo ./log_check.py &
 
 import os
 import time
@@ -44,7 +53,7 @@ while True:
         for line in output.split("\n"):
             if not line:
                 continue
-            
+
             dts = line[:15]  # :15 length of date in linux logs
             dts = f"{datetime.now().year} {dts}"
             d = datetime.strptime(dts, '%Y %b %d %H:%M:%S')
@@ -77,5 +86,5 @@ while True:
                             m['count'].append(match_info)
 
 
-            
+
     time.sleep(config['check_interval'])

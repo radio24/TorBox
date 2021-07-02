@@ -18,5 +18,10 @@ BLOCK_HTTP=0
 # 1 - SSH access from the Internet is allowed
 SSH_FROM_INTERNET=0
 
-# Used as a global variable - don't change it!!
+## Global variables to help inter-script communication - don't change them!!
+
+# Where is the Internet?
+INTERNET_IFACE=wlan1
+
+# Exit controll variable
 EXITID=0
