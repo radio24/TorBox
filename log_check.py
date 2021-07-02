@@ -54,10 +54,14 @@ while True:
             if not line:
                 continue
 
-            dts = line[:15]  # :15 length of date in linux logs
-            dts = f"{datetime.now().year} {dts}"
-            d = datetime.strptime(dts, '%Y %b %d %H:%M:%S')
-            line_ts = d.timestamp()
+            # only process lines with right format
+            try:
+                dts = line[:15]  # :15 length of date in linux logs
+                dts = f"{datetime.now().year} {dts}"
+                d = datetime.strptime(dts, '%Y %b %d %H:%M:%S')
+                line_ts = d.timestamp()
+            except:
+                continue
 
             if m['last_update'] < line_ts:
                 m['last_update'] = line_ts
