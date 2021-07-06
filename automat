@@ -76,7 +76,7 @@ if [ $ARGUMENT = 1 ]; then
 #  sudo rm -r /var/log/tor/*
 #  sudo touch /var/log/tor/notices.log
 #  sudo chown debian-tor /var/log/tor/notices.log
-  (printf "# !! AUTOMAT RESTARTED TOR !!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
   sudo systemctl restart tor
 
 # To implement this in TorBox v.0.4.2, torbox.run has to be replaced!!
@@ -87,14 +87,14 @@ elif [ $ARGUMENT = 2 ]; then
   (INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | cut -c16-)) 2> /dev/nul
   sudo ./torbox_wireless_manager.py -i $INTERNET_IFACE -a
   sleep 2
-  (printf "# !! AUTOMAT RESTARTED TOR !!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
   sudo systemctl restart tor
   sleep 4
 
 # Entry 3: Restart Tor, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
-  (printf "# !! AUTOMAT RESTARTED TOR !!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
   sudo systemctl restart tor
   sleep 4
 fi

@@ -421,7 +421,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.1 - UPDATE & RESET OPTIONS" -
 "7" "Erase all passwords in the TWM (reboot required!)" OFF \
 "8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
 "9" "Reset Tor and force a change of the permanent entry node" OFF \
-"10" "Remove permanently Bridge Relay data" OFF \
+"10" "Remove permanently OBFS4 Bridge Relay data" OFF \
 "11" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
 
 exitstatus=$?
