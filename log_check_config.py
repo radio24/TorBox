@@ -38,9 +38,16 @@ matches = [
         "command": 'sudo bash automat 2',
     },
     {
-        "file": '/var/log/tor/notices.log',        
+        "file": '/var/log/tor/notices.log',
         "match": "We tried for * seconds to connect to * using exit *",  # use * as wildcard
         "match_count": 40,  # min matches to execute command
+        "match_time": 2*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash automat 3',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "Tried for * seconds to get a connection to * Giving up.",  # use * as wildcard
+        "match_count": 100,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash automat 3',
     },
