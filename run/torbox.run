@@ -23,5 +23,8 @@ SSH_FROM_INTERNET=0
 # Where is the Internet?
 INTERNET_IFACE=wlan1
 
+# Where are the Clients? If you use multipple interface, separate them with a space.
+CLIENT_IFACE=wlan1
+
 # Exit controll variable
 EXITID=0
