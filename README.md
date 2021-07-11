@@ -59,7 +59,7 @@ GREAT! There is a lot to improve and fix (security of the entire system, graphic
 
 For secure email communication, we are using for the [TorBox email](mailto:anonym@torbox.ch) [Protonmail](https://protonmail.com). All messages between ProtonMail users are automatically [end-to-end encrypted](https://protonmail.com/blog/what-is-end-to-end-encryption/). Additionally, all messages in ProtonMail inboxes are protected with PGP encryption to prevent Protonmail (or anyone else) from reading or sharing emails, a concept known as [zero-access encryption](https://protonmail.com/blog/zero-access-encryption/). Creating a ProtonMail email address is free and takes less than a minute. With ProtonMail, anyone can use PGP regardless of their technical knowledge. However, technically versed, can also use [our public PGP key](https://raw.githubusercontent.com/radio24/TorBox/master/PUBLICKEY.asc) to communicate with us:
 
-``-----BEGIN PGP PUBLIC KEY BLOCK-----
+```-----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: OpenPGP.js v4.10.10
 Comment: https://openpgpjs.org
 
@@ -73,4 +73,4 @@ YQQYFggACQUCXemNYQIbDAAKCRDoSSlTg0HoQArZAQD94cT2csOWOsqqx7+q
 Ps0P1Udn2/jXRbO+XbfzBzjM6wEAq4Z4g0w03KkHC3aU8/fATEnbN2+TInLV
 gNKTldrMtAg=
 =eGoI
------END PGP PUBLIC KEY BLOCK-----``
+-----END PGP PUBLIC KEY BLOCK-----```
