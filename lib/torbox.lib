@@ -355,7 +355,6 @@ activate_obfs4_bridges()
   SOURCE_SCRIPT=$1
   number_of_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
-    deactivating_bridge_relay
     sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
     sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
     sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}

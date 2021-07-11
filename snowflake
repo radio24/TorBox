@@ -118,7 +118,6 @@ i=0
 		INPUT=$(cat text/activate-snowflake-text)
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
-			deactivating_bridge_relay
 			deactivate_obfs4_bridges
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 			sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
