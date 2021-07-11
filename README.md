@@ -56,3 +56,21 @@ GREAT! There is a lot to improve and fix (security of the entire system, graphic
 ### Contact
 * [TorBox website](https://www.torbox.ch)
 * [TorBox email](mailto:anonym@torbox.ch)
+
+For secure email communication, we are using for the [TorBox email](mailto:anonym@torbox.ch) [Protonmail](https://protonmail.com). All messages between ProtonMail users are automatically [end-to-end encrypted](https://protonmail.com/blog/what-is-end-to-end-encryption/). Additionally, all messages in ProtonMail inboxes are protected with PGP encryption to prevent Protonmail (or anyone else) from reading or sharing emails, a concept known as [zero-access encryption](https://protonmail.com/blog/zero-access-encryption/). Creating a ProtonMail email address is free and takes less than a minute. With ProtonMail, anyone can use PGP regardless of their technical knowledge. However, technically versed, can also use [our public PGP key](https://raw.githubusercontent.com/radio24/TorBox/master/PUBLICKEY.asc) to communicate with us:
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: OpenPGP.js v4.10.10
+Comment: https://openpgpjs.org
+
+xjMEXemNYRYJKwYBBAHaRw8BAQdAH22RKj/kZRqZds03njk7tSFEgrYkbeFo
+PRC3CwA2JwPNI2Fub255bUB0b3Jib3guY2ggPGFub255bUB0b3Jib3guY2g+
+wncEEBYKAB8FAl3pjWEGCwkHCAMCBBUICgIDFgIBAhkBAhsDAh4BAAoJEOhJ
+KVODQehAkY8A/A7vPC+6nPaGBiv7P6wryQ+THA97uEwRK0Rsx3TYlKHuAQDN
+M4XH5G++eqqptaEv1daJEofwOnYxahJoHzYvdfZUBM44BF3pjWESCisGAQQB
+l1UBBQEBB0Cp+yT4Ec5kmGaGWneulB/KSgXLkkMSVaD++dC9mrcTfQMBCAfC
+YQQYFggACQUCXemNYQIbDAAKCRDoSSlTg0HoQArZAQD94cT2csOWOsqqx7+q
+Ps0P1Udn2/jXRbO+XbfzBzjM6wEAq4Z4g0w03KkHC3aU8/fATEnbN2+TInLV
+gNKTldrMtAg=
+=eGoI
+-----END PGP PUBLIC KEY BLOCK-----
