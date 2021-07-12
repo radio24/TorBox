@@ -21,10 +21,10 @@ SSH_FROM_INTERNET=0
 ## Global variables to help inter-script communication - don't change them!!
 
 # Where is the Internet?
-INTERNET_IFACE=wlan1
+INTERNET_IFACE=eth0
 
 # Where are the Clients? If you use multipple interface, separate them with a space.
-CLIENT_IFACE=wlan1
+CLIENT_IFACE=wlan0 eth1
 
 # Exit controll variable
 EXITID=0
