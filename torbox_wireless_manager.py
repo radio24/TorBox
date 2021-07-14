@@ -23,7 +23,7 @@
 # which is based on Python 2 and seemes to be abadone by the developers.
 #
 # SYNTAX
-# sudo torbox_wireless_manager -i <interface> [-a|--autoconnect]
+# sudo torbox_wireless_manager.py -i <interface> [-a|--autoconnect]
 #
 # -i <interface>: Interface to connect - mandatory!
 # -a|--autoconnect: Don't show an interactive user menu, just try to automatically connect to an already know network

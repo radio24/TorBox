@@ -6,6 +6,7 @@
 #
 # This file manages global variables -- please don't remove the file
 
+# 0 - Not a fresh installation - does nothing
 # 1 - Delete pi after running run_install.sh
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard
 FRESH_INSTALLED=0
@@ -18,5 +19,17 @@ BLOCK_HTTP=0
 # 1 - SSH access from the Internet is allowed
 SSH_FROM_INTERNET=0
 
-# Used as a global variable - don't change it!!
+# 0 - TorBox's automatic countermeasures are deactivated (default)
+# 1 - TorBox's automatic countermeasures are activated
+LOGCHECK=0
+
+## Global variables to help inter-script communication - don't change them!!
+
+# Where is the Internet?
+INTERNET_IFACE=eth0
+
+# Where are the Clients? If you use multiple interfaces, separate them with a space.
+CLIENT_IFACE=wlan0 eth1
+
+# Exit controll variable
 EXITID=0

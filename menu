@@ -135,12 +135,12 @@ else
 fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
   IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
-  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
-  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
-  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; fi
-  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; fi
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
 fi
 }
 
@@ -261,6 +261,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth1/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         elif [ -z "$WLAN0_IP" ] && [ -n "$ETH1_IP" ] ; then
@@ -277,6 +279,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces eth0 eth1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
@@ -293,6 +297,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces eth0 wlan0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         fi
@@ -351,6 +357,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -367,6 +375,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces wlan1 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -383,6 +393,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -445,6 +457,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 eth0/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         elif [ -z "$WLAN1_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -461,6 +475,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 eth0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         else
@@ -477,6 +493,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         fi
@@ -535,6 +553,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -551,6 +571,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces usb0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -567,6 +589,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces usb0 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -601,6 +625,8 @@ if [ $exitstatus = 0 ]; then
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -617,6 +643,8 @@ if [ $exitstatus = 0 ]; then
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces ppp0 eth0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             else
@@ -633,6 +661,8 @@ if [ $exitstatus = 0 ]; then
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces ppp0 wlan0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             fi
@@ -695,6 +725,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -711,6 +743,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces eth1 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -727,6 +761,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces eth1 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -806,6 +842,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -822,6 +860,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces tun0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -838,6 +878,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces tun0 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
