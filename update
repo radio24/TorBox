@@ -74,7 +74,6 @@ RECOMPILE=0
 TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
-NEW_IDENT="new_ident"
 BOOTMSG=0
 i=0
 n=0
@@ -354,8 +353,6 @@ update_torcfg()
     sudo cp ../.profile ../.profile.bak
     sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a ../.profile
   fi
-  sudo cp etc/new_ident .
-  echo -e "${RED}[+]${NOCOLOR} Copied new_ident -- backup not necessary"
   # This has to be at the end to avoid unnecessary error messages
   sudo cp /etc/hostname /etc/hostname.bak
   sudo cp etc/hostname /etc/

@@ -243,7 +243,6 @@ if [ $exitstatus = 0 ]; then
       	else
           sudo echo ${INPUTHASH} >> ${TORRC}
       	fi
-      	sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
       	restarting_tor menu-config
       fi
 

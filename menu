@@ -193,7 +193,13 @@ if [ $exitstatus = 0 ]; then
 # This enforces a new exit node
     elif [ $CHOICE = 2 ]; then
       clear
-      sudo bash new_ident
+      echo ""
+      echo -e "${RED}[+] Requesting new identity...${WHITE}"
+      echo ""
+      sleep 2
+      sudo -u debian-tor tor-prompt --run 'SIGNAL NEWNYM'
+      echo -e "${RED}[+] Done!${NOCOLOR}"
+      sleep 4
 
 # Restart Tor and check the progress
     elif [ $CHOICE = 3 ]; then
