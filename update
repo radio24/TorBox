@@ -375,9 +375,16 @@ update_torbox_menu()
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
   echo -e "${RED}[+] Reading configuration...${NOCOLOR}"
+  # Save configuration
   PASSWORD=$(grep "^PASSWORD=" ${NEW_IDENT})
-  BLOCK_HTTP=$(grep "^BLOCK_HTTP=" ${RUNFILE})
   SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=" ${RUNFILE})
+  TOR_CONTROL_PORT_ACCESS=$(grep "^TOR_CONTROL_PORT_ACCESS=" ${RUNFILE})
+  BLOCK_HTTP=$(grep "^BLOCK_HTTP=" ${RUNFILE})
+  LOGCHECK=$(grep "^LOGCHECK=" ${RUNFILE})
+  INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE})
+  CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
+  sudo mv log_check_config.py ..
+  # ======================
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
@@ -394,9 +401,16 @@ update_torbox_menu()
     rm -r master.zip
     cd torbox
     echo -e "${RED}[+] Writing configuration...${NOCOLOR}"
+    # Restore configuration
     sudo sed -i "s/^PASSWORD=.*/${PASSWORD}/g" ${NEW_IDENT}
-    sudo sed -i "s/^BLOCK_HTTP=.*/${BLOCK_HTTP}/g" ${RUNFILE}
     sudo sed -i "s/^SSH_FROM_INTERNET=.*/${SSH_FROM_INTERNET}/g" ${RUNFILE}
+    sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=.*/${TOR_CONTROL_PORT_ACCESS}/g" ${RUNFILE}
+    sudo sed -i "s/^BLOCK_HTTP=.*/${BLOCK_HTTP}/g" ${RUNFILE}
+    sudo sed -i "s/^LOGCHECK=.*/${LOGCHECK}/g" ${RUNFILE}
+    sudo sed -i "s/^INTERNET_IFACE=.*/${INTERNET_IFACE}/g" ${RUNFILE}
+    sudo sed -i "s/^CLIENT_IFACE=.*/${CLIENT_IFACE}/g" ${RUNFILE}
+    sudo mv ../log_check_config.py .
+    # ======================
     echo -e "${RED} ${NOCOLOR}"
     echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
