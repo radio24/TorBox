@@ -88,7 +88,7 @@ GO_VERSION_64="go1.16.5.linux-arm64.tar.gz"
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
 
-# Avoid cheap censorship mechanism
+# Avoid cheap censorship mechanisms
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)

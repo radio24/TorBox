@@ -53,6 +53,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+TOR_GET_BRIDGES_URL="https://bridges.torproject.org"
 TORRC="/etc/tor/torrc"
 MODE_BRIDGES=$1
 STANDALONE=$2
@@ -81,9 +82,11 @@ if [ $exitstatus = 0 ]; then
     # Add bridges automatically
     if [ $CHOICE = 1 ]; then
       clear
+      add_open_dns
+      echo ""
       echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
       #-m 6 must not be lower, otherwise it looks like there is no connection!
-      OCHECK=$(curl -m 6 -s https://bridges.torproject.org)
+      OCHECK=$(curl -m 6 -s $TOR_GET_BRIDGES_URL)
       if [ $? == 0 ]; then
         echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
         sleep 3

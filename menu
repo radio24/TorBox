@@ -822,9 +822,8 @@ if [ $exitstatus = 0 ]; then
             echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
           else
             echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-            echo -e "${RED}[+] We will add a bunch of public nameservers to /etc/resolv.conf and try again...${NOCOLOR}"
-            echo -e "${RED}[+] This nameservers are only used for local resolution. All clients DNS resquest are handled through Tor.${NOCOLOR}"
-            sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+            echo ""
+            add_open_dns
             (sudo resolvconf -a tun0 <etc/resolv.conf) 2> /dev/null
             sleep 2
           fi

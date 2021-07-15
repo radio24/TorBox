@@ -55,9 +55,6 @@ CHECK_URL1="http://google.com"
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
 
-# Avoid cheap censorship mechanism
-RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
-
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -89,9 +86,7 @@ n=0
 online_check_update()
 {
   clear
-  echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanism...${NOCOLOR}"
-  sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-  (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+  add_open_dns
   echo " "
   echo -e "${RED}[+] Please wait...${NOCOLOR}"
   sleep 15
@@ -517,8 +512,7 @@ if [ $exitstatus = 0 ]; then
 
 #This changes/updates the installed Tor version
   elif [ $ARGUMENT = 4 ]; then
-    # Avoid cheap censorship mechanism
-    (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+    # Avoid cheap censorship mechanisms
     online_check_update
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then

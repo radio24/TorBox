@@ -6,6 +6,17 @@
 #
 # This file manages global variables -- please don't remove the file
 
+# DNS resolutions
+# During the installation, during updates and communicating with
+# torproject.org, local DNS resolutions are made by default through
+# Google’s and Cloudflare’s Domain Name Servers to avoid cheap censorship
+# mechanisms. However, you can add here your prefered name servers
+# (separated by a comma). Data traffic from the connected
+# clients, which has to be protected, is completely routed through Tor
+# (including DNS requests). Additionally, TorBox is configured that any
+# direct DNS requests from clients are blocked.
+NAMESERVERS=1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4
+
 # 0 - Not a fresh installation - does nothing
 # 1 - Delete pi after running run_install.sh
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard

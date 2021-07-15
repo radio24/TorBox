@@ -51,6 +51,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 i=0
 
@@ -103,8 +104,10 @@ else
       # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
         clear
+        add_open_dns
+        echo ""
         echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
+        OCHECK=$(curl -m 6 -s $BRIDGE_DB_URL)
         if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
         if [ $OCHECK == 0 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
