@@ -54,7 +54,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-PING_SERVER="google.com"
+PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13- | sed 's`^https://``g' | sed 's`^http://``g') 2> /dev/nul
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"

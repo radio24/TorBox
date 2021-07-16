@@ -40,7 +40,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Connectivity check
-CHECK_URL1="http://google.com"
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/nul
 
 #Other variables
 TORRC="/etc/tor/torrc"
@@ -97,7 +97,7 @@ online_check()
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   JUMPTO=$1
   clear
-  OCHECK=$(curl -m 5 -s $CHECK_URL1)
+  OCHECK=$(curl -m 5 -s $CHECK_URL)
   if [ $? -gt 0 ]; then
     whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
     trap "bash $JUMPTO; exit 0" EXIT
@@ -135,7 +135,6 @@ add_open_dns()
     fi
   done
 }
-
 
 # erase_logs()
 # Used predefined variables: RED, NOCOLOR

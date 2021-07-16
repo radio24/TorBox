@@ -17,6 +17,15 @@
 # direct DNS requests from clients are blocked.
 NAMESERVERS=1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4
 
+# Ping URL
+# Sometimes, we have to check the connectivity of the TorBox with a ping.
+# Because it is only a ping, and the pinged server should be very stable, accessible
+# and have a extensive traffic, we choose as default http://google.com. However,
+# you can change it to whatever you like. This server will also be used when
+# activating the "Countermeasure against a disconnection when idle feature" in
+# the Countermeasure sub-menu.
+PING_SERVER=http://google.com
+
 # 0 - Not a fresh installation - does nothing
 # 1 - Delete pi after running run_install.sh
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard

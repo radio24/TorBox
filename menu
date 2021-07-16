@@ -51,7 +51,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Connectivity check
-CHECK_URL1="http://google.com"
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/nul
 
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
@@ -817,7 +817,7 @@ if [ $exitstatus = 0 ]; then
         if [ "$tun0up" != "" ] ; then
           clear
           echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-          wget -q --spider $CHECK_URL1
+          wget -q --spider $CHECK_URL
           if [ $? -eq 0 ]; then
             echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
           else
