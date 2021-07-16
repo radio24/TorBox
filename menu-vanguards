@@ -4,6 +4,7 @@
 # Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
+#
 # Github:  https://github.com/radio24/TorBox
 # Copyright (C) 2021 nyxnor
 # Github:  https://github.com/nyxnor
@@ -27,29 +28,15 @@
 # SYNTAX
 # ./menu-vanguards
 #
-#
 
 . lib/torbox.lib
-
-######## SET VARIABLES ########
-#
-#Set the the variables for the menu
-MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
-MENU_HEIGHT_15=15
-MENU_HEIGHT_25=25
-
-#Colors
-RED='\033[1;31m'
-WHITE='\033[1;37m'
-NOCOLOR='\033[0m'
 
 # Countermeasure against deanonymization attacks (vanguards)
 CHOICE=$(whiptail --menu "Vanguards are: ${VANGUARDSSTATUS}" 20 80 6 \
         "LOGS" "See Vanguards logs" \
         "INSTALL" "Install Vanguards" \
-        "RESTART_vanguards" "Restart the service for the default instance" \
-        "STOP_vanguards" "Stop the service for the default instance" \
+        "RESTART" "Restart the service for the default instance" \
+        "STOP" "Stop the service for the default instance" \
         "REMOVE" "Remove/Uninstall Vanguards" \
         3>&1 1>&2 2>&3)
 
@@ -72,7 +59,7 @@ elif [ "$CHOICE" == "INSTALL" ]; then
 [Unit]
 Description=Additional protections for Tor onion services
 Wants=tor@default.service
-After=network.target nss-lookup.target mnt-hdd.mount
+After=network.target nss-lookup.target
 
 [Service]
 WorkingDirectory=/var/lib/tor/vanguards
