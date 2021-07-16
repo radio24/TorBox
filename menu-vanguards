@@ -52,7 +52,9 @@ elif [ "$CHOICE" == "INSTALL" ]; then
   # installing from git to retrieve the latest version (debian package is not updated frequently)
   sudo git clone https://github.com/mikeperry-tor/vanguards
   sudo mv vanguards /var/lib/tor/
-  sudo cp /var/lib/tor/vanguards/vanguards-example.conf /var/lib/tor/vanguards/vanguards.conf 
+  sudo cp /var/lib/tor/vanguards/vanguards-example.conf /var/lib/tor/vanguards/vanguards.conf
+  DEFAULT_PASS="CHANGE-IT"
+  sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /var/lib/tor/vanguards/vanguards.conf
   sudo apt install -y python3-stem #python-stem vanguards
   # create service
   echo "Creating service for Vanguards..."
