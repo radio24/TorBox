@@ -77,16 +77,18 @@ EOF
   sudo systemctl enable vanguards@default.service
   sudo systemctl start vanguards@default.service
 elif [ "$CHOICE" == "RESTART_vanguards" ]; then
+  echo "Restarting Vanguards ..."
   clear
   sudo systemctl restart vanguards@default.service
+  sleep 1
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  sleep 3
   whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
 elif [ "$CHOICE" == "STOP_vanguards" ]; then
+  echo "Stopping Vanguards ..."
   clear
   sudo systemctl stop vanguards@default.service
+  sleep 1
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  sleep 3
   whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
 elif [ "$CHOICE" == "REMOVE" ]; then
   echo "Removing Vanguards..."
