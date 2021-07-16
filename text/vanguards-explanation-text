@@ -2,7 +2,7 @@ Even after deployment of the new v3 onion service protocol, the attacks facing o
 
 Because of this, Tor Project have decided to rapid-prototype these defenses in a controller addon in order to make them available ahead of their official Tor-core release, for onion services that require high security as soon as possible.
 
-Note that this addon protects the Raspiblitz controller. If also want to protect your controller when using Tor Browser (WebUI) or tor daemon (SSH), on your host machine, download Vanguards addon and run the following specifying the port (Defaults -> Browser=9151, Daemon=9050):
+Note that this addon protects the Raspiblitz controller. If also want to protect your controller when using Tor Browser (WebUI) or tor daemon (SSH), on your host machine, download Vanguards addon and run the following specifying the port (Defaults -> Browser=9151, Daemon=9051):
 
   ./src/vanguards.py --control_port 9151
 
