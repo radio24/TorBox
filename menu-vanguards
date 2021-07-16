@@ -97,6 +97,9 @@ elif [ "$CHOICE" == "REMOVE" ]; then
   sudo systemctl daemon-reload
   restarting_tor menu-bridges
   echo "Done"
+else
+  clear
+  exit 0
 fi
 
 bash menu-vanguards
