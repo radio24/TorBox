@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+# Copyright (C) 2021 nyxnor
+# Github:  https://github.com/nyxnor
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file helps againsta deanonymization attacks by implementing the Vanguards addon.
+#
+# SYNTAX
+# ./menu-vanguards
+#
+#
+
+. lib/torbox.lib
+
+######## SET VARIABLES ########
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_25=25
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+# Countermeasure against deanonymization attacks (vanguards)
+CHOICE=$(whiptail --menu "Vanguards are: ${VANGUARDSSTATUS}" 20 80 6 \
+        "LOGS" "See Vanguards logs" \
+        "INSTALL" "Install Vanguards" \
+        "RESTART_vanguards" "Restart the service for the default instance" \
+        "STOP_vanguards" "Stop the service for the default instance" \
+        "REMOVE" "Remove/Uninstall Vanguards" \
+        3>&1 1>&2 2>&3)
+
+if [ "$CHOICE" == "LOGS" ]; then
+  clear
+  trap "bash menu-bridges; exit 0" EXIT
+  sudo journalctl -n 10 -fu vanguards@default.service
+elif [ "$CHOICE" == "INSTALL" ]; then
+  clear
+  # install
+  sudo rm -rf /var/lib/tor/vanguards
+  echo "Installing necessary packages..."
+  # installing from git to retrieve the latest version (debian package is not updated frequently)
+  sudo git clone https://github.com/mikeperry-tor/vanguards
+  sudo mv vanguards /var/lib/tor/
+  sudo apt install -y python3-stem #python-stem vanguards
+  # create service
+  echo "Creating service for Vanguards..."
+  sudo tee /etc/systemd/system/vanguards@default.service >/dev/null <<EOF
+[Unit]
+Description=Additional protections for Tor onion services
+Wants=tor@default.service
+After=network.target nss-lookup.target mnt-hdd.mount
+
+[Service]
+WorkingDirectory=/var/lib/tor/vanguards
+ExecStart=/usr/bin/python3 src/vanguards.py --control_port 9051
+Environment=VANGUARDS_CONFIG=/etc/tor/vanguards.conf
+User=debian-tor
+Group=debian-tor
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable vanguards@default.service
+  sudo systemctl start vanguards@default.service
+elif [ "$CHOICE" == "RESTART_vanguards" ]; then
+  clear
+  sudo systemctl restart vanguards@default.service
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  sleep 3
+  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+elif [ "$CHOICE" == "STOP_vanguards" ]; then
+  clear
+  sudo systemctl stop vanguards@default.service
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  sleep 3
+  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+elif [ "$CHOICE" == "REMOVE" ]; then
+  echo "Removing Vanguards..."
+  sudo systemctl stop vanguards@default.service
+  sudo systemctl disable vanguards@default.service
+  sudo rm -rf /etc/systemd/system/vanguards@default.service
+  sudo rm -rf /var/lib/tor/vanguards
+  sudo systemctl daemon-reload
+  restarting_tor menu-bridges
+  echo "Done"
+fi
+
+bash menu-vanguards

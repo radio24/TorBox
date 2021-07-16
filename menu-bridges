@@ -117,6 +117,13 @@ read_config()
       PING="OFF"
     fi
 
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  if [ ${VANGUARDSSTATUS} == "active" ]; then
+    VANGUARDSSTATUSb="ON!"
+  else
+    VANGUARDSSTATUSb="OFF"
+  fi
+
   # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
   sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
   sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
@@ -154,7 +161,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - COUNTERMEASUR
 " 10" "Use SNOWFLAKE to circumvent censorship -> "$SNOWSTRING  \
 " 11" "Use MEEK-AZURE to circumvent censorship -> "$MEEKSTRING  \
 " 12" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
-" 13" "Countermeasure against a disconnection when idle feature - "$PING 3>&1 1>&2 2>&3)
+" 13" "Countermeasure against a disconnection when idle feature - "$PING \
+" 14" "Countermeasure against deanonymization attacks - $VANGUARDSSTATUSb" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -290,12 +298,12 @@ if [ $exitstatus = 0 ]; then
       read_config
 
 # Remove bridges
-  elif [ $CHOICE = 7 ]; then
-      sudo bash bridges_remove_old 1
-      read_config
+    elif [ $CHOICE = 7 ]; then
+        sudo bash bridges_remove_old 1
+        read_config
 
 # Enter the advanced configuration editor
-  elif [ $CHOICE = 8 ]; then
+    elif [ $CHOICE = 8 ]; then
       INPUT=$(cat text/advanced-bridges-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
@@ -304,60 +312,60 @@ if [ $exitstatus = 0 ]; then
       fi
 
 # Restart Tor and check the progress
-  elif [ $CHOICE = 9 ]; then
+    elif [ $CHOICE = 9 ]; then
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-      	clear
+        clear
         restarting_tor menu-bridges
       fi
 
 # Use Snowflake to circumvent censorship
-  elif [ $CHOICE = 10 ]; then
-    sudo bash snowflake $SNOWSTRING $MEEKSTRING
-    read_config
+    elif [ $CHOICE = 10 ]; then
+      sudo bash snowflake $SNOWSTRING $MEEKSTRING
+      read_config
 
 # Use Meek-Azure to circumvent censorship
-  elif [ $CHOICE = 11 ]; then
-    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
-    read_config
+    elif [ $CHOICE = 11 ]; then
+      sudo bash meek-azure $MEEKSTRING $SNOWSTRING
+      read_config
 
 # Connect/Disconnect TorBox to/from VPN
-  elif [ $CHOICE = 12 ]; then
-    if [ "$tun0up" = "" ] ; then
-      INPUT=$(cat text/connecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        connecting_to_VPN
-        sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-        echo ""
-        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-        echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
-        sleep 5
-        tun0up=$(ip link | grep tun0)
+    elif [ $CHOICE = 12 ]; then
+      if [ "$tun0up" = "" ] ; then
+        INPUT=$(cat text/connecting-VPN-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          connecting_to_VPN
+          sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+          echo ""
+          echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
+          echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+          sleep 5
+          tun0up=$(ip link | grep tun0)
+        fi
+      else
+        INPUT=$(cat text/disconnecting-VPN-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+          clear
+          echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
+          sudo killall openvpn
+          echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+          sleep 15
+          echo ""
+          echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
+          echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
+          sleep 5
+          tun0up=$(ip link | grep tun0)
+        fi
       fi
-    else
-      INPUT=$(cat text/disconnecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-        clear
-        echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
-        sudo killall openvpn
-        echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
-        sleep 15
-        echo ""
-        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-        echo -e "${RED}[+] In case of problems, use main menu entry 4-9.${NOCOLOR}"
-        sleep 5
-        tun0up=$(ip link | grep tun0)
-      fi
-    fi
 
 # Countermeasure against a disconnection when idle feature
-  elif [ $CHOICE = 13 ] ; then
+    elif [ $CHOICE = 13 ]; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-			  ping -q $PING_SERVER >/dev/null &
+        ping -q $PING_SERVER >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
-			  echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-			  sleep 2
+        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+        sleep 2
       fi
       if [ "$PING" = "ON" ]; then
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -366,8 +374,16 @@ if [ $exitstatus = 0 ]; then
           sleep 2
         fi
       fi
+
+# Countermeasure against attacks to deanonymize server location
+    elif [ $CHOICE = 14 ]; then
+      trap "bash menu-bridges; exit 0" SIGINT
+      INPUT=$(cat text/vanguards-explanation-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        bash menu-vanguards
+      fi
     fi
- 	fi
+  fi
 else
   clear
   exit 0
