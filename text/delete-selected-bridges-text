@@ -1,10 +1,14 @@
-With this menu entry, you can REMOVE SELECTED BRIDGES from the Tor configuration. However, bridges are necessary for TorBox to bypass Tor blocking in a country. After deleting all bridges, you should either add new bridges or deactivate the OBFS4 BRIDGE MODE entirely.
+With this menu entry, you can REMOVE selected OBFS4 BRIDGES from the Tor configuration. However, OBFS4 Bridges are necessary for TorBox to bypass Tor blocking in a country. To use this feature of TorBox, you need to have at least one OBFS4 bridge. After deleting all OBFS4 bridges, you should add new OBFS4 bridges again.
 
 2-STEP PROCEDURE
-To remove selected bridges, you have to follow a 2-step procedure:
-1. List all bridges (menu entry 3) and make a note of all bridge numbers
-   you want to remove.
+To remove selected OBFS4 bridges, you have to follow a 2-step procedure:
+1. List all OBFS4 bridges and make a note of all bridge numbers you want
+   to remove.
 2. Continue with this menu entry and put in all bridge numbers separated
    by a comma, which you want to remove (for example: 1,2,3,10)
+
+IMPORTANT
+WITH REMOVING ALL OBFS4 BRIDGES, TorBox will directly connect to the Tor network, which is the default.
+However, instead of removing OBFS4 bridges, we recommend simply to deactivate them.
 
 Would you like to CONTINUE?

@@ -41,8 +41,6 @@ MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -52,8 +50,10 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 MEEKSTRING=$1
 SNOWSTRING=$2
+EXITID=$(grep "^EXITID=" ${RUNFILE})
 i=0
 
 
@@ -67,11 +67,13 @@ i=0
 ######## PREPARATIONS ########
 ###########################
 
-if [ "$SNOWSTRING" = "ON!" ]; then
-	whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-else
+	if [ $EXITID = "EXITID=1" ]; then
+		sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+		exit 0
+	fi
 	if [ "$MEEKSTRING" = "OFF" ]; then
 		clear
+		trap "bash meek-azure; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's first check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
 		if [ ${#configured_meekazure_deactivated[0]} = 0 ]; then
@@ -88,7 +90,7 @@ else
 		#-m 6 must not be lower, otherwise it looks like there is no connection!
 		OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
 		if [ $? == 0 ]; then
-			echo -e "${RED}[+] OK - we are connected with the bridge database${NOCOLOR}"
+			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
 			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2
@@ -98,13 +100,18 @@ else
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				bridge_status=$(./bridges_check.py -f $bridge_hash)
-				if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
-				elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-				elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+				if [ $bridge_status == 1 ]; then bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+			elif [ $bridge_status == 0 ]; then bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
+		elif [ $bridge_status == 2 ]; then bridge_status_txt="- DOESN'T EXIST" ; fi
 				i=$(( $i + 1 ))
-				bridge_address="$i : $bridge_address $bridge_status"
+				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e $bridge_address
 			done
+			if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+				echo " "
+				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
+				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
+			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
@@ -118,25 +125,31 @@ else
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
+			deactivate_obfs4_bridges
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+		  sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+			sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
 			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
 			sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
 			sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-			sudo sed -i "s/#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
+			sudo sed -i "s/^#Bridge meek_lite /Bridge meek_lite /g" ${TORRC}
+			sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
 			clear
-			restarting_tor menu-bridges
+			restarting_tor meek-azure
 		fi
 	else
-		INPUT=$(cat text/deactivate-meek-azure-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-			clear
-			sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-			sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-			sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-			sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-			sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-			restarting_tor menu-bridges
+		if [ "$MEEKSTRING" = "ON!" ]; then
+			INPUT=$(cat text/deactivate-meek-azure-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				clear
+				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+				sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+				restarting_tor meek-azure
+			fi
 		fi
 	fi
-fi

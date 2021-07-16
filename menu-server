@@ -41,6 +41,7 @@ MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -66,7 +67,7 @@ read_config()
 MODE_BR=$(grep "^BridgeRelay" ${TORRC})
 MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
 if [ "$MODE_BR" = "BridgeRelay 1" ]; then
-    TOGGLE07="YES]==="
+    TOGGLE07="Bridge relay ON!"
     TOGGLE07b="ON"
     TOGGLE08="NO!]==="
     TOGGLE08b="OFF"
@@ -76,7 +77,7 @@ if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     CONTACT=$(grep "^ContactInfo" ${TORRC})
     NICK=$(grep "^Nickname" ${TORRC})
 else
-    TOGGLE07="NO!]==="
+    TOGGLE07="Bridge relay OFF!"
     TOGGLE07b="OFF"
     TOGGLE08="YES]==="
     TOGGLE08b="ON"
@@ -120,19 +121,19 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.0 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-" " " " \
-"===" "===================[Help others with a Bridge Relay -> "$TOGGLE07 \
-"  1" "RUN A TOR BRIDGE RELAY - READ ME FIRST"  \
-"  2" "Toggle Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"===" "============================================[Informational]===" \
+"  1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
+"===" "======================================[OBFS4 bridges relay]==="  \
+"  2" "Toggle OBFS4 Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
 "  3" "Check and/or change the configuration"  \
 "  4" "Reset configuration to default"  \
-"  5" "Show me my personal bridge address"  \
+"  5" "Show me my personal OBFS4 bridge address"  \
 "  6" "Enter the advanced configuration editor"  \
 "  7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "===" "=========================================[Backup & Restore]===" \
-"  8" "Backup the Bridge Relay configuration"  \
-"  9" "Restore the Bridge Relay configuration"  \
+"  8" "Backup the OBFS4 Bridge Relay configuration"  \
+"  9" "Restore the OBFS4 Bridge Relay configuration"  \
 "===" "=======================================[How can I support?]===" \
 " 10" "PLEASE SUPPORT THE TOR PROJECT!" \
 " 11" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
@@ -217,7 +218,7 @@ if [ $exitstatus = 0 ]; then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
-        nNICK="TorBox040"
+        nNICK="TorBox041"
         change_config
         read_config
       fi

@@ -1,9 +1,9 @@
 # TorBox
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
-For more information, visit the [TorBox website](https://www.torbox.ch)<br />.
-TorBox Image (about 1.2 GB) : [v.0.4.0 (10.04.2021)](https://www.torbox.ch/data/torbox-20210410-v040.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
-TorBox Menu only : [v.0.4.0 (10.04.2021)](https://www.torbox.ch/data/torbox040-20210410.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+For more information, visit the [TorBox website](https://www.torbox.ch).<br />
+* **TorBox Image** (about 940 Mb): [v.0.4.1 (13.06.2021)](https://www.torbox.ch/data/torbox-20210613-v041.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Menu only**: [v.0.4.1 (13.06.2021)](https://www.torbox.ch/data/torbox041-20210613.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 ![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
 
@@ -16,13 +16,13 @@ TorBox is ideal for providing additional protection for the entire data stream a
 1. Download the latest TorBox image file and [verify the integrity of the downloaded file](https://www.torbox.ch/?page_id=1128).
 2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital); for example, with [Etcher](https://www.balena.io/etcher/). TorBox needs at least a 4 GB SD Card, but 8 GB is recommended.
 3. Put the SD Card into your Raspberry Pi, link it with an Internet router using an Ethernet cable, or place an USB WiFi adapter in one of the USB ports to use an  existing WiFi. Afterwards, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required.
-4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox040” (password: **CHANGE-IT**). Then use an [SSH client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: **torbox** / password: **CHANGE-IT**). Now, you should see the [TorBox main menu](https://www.torbox.ch/?page_id=775). Choose the preferred connection setup, and **change the default passwords as soon as possible** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875)). For a connection via cable, see [here](https://www.torbox.ch/?page_id=775).
+4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “TorBox041” (password: **CHANGE-IT**). Then use an [SSH client](https://en.wikipedia.org/wiki/Comparison_of_SSH_clients) to access 192.168.42.1 (username: **torbox** / password: **CHANGE-IT**) or with a web browser (for details see [here](https://www.torbox.ch/?page_id=112#how-can-i-access-the-torbox-menu)). Now, you should see the [TorBox main menu](https://www.torbox.ch/?page_id=775). Choose the preferred connection setup, and **change the default passwords as soon as possible** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875)). For a connection via cable, see [here](https://www.torbox.ch/?page_id=775).
 
 A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/)) or a [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) is recommended. However, we offer also [installation script for other systems](https://www.torbox.ch/?page_id=1168#others), which might run on other hardware platforms.
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2021/04/TorBox-A5-RPI4-040.png)
+[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2021/06/TorBox-A5-RPI4-041g-e1624180132597.png)](https://www.torbox.ch/wp-content/uploads/2021/06/TorBox-A5-RPI4-041.png)
 
 ### Features
 * TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. If wanted, all HTTP plain traffic [can be blocked](https://www.torbox.ch/?page_id=875) additionally.
@@ -56,3 +56,23 @@ GREAT! There is a lot to improve and fix (security of the entire system, graphic
 ### Contact
 * [TorBox website](https://www.torbox.ch)
 * [TorBox email](mailto:anonym@torbox.ch)
+
+For secure email communication, we are using for the [TorBox email](mailto:anonym@torbox.ch) [Protonmail](https://protonmail.com). All messages between Protonmail users are automatically [end-to-end encrypted](https://protonmail.com/blog/what-is-end-to-end-encryption/). Additionally, all messages in Protonmail inboxes are protected with [PGP encryption](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to prevent Protonmail (or anyone else) from reading or sharing emails, a concept known as [zero-access encryption](https://protonmail.com/blog/zero-access-encryption/). Creating a Protonmail email address is free and takes less than a minute. With Protonmail, anyone can use PGP regardless of their technical knowledge. However, technically versed, can also use [our public PGP key](https://raw.githubusercontent.com/radio24/TorBox/master/PUBLICKEY.asc) to communicate with us:
+
+```
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: OpenPGP.js v4.10.10
+Comment: https://openpgpjs.org
+
+xjMEXemNYRYJKwYBBAHaRw8BAQdAH22RKj/kZRqZds03njk7tSFEgrYkbeFo
+PRC3CwA2JwPNI2Fub255bUB0b3Jib3guY2ggPGFub255bUB0b3Jib3guY2g+
+wncEEBYKAB8FAl3pjWEGCwkHCAMCBBUICgIDFgIBAhkBAhsDAh4BAAoJEOhJ
+KVODQehAkY8A/A7vPC+6nPaGBiv7P6wryQ+THA97uEwRK0Rsx3TYlKHuAQDN
+M4XH5G++eqqptaEv1daJEofwOnYxahJoHzYvdfZUBM44BF3pjWESCisGAQQB
+l1UBBQEBB0Cp+yT4Ec5kmGaGWneulB/KSgXLkkMSVaD++dC9mrcTfQMBCAfC
+YQQYFggACQUCXemNYQIbDAAKCRDoSSlTg0HoQArZAQD94cT2csOWOsqqx7+q
+Ps0P1Udn2/jXRbO+XbfzBzjM6wEAq4Z4g0w03KkHC3aU8/fATEnbN2+TInLV
+gNKTldrMtAg=
+=eGoI
+-----END PGP PUBLIC KEY BLOCK-----
+```

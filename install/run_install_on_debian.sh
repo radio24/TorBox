@@ -83,7 +83,7 @@ CHECK_URL1="ubuntu.com"
 CHECK_URL2="google.com"
 
 #Used go version
-GO_VERSION_64="go1.16.3.linux-arm64.tar.gz"
+GO_VERSION_64="go1.16.5.linux-arm64.tar.gz"
 
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
@@ -91,10 +91,12 @@ TORURL="https://github.com/torproject/tor/releases"
 # Avoid cheap censorship mechanism
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
+if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
+
 #Other variables
 RUNFILE="torbox/run/torbox.run"
-CHECK_HD1=$(grep -q --text 'Raspberry Pi' /proc/device-tree/model)
-CHECK_HD2=$(grep -q "Raspberry Pi" /proc/cpuinfo)
 SELECT_TOR=$1
 i=0
 n=0
@@ -183,7 +185,7 @@ apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools unzip git openvpn ppp tor tor-geoipdb build-essential
+apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools unzip git openvpn ppp tor tor-geoipdb build-essential shellinabox
 
 # Additional installations for Debian systems
 apt-get -y install sudo resolvconf
@@ -305,6 +307,7 @@ clear
 echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
 (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 sudo chmod a+x /usr/share/tor/geoip*
+# Copy not moving!
 (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
 setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
@@ -409,6 +412,12 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
+(sudo cp /etc/default/shellinabox /etc/default/shellinabox.bak) 2> /dev/null
+sudo cp etc/default/shellinabox /etc/default/shellinabox
+sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
+sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
+sudo systemctl restart shellinabox.service
+echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"

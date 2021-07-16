@@ -1,13 +1,13 @@
 HMMM... THAT DOESN'T LOOK GOOD...
 
-We couldn't check if your connection is now protected. However, BE PATIENT! Tor needs UP TO ONE MINUTE to establish the necessary circuits -- check with main menu entry 3 "Show the Tor log file" in the main menu. At the end of Tor's boot process, you should see "Bootstrapped 100%: Done". You can leave the progress report with CTRL-C.
+We couldn't check if your connection is now protected. However, BE PATIENT! Tor needs UP TO ONE MINUTE to establish the necessary circuits -- check with main menu entry 4 "Show the Tor log file" in the main menu. At the end of Tor's boot process, you should see "Bootstrapped 100%: Done". You can leave the progress report with CTRL-C.
 
-If this doesn't help you may have to choose the Internet source again (main menu 4-9) or even reboot TorBox. You can also manually check, if TorBox is working and your connection being protected. To make so, open on one of your client a web-browser and try to access the following address:
+If this doesn't help you may have to choose the Internet source again (main menu 5-10) or even reboot TorBox. You can also manually check, if TorBox is working and your connection being protected. To make so, open on one of your client a web-browser and try to access the following address:
 
                       https://check.torproject.org
 
 Finally, you should read: "Congratulations. This browser is configured to use Tor." ONLY IN THIS CASE IS YOUR CONNECTION PROTECTED !!
 
-"PROTECTED" means that all data from your devices, which are connected with TorBox is encrypted and tunneled through Tor. This may be sufficient to protect you from spying on your internet traffic or to circumvent censorship measures. However, to stay anonymous is much harder. For example, in this case, you should exclusively use Tor Browser while browsing the web to withhold some information about your computer's configuration. You can download it here: https://goo.gl/2UwZmR
+"PROTECTED" means that all data from your devices, which are connected with TorBox is encrypted and tunneled through Tor. This may be sufficient to protect others from spying on your internet traffic or to circumvent censorship measures. However, to stay anonymous is much harder. For example, in this case, you should exclusively use Tor Browser while browsing the web to withhold some information about your computer's configuration. You can download it here: https://goo.gl/2UwZmR
 
 You shouldn't use TorBox if your life or well-being is dependent on data security/anonymity. In this case, you should instead use Tails: https://tails.boum.org/

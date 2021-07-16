@@ -1,6 +1,7 @@
-With this menu entry, you can ADD BRIDGES AUTOMATICALLY. Bridges are necessary for TorBox to bypass Tor blocking in a country. However, adding bridges is not enough - if not already done - you have to activate the OBFS4 BRIDGE MODE of TorBox (menu entry 2).
+With this menu entry, you can ADD OBFS4 BRIDGES AUTOMATICALLY. OBFS4 Bridges are necessary for TorBox to bypass Tor blocking in a country.
 
 IMPORTANT
-- TorBox is not always able to catch a bridge. If it stuck for several
-  minutes, press CTR-C and add the bridges manually.
-- For security reasons, only one bridge is acquired about every 24 hours.
+- TorBox is not always able to catch a OBFS4 bridge. If it stuck for
+  several minutes, press CTR-C and add the bridges manually.
+- For security reasons, only one OBFS4 bridge is acquired about every
+  24 hours.
