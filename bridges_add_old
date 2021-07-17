@@ -86,8 +86,13 @@ if [ $exitstatus = 0 ]; then
       echo ""
       echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
       #-m 6 must not be lower, otherwise it looks like there is no connection!
-      OCHECK=$(curl -m 6 -s $TOR_GET_BRIDGES_URL)
-      if [ $? == 0 ]; then
+      OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $TOR_GET_BRIDGES_URL)
+      if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+      if [ $OCHECK == 1 ]; then
+        OCHECK=$(curl -m 6 -s $TOR_GET_BRIDGES_URL)
+        if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+      fi
+      if [ $OCHECK == 0 ]; then
         echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
         sleep 3
         clear

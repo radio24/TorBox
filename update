@@ -49,9 +49,6 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-# Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/nul
-
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
 
@@ -76,6 +73,9 @@ BOOTMSG=0
 i=0
 n=0
 
+# Connectivity check
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+
 ##############################
 ######## FUNCTIONS ###########
 
@@ -92,9 +92,14 @@ online_check_update()
   sleep 15
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
-  OCHECK=$(curl -m 5 -s $CHECK_URL)
-  clear
-  if [ $? -gt 0 ]; then
+  #-m 6 must not be lower, otherwise it looks like there is no connection!
+  OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
+  if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+  if [ $OCHECK == 1 ]; then
+    OCHECK=$(curl -m 6 -s $CHECK_URL)
+    if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+  fi
+  if [ $OCHECK == 1 ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=0
@@ -624,6 +629,7 @@ if [ $exitstatus = 0 ]; then
         (sudo rm -r /var/lib/tor/state) 2> /dev/null
         sleep 2
         echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
+        sudo rm /var/log/tor/notices.log
         sudo touch /var/log/tor/notices.log
         sudo chown debian-tor /var/log/tor/notices.log
         echo -e "${RED}[+] Done!${NOCOLOR}"
