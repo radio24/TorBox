@@ -230,6 +230,7 @@ sudo rm wiringpi-latest.deb
 # Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install PySocks
 sudo pip3 install urwid
 
 # Additional installation for GO

@@ -205,6 +205,7 @@ cd ~
 # Additional installations for Python
 pip3 install pytesseract
 pip3 install mechanize
+pip3 install PySocks
 pip3 install urwid
 
 # Additional installation for GO

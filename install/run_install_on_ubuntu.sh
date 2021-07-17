@@ -277,6 +277,7 @@ echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install PySocks
 sudo pip3 install urwid
 
 # Additional go
