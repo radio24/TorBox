@@ -94,10 +94,16 @@ online_check_update()
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
   #-m 6 must not be lower, otherwise it looks like there is no connection!
   OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
-  if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+  if [ $? == 0 ]; then
+    OCHECK="0";
+    TORCONNECT="1"
+  else OCHECK="1"; fi
   if [ $OCHECK == 1 ]; then
     OCHECK=$(curl -m 6 -s $CHECK_URL)
-    if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+    if [ $? == 0 ]; then
+      OCHECK="0";
+      TORCONNECT="0"
+    else OCHECK="1"; fi
   fi
   if [ $OCHECK == 1 ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
@@ -134,17 +140,33 @@ update_firmware()
 update_tor()
 {
   clear
-  if ! grep "torproject" /etc/apt/sources.list ; then
-    sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-    if hostnamectl | grep -q "Ubuntu 20.10" ; then
-      sudo printf "\n# Added by TorBox update script\ndeb-src https://deb.torproject.org/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
-    elif [ "$CHECK_OS" == "Debian" ]; then
-      sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-    else
-      sudo printf "\n# Added by TorBox update script\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-    fi
+  SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org"
+  SOURCES_TOR_UPDATE_PLAIN_SED="https:\/\/deb.torproject.org"
+  SOURCES_TOR_UPDATE_ONION_APT="tor://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  SOURCES_TOR_UPDATE_ONION_SED="tor:\/\/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  SOURCES_TOR_UPDATE_ONION_CURL="--socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  if [ $TORCONNECT -eq 0 ]; then
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_PLAIN
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_PLAIN
+  else
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_ONION_APT
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_ONION_CURL
   fi
-  sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  # If an old entry is already there, we will remove it first
+  sudo sed -i "/# Added by TorBox/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_PLAIN_SED/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_ONION_SED/d" /etc/apt/sources.list
+  clear
+  # Add the new entry
+  if hostnamectl | grep -q "Ubuntu 20.10" ; then
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+  elif [ "$CHECK_OS" == "Debian" ]; then
+    sudo printf "\n# Added by TorBox update script\ndeb $SOURCES_TOR_UPDATE/torproject.org buster main\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  else
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
+  sudo curl $SOURCES_TOR_UPDATE_CURL/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
   sudo apt-get -y update
@@ -152,6 +174,7 @@ update_tor()
   KERNEL_VERS=$(uname -s -r)
   TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
   SOURCE_VERS_NUMBER=$(ls -l|grep "^d"|grep -o "tor.*"|cut -d " " -f11-|sed s/tor-//g|sed s/.orig//g)
+  clear
   if [ "$SOURCE_VERS_NUMBER" == "$TOR_VERS" ] ; then
     INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS (newest stable version!)\n\nThere is no new stable version of Tor around!\nWould you like to recompile Tor anyway?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -189,6 +212,7 @@ update_tor()
     #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
     return 1
   fi
+  sudo cp /etc/apt/sources.list.bak /etc/apt/sources.list
 }
 
 #With this function change/update of tor from a list of versions is possible
