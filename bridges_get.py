@@ -20,6 +20,7 @@
 # DESCRIPTION
 # This file fetches one new bridge. The return values is:
 # obfs4 <IP address>:<Port> <Fingerprint> <Certificate> <iat-mode>
+# or 0 if fetching the bridge fails over tor and clearnet.
 #
 # IMPORTANT
 # The bridge database delivers only 1-3 bridges approximately every 24 hours,
