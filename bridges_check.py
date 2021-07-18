@@ -45,6 +45,10 @@ import json
 from binascii import a2b_hex
 from hashlib import sha1
 
+# Tor socks
+SOCKS_HOST = '192.168.42.1'
+SOCKS_PORT = 9050
+
 # get the options from cmd line
 options, remainder = getopt.getopt(sys.argv[1:], 'f:ish', ['fingerprint=',
                                                         'info=',
@@ -84,7 +88,19 @@ if not hashed_fingerprint:
 
 # search for the fingerprint in the torproject
 url = 'https://onionoo.torproject.org/details?lookup=%s' % fingerprint
-r = requests.get(url)
+
+# Always go over tor first
+proxy = {'https': f"socks5h://{SOCKS_HOST}:{SOCKS_PORT}"}
+try:
+    r = requests.get(url, proxies=proxy)
+except:
+    # Tor not running, try over clearnet
+    try:
+        r = requests.get(url)
+    except:
+        # Error
+        print(-1)
+        quit()
 
 # load json data
 data = json.loads(r.text)
