@@ -19,6 +19,7 @@
 #
 # DESCRIPTION
 # This file checks the status of a bridge. Possible return values are:
+# -1: Connection error
 # 0: bridge exists and is offline
 # 1: bridge exists and is online
 # 2: bridge doesn't exist
