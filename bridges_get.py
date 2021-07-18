@@ -60,9 +60,6 @@ while bridges == False:
     br.set_handle_robots(False)
 
     try:
-        # Clearnet request
-        res = br.open(BRIDGES_URL)
-    except:
         # Tor request
         socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5,
                               SOCKS_HOST,
@@ -71,9 +68,17 @@ while bridges == False:
         # patch socket module
         socket.socket = socks.socksocket
         socket.create_connection = create_connection
+
+        res = br.open(BRIDGES_URL)
+    except:
+        # Clearnet request
         try:
+            # unset socks proxy
+            socks.setdefaultproxy()
+
             res = br.open(BRIDGES_URL)
         except:
+            # Error
             print("0")
             quit()
 
