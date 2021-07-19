@@ -318,6 +318,7 @@ if [ $exitstatus = 0 ]; then
             cat install/log_check_config/footer >> log_check_config.py
             sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run
             sudo ./log_check.py &
+            echo -e "${RED}[+] TorBox's automatic countermeasure features activated!${NOCOLOR}"
           fi
         fi
       fi
