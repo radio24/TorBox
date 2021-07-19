@@ -49,9 +49,6 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-# Release Page of the Unofficial Tor repositories on GitHub
-TORURL="https://github.com/torproject/tor/releases"
-
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -92,7 +89,7 @@ online_check_update()
   sleep 15
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
-  #-m 6 must not be lower, otherwise it looks like there is no connection!
+  #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
   OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
   if [ $? == 0 ]; then
     OCHECK="0";
@@ -116,10 +113,44 @@ online_check_update()
   fi
 }
 
+# Sets the right settings for /etc/apt/sources.list
+set_sources_list()
+{
+  SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org"
+  SOURCES_TOR_UPDATE_PLAIN_SED="https:\/\/deb.torproject.org"
+  SOURCES_TOR_UPDATE_ONION_APT="tor://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  SOURCES_TOR_UPDATE_ONION_SED="tor:\/\/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  SOURCES_TOR_UPDATE_ONION_CURL="--socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+  if [ $TORCONNECT -eq 0 ]; then
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_PLAIN
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_PLAIN
+  else
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_ONION_APT
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_ONION_CURL
+  fi
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  # If an old entry is already there, we will remove it first
+  sudo sed -i "/# Added by TorBox/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_PLAIN_SED/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_ONION_SED/d" /etc/apt/sources.list
+  # Add the new entry
+  if hostnamectl | grep -q "Ubuntu 20.10" ; then
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+  elif [ "$CHECK_OS" == "Debian" ]; then
+    sudo printf "\n# Added by TorBox update script\ndeb $SOURCES_TOR_UPDATE/torproject.org buster main\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  else
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
+  clear
+  sudo curl $SOURCES_TOR_UPDATE_CURL/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
+}
+
 # This function updates the firmware on a RPI4
 update_firmware()
 {
   online_check_update
+  TORCONNECT=0
+  set_sources_list
   clear
   sudo apt-get install rpi-eeprom
   sleep 2
@@ -140,33 +171,6 @@ update_firmware()
 update_tor()
 {
   clear
-  SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org"
-  SOURCES_TOR_UPDATE_PLAIN_SED="https:\/\/deb.torproject.org"
-  SOURCES_TOR_UPDATE_ONION_APT="tor://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
-  SOURCES_TOR_UPDATE_ONION_SED="tor:\/\/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
-  SOURCES_TOR_UPDATE_ONION_CURL="--socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
-  if [ $TORCONNECT -eq 0 ]; then
-    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_PLAIN
-    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_PLAIN
-  else
-    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_ONION_APT
-    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_ONION_CURL
-  fi
-  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-  # If an old entry is already there, we will remove it first
-  sudo sed -i "/# Added by TorBox/d" /etc/apt/sources.list
-  sudo sed -i "/$SOURCES_TOR_UPDATE_PLAIN_SED/d" /etc/apt/sources.list
-  sudo sed -i "/$SOURCES_TOR_UPDATE_ONION_SED/d" /etc/apt/sources.list
-  clear
-  # Add the new entry
-  if hostnamectl | grep -q "Ubuntu 20.10" ; then
-    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
-  elif [ "$CHECK_OS" == "Debian" ]; then
-    sudo printf "\n# Added by TorBox update script\ndeb $SOURCES_TOR_UPDATE/torproject.org buster main\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-  else
-    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-  fi
-  sudo curl $SOURCES_TOR_UPDATE_CURL/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
   if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
   mkdir ~/debian-packages; cd ~/debian-packages
   sudo apt-get -y update
@@ -212,16 +216,20 @@ update_tor()
     #Return code for BOOTMSG / 1=finishing / 0=no finishing needed
     return 1
   fi
-  sudo cp /etc/apt/sources.list.bak /etc/apt/sources.list
 }
 
 #With this function change/update of tor from a list of versions is possible
 select_and_install_tor()
 {
   clear
+  # Release Page of the Unofficial Tor repositories on GitHub
+  TORURL="https://github.com/torproject/tor/releases"
   echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
-  readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
-
+  if [ $TORCONNECT -eq 0 ]; then
+    readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+  else
+    readarray -t torversion_datesorted < <(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+  fi
   #How many tor version did we fetch?
   if [ ${#torversion_datesorted[0]} = 0 ]; then number_torversion=0
   else
@@ -270,7 +278,6 @@ select_and_install_tor()
         return 0
       else
         CHOICE_TOR=$(( $REPLY - 1 ))
-        #Download and install
         clear
         echo -e "${RED}[+] Install necessary packages... ${NOCOLOR}"
         sudo apt-get -y update
@@ -282,9 +289,16 @@ select_and_install_tor()
         filename="tor-$version_string.tar.gz"
         if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
         mkdir ~/debian-packages; cd ~/debian-packages
-        wget $download_tor_url
+        if [ $TORCONNECT -eq 0 ]; then
+          wget $download_tor_url
+          DLCHECK=$?
+        else
+          # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
+          torsocks wget $download_tor_url
+          DLCHECK=$?
+        fi
         clear
-        if [ $? -eq 0 ] ; then
+        if [ $DLCHECK -eq 0 ] ; then
           echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           tar xzf $filename
           cd `ls -d */`
@@ -472,7 +486,7 @@ if [ $exitstatus = 0 ]; then
       exit 0
     fi
 
-#This updates the base system
+#This updates the base system (because of performance considerations over clearnet)
     if [ $ARGUMENT = 1 ]; then
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
@@ -481,6 +495,8 @@ if [ $exitstatus = 0 ]; then
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         online_check_update
+        TORCONNECT=0
+        set_sources_list
         clear
         sudo apt-get -y update
         sudo apt-get -y dist-upgrade
@@ -500,7 +516,7 @@ if [ $exitstatus = 0 ]; then
         BOOTMSG=1
       fi
 
-# This updates additional network drivers
+# This updates additional network drivers (because of performance considerations over clearnet)
   elif [ $ARGUMENT = 2 ]; then
       kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
       if [ $LOOP_NUMBER = 1 ]; then
@@ -516,7 +532,7 @@ if [ $exitstatus = 0 ]; then
         LOOP_NUMBER=0
       fi
 
-#This updates the firmware on a RPI4
+#This updates the firmware on a RPI4 (because of performance considerations over clearnet)
   elif [ $ARGUMENT = 3 ]; then
     if [ ! -z "$CHECK_HD3" ] || [ ! -z "$CHECK_HD4" ]; then
       if [ $LOOP_NUMBER = 1 ]; then
@@ -543,6 +559,7 @@ if [ $exitstatus = 0 ]; then
   elif [ $ARGUMENT = 4 ]; then
     # Avoid cheap censorship mechanisms
     online_check_update
+    set_sources_list
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       select_and_install_tor
@@ -554,6 +571,7 @@ if [ $exitstatus = 0 ]; then
     # Finishing
     cd ~/torbox
     if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+    sudo cp /etc/apt/sources.list.bak /etc/apt/sources.list
     if [ $FINISHING = 1 ] ; then
       (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
       # sudo apt-get install tor-geoipdb
