@@ -83,20 +83,14 @@ i=0
 			read -n 1 -s -r -p "Press any key to continue"
 			exit 1
 		else
+			echo " "
+			echo -e "${WHITE}[!] MEEK-AZURE is configured and ready!${NOCOLOR}"
 			number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
+			sleep 5
 		fi
 		echo " "
-		add_open_dns
-		echo ""
-		echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-		#-m 6 must not be lower, otherwise it looks like there is no connection!
-		OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $BRIDGE_DB_URL)
-		if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
+		online_check meek-azure $BRIDGE_DB_URL 1 1
 		if [ $OCHECK == 1 ]; then
-			OCHECK=$(curl -m 6 -s $BRIDGE_DB_URL)
-			if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
-		fi
-		if [ $OCHECK == 0 ]; then
 			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
 			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"

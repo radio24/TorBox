@@ -39,8 +39,9 @@ NO_SPACER=0
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
-MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
+MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
@@ -58,6 +59,17 @@ CHECK_OS="OTHER"
 if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
 if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
 if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+
+# URLS
+SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org"
+SOURCES_TOR_UPDATE_PLAIN_SED="https:\/\/deb.torproject.org"
+SOURCES_TOR_UPDATE_ONION_APT="tor://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+SOURCES_TOR_UPDATE_ONION_SED="tor:\/\/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+SOURCES_TOR_UPDATE_ONION_CURL="--socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
+TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
+TORURL="https://github.com/torproject/tor/releases"
+TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
+
 
 #Other variables
 LOOP_NUMBER=0
@@ -79,48 +91,10 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 # include lib
 .  lib/torbox.lib
 
-#This function checks the internet connection (!! don't source it out to a seperate shell script file or to the library !!)
-online_check_update()
-{
-  clear
-  add_open_dns
-  echo " "
-  echo -e "${RED}[+] Please wait...${NOCOLOR}"
-  sleep 15
-  clear
-  echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
-  #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-  OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
-  if [ $? == 0 ]; then
-    OCHECK="0";
-    TORCONNECT="1"
-  else OCHECK="1"; fi
-  if [ $OCHECK == 1 ]; then
-    OCHECK=$(curl -m 6 -s $CHECK_URL)
-    if [ $? == 0 ]; then
-      OCHECK="0";
-      TORCONNECT="0"
-    else OCHECK="1"; fi
-  fi
-  if [ $OCHECK == 1 ]; then
-    INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
-    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-      OCHECK=0
-    else
-      trap "bash update; exit 0" EXIT
-      exit 0
-    fi
-  fi
-}
-
 # Sets the right settings for /etc/apt/sources.list
+# Used predefined variables: SOURCES_TOR_UPDATE_PLAIN, SOURCES_TOR_UPDATE_PLAIN_SED, SOURCES_TOR_UPDATE_ONION_APT, SOURCES_TOR_UPDATE_ONION_SED, SOURCES_TOR_UPDATE_ONION_CURL
 set_sources_list()
 {
-  SOURCES_TOR_UPDATE_PLAIN="https://deb.torproject.org"
-  SOURCES_TOR_UPDATE_PLAIN_SED="https:\/\/deb.torproject.org"
-  SOURCES_TOR_UPDATE_ONION_APT="tor://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
-  SOURCES_TOR_UPDATE_ONION_SED="tor:\/\/apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
-  SOURCES_TOR_UPDATE_ONION_CURL="--socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 http://apow7mjfryruh65chtdydfmqfpj5btws7nbocgtaovhvezgccyjazpqd.onion"
   if [ $TORCONNECT -eq 0 ]; then
     SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_PLAIN
     SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_PLAIN
@@ -148,7 +122,7 @@ set_sources_list()
 # This function updates the firmware on a RPI4
 update_firmware()
 {
-  online_check_update
+  online_check update
   TORCONNECT=0
   set_sources_list
   clear
@@ -218,12 +192,12 @@ update_tor()
   fi
 }
 
-#With this function change/update of tor from a list of versions is possible
+# With this function change/update of tor from a list of versions is possible
+# Used predefined variables: TORURL, TORURL_DL_PARTIAL
 select_and_install_tor()
 {
   clear
   # Release Page of the Unofficial Tor repositories on GitHub
-  TORURL="https://github.com/torproject/tor/releases"
   echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
@@ -285,7 +259,7 @@ select_and_install_tor()
         echo ""
         echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
         version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
-        download_tor_url="https://github.com/torproject/tor/archive/refs/tags/tor-$version_string.tar.gz"
+        download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
         filename="tor-$version_string.tar.gz"
         if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
         mkdir ~/debian-packages; cd ~/debian-packages
@@ -333,8 +307,10 @@ update_torcfg()
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
   echo ""
   if ! grep "torproject" /etc/apt/sources.list ; then
+    sudo sed -i "/# Added by TorBox/d" /etc/apt/sources.list
+    sudo sed -i "/$SOURCES_TOR_UPDATE_ONION_SED/d" /etc/apt/sources.list
     sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-    sudo printf "\n# Added by TorBox update script\ndeb https://deb.torproject.org/torproject.org buster main\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+    sudo printf "\n# Added by TorBox update script\ndeb $SOURCES_TOR_UPDATE_PLAIN buster main\ndeb-src $SOURCES_TOR_UPDATE_PLAIN buster main\n" | sudo tee -a /etc/apt/sources.list
     echo -e "${RED}[+]${NOCOLOR} Changed /etc/apt/sources.list -- backup done"
   fi
   (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
@@ -425,7 +401,12 @@ update_torbox_menu()
   # ======================
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
-  wget https://github.com/radio24/TorBox/archive/refs/heads/master.zip
+  if [ $TORCONNECT = 0 ]; then
+    wget $TORBOXMENUURL
+  else
+    # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
+    torsocks wget $TORBOXMENUURL
+  fi
   if [ -e master.zip ]; then
     TORBOX_UPDATE=1
     echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
@@ -494,7 +475,7 @@ if [ $exitstatus = 0 ]; then
       TOR_VERS=$(tor --version|rev|cut -c2-|rev)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        online_check_update
+        online_check update
         TORCONNECT=0
         set_sources_list
         clear
@@ -558,7 +539,16 @@ if [ $exitstatus = 0 ]; then
 #This changes/updates the installed Tor version
   elif [ $ARGUMENT = 4 ]; then
     # Avoid cheap censorship mechanisms
-    online_check_update
+    online_check update
+    if [ $TORCONNECT = 0 ]; then
+      INPUT=$(cat text/clearnet_warning-text)
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        sleep 1
+      else
+        trap "screen bash update; exit 0" EXIT
+        exit 0
+      fi
+    fi
     set_sources_list
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -597,11 +587,29 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/torbox_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-          online_check_update
+          online_check update
+          if [ $TORCONNECT = 0 ]; then
+            INPUT=$(cat text/clearnet_warning-text)
+            if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+              sleep 1
+            else
+              trap "screen bash update; exit 0" EXIT
+              exit 0
+            fi
+          fi
           update_torbox_menu
         fi
       else
-        online_check_update
+        online_check update
+        if [ $TORCONNECT = 0 ]; then
+          INPUT=$(cat text/clearnet_warning-text)
+          if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+            sleep 1
+          else
+            trap "screen bash update; exit 0" EXIT
+            exit 0
+          fi
+        fi
         update_torbox_menu
       fi
       exit 0

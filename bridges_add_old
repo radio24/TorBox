@@ -84,46 +84,56 @@ if [ $exitstatus = 0 ]; then
       clear
       INPUT=$(cat text/add-bridges-automatically-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
-        trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
-        echo " "
-        add_open_dns
-        bridge_address=$(sudo python3 bridges_get.py)
-        if [ "$bridge_address" = "0" ]; then
+        online_check bridges_add_old $TOR_GET_BRIDGES_URL 1 1
+        if [ $OCHECK == 1 ]; then
+          echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
+          trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
           echo " "
-          echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          clear
-          exit 0
-        else
-          if grep -q "$bridge_address" $TORRC ; then
+          bridge_address=$(sudo python3 bridges_get.py)
+          if [ "$bridge_address" = "0" ]; then
             echo " "
-            echo -e "${WHITE}[!] We fetched a bridge, but it is already added!${NOCOLOR}"
-            echo -e "${RED}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
+            echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p "Press any key to continue"
             clear
             exit 0
           else
-            echo ""
-            echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
-            if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            else
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            fi
-            echo -e "${RED}[+] Saved a valid bridge!${NOCOLOR}"
-            sudo echo $bridge_address >> $TORRC
-            sleep 5
-            clear
-            if [ $STANDALONE = 1 ]; then
-              activate_obfs4_bridges bridges_add_old
+            if grep -q "$bridge_address" $TORRC ; then
+              echo " "
+              echo -e "${WHITE}[!] We fetched a bridge, but it is already added!${NOCOLOR}"
+              echo -e "${RED}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
+              echo " "
+              read -n 1 -s -r -p "Press any key to continue"
+              clear
               exit 0
+            else
+              echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
+              if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+                bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
+                bridge_address=$(echo -e "$bridge_address\n")
+              else
+                bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
+                bridge_address=$(echo -e "$bridge_address\n")
+              fi
+              echo -e "${RED}[+] Saving a valid bridge!${NOCOLOR}"
+              echo ""
+              printf "$bridge_address\n" | sudo tee -a $TORRC
+              echo ""
+              echo -e "${RED}[+] DONE!${NOCOLOR}"
+              sleep 5
+              clear
+              if [ $STANDALONE = 1 ]; then
+                activate_obfs4_bridges bridges_add_old
+                exit 0
+              fi
             fi
           fi
+        else
+          echo ""
+          echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+          echo -e "${WHITE}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
+          sleep 5
+          clear
         fi
       fi
 
