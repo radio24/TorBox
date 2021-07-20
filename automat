@@ -54,14 +54,6 @@ n=0
 if [ $ARGUMENT = 1 ]; then
 #  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
   sudo systemctl stop tor
-#  deactivating_bridge_relay
-#  if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-#    sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-#    sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-#    sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-    #Deaktivate all sort of bridges obfs4 and meek-azure
-#    sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
-#  fi
   (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
   (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
   (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null

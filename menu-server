@@ -76,6 +76,7 @@ if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
     CONTACT=$(grep "^ContactInfo" ${TORRC})
     NICK=$(grep "^Nickname" ${TORRC})
+    BRIDGEDISTRIBUTION=$(grep "BridgeDistribution" ${TORRC})
 else
     TOGGLE07="Bridge relay OFF!"
     TOGGLE07b="OFF"
@@ -86,11 +87,13 @@ else
     OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC})
     CONTACT=$(grep "^#ContactInfo" ${TORRC})
     NICK=$(grep "^#Nickname" ${TORRC})
+    BRIDGEDISTRIBUTION=$(grep "#BridgeDistribution" ${TORRC})
 fi
 sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
 sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
 sNICK=$(cut -d ' ' -f2 <<< $NICK)
+sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
 }
 
 # This function changes the configuration and, if necessary, restarts tor
@@ -101,11 +104,13 @@ if [ "$MODE_BR" != "BridgeRelay 1" ]; then
   sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
   sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
   sudo sed -i "s/^$NICK/#Nickname $nNICK/" ${TORRC}
+  sudo sed -i "s/^$BRIDGEDISTRIBUTION/#BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
 else
   sudo sed -i "s/^$ORPORT/ORPort $nORPORT/" ${TORRC}
   sudo sed -i "s/^$OBFS4PORT/ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
   sudo sed -i "s/^$CONTACT/ContactInfo $nCONTACT/" ${TORRC}
   sudo sed -i "s/^$NICK/Nickname $nNICK/" ${TORRC}
+  sudo sed -i "s/^$BRIDGEDISTRIBUTION/BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
   INPUT=$(cat text/restart-bridge_server-text)
   if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
     clear
@@ -163,6 +168,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#ServerTransportListenAddr/ServerTransportListenAddr/g" ${TORRC}
             sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
             sudo sed -i "s/^#Nickname/Nickname/g" ${TORRC}
+            sudo sed -i "s/^#BridgeDistribution/BridgeDistribution/g" ${TORRC}
             (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
             RULE_CHECK=$?
             if [ $RULE_CHECK = 1 ]; then
@@ -188,7 +194,7 @@ if [ $exitstatus = 0 ]; then
 # Check and/or change the configuration
 		elif [ $CHOICE = 3 ]; then
       if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to change the configuration?"
+			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to change the configuration?"
         if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
           nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: 4235):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
   			  if [ "$nORPORT" = "" ]; then
@@ -203,6 +209,16 @@ if [ $exitstatus = 0 ]; then
             nCONTACT="<address@email.com>"
           fi
           nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+          nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
+"ANY" "Let BridgeDB decide about the distribution method (default)" ON \
+"HTTPS" "Distributed through the bridge website" OFF \
+"MOAT" "Directly fetched and used by the Torbrowser" OFF \
+"EMAIL" "Distributed by email (bridges@torproject.org)" OFF \
+"NONE" "Avoid distributing the bridge address" OFF 3>&1 1>&2 2>&3)
+          nBRIDGEDISTRIBUTION=${nBRIDGEDISTRIBUTION,,}
+          if [ "$nBRIDGEDISTRIBUTION" = "" ]; then
+            nBRIDGEDISTRIBUTION="any"
+          fi
           change_config
           read_config
         fi
@@ -213,12 +229,13 @@ if [ $exitstatus = 0 ]; then
 
 # Reset configuration to default
     elif [ $CHOICE = 4 ]; then
-      INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nWould you like to reset the configuration to the default values?"
+      INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to reset the configuration to the default values?"
       if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
         nORPORT="4235"
         nOBFS4PORT="443"
         nCONTACT="<address@email.com>"
         nNICK="TorBox041"
+        nBRIDGEDISTRIBUTION="any"
         change_config
         read_config
       fi
@@ -323,16 +340,19 @@ if [ $exitstatus = 0 ]; then
             OBFS4PORT_BAK=$(grep "^ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
             CONTACT_BAK=$(grep "^ContactInfo" backup.tbx/etc/tor/torrc)
             NICK_BAK=$(grep "^Nickname" backup.tbx/etc/tor/torrc)
+            BRIDGEDISTRIBUTION_BACK=$(grep "^BridgeDistribution" backup.tbx/etc/tor/torrc)
           else
             ORPORT_BAK=$(grep "^#ORPort" backup.tbx/etc/tor/torrc)
             OBFS4PORT_BAK=$(grep "^#ServerTransportListenAddr" backup.tbx/etc/tor/torrc)
             CONTACT_BAK=$(grep "^#ContactInfo" backup.tbx/etc/tor/torrc)
             NICK_BAK=$(grep "^#Nickname" backup.tbx/etc/tor/torrc)
+            BRIDGEDISTRIBUTION_BACK=$(grep "^#BridgeDistribution" backup.tbx/etc/tor/torrc)
           fi
           nORPORT=$(cut -d ' ' -f2 <<< $ORPORT_BAK)
           nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT_BAK)
           nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT_BAK)
           nNICK=$(cut -d ' ' -f2 <<< $NICK_BAK)
+          nBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION_BACK)
           sleep 1
           echo -e "${RED}[+] Cleaning...${NOCOLOR}"
           sudo rm -r backup.tbx
