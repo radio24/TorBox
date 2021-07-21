@@ -76,7 +76,7 @@ check_fresh_install()
   # will be set at the end of the run_install.sh
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
     clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
       (sudo userdel -r pi) 2> /dev/null
     fi
