@@ -803,10 +803,9 @@ if [ $exitstatus = 0 ]; then
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         online_check menu-config
         sudo apt-get -y install python3-dev
-        # This is the older version of the installation script - https://github.com/adafruit/Raspberry-Pi-Installer-Scripts/blob/master/converted_shell_scripts/adafruit-pitft.sh
-        # wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/converted_shell_scripts/adafruit-pitft.sh
-        # chmod +x adafruit-pitft.sh
-        sudo bash install/adafruit-pitft.sh -u /home/torbox
+        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
+        chmod +x adafruit-pitft.sh
+        sudo ./adafruit-pitft.sh -u /home/torbox
       fi
 
 #This is the support for 3.5" no-name TFT displays
