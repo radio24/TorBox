@@ -48,6 +48,24 @@ import socket
 import re
 import os
 import base64
+import sys
+import getopt
+
+# get the options from cmd line
+options, remainder = getopt.getopt(sys.argv[1:],
+                                   'n:h',
+                                   ['network=',
+                                    'help'])
+
+network = False
+for opt, arg in options:
+    if opt in ('-n', '--network'):
+        network = arg
+    elif opt in ('-h', '--help'):
+        print(f"Usage:\n {sys.argv[0]} [-n <tor|inet>]\n\n"\
+                "Options:\n"\
+                " -n, --network=<tor|inet>\t\tForce get over specific network\n")
+        quit()
 
 def create_connection(address, timeout=None, source_address=None):
     sock = socks.socksocket()
@@ -60,28 +78,48 @@ while bridges == False:
     br = Browser()
     br.set_handle_robots(False)
 
-    try:
-        # Tor request
-        socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5,
-                              SOCKS_HOST,
-                              SOCKS_PORT)
+    # Tor request by default
+    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5,
+                          SOCKS_HOST,
+                          SOCKS_PORT)
 
-        # patch socket module
-        socket.socket = socks.socksocket
-        socket.create_connection = create_connection
+    # patch socket module
+    socket.socket = socks.socksocket
+    socket.create_connection = create_connection
 
-        res = br.open(BRIDGES_URL)
-    except:
+    if network == 'tor':
+        try:
+            print("tor")
+            res = br.open(BRIDGES_URL)
+        except:
+            print(-1)
+            quit()
+    elif network == 'inet':
         # Clearnet request
         try:
+            print("inet")
             # unset socks proxy
             socks.setdefaultproxy()
 
             res = br.open(BRIDGES_URL)
         except:
             # Error
-            print("0")
+            print(-1)
             quit()
+    else:
+        try:
+            res = br.open(BRIDGES_URL)
+        except:
+            # Clearnet request
+            try:
+                # unset socks proxy
+                socks.setdefaultproxy()
+
+                res = br.open(BRIDGES_URL)
+            except:
+                # Error
+                print(-1)
+                quit()
 
     # look for the captcha image / re.findall returns all the findings as a list
     html = str(res.read())
