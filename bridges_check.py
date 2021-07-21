@@ -51,17 +51,23 @@ SOCKS_HOST = '192.168.42.1'
 SOCKS_PORT = 9050
 
 # get the options from cmd line
-options, remainder = getopt.getopt(sys.argv[1:], 'f:ish', ['fingerprint=',
-                                                        'info=',
-                                                        'help',
-                                                        'hashed-fingerprint'
-                                                        ])
+options, remainder = getopt.getopt(sys.argv[1:],
+                                   'n:f:ish',
+                                   ['network=',
+                                    'fingerprint=',
+                                    'info=',
+                                    'help',
+                                    'hashed-fingerprint'])
+
+network = False
 fingerprint = False
 hashed_fingerprint = False
 get_info_file = False
 show_info = False
 
 for opt, arg in options:
+    if opt in ('-n', '--network'):
+        network = arg
     if opt in ('-f', '--fingerprint'):
         fingerprint = arg
     elif opt in ('-i', '--info'):
@@ -71,7 +77,14 @@ for opt, arg in options:
     elif opt in ('-s', '--hashed-fingerprint'):
         hashed_fingerprint = True
     elif opt in ('-h', '--help'):
-        print("Usage:\n %s [-i] -f <fingerprint>\n\nOptions:\n -f, --fingerprint=<fingerprint>\tGet status of a tor bridge (0: offline, 1: online, 2: not exists) [REQUIRED PARAM]\n\t\t\t\t\t Fingerprint must not be hashed\n -s, --hashed-fingerprint\t\tSearch for hashed fingerprint\n -i, --info <file_name>\t\t\tSave the info from bridge and save to file in JSON format (-i prints to stdout)\n -h, --help\t\t\t\tshow this help\n" % sys.argv[0])
+        print(f"Usage:\n {sys.argv[0]} [-i] -f <fingerprint>\n\n"\
+                "Options:\n"\
+                " -n, --network=<tor|inet>\t\tForce check over specific network\n"\
+                " -f, --fingerprint=<fingerprint>\tGet status of a tor bridge (0: offline, 1: online, 2: not exists) [REQUIRED PARAM]\n"\
+                        "\t\t\t\t\t Fingerprint must not be hashed\n"\
+                " -s, --hashed-fingerprint\t\tSearch for hashed fingerprint\n"\
+                " -i, --info <file_name>\t\t\tSave the info from bridge and save to file in JSON format (-i prints to stdout)\n"\
+                " -h, --help\t\t\t\tshow this help\n")
         quit()
 
 # if fingerprint not passed, we show how to use it. fingerprint is required
@@ -89,19 +102,34 @@ if not hashed_fingerprint:
 
 # search for the fingerprint in the torproject
 url = 'https://onionoo.torproject.org/details?lookup=%s' % fingerprint
-
-# Always go over tor first
+# Tor proxy
 proxy = {'https': f"socks5h://{SOCKS_HOST}:{SOCKS_PORT}"}
-try:
-    r = requests.get(url, proxies=proxy)
-except:
-    # Tor not running, try over clearnet
+
+if network == 'inet':
     try:
         r = requests.get(url)
     except:
         # Error
         print(-1)
         quit()
+elif network == 'tor':
+    try:
+        r = requests.get(url, proxies=proxy)
+    except:
+        print(-1)
+        quit()
+else:
+    # Always go over tor first
+    try:
+        r = requests.get(url, proxies=proxy)
+    except:
+        # Tor not running, try over clearnet
+        try:
+            r = requests.get(url)
+        except:
+            # Error
+            print(-1)
+            quit()
 
 # load json data
 data = json.loads(r.text)
