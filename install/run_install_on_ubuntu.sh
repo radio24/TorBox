@@ -863,9 +863,7 @@ echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
-sudo cp torbox/etc/hostname /etc/
-echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+sudo hostnamectl set-hostname TorBox041
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
