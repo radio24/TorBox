@@ -122,23 +122,30 @@ set_sources_list()
 # This function updates the firmware on a RPI4
 update_firmware()
 {
-  online_check update
+  online_check
   TORCONNECT=0
-  set_sources_list
-  clear
-  sudo apt-get install rpi-eeprom
-  sleep 2
-  clear
-  echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
-  echo " "
-  sudo rpi-eeprom-update
-  echo " "
-  read -n 1 -s -r -p "Press any key to continue"
-  echo " "
-  sudo rpi-eeprom-update -a
-  echo " "
-  echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
-  sleep 5
+  if [ $OCHECK == 1 ]; then
+    set_sources_list
+    clear
+    sudo apt-get install rpi-eeprom
+    sleep 2
+    clear
+    echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
+    echo " "
+    sudo rpi-eeprom-update
+    echo " "
+    read -n 1 -s -r -p "Press any key to continue"
+    echo " "
+    sudo rpi-eeprom-update -a
+    echo " "
+    echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+    sleep 5
+  else
+    echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+    echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+    echo " "
+    read -n 1 -s -r -p "Press any key to continue"
+  fi
 }
 
 # This function updates TOR
@@ -473,26 +480,33 @@ if [ $exitstatus = 0 ]; then
       TOR_VERS=$(tor --version|rev|cut -c2-|rev)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        online_check update
+        online_check
         TORCONNECT=0
-        set_sources_list
-        clear
-        sudo apt-get -y update
-        sudo apt-get -y dist-upgrade
-        sudo systemctl unmask hostapd
-        sudo systemctl enable hostapd
-        sudo systemctl enable isc-dhcp-server
-        # Copy not moving!
-        sudo cp /usr/share/tor/geoip* /usr/bin
-        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-        sudo systemctl enable tor
-        sudo systemctl daemon-reload
-        echo ""
-        echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
-        sleep 5
-        BOOTMSG=1
+        if [ $OCHECK == 1 ]; then
+          set_sources_list
+          clear
+          sudo apt-get -y update
+          sudo apt-get -y dist-upgrade
+          sudo systemctl unmask hostapd
+          sudo systemctl enable hostapd
+          sudo systemctl enable isc-dhcp-server
+          # Copy not moving!
+          sudo cp /usr/share/tor/geoip* /usr/bin
+          sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+          sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+          sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+          sudo systemctl enable tor
+          sudo systemctl daemon-reload
+          echo ""
+          echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+          sleep 5
+          BOOTMSG=1
+        else
+          echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+        fi
       fi
 
 # This updates additional network drivers (because of performance considerations over clearnet)
@@ -501,10 +515,17 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/install_network_drivers-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
-          online_check update
-          bash install_network_drivers
-          BOOTMSG=1
-          LOOP_NUMBER=0
+          online_check
+          if [ $OCHECK == 1 ]; then
+            bash install_network_drivers
+            BOOTMSG=1
+            LOOP_NUMBER=0
+          else
+            echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+          fi
         fi
       else
         bash install_network_drivers
@@ -538,15 +559,10 @@ if [ $exitstatus = 0 ]; then
 #This changes/updates the installed Tor version
   elif [ $ARGUMENT = 4 ]; then
     # Avoid cheap censorship mechanisms
-    online_check update
-    if [ $TORCONNECT = 0 ]; then
-      INPUT=$(cat text/clearnet_warning-text)
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-        sleep 1
-      else
-        trap "screen bash update; exit 0" EXIT
-        exit 0
-      fi
+    online_check default 1 1
+    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+      trap "screen bash update; exit 0" EXIT
+      exit 0
     fi
     set_sources_list
     INPUT=$(cat text/update-tor-text)
@@ -586,28 +602,18 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/torbox_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-          online_check update
-          if [ $TORCONNECT = 0 ]; then
-            INPUT=$(cat text/clearnet_warning-text)
-            if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-              sleep 1
-            else
-              trap "screen bash update; exit 0" EXIT
-              exit 0
-            fi
+          online_check default 1 1
+          if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+            trap "screen bash update; exit 0" EXIT
+            exit 0
           fi
           update_torbox_menu
         fi
       else
-        online_check update
-        if [ $TORCONNECT = 0 ]; then
-          INPUT=$(cat text/clearnet_warning-text)
-          if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-            sleep 1
-          else
-            trap "screen bash update; exit 0" EXIT
-            exit 0
-          fi
+        online_check default 1 1
+        if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+          trap "screen bash update; exit 0" EXIT
+          exit 0
         fi
         update_torbox_menu
       fi

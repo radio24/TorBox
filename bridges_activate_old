@@ -104,7 +104,7 @@ else
       # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
         clear
-        online_check bridges_activate_old $BRIDGE_DB_URL 1 1
+        online_check $BRIDGE_DB_URL 1 1
         if [ $OCHECK == 1 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
           echo " "
@@ -114,7 +114,11 @@ else
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            if [ $CLEARNET_DECISSION == 1 ]; then
+              bridge_status=$(./bridges_check.py $bridge_hash)
+            else [ $CLEARNET_DECISSION == 0 ]; then
+              bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
+            fi
             j=0
             if [ $bridge_status == 1 ]; then
               j=$(($i + 1))
