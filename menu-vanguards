@@ -50,7 +50,10 @@ elif [ "$CHOICE" == "INSTALL" ]; then
   sudo rm -rf /var/lib/tor/vanguards
   echo "Installing necessary packages..."
   # installing from git to retrieve the latest version (debian package is not updated frequently)
-  sudo git clone https://github.com/mikeperry-tor/vanguards
+  sudo -u debian-tor git clone https://github.com/mikeperry-tor/vanguards
+  cd vanguards || exit 1
+  VANGUARDS_COMMIT_HASH=10942de
+  sudo -u debian-tor reset --hard ${VANGUARDS_COMMIT_HASH} || exit 1
   sudo mv vanguards /var/lib/tor/
   sudo cp /var/lib/tor/vanguards/vanguards-example.conf /var/lib/tor/vanguards/vanguards.conf
   DEFAULT_PASS="CHANGE-IT"
