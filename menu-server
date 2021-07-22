@@ -201,7 +201,7 @@ if [ $exitstatus = 0 ]; then
  			   fi
           nOBFS4PORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (ENTER -> $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         if [ "$nOBFS4PORT" = "" ]; then
-          nOBFS4PORT="$nOBSF4Port"
+          nOBFS4PORT="$sOBSF4Port"
         fi
           nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         if [ "$nCONTACT" = "" ]; then
