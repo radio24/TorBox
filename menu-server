@@ -193,38 +193,33 @@ if [ $exitstatus = 0 ]; then
 
 # Check and/or change the configuration
 		elif [ $CHOICE = 3 ]; then
-      if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-			  INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to change the configuration?"
-        if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
-          nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: 4235):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-  			  if [ "$nORPORT" = "" ]; then
-            nORPORT="4235"
- 			    fi
-            nOBFS4PORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (default: 443):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          if [ "$nOBFS4PORT" = "" ]; then
-            nOBFS4PORT="443"
-          fi
-            nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address (default: <address@email.com>):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          if [ "$nCONTACT" = "" ]; then
-            nCONTACT="<address@email.com>"
-          fi
-          nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
+			INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to change the configuration?"
+      if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
+        nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (default: $sORPORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+  			 if [ "$nORPORT" = "" ]; then
+          nORPORT=$sOPORT
+ 			   fi
+          nOBFS4PORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (default: $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        if [ "$nOBFS4PORT" = "" ]; then
+          nOBFS4PORT="$nOBSF4Port"
+        fi
+          nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address (default: $sCONTACT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        if [ "$nCONTACT" = "" ]; then
+          nCONTACT=$sCONTACT
+        fi
+        nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
 "ANY" "Let BridgeDB decide about the distribution method (default)" ON \
 "HTTPS" "Distributed through the bridge website" OFF \
 "MOAT" "Directly fetched and used by the Torbrowser" OFF \
 "EMAIL" "Distributed by email (bridges@torproject.org)" OFF \
 "NONE" "Avoid distributing the bridge address" OFF 3>&1 1>&2 2>&3)
-          nBRIDGEDISTRIBUTION=${nBRIDGEDISTRIBUTION,,}
-          if [ "$nBRIDGEDISTRIBUTION" = "" ]; then
-            nBRIDGEDISTRIBUTION="any"
-          fi
-          change_config
-          read_config
+        nBRIDGEDISTRIBUTION=${nBRIDGEDISTRIBUTION,,}
+        if [ "$nBRIDGEDISTRIBUTION" = "" ]; then
+          nBRIDGEDISTRIBUTION="sBRIDGEDISTRIBUTION"
         fi
-      else
-        INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\n\nTo change the configuration, you have first to DEACTIVATE the Bridge Relay Mode."
-        whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
+        change_config
+        read_config
       fi
 
 # Reset configuration to default
