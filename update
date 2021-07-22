@@ -501,6 +501,7 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/install_network_drivers-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+          online_check update
           bash install_network_drivers
           BOOTMSG=1
           LOOP_NUMBER=0
