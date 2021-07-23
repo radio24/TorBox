@@ -26,7 +26,7 @@
 # SYNTAX
 # ./run_install.sh <--select-tor>
 #
-# The <--select-tor> options allows the user to select a specific tor version.
+# The <--select-tor> option allows the user to select a specific tor version.
 # Without this option, the installation script installs the latest stable version.
 #
 # IMPORTANT
@@ -39,18 +39,17 @@
 #  1. Checking for Internet connection
 #  2. Checking for the WLAN regulatory domain
 #  3. Updating the system
-#  4. Adding the Tor repository to the source list.
-#  5. Installing all necessary packages
-#  6. Install Tor
-#  7. Configuring Tor with the pluggable transports
-#  8. Re-checking Internet connectivity
-#  9. Downloading and installing the latest version of TorBox
-# 10. Installing all configuration files
-# 11. Disabling Bluetooth
-# 12. Configure the system services
-# 13. Installing additional network drivers
-# 14. Adding and implementing the user torbox
-# 15. Finishing, cleaning and booting
+#  4. Installing all necessary packages
+#  5. Install Tor
+#  6. Configuring Tor with the pluggable transports
+#  7. Re-checking Internet connectivity
+#  8. Downloading and installing the latest version of TorBox
+#  9. Installing all configuration files
+# 10. Disabling Bluetooth
+# 11. Configure the system services
+# 12. Installing additional network drivers
+# 13. Adding and implementing the user torbox
+# 14. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -204,19 +203,7 @@ sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
 
-# 4. Adding the Tor repository to the source list.
-sleep 10
-clear
-echo -e "${RED}[+] Step 4: Adding the Tor repository to the source list....${NOCOLOR}"
-echo ""
-if ! grep "torproject" /etc/apt/sources.list ; then
-	sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
-	sudo printf "\n# Added by TorBox\ndeb-src https://deb.torproject.org/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
-fi
-sudo curl https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
-sudo apt-get -y update
-
-# 5. Installing all necessary packages
+# 4. Installing all necessary packages
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
@@ -244,12 +231,12 @@ fi
 export PATH=$PATH:/usr/local/go/bin
 rm $GO_VERSION
 
-# 6. Install Tor
+# 5. Install Tor
 sleep 10
 clear
 echo -e "${RED}[+] Step 6: Installing tor...${NOCOLOR}"
 
-# 6a. Select, compile and install Tor
+# 5a. Select, compile and install Tor
 if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	clear
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
@@ -332,7 +319,7 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	fi
 else number_torversion=0 ; fi
 
-# 6b. Compile and install the latest stable Tor version
+# 5b. Compile and install the latest stable Tor version
 if [ $number_torversion = 0 ] ; then
 	mkdir ~/debian-packages; cd ~/debian-packages
 	apt source tor
@@ -348,7 +335,7 @@ if [ $number_torversion = 0 ] ; then
 	sudo rm -r ~/debian-packages
 fi
 
-# 7. Configuring Tor with the pluggable transports
+# 6. Configuring Tor with the pluggable transports
 sleep 10
 clear
 echo -e "${RED}[+] Step 7: Configuring Tor with the pluggable transports....${NOCOLOR}"
@@ -362,7 +349,7 @@ sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/to
 
 # Additional installation for Snowflake
 cd ~
-git clone https://git.torproject.org/pluggable-transports/snowflake.git
+git clone https://github.com/keroserene/snowflake.git
 export GO111MODULE="on"
 cd ~/snowflake/proxy
 go get
@@ -378,7 +365,7 @@ cd ~
 sudo rm -rf snowflake
 sudo rm -rf go*
 
-# 8. Again checking connectivity
+# 7. Again checking connectivity
 sleep 10
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
@@ -426,7 +413,7 @@ else
   fi
 fi
 
-# 9. Downloading and installing the latest version of TorBox
+# 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
@@ -453,7 +440,7 @@ else
   exit 1
 fi
 
-# 10. Installing all configuration files
+#  9. Installing all configuration files
 sleep 10
 clear
 cd torbox
@@ -508,7 +495,7 @@ if ! grep "# Added by TorBox (002)" .profile ; then
 	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
 
-# 11. Disabling Bluetooth
+# 10. Disabling Bluetooth
 sleep 10
 clear
 echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
@@ -521,7 +508,7 @@ if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo apt-get -y autoremove
 fi
 
-# 12. Configure the system services
+# 11. Configure the system services
 sleep 10
 clear
 echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
@@ -547,7 +534,7 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# 13. Installing additional network drivers
+# 12. Installing additional network drivers
 kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 path_8188eu="8188eu-drivers/"
@@ -644,7 +631,7 @@ cd ~
 sudo rm -r 8821au
 sleep 2
 
-# 14. Adding the user torbox
+# 13. Adding the user torbox
 sleep 10
 clear
 echo -e "${RED}[+] Step 14: Set up the torbox user...${NOCOLOR}"
@@ -672,7 +659,7 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
 fi
 cd /home/torbox/
 
-# 15. Finishing, cleaning and booting
+# 14. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"

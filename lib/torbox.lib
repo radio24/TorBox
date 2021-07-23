@@ -50,6 +50,7 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 ##############################
 ######## FUNCTIONS ###########
 
+
 # check_tor()
 # Used predefined variables: RED, NOCOLOR
 # This function checks the status on https://check.torproject.org/
@@ -156,6 +157,34 @@ online_check()
       exit 0
     fi
   fi
+}
+
+# Sets the right settings for /etc/apt/sources.list
+# Used predefined variables: SOURCES_TOR_UPDATE_PLAIN, SOURCES_TOR_UPDATE_PLAIN_SED, SOURCES_TOR_UPDATE_ONION_APT, SOURCES_TOR_UPDATE_ONION_SED, SOURCES_TOR_UPDATE_ONION_CURL
+set_sources_list()
+{
+  if [ $TORCONNECT -eq 0 ]; then
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_PLAIN
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_PLAIN
+  else
+    SOURCES_TOR_UPDATE=$SOURCES_TOR_UPDATE_ONION_APT
+    SOURCES_TOR_UPDATE_CURL=$SOURCES_TOR_UPDATE_ONION_CURL
+  fi
+  sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+  # If an old entry is already there, we will remove it first
+  sudo sed -i "/# Added by TorBox/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_PLAIN_SED/d" /etc/apt/sources.list
+  sudo sed -i "/$SOURCES_TOR_UPDATE_ONION_SED/d" /etc/apt/sources.list
+  # Add the new entry
+  if hostnamectl | grep -q "Ubuntu 20.10" ; then
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org groovy main\n" | sudo tee -a /etc/apt/sources.list
+  elif [ "$CHECK_OS" == "Debian" ]; then
+    sudo printf "\n# Added by TorBox update script\ndeb $SOURCES_TOR_UPDATE/torproject.org buster main\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  else
+    sudo printf "\n# Added by TorBox update script\ndeb-src $SOURCES_TOR_UPDATE/torproject.org buster main\n" | sudo tee -a /etc/apt/sources.list
+  fi
+  clear
+  sudo curl $SOURCES_TOR_UPDATE_CURL/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo apt-key add -
 }
 
 # add_open_dns()

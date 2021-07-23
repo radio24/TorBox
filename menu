@@ -71,6 +71,7 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 # or run the first time after flashing the image file to a SD card.
 check_fresh_install()
 {
+
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
   # This will completely remove pi (only for Raspbian OS). The parameter
   # will be set at the end of the run_install.sh
@@ -81,6 +82,16 @@ check_fresh_install()
       (sudo userdel -r pi) 2> /dev/null
     fi
     clear
+    # Will ask it user want bridges 
+    # will APT over Tor if Tor is working
+    INPUT=$(cat text/recommend-add-bridges-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+      bash menu-bridges
+    fi
+    online_check menu 
+    set_sources_list
+    sudo apt-get -y update
+    check_tor
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
     sudo reboot
@@ -148,11 +159,10 @@ fi
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+check_tor
 check_fresh_install
 check_bridge_relay
 check_interface_with_internet
-check_tor
-
 
 if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="VPN is up & TOR working"
 elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ] ; then TOR_STATUS="         TOR is working"
