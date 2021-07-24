@@ -153,16 +153,6 @@ online_check()
         TORCONNECT=0
       fi
     else
-      CLEARNET_DECISSION=1
-      OCHECK=$(curl -m 6 -s $CHECK_URL)
-      if [ $? == 0 ]; then
-        OCHECK=1
-        TORCONNECT=0
-      else
-        OCHECK=0
-        TORCONNECT=0
-      fi
-    else
       CLEARNET_DECISSION=0
       OCHECK=0;
       TORCONNECT=0
