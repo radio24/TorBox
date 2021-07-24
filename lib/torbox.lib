@@ -395,7 +395,7 @@ list_all_obfs4_bridges()
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
             bridge_status=$(./bridges_check.py $bridge_hash)
-          else [ $CLEARNET_DECISSION == 0 ]; then
+          else
             bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
@@ -426,7 +426,7 @@ list_all_obfs4_bridges()
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
             bridge_status=$(./bridges_check.py $bridge_hash)
-          else [ $CLEARNET_DECISSION == 0 ]; then
+          else
             bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"

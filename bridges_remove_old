@@ -132,7 +132,7 @@ if [ $exitstatus = 0 ]; then
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
             bridge_status=$(./bridges_check.py $bridge_hash)
-          else [ $CLEARNET_DECISSION == 0 ]; then
+          else
             bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
           fi
           if [ $bridge_status == 2 ]; then
@@ -153,7 +153,7 @@ if [ $exitstatus = 0 ]; then
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
             bridge_status=$(./bridges_check.py $bridge_hash)
-          else [ $CLEARNET_DECISSION == 0 ]; then
+          else
             bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
           fi
           if [ $bridge_status == 2 ]; then

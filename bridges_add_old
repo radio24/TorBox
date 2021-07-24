@@ -91,7 +91,7 @@ if [ $exitstatus = 0 ]; then
           echo " "
           if [ $CLEARNET_DECISSION == 1 ]; then
             bridge_address=$(sudo python3 bridges_get.py)
-          else [ $CLEARNET_DECISSION == 0 ]; then
+          else
             bridge_address=$(sudo python3 bridges_get.py --network=tor)
           fi
           if [ "$bridge_address" = "0" ]; then
