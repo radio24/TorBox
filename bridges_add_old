@@ -136,8 +136,10 @@ if [ $exitstatus = 0 ]; then
           echo ""
           echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
-          sleep 5
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
+          exit 0
         fi
       fi
 

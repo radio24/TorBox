@@ -143,15 +143,19 @@ else
             echo ""
             echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
             echo -e "${RED}[+] Please add some new OBFS4 bridges first! ${NOCOLOR}"
-            sleep 5
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
             clear
+            exit 0
           fi
         else
           echo ""
           echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 5
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
+          exit 0
         fi
         exit 0
 
