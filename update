@@ -122,8 +122,8 @@ set_sources_list()
 # This function updates the firmware on a RPI4
 update_firmware()
 {
+  # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
   online_check
-  TORCONNECT=0
   if [ $OCHECK == 1 ]; then
     set_sources_list
     clear
@@ -141,7 +141,7 @@ update_firmware()
     echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
     sleep 5
   else
-    echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+    echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
     echo " "
     read -n 1 -s -r -p "Press any key to continue"
@@ -480,8 +480,8 @@ if [ $exitstatus = 0 ]; then
       TOR_VERS=$(tor --version|rev|cut -c2-|rev)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
         online_check
-        TORCONNECT=0
         if [ $OCHECK == 1 ]; then
           set_sources_list
           clear
@@ -502,7 +502,7 @@ if [ $exitstatus = 0 ]; then
           sleep 5
           BOOTMSG=1
         else
-          echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
           echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
           echo " "
           read -n 1 -s -r -p "Press any key to continue"
@@ -512,16 +512,17 @@ if [ $exitstatus = 0 ]; then
 # This updates additional network drivers (because of performance considerations over clearnet)
   elif [ $ARGUMENT = 2 ]; then
       kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
+      # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+      online_check
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/install_network_drivers-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
-          online_check
           if [ $OCHECK == 1 ]; then
             bash install_network_drivers
             BOOTMSG=1
             LOOP_NUMBER=0
           else
-            echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+            echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
             echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p "Press any key to continue"

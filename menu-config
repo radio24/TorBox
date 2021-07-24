@@ -808,7 +808,7 @@ if [ $exitstatus = 0 ]; then
           chmod +x adafruit-pitft.sh
           sudo ./adafruit-pitft.sh -u /home/torbox
         else
-          echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
   				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
           echo " "
     			read -n 1 -s -r -p "Press any key to continue"
@@ -864,7 +864,7 @@ if [ $exitstatus = 0 ]; then
             exit 0
           fi
         else
-          echo -e "${WHITE}[!] SORRY! - the TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
           echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
           echo " "
           read -n 1 -s -r -p "Press any key to continue"
