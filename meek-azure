@@ -91,36 +91,43 @@ i=0
 		echo " "
 		online_check $BRIDGE_DB_URL 1 1
 		if [ $OCHECK == 1 ]; then
+			echo " "
 			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER${NOCOLOR}"
 			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2
 			echo " "
+			MEEK_ON=0
 			while [ $i -lt $number_configured_meekazure_deactivated ]
 			do
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				if [ $CLEARNET_DECISSION == 1 ]; then
-					bridge_status=$(./bridges_check.py $bridge_hash)
+					bridge_status=$(./bridges_check.py -f $bridge_hash)
 				else
-					bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
+					bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 				fi
-				if [ $bridge_status == 1 ]; then bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-				elif [ $bridge_status == 0 ]; then bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
-				elif [ $bridge_status == 2 ]; then bridge_status_txt="- DOESN'T EXIST"
+				if [ $bridge_status == 1 ]; then
+					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+					MEEK_ON=$(( $MEEK_ON + 1 ))
+				elif [ $bridge_status == 0 ]; then
+					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
+				elif [ $bridge_status == 2 ]; then
+					bridge_status_txt="- DOESN'T EXIST"
 				fi
 				i=$(( $i + 1 ))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
-				echo -e $bridge_address
+				echo -e "$bridge_address"
 			done
-			if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+			if [ $MEEK_ON == 0 ] ; then
 				echo " "
-				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
+				echo -e "${WHITE}[!] SORRY! - the MEEK-AYURE SERVER seems to be OFFLINE!${NOCOLOR}"
 				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
 			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
+			echo " "
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
 			echo -e "${RED}[+] We cannot check the MEEK-AZURE SERVER - we try to use it anyway!${NOCOLOR}"
 			echo " "

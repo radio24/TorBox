@@ -805,8 +805,10 @@ if [ $exitstatus = 0 ]; then
         if [ $OCHECK == 1 ]; then
           sudo apt-get -y install python3-dev
           wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
-          chmod +x adafruit-pitft.sh
-          sudo ./adafruit-pitft.sh -u /home/torbox
+          chmod +x adafruit-pitft.py
+          sudo pip3 install Click adafruit-python-shell
+          sudo python3 adafruit-pitft.py -u /home/torbox
+          rm adafruit-pitft.py
         else
           echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
   				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -817,11 +819,11 @@ if [ $exitstatus = 0 ]; then
 
 #This is the support for 3.5" no-name TFT displays
     elif [ $CHOICE = 16 ]; then
-      INPUT=$(cat text/nonametft-text)
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-        online_check
-        if [ $OCHECK == 1 ]; then
+      online_check
+      if [ $OCHECK == 1 ]; then
+        INPUT=$(cat text/nonametft-text)
+        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           cd
           sudo rm -rf LCD-show
           # This is the original repository, but doesn't work with kernel 5.4.*, yet
@@ -847,7 +849,7 @@ if [ $exitstatus = 0 ]; then
               sudo systemctl daemon-reload
             fi
           else
-            (sudo /etc/systemd/system/getty@tty1.service.d/override.conf) 2>/dev/null
+            (sudo systemctl disable /etc/systemd/system/getty@tty1.service.d/override.conf) 2>/dev/null
             sudo systemctl daemon-reload
           fi
           if (whiptail --defaultno --yesno "\n\nWould you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -855,6 +857,7 @@ if [ $exitstatus = 0 ]; then
           else
             sudo sed -i "s/^screen .\/menu/.\/menu/g" .profile
           fi
+          sudo rm -rf LCD-show
           if (whiptail --yesno "\n\nWould you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
             clear
             echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
@@ -863,12 +866,12 @@ if [ $exitstatus = 0 ]; then
             sudo reboot
             exit 0
           fi
-        else
-          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
         fi
+      else
+        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
       fi
 
 #This is the support for Sixfab Shields/HATs for cellular connections
@@ -890,4 +893,7 @@ else
   clear
   exit 0
 fi
+cd
+cd torbox
 bash menu-config
+exit 0

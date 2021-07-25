@@ -131,9 +131,9 @@ if [ $exitstatus = 0 ]; then
           bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py $bridge_hash)
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 2 ]; then
             j=$(($j + 1))
@@ -152,9 +152,9 @@ if [ $exitstatus = 0 ]; then
           bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py $bridge_hash)
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 2 ]; then
             j=$(($j + 1))
@@ -177,7 +177,7 @@ if [ $exitstatus = 0 ]; then
           read -n 1 -s -r -p "Press any key to continue"
           clear
           number_of_bridges
-          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear
@@ -247,7 +247,7 @@ if [ $exitstatus = 0 ]; then
           read -n 1 -s -r -p "Press any key to continue"
           clear
           number_of_bridges
-          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear

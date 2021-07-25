@@ -124,9 +124,9 @@ else
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
             if [ $CLEARNET_DECISSION == 1 ]; then
-              bridge_status=$(./bridges_check.py $bridge_hash)
+              bridge_status=$(./bridges_check.py -f $bridge_hash)
             else
-              bridge_status=$(./bridges_check.py --network=tor $bridge_hash)
+              bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
             fi
             if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
               j=$(($j + 1))
