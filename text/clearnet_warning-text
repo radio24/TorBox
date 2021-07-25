@@ -1,0 +1,7 @@
+Currently, we cannot access a tor-related URL through tor! 
+
+If you choose YES, we will access this URL directly. Even if this shouldn't be a concern in general, it could be problematic in an authoritarian country because your network provider will probably see that you are using tor.
+
+If you choose NO, then we will go back to the menu. In this case, please check if your local tor installation is working correctly. To be on the safe side, in such a situation, you should permanently use bridges.
+
+Would you like that we directly access the URL?

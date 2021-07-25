@@ -1,11 +1,12 @@
 Currently, no OBFS4 bridges are configured. OBFS4 Bridges are necessary for TorBox to bypass Tor blocking in a country. With the help of this dialog-based configuration assistant, OBFS4 bridges can easily be added. When adding more than 5 OBFS4 bridges, it is recommended to use the advanced configuration editor (menu entry 7).
 
 HOW TO OBTAIN OBFS4 BRIDGES?
-With TorBox, you have three ways to obtain OBFS4 bridges:
+With TorBox, you have four ways to obtain OBFS4 bridges:
 1. Obtain about every 24h one OBFS4 bridge automatically.
 2. Get them here: https://bridges.torproject.org/
    (chose "Advanced Options", "obfs4" and press "Get Bridges).
 3. Send an email to bridges@torproject.org, using an address from Riseup
    or Gmail with "get transport obfs4" in the body of the mail.
+4. (Not recommended, only if needed): Via Telegram: https://t.me/tor_bridges
 
 Would you like to start adding OBFS4 bridges, now?

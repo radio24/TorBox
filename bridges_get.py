@@ -20,16 +20,25 @@
 # DESCRIPTION
 # This file fetches one new bridge. The return values is:
 # obfs4 <IP address>:<Port> <Fingerprint> <Certificate> <iat-mode>
+# or 0 if fetching the bridge fails over tor and clearnet.
 #
 # IMPORTANT
 # The bridge database delivers only 1-3 bridges approximately every 24 hours,
 # of which we pick one. With the bridges already delivered this should be sufficient.
 #
 # SYNTAX
-# ./bridges_get.py
+# ./bridges_get.py [-n, --network=<tor|inet>] [-h, --help]
+#
+# -h, --help: print the help screen
+# -n, --network=<tor|inet>: force check over specific network
 
-tmp_dir = '/tmp' # where we store the temporal captchas to solve (full path)
-tor_get_bridges_url = 'https://bridges.torproject.org/bridges?transport=obfs4' # url where we get the bridges
+# where we store the temporal captchas to solve (full path)
+TMP_DIR = '/tmp'
+# url where we get the bridges
+BRIDGES_URL = 'https://bridges.torproject.org/bridges?transport=obfs4'
+# Tor socks
+SOCKS_HOST = '192.168.42.1'
+SOCKS_PORT = 9050
 
 # -
 
@@ -37,60 +46,135 @@ from PIL import Image, ImageFilter
 from pytesseract import image_to_string
 from mechanize import Browser
 
+import socks
+import socket
 import re
 import os
 import base64
+import sys
+import getopt
+
+# get the options from cmd line
+options, remainder = getopt.getopt(sys.argv[1:],
+                                   'n:h',
+                                   ['network=',
+                                    'help'])
+
+network = False
+for opt, arg in options:
+    if opt in ('-n', '--network'):
+        network = arg
+    elif opt in ('-h', '--help'):
+        print(f"Usage:\n {sys.argv[0]} [-n <tor|inet>]\n\n"\
+                "Options:\n"\
+                " -n, --network=<tor|inet>\t\tForce get over specific network\n")
+        quit()
+
+def create_connection(address, timeout=None, source_address=None):
+    sock = socks.socksocket()
+    sock.connect(address)
+    return sock
 
 bridges = False
 while bridges == False:
-	# open page first
-	br = Browser()
-	br.set_handle_robots(False)
-	res = br.open(tor_get_bridges_url)
+    # open page first
+    br = Browser()
+    br.set_handle_robots(False)
 
-	# look for the captcha image / re.findall returns all the findings as a list
-	html = str(res.read())
-	q = re.findall(r'src="data:image/jpeg;base64,(.*?)"', html, re.DOTALL)
-	img_data = q[0]
+    # Tor request by default
+    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5,
+                          SOCKS_HOST,
+                          SOCKS_PORT)
 
-	# store captcha image
-	f = open('%s/captcha.jpg' % tmp_dir, 'wb')
-	f.write( base64.b64decode(img_data) )
-	f.close()
+    # patch socket module
+    socket.socket = socks.socksocket
+    socket.create_connection = create_connection
 
-	# cleaning captcha / convert is part of imagemagick
-	os.system('convert %s/captcha.jpg -threshold 15%% %s/captcha.tif'  % (tmp_dir, tmp_dir))
-	os.system('convert %s/captcha.tif -morphology Erode Disk:2 %s/captcha.tif'  % (tmp_dir, tmp_dir))
+    if network == 'tor':
+        try:
+            print("tor")
+            res = br.open(BRIDGES_URL)
+        except:
+            print(-1)
+            quit()
+    elif network == 'inet':
+        # Clearnet request
+        try:
+            print("inet")
+            # unset socks proxy
+            socks.setdefaultproxy()
 
-	# solve the captcha
-	captcha_text = image_to_string(Image.open('%s/captcha.tif' % tmp_dir), config='-c tessedit_char_whitelist=0123456789ABCDEFGHIJKMNLOPKRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
-	captcha_text = captcha_text.strip()
+            res = br.open(BRIDGES_URL)
+        except:
+            # Error
+            print(-1)
+            quit()
+    else:
+        try:
+            res = br.open(BRIDGES_URL)
+        except:
+            # Clearnet request
+            try:
+                # unset socks proxy
+                socks.setdefaultproxy()
 
-	# if captcha len doesn't match on what we look, we just try again / ATTENTION: the length has to match the one of the captcha on https://bridges.torproject.org/bridges?transport=obfs4 !!
-	if len(captcha_text) < 7 or len(captcha_text) > 7:
-		continue
+                res = br.open(BRIDGES_URL)
+            except:
+                # Error
+                print(-1)
+                quit()
 
-	# reply to server with the captcha text
-	br.select_form(nr=0)
-	br['captcha_response_field'] = captcha_text
-	reply = br.submit()
+    # look for the captcha image / re.findall returns all the findings as a list
+    html = str(res.read())
+    q = re.findall(r'src="data:image/jpeg;base64,(.*?)"', html, re.DOTALL)
+    img_data = q[0]
 
-	# look for the bridges if the captcha was beaten  / re.findall returns all the findings as a list
-	html = str(reply.read())
-	q = re.findall(r'<div class="bridge-lines" id="bridgelines">(.*?)</div>', html, re.DOTALL)
-	try:
-		txt = q[0]
-		# split into a list
-		b = txt.split('<br />')
-		# remark by Patrick: this creates an empty list - not sure if that is necessary (???)
-		r = []
-		for l in b:
-			# removes spaces at the beginning and at the end of the string as well as all newlines
-			_b = l.strip().replace('\\n', '')
-			if _b != '':
-				bridges = _b
-	# captcha failed, try again
-	except Exception as e:
-		pass
+    # store captcha image
+    f = open('%s/captcha.jpg' % TMP_DIR, 'wb')
+    f.write( base64.b64decode(img_data) )
+    f.close()
+
+    # cleaning captcha / convert is part of imagemagick
+    os.system(f'convert {TMP_DIR}/captcha.jpg '\
+              f'-threshold 15% {TMP_DIR}/captcha.tif')
+    os.system(f'convert {TMP_DIR}/captcha.tif '\
+              f'-morphology Erode Disk:2 {TMP_DIR}/captcha.tif')
+
+    # solve the captcha
+    captcha_text = image_to_string(Image.open(f'{TMP_DIR}/captcha.tif'),
+                            config='-c tessedit_char_whitelist='\
+                                    '0123456789'\
+                                    'ABCDEFGHIJKMNLOPKRSTUVWXYZ'\
+                                    'abcdefghijklmnopqrstuvwxyz')
+    captcha_text = captcha_text.strip()
+
+    # if captcha len doesn't match on what we look, we just try again
+    # ATTENTION: the length has to match with the captcha on
+    # https://bridges.torproject.org/bridges?transport=obfs4 !!
+    if len(captcha_text) != 7:
+        continue
+
+    # reply to server with the captcha text
+    br.select_form(nr=0)
+    br['captcha_response_field'] = captcha_text
+    reply = br.submit()
+
+    # look for the bridges if the captcha was beaten
+    html = str(reply.read())
+    q = re.findall(r'<div class="bridge-lines" id="bridgelines">(.*?)</div>',
+                    html,
+                    re.DOTALL)
+    try:
+        txt = q[0]
+        b = txt.split('<br />')
+
+        for l in b:
+            # clean string for newlines and spaces
+            _b = l.strip().replace('\\n', '')
+            if _b != '':
+                bridges = _b
+    # captcha failed, try again
+    except Exception as e:
+        pass
 
 print(bridges)

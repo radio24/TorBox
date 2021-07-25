@@ -90,7 +90,7 @@ GO_VERSION_64="go1.16.5.linux-arm64.tar.gz"
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
 
-# Avoid cheap censorship mechanism
+# Avoid cheap censorship mechanisms
 RESOLVCONF="\n# Added by TorBox install script\nDNS=1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4\n"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
@@ -254,7 +254,7 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
 
-check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox"
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor"
 
 #Install wiringpi
 clear
@@ -277,6 +277,7 @@ echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install PySocks
 sudo pip3 install urwid
 
 # Additional go
@@ -323,7 +324,8 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
 	  #We will build a new array with only the relevant tor versions
-	  while [ $i -lt $number_torversion ]
+    i=0
+    while [ $i -lt $number_torversion ]
 	  do
 	    if [ $n = 0 ] ; then
 	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
@@ -862,9 +864,7 @@ echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
-sudo cp torbox/etc/hostname /etc/
-echo -e "${RED}[+] Copied /etc/hostname -- backup done${NOCOLOR}"
+sudo hostnamectl set-hostname TorBox041
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

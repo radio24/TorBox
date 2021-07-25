@@ -31,14 +31,15 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=11
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=4
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
@@ -53,14 +54,16 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-PING_SERVER="google.com"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
 BRIDGESTRING=""
+LOOP_NUMBER=0
 i=0
 j=0
+PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13- | sed 's`^https://``g' | sed 's`^http://``g') 2> /dev/null
+
 
 
 ###########################
@@ -122,6 +125,15 @@ read_config()
     VPNSTRING2="from"
   fi
 
+  # Is the automatic countermeasure feature activated?
+    if ps -ax | grep "[l]og_check.py" ; then
+      LOGCHECK="Deactivate"
+      LOGCHECKSTATUSb="ON"
+    else
+      LOGCHECK="Activate"
+      LOGCHECKSTATUSb="OFF"
+    fi
+
   # Is the Countermeasure against a disconnection when idle feature active?
     if ps -ax | grep "[p]ing -q $PING_SERVER" ; then
       PING="ON"
@@ -167,12 +179,14 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASUR
 "  5" "Remove configured OBFS4 bridges"  \
 "  6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
 "  7" "Enter the advanced configuration editor"  \
-"===" "=====================================[More Countermeasures]===" \
+"===" "=============================================[More bridges]===" \
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
-" 10" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN"  \
-" 11" "Countermeasure against a disconnection when idle feature \
-" 12" "Countermeasure against deanonymization attacks - $VANGUARDSSTATUSb" 3>&1 1>&2 2>&3)
+"===" "=====================================[More Countermeasures]===" \
+" 10" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
+" 11" Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb \
+" 12" "Countermeasure against a disconnection when idle feature - "$PING \
+" 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -282,8 +296,70 @@ if [ $exitstatus = 0 ]; then
       sudo bash meek-azure $MEEKSTRING $SNOWSTRING
       read_config
 
+    # Activate/deactivate TorBox's automatic countermeasures
+    elif [ $CHOICE = 10 ] ; then
+      if [ "$LOGCHECK" = "Deactivate" ]; then
+        sudo killall log_check.py
+        sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
+      fi
+      if [ "$LOGCHECK" = "Activate" ]; then
+
+        ###### DISPLAY THE AVAILABLE OPTIONS ######
+        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.1 - AUTOMATIC COUNTERMEASURES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
+        "1" "Protection against entry guard failing and overloaded tor network" ON \
+        "2" "Protection against interrupted WiFi connection with the Internet" ON \
+        "3" "Protection against excessive number of failing tor circuits" ON \
+        "4" "Protection against excessive connection failing with tor circuits" ON 3>&1 1>&2 2>&3)
+
+        exitstatus=$?
+
+        if [ $exitstatus = 0 ]; then
+          mapfile -t CHOICE2 <<< "$CHOICE2"
+          for ARGUMENT in "${CHOICE2[@]}"; do
+            if [ "$ARGUMENT" = "" ]; then exit 0 ; fi
+            LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+            if [ $LOOP_NUMBER = 1 ]; then cp install/log_check_config/header log_check_config.py ; fi
+            if [ $ARGUMENT = 1 ]; then cat install/log_check_config/001 >> log_check_config.py ; fi
+            if [ $ARGUMENT = 2 ]; then cat install/log_check_config/002 >> log_check_config.py ; fi
+            if [ $ARGUMENT = 3 ]; then cat install/log_check_config/003 >> log_check_config.py ; fi
+            if [ $ARGUMENT = 4 ]; then cat install/log_check_config/004 >> log_check_config.py ; fi
+          done
+          if [ $LOOP_NUMBER -gt 0 ]; then
+            cat install/log_check_config/footer >> log_check_config.py
+            sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run
+            sudo ./log_check.py &
+            echo -e "${RED}[+] TorBox's automatic countermeasure features activated!${NOCOLOR}"
+          fi
+        fi
+      fi
+
+    # Countermeasure against attacks to deanonymize server location
+    elif [ $CHOICE = 11 ]; then
+      trap "bash menu-bridges; exit 0" SIGINT
+      INPUT=$(cat text/vanguards-explanation-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        bash menu-vanguards
+      fi
+
+    # Countermeasure against a disconnection when idle feature
+    elif [ $CHOICE = 12 ] ; then
+      if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+        whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
+        ping -q $PING_SERVER >/dev/null &
+        #Alternative Möglichkeit: screen -dm ping google.com
+        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+        sleep 2
+      fi
+      if [ "$PING" = "ON" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          sudo killall ping
+          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
+          sleep 2
+        fi
+      fi
+
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 10 ]; then
+    elif [ $CHOICE = 13 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -309,31 +385,6 @@ if [ $exitstatus = 0 ]; then
           sleep 5
           tun0up=$(ip link | grep tun0)
         fi
-      fi
-
-    # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 11 ] ; then
-      if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
-        whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-        ping -q $PING_SERVER >/dev/null &
-        #Alternative Möglichkeit: screen -dm ping google.com
-        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-        sleep 2
-      fi
-      if [ "$PING" = "ON" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          sudo killall ping
-          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
-          sleep 2
-        fi
-      fi
-
-# Countermeasure against attacks to deanonymize server location
-    elif [ $CHOICE = 12 ]; then
-      trap "bash menu-bridges; exit 0" SIGINT
-      INPUT=$(cat text/vanguards-explanation-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        bash menu-vanguards
       fi
     fi
   fi

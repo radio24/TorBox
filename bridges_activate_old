@@ -51,6 +51,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 i=0
 
@@ -103,10 +104,8 @@ else
       # Activate only bridges, which are ONLINE
       elif [ $CHOICE = 2 ]; then
         clear
-        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-        if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
-        if [ $OCHECK == 0 ]; then
+        online_check $BRIDGE_DB_URL 1 1
+        if [ $OCHECK == 1 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
           echo " "
           echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
@@ -115,7 +114,11 @@ else
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            if [ $CLEARNET_DECISSION == 1 ]; then
+              bridge_status=$(./bridges_check.py -f $bridge_hash)
+            else
+              bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            fi
             j=0
             if [ $bridge_status == 1 ]; then
               j=$(($i + 1))
@@ -140,15 +143,19 @@ else
             echo ""
             echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
             echo -e "${RED}[+] Please add some new OBFS4 bridges first! ${NOCOLOR}"
-            sleep 5
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
             clear
+            exit 0
           fi
         else
           echo ""
           echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 5
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
+          exit 0
         fi
         exit 0
 

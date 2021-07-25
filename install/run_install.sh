@@ -88,7 +88,7 @@ GO_VERSION="go1.16.5.linux-armv6l.tar.gz"
 # Release Page of the Unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/releases"
 
-# Avoid cheap censorship mechanism
+# Avoid cheap censorship mechanisms
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
@@ -220,7 +220,7 @@ sudo apt-get -y update
 sleep 10
 clear
 echo -e "${RED}[+] Step 5: Installing all necessary packages....${NOCOLOR}"
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb build-essential shellinabox
+sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor
 
 #Install wiringpi
 wget https://project-downloads.drogon.net/wiringpi-latest.deb
@@ -230,6 +230,7 @@ sudo rm wiringpi-latest.deb
 # Additional installations for Python
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
+sudo pip3 install PySocks
 sudo pip3 install urwid
 
 # Additional installation for GO
@@ -263,7 +264,8 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
 	  #We will build a new array with only the relevant tor versions
-	  while [ $i -lt $number_torversion ]
+		i=0
+		while [ $i -lt $number_torversion ]
 	  do
 	    if [ $n = 0 ] ; then
 	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
@@ -643,6 +645,28 @@ cd ~
 sudo rm -r 8821au
 sleep 2
 
+# Installing the RTL88x2BU
+clear
+echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/88x2bu.git
+cd 88x2bu
+cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+chmod a+x install-rtl88x2bu.sh
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		 sudo ./raspi64.sh
+	else
+		sudo ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl88x2bu.sh
+cd ~
+sudo rm -r 88x2bu
+sleep 2
+
+
 # 14. Adding the user torbox
 sleep 10
 clear
@@ -703,9 +727,7 @@ sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo cp /etc/hostname /etc/hostname.bak) 2> /dev/null
-sudo cp torbox/etc/hostname /etc/
-echo -e "${RED}[+]Copied /etc/hostname -- backup done${NOCOLOR}"
+sudo hostnamectl set-hostname TorBox041
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"

@@ -12,13 +12,14 @@ TransPort 192.168.42.1:9040
 #TransPort 192.168.43.1:9040
 DNSPort 192.168.42.1:9053
 #DNSPort 192.168.43.1:9053
+SocksPort 127.0.0.1:9050
 SocksPort 192.168.42.1:9050
 SocksPort 192.168.42.1:9052 IsolateDestAddr
 #SocksPort 192.168.43.1:9050
 #SocksPort 192.168.43.1:9052 IsolateDestAddr
 DisableDebuggerAttachment 0
 ControlPort 9051
-ControlPort 192.168.42.1:9051
+#ControlPort 192.168.42.1:9051
 #ControlPort 192.168.43.1:9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
 
@@ -32,6 +33,7 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #ServerTransportListenAddr obfs4 0.0.0.0:443
 #ContactInfo <address@email.com>
 #Nickname TorBox041
+#BridgeDistribution any
 
 ## TO OVERCOME A FIREWALL, START HERE!
 ## HOWEVER, USE IT ONLY, IF REALLY NECESSARY!
@@ -56,21 +58,22 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 #UseBridges 1
 #UpdateBridgesFromAuthority 1
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
-#ClientTransportPlugin snowflake exec PluggableTransports/snowflake-client -url https://snowflake-broker.azureedge.net/ -front ajax.aspnetcdn.com -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478
+#ClientTransportPlugin snowflake exec PluggableTransports/snowflake-client -url https://snowflake-broker.torproject.net.global.prod.fastly.net/ -front cdn.sstatic.net -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478
 
 ## Meek-Azure
-#Bridge meek_lite 0.0.2.0:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
+#Bridge meek_lite 192.0.2.2:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
 
 ## Snowflake
 #Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72
 
 ## OBFS4 bridges
 ##
-## You have two ways to get new bridge-addresses:
+## You have three ways to get new bridge-addresses:
 ## 1. Get them here https://bridges.torproject.org/
 ##    (chose "Advanced Options", "obfs4" and press "Get Bridges)
 ## 2. Or send an email to bridges@torproject.org, using an address
 ##    from Riseup or Gmail with "get transport obfs4" in the body of the mail.
+## 3. (Not recommended, only if needed): Via Telegram: https://t.me/tor_bridges
 #Bridge obfs4 144.217.20.138:80 FB70B257C162BF1038CA669D568D76F5B7F0BABB cert=vYIV5MgrghGQvZPIi1tJwnzorMgqgmlKaB77Y3Z9Q/v94wZBOAXkW+fdx4aSxLVnKO+xNw iat-mode=0
 #Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
 #Bridge obfs4 [2001:470:b381:bfff:216:3eff:fe23:d6c3]:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
