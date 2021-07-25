@@ -206,6 +206,7 @@ select_and_install_tor()
     IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
     #We will build a new array with only the relevant tor versions
+    i=0
     while [ $i -lt $number_torversion ]
     do
       if [ $n = 0 ] ; then
