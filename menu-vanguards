@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+#
+# Github:  https://github.com/radio24/TorBox
+# Copyright (C) 2021 nyxnor
+# Github:  https://github.com/nyxnor
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file helps againsta deanonymization attacks by implementing the Vanguards addon.
+#
+# SYNTAX
+# ./menu-vanguards
+#
+
+. lib/torbox.lib
+
+# Countermeasure against deanonymization attacks (vanguards)
+CHOICE=$(whiptail --menu "Vanguards are: ${VANGUARDSSTATUS}" 20 80 6 \
+        "LOGS" "See Vanguards logs" \
+        "INSTALL" "Install Vanguards" \
+        "RESTART" "Restart the service for the default instance" \
+        "STOP" "Stop the service for the default instance" \
+        "REMOVE" "Remove/Uninstall Vanguards" \
+        3>&1 1>&2 2>&3)
+
+if [ "$CHOICE" == "LOGS" ]; then
+  clear
+  trap "bash menu-bridges; exit 0" EXIT
+  sudo journalctl -n 10 -fu vanguards@default.service
+elif [ "$CHOICE" == "INSTALL" ]; then
+  clear
+  # install
+  sudo rm -rf /var/lib/tor/vanguards
+  echo "Installing necessary packages..."
+  # installing from git to retrieve the latest version (debian package is not updated frequently)
+  sudo -u debian-tor git clone https://github.com/mikeperry-tor/vanguards
+  cd vanguards || exit 1
+  VANGUARDS_COMMIT_HASH=10942de
+  sudo -u debian-tor reset --hard ${VANGUARDS_COMMIT_HASH} || exit 1
+  sudo mv vanguards /var/lib/tor/
+  sudo cp /var/lib/tor/vanguards/vanguards-example.conf /var/lib/tor/vanguards/vanguards.conf
+  DEFAULT_PASS="CHANGE-IT"
+  sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /var/lib/tor/vanguards/vanguards.conf
+  sudo apt install -y python3-stem #python-stem vanguards
+  # create service
+  echo "Creating service for Vanguards..."
+  sudo tee /etc/systemd/system/vanguards@default.service >/dev/null <<EOF
+[Unit]
+Description=Additional protections for Tor onion services
+Wants=tor@default.service
+After=network.target nss-lookup.target
+
+[Service]
+WorkingDirectory=/var/lib/tor/vanguards
+ExecStart=/usr/bin/python3 src/vanguards.py --control_port 9051
+Environment=VANGUARDS_CONFIG=/etc/tor/vanguards.conf
+User=debian-tor
+Group=debian-tor
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable vanguards@default.service
+  sudo systemctl start vanguards@default.service
+elif [ "$CHOICE" == "RESTART_vanguards" ]; then
+  echo "Restarting Vanguards ..."
+  clear
+  sudo systemctl restart vanguards@default.service
+  sleep 1
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+elif [ "$CHOICE" == "STOP_vanguards" ]; then
+  echo "Stopping Vanguards ..."
+  clear
+  sudo systemctl stop vanguards@default.service
+  sleep 1
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+elif [ "$CHOICE" == "REMOVE" ]; then
+  echo "Removing Vanguards..."
+  sudo systemctl stop vanguards@default.service
+  sudo systemctl disable vanguards@default.service
+  sudo rm -rf /etc/systemd/system/vanguards@default.service
+  sudo rm -rf /var/lib/tor/vanguards
+  sudo systemctl daemon-reload
+  restarting_tor menu-bridges
+  echo "Done"
+else
+  clear
+  exit 0
+fi
+
+bash menu-vanguards

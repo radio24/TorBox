@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=12
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -128,8 +128,10 @@ read_config()
   # Is the automatic countermeasure feature activated?
     if ps -ax | grep "[l]og_check.py" ; then
       LOGCHECK="Deactivate"
+      LOGCHECKSTATUSb="ON"
     else
       LOGCHECK="Activate"
+      LOGCHECKSTATUSb="OFF"
     fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
@@ -138,6 +140,13 @@ read_config()
     else
       PING="OFF"
     fi
+
+  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+  if [ ${VANGUARDSSTATUS} == "active" ]; then
+    VANGUARDSSTATUSb="ON!"
+  else
+    VANGUARDSSTATUSb="OFF"
+  fi
 
   # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
   sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
@@ -174,9 +183,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASUR
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
 "===" "=====================================[More Countermeasures]===" \
-" 10" $LOGCHECK" TorBox's automatic countermeasures"  \
-" 11" "Countermeasure against a disconnection when idle feature - "$PING \
-" 12" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
+" 10" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
+" 11" Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb \
+" 12" "Countermeasure against a disconnection when idle feature - "$PING \
+" 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -323,8 +333,16 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
 
+    # Countermeasure against attacks to deanonymize server location
+    elif [ $CHOICE = 11 ]; then
+      trap "bash menu-bridges; exit 0" SIGINT
+      INPUT=$(cat text/vanguards-explanation-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        bash menu-vanguards
+      fi
+
     # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 11 ] ; then
+    elif [ $CHOICE = 12 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
         ping -q $PING_SERVER >/dev/null &
@@ -341,7 +359,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 12 ]; then
+    elif [ $CHOICE = 13 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then

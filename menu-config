@@ -247,14 +247,16 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 3 ]; then
       INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       if [ "$INPUT" != "" ]; then
-        INPUTHASH=HashedControlPassword\ $(tor --hash-password $INPUT)
-      	INPUT=PASSWORD=\"$INPUT\"
+        INPUTHASH=HashedControlPassword\ $(tor --hash-password ${INPUT})
+      	INPUT=PASSWORD=\"${INPUT}\"
       	if grep -q "^HashedControlPassword\ " ${TORRC}; then
           sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
       	else
           sudo echo ${INPUTHASH} >> ${TORRC}
       	fi
-      	sudo sed -i "s/^PASSWORD=.*/${INPUT}/" new_ident
+	if [ -d "/var/lib/tor/vanguards" ]; then
+	  sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
+	fi
       	restarting_tor menu-config
       fi
 
