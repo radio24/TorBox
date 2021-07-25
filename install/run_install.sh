@@ -91,8 +91,8 @@ TORURL="https://github.com/torproject/tor/releases"
 RESOLVCONF="\n# Added by TorBox install script\nnameserver 1.1.1.1\nnameserver 1.0.0.1\nnameserver 8.8.8.8\nnameserver 8.8.4.4\n"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
-if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
-if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
+if grep -q --text 'Raspberry Pi' /proc/device-tree/model; then CHECK_HD1="Raspberry Pi" ; fi
+if grep -q "Raspberry Pi" /proc/cpuinfo; then CHECK_HD2="Raspberry Pi" ; fi
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
@@ -181,7 +181,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
 COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
-if [ "$COUNTRY" = "00:" ] ; then
+if [ "$COUNTRY" = "00:" ]; then
   echo -e "${WHITE}[!]         No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
   echo -e "${WHITE}[!]         Therefore we will set it to US! You can change it later.${NOCOLOR}"
   sudo iw reg set US
@@ -225,7 +225,7 @@ cd ~
 sudo rm -rf /usr/local/go
 wget https://golang.org/dl/$GO_VERSION
 sudo tar -C /usr/local -xzvf $GO_VERSION
-if ! grep "# Added by TorBox (001)" .profile ; then
+if ! grep "# Added by TorBox (001)" .profile; then
 	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
 fi
 export PATH=$PATH:/usr/local/go/bin
@@ -237,7 +237,7 @@ clear
 echo -e "${RED}[+] Step 6: Installing tor...${NOCOLOR}"
 
 # 5a. Select, compile and install Tor
-if [ "$SELECT_TOR" = "--select-tor" ] ; then
+if [ "$SELECT_TOR" = "--select-tor" ]; then
 	clear
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
 	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
@@ -253,14 +253,14 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  #We will build a new array with only the relevant tor versions
 	  while [ $i -lt $number_torversion ]
 	  do
-	    if [ $n = 0 ] ; then
+	    if [ $n = 0 ]; then
 	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
 	      covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
 	      i=$(( $i + 1 ))
 	      n=$(( $n + 1 ))
 	    else
 	      actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
-	      if [ "$actual_version" == "$covered_version" ] ; then i=$(( $i + 1 ))
+	      if [ "$actual_version" == "$covered_version" ]; then i=$(( $i + 1 ))
 	      else
 	        torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
 	        covered_version=$actual_version
@@ -283,7 +283,7 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  echo ""
 	  read -r -p $'\e[1;37mWhich tor version (number) would you like to use? -> \e[0m'
 	  echo
-	  if [[ $REPLY =~ ^[1234567890]$ ]] ; then
+	  if [[ $REPLY =~ ^[1234567890]$ ]]; then
 	    CHOICE_TOR=$(( $REPLY - 1 ))
 	  else number_torversion=0 ; fi
 
@@ -296,7 +296,7 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  mkdir ~/debian-packages; cd ~/debian-packages
 	  wget $download_tor_url
 	  clear
-	  if [ $? -eq 0 ] ; then
+	  if [ $? -eq 0 ]; then
 	    echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 	    tar xzf $filename
 	    cd `ls -d */`
@@ -313,26 +313,40 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	    sudo rm -r ~/debian-packages
 	  else number_torversion=0 ; fi
 	fi
-	if [ $number_torversion = 0 ] ; then
+	if [ $number_torversion = 0 ]; then
 	  echo -e "${WHITE}[!]         Something didn't go as expected!${NOCOLOR}"
 	  echo -e "${WHITE}[!]         I will try to install the latest stable version.${NOCOLOR}"
 	fi
 else number_torversion=0 ; fi
 
 # 5b. Compile and install the latest stable Tor version
-if [ $number_torversion = 0 ] ; then
-	mkdir ~/debian-packages; cd ~/debian-packages
-	apt source tor
-	sudo apt-get -y install fakeroot devscripts
-	#sudo apt-get -y install tor deb.torproject.org-keyring
-	#sudo apt-get -y upgrade tor deb.torproject.org-keyring
-	sudo apt-get -y build-dep tor deb.torproject.org-keyring
-	cd tor-*
-	sudo debuild -rfakeroot -uc -us
-	cd ..
-	sudo dpkg -i tor_*.deb
+if [ $number_torversion = 0 ]; then
+  LATEST_STABLE_VERSION=$(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | grep -v "-" 2>&1 | head -n 1)
+  #Download and install
+  clear
+  echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
+  version_string="$(echo ${LATEST_STABLE_VERSION} | sed -e 's/ //g')"
+  download_tor_url="https://github.com/torproject/tor/archive/refs/tags/tor-$version_string.tar.gz"
+  filename="tor-$version_string.tar.gz"
+  mkdir ~/debian-packages; cd ~/debian-packages
+  wget $download_tor_url
+  clear
+  if [ $? -eq 0 ]; then
+	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+	tar xzf $filename
+	cd `ls -d */`
+	#The following packages are needed
+	sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
+	echo -e "${RED}[+]         Installing additianal packages... ${NOCOLOR}"
+	clear
+	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
+	./autogen.sh
+	./configure
+	make
+	sudo make install
 	cd
-	sudo rm -r ~/debian-packages
+    sudo rm -r ~/debian-packages
+  fi
 fi
 
 # 6. Configuring Tor with the pluggable transports
@@ -479,7 +493,7 @@ echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
-if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
@@ -491,7 +505,7 @@ echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR} Changing .profile"
 cd
-if ! grep "# Added by TorBox (002)" .profile ; then
+if ! grep "# Added by TorBox (002)" .profile; then
 	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
 
@@ -499,7 +513,7 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/config.txt ; then
+if ! grep "# Added by TorBox" /boot/config.txt; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
   sudo systemctl disable bluealsa.service
@@ -653,7 +667,7 @@ sudo mv /home/pi/* /home/torbox/
 sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2> /dev/null
 sudo chown -R torbox.torbox /home/torbox/
-if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
+if ! sudo grep "# Added by TorBox" /etc/sudoers; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
   (sudo visudo -c) 2> /dev/null
 fi
