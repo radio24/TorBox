@@ -1,9 +1,7 @@
 Even after deployment of the new v3 onion service protocol, the attacks facing onion services are wide-ranging, and still require more extensive modifications to fix in Tor-core itself.
 
-Because of this, Tor Project have decided to rapid-prototype these defenses in a controller addon in order to make them available ahead of their official Tor-core release, for onion services that require high security as soon as possible.
+This menu entry activates Vanguards (https://github.com/mikeperry-tor/vanguards), which protects against guard discovery and related traffic analysis attacks.
 
-Note that this addon protects the Raspiblitz controller. If also want to protect your controller when using Tor Browser (WebUI) or tor daemon (SSH), on your host machine, download Vanguards addon and run the following specifying the port (Defaults -> Browser=9151, Daemon=9051):
+A guard discovery attack enables an adversary to determine the guard node(s) that are in use by a Tor client and/or Tor onion service. Once the guard node is known, traffic analysis attacks that can deanonymize an onion service (or onion service user) become easier.
 
-  ./src/vanguards.py --control_port 9151
-
-Source: https://github.com/mikeperry-tor/vanguards
+Would you like to ACTIVATE Vanguard's Guard discovery and related traffic analysis protection?

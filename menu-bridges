@@ -127,23 +127,28 @@ read_config()
 
   # Is the automatic countermeasure feature activated?
     if ps -ax | grep "[l]og_check.py" ; then
+      clear
       LOGCHECK="Deactivate"
       LOGCHECKSTATUSb="ON"
     else
+      clear
       LOGCHECK="Activate"
       LOGCHECKSTATUSb="OFF"
     fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
     if ps -ax | grep "[p]ing -q $PING_SERVER" ; then
+      clear
       PING="ON"
     else
+      clear
       PING="OFF"
     fi
 
+  # Is the Countermeasure against attacks to deanonymize server location active?
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
   if [ ${VANGUARDSSTATUS} == "active" ]; then
-    VANGUARDSSTATUSb="ON!"
+    VANGUARDSSTATUSb="ON"
   else
     VANGUARDSSTATUSb="OFF"
   fi
@@ -184,7 +189,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASUR
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
 "===" "=====================================[More Countermeasures]===" \
 " 10" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
-" 11" Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb \
+" 11" "Guard discovery and related traffic analysis protection - $VANGUARDSSTATUSb" \
 " 12" "Countermeasure against a disconnection when idle feature - "$PING \
 " 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
@@ -300,6 +305,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 10 ] ; then
       if [ "$LOGCHECK" = "Deactivate" ]; then
         sudo killall log_check.py
+        sudo rm log_check_config.py
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
       fi
       if [ "$LOGCHECK" = "Activate" ]; then
@@ -318,17 +324,18 @@ if [ $exitstatus = 0 ]; then
           for ARGUMENT in "${CHOICE2[@]}"; do
             if [ "$ARGUMENT" = "" ]; then exit 0 ; fi
             LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-            if [ $LOOP_NUMBER = 1 ]; then cp install/log_check_config/header log_check_config.py ; fi
-            if [ $ARGUMENT = 1 ]; then cat install/log_check_config/001 >> log_check_config.py ; fi
-            if [ $ARGUMENT = 2 ]; then cat install/log_check_config/002 >> log_check_config.py ; fi
-            if [ $ARGUMENT = 3 ]; then cat install/log_check_config/003 >> log_check_config.py ; fi
-            if [ $ARGUMENT = 4 ]; then cat install/log_check_config/004 >> log_check_config.py ; fi
+            if [ $LOOP_NUMBER = 1 ]; then (cp install/log_check_config/header log_check_config.py) 2>/dev/null; fi
+            if [ $ARGUMENT = 1 ]; then (cat install/log_check_config/001 >> log_check_config.py) 2>/dev/null; fi
+            if [ $ARGUMENT = 2 ]; then (cat install/log_check_config/002 >> log_check_config.py) 2>/dev/null; fi
+            if [ $ARGUMENT = 3 ]; then (cat install/log_check_config/003 >> log_check_config.py) 2>/dev/null; fi
+            if [ $ARGUMENT = 4 ]; then (cat install/log_check_config/004 >> log_check_config.py) 2>/dev/null; fi
           done
           if [ $LOOP_NUMBER -gt 0 ]; then
-            cat install/log_check_config/footer >> log_check_config.py
-            sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run
+            (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
+            (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
             sudo ./log_check.py &
             echo -e "${RED}[+] TorBox's automatic countermeasure features activated!${NOCOLOR}"
+            sleep 5
           fi
         fi
       fi

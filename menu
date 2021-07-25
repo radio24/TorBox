@@ -173,7 +173,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.1 - MAIN MENU" --menu "Choose
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
 "  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"  4" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
+"  4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
 "  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
 "  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \

@@ -28,86 +28,138 @@
 # SYNTAX
 # ./menu-vanguards
 #
+#
+###### SET VARIABLES ######
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=5
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=1
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_25=25
+# MENU_HEIGHT should not exceed 26
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+
+###########################
+######## FUNCTIONS ########
 . lib/torbox.lib
 
-# Countermeasure against deanonymization attacks (vanguards)
-CHOICE=$(whiptail --menu "Vanguards are: ${VANGUARDSSTATUS}" 20 80 6 \
-        "LOGS" "See Vanguards logs" \
-        "INSTALL" "Install Vanguards" \
-        "RESTART" "Restart the service for the default instance" \
-        "STOP" "Stop the service for the default instance" \
-        "REMOVE" "Remove/Uninstall Vanguards" \
-        3>&1 1>&2 2>&3)
-
-if [ "$CHOICE" == "LOGS" ]; then
-  clear
-  trap "bash menu-bridges; exit 0" EXIT
-  sudo journalctl -n 10 -fu vanguards@default.service
-elif [ "$CHOICE" == "INSTALL" ]; then
-  clear
-  # install
-  sudo rm -rf /var/lib/tor/vanguards
-  echo "Installing necessary packages..."
-  # installing from git to retrieve the latest version (debian package is not updated frequently)
-  sudo -u debian-tor git clone https://github.com/mikeperry-tor/vanguards
-  cd vanguards || exit 1
-  VANGUARDS_COMMIT_HASH=10942de
-  sudo -u debian-tor reset --hard ${VANGUARDS_COMMIT_HASH} || exit 1
-  sudo mv vanguards /var/lib/tor/
-  sudo cp /var/lib/tor/vanguards/vanguards-example.conf /var/lib/tor/vanguards/vanguards.conf
-  DEFAULT_PASS="CHANGE-IT"
-  sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /var/lib/tor/vanguards/vanguards.conf
-  sudo apt install -y python3-stem #python-stem vanguards
-  # create service
-  echo "Creating service for Vanguards..."
-  sudo tee /etc/systemd/system/vanguards@default.service >/dev/null <<EOF
-[Unit]
-Description=Additional protections for Tor onion services
-Wants=tor@default.service
-After=network.target nss-lookup.target
-
-[Service]
-WorkingDirectory=/var/lib/tor/vanguards
-ExecStart=/usr/bin/python3 src/vanguards.py --control_port 9051
-Environment=VANGUARDS_CONFIG=/etc/tor/vanguards.conf
-User=debian-tor
-Group=debian-tor
-Type=simple
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-  sudo systemctl daemon-reload
-  sudo systemctl enable vanguards@default.service
-  sudo systemctl start vanguards@default.service
-elif [ "$CHOICE" == "RESTART_vanguards" ]; then
-  echo "Restarting Vanguards ..."
-  clear
-  sudo systemctl restart vanguards@default.service
-  sleep 1
+# This function imports the configuration and makes some preparations
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
-elif [ "$CHOICE" == "STOP_vanguards" ]; then
-  echo "Stopping Vanguards ..."
-  clear
-  sudo systemctl stop vanguards@default.service
-  sleep 1
-  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
-elif [ "$CHOICE" == "REMOVE" ]; then
-  echo "Removing Vanguards..."
-  sudo systemctl stop vanguards@default.service
-  sudo systemctl disable vanguards@default.service
-  sudo rm -rf /etc/systemd/system/vanguards@default.service
-  sudo rm -rf /var/lib/tor/vanguards
-  sudo systemctl daemon-reload
-  restarting_tor menu-bridges
-  echo "Done"
+  if [ ${VANGUARDSSTATUS} == "active" ]; then
+    VANGUARDSSTATUSc="Vanguards ACTIVATED!"
+  else
+    VANGUARDSSTATUSc="Vanguards DEACTIVATED!"
+  fi
+}
+
+###### DISPLAY THE MENU ######
+clear
+
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - VANGUARDS PROTECTION" --menu "Choose an option (ESC -> back to the main menu)       ${VANGUARDSSTATUSc}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"===" "==============================================================" \
+"  1" "Display the Vanguards log"  \
+"  2" "Install Vanguards"  \
+"  3" "Restart Vanguards"  \
+"  4" "Stop Vanguards"  \
+"  5" "Remove/Uninstall Vanguards" 3>&1 1>&2 2>&3)
+
+exitstatus=$?
+
+if [ $exitstatus = 0 ]; then
+  if [ "$CHOICE" != " " ]; then
+
+    # Display the Vanguards log
+    if [ $CHOICE = 1 ]; then
+      clear
+      trap "bash menu-vanguards; exit 0" EXIT
+      sudo journalctl -n 10 -fu vanguards@default.service
+
+    # Install Vanguards
+    elif [ $CHOICE = 2 ]; then
+      clear
+      # Why???
+      sudo rm -rf /var/lib/tor/vanguards
+      # online_check !!!!!
+      echo "Installing necessary packages..."
+      # installing from git to retrieve the latest version (debian package is not updated frequently)
+      cd
+      sudo git clone https://github.com/mikeperry-tor/vanguards
+      sudo chown -R debian-tor:debian-tor vanguards
+      cd ~/vanguards || exit 1
+      VANGUARDS_COMMIT_HASH=10942de
+      sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH} || exit 1
+      cd
+      sudo -u debian-tor mv vanguards /var/lib/tor/
+      sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
+      DEFAULT_PASS="CHANGE-IT"
+      VANGUARD_LOG_FILE="/var/log/tor/vanguard.log"
+      sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
+      sudo sed -i "s/^logfile =.*/logfile = ${VANGUARD_LOG_FILE}/" /etc/tor/vanguards.conf
+
+      # Install Script ???
+      sudo apt install -y python3-stem
+      # create service
+      cd torbox
+      echo "Creating service for Vanguards..."
+      sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
+      sudo systemctl daemon-reload
+      sudo systemctl enable vanguards@default.service
+      sudo systemctl start vanguards@default.service
+      read -n 1 -s -r -p "Press any key to continue"
+
+      # Restart Vanguards
+    elif [ $CHOICE == 3 ]; then
+      echo "Restarting Vanguards ..."
+      clear
+      sudo systemctl restart vanguards@default.service
+      sleep 1
+      VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+      whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+
+    # Stop Vanguards
+    elif [ $CHOICE = 4 ]; then
+      echo "Stopping Vanguards ..."
+      clear
+      sudo systemctl stop vanguards@default.service
+      sleep 1
+      VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+      whiptail --msgbox "Vanguards are now: ${VANGUARDSSTATUS}" 10 35
+
+    # Remove Vanguards
+    elif [ $CHOICE = 5 ]; then
+      echo "Removing Vanguards..."
+      sudo systemctl stop vanguards@default.service
+      sudo systemctl disable vanguards@default.service
+      sudo rm -rf /etc/systemd/system/vanguards@default.service
+      sudo rm -rf /var/lib/tor/vanguards
+      sudo systemctl daemon-reload
+      restarting_tor menu-bridges
+      echo "Done"
+    fi
+  fi
 else
   clear
   exit 0
 fi
-
 bash menu-vanguards
+exit 0
