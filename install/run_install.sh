@@ -251,7 +251,8 @@ if [ "$SELECT_TOR" = "--select-tor" ]; then
 	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
 	  #We will build a new array with only the relevant tor versions
-	  while [ $i -lt $number_torversion ]
+		i=0
+		while [ $i -lt $number_torversion ]
 	  do
 	    if [ $n = 0 ]; then
 	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
@@ -645,7 +646,29 @@ cd ~
 sudo rm -r 8821au
 sleep 2
 
-# 13. Adding the user torbox
+# Installing the RTL88x2BU
+clear
+echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
+echo -e " "
+echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+git clone https://github.com/morrownr/88x2bu.git
+cd 88x2bu
+cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+chmod a+x install-rtl88x2bu.sh
+if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+	if uname -r | grep -q "arm64"; then
+		 sudo ./raspi64.sh
+	else
+		sudo ./raspi32.sh
+ fi
+fi
+sudo ./install-rtl88x2bu.sh
+cd ~
+sudo rm -r 88x2bu
+sleep 2
+
+
+# 14. Adding the user torbox
 sleep 10
 clear
 echo -e "${RED}[+] Step 14: Set up the torbox user...${NOCOLOR}"

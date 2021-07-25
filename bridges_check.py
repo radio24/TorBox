@@ -27,10 +27,10 @@
 # This program uses the Onionoo protocol - for more information go to: https://metrics.torproject.org/onionoo.html
 #
 # SYNTAX
-# ./bridges_check.py [-i] -f <fingerprint> [-s] [--info file_name] [-h]
+# ./bridges_check.py [-i] [-n, --network=<tor|inet>] -f <fingerprint> [-s] [--info file_name] [-h, --help]
 #
-# -h: print the help screen
-# --help: print the help screen
+# -h, --help: print the help screen
+# -n, --network=<tor|inet>: force check over specific network
 # -f <fingerprint>: search with the fingerprint
 # -f <fingerprint> -s: search with the hashed fingerprint
 # -f <fingerprint> -i: search with the fingerprint and print extended information on stdout

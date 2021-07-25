@@ -94,23 +94,33 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 # This function updates the firmware on a RPI4
 update_firmware()
 {
-  online_check update
-  TORCONNECT=0
-  set_sources_list
+  # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
   clear
-  sudo apt-get install rpi-eeprom
-  sleep 2
-  clear
-  echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
-  echo " "
-  sudo rpi-eeprom-update
-  echo " "
-  read -n 1 -s -r -p "Press any key to continue"
-  echo " "
-  sudo rpi-eeprom-update -a
-  echo " "
-  echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
-  sleep 5
+  online_check
+  if [ $OCHECK == 1 ]; then
+    trap "screen bash update; exit 0" SIGINT
+    set_sources_list
+    clear
+    sudo apt-get install rpi-eeprom
+    sleep 2
+    clear
+    echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
+    echo " "
+    sudo rpi-eeprom-update
+    echo " "
+    read -n 1 -s -r -p "Press any key to continue or CTRL-C to leave"
+    echo " "
+    echo " "
+    sudo rpi-eeprom-update -a
+    echo " "
+    echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+    sleep 5
+  else
+    echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+    echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+    echo " "
+    read -n 1 -s -r -p "Press any key to continue"
+  fi
 }
 
 # This function updates TOR
@@ -185,6 +195,7 @@ select_and_install_tor()
     IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
     #We will build a new array with only the relevant tor versions
+    i=0
     while [ $i -lt $number_torversion ]
     do
       if [ $n = 0 ] ; then
@@ -439,14 +450,24 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the base system (because of performance considerations over clearnet)
     if [ $ARGUMENT = 1 ]; then
+      clear
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
  			KERNEL_VERS=$(uname -s -r)
       TOR_VERS=$(tor --version|rev|cut -c2-|rev)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        online_check update
-        TORCONNECT=0
+        # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+        online_check
+        if [ $OCHECK == 0 ]; then
+          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          trap "screen bash update; exit 0" EXIT
+          exit 0
+        fi
+        clear
         set_sources_list
         clear
         sudo apt-get -y update
@@ -469,10 +490,21 @@ if [ $exitstatus = 0 ]; then
 
 # This updates additional network drivers (because of performance considerations over clearnet)
   elif [ $ARGUMENT = 2 ]; then
+      clear
       kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/install_network_drivers-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+          # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+          online_check
+          if [ $OCHECK == 0 ]; then
+            echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+            trap "screen bash update; exit 0" EXIT
+            exit 0
+          fi
           bash install_network_drivers
           BOOTMSG=1
           LOOP_NUMBER=0
@@ -508,20 +540,35 @@ if [ $exitstatus = 0 ]; then
 
 #This changes/updates the installed Tor version
   elif [ $ARGUMENT = 4 ]; then
-    # Avoid cheap censorship mechanisms
-    online_check update
-    if [ $TORCONNECT = 0 ]; then
-      INPUT=$(cat text/clearnet_warning-text)
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-        sleep 1
-      else
-        trap "screen bash update; exit 0" EXIT
-        exit 0
-      fi
-    fi
-    set_sources_list
+    clear
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      EXPERT=1
+    else
+      EXPERT=0
+    fi
+    # Avoid cheap censorship mechanisms
+    online_check default 1 1
+    if [ $OCHECK == 0 ]; then
+      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+      echo " "
+      read -n 1 -s -r -p "Press any key to continue"
+      trap "screen bash update; exit 0" EXIT
+      exit 0
+    fi
+    # We can only use Clearnet if allowed!
+    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+      echo " "
+      read -n 1 -s -r -p "Press any key to continue"
+      trap "screen bash update; exit 0" EXIT
+      exit 0
+    fi
+    set_sources_list
+    if [ $EXPERT == 1 ]; then
       select_and_install_tor
       FINISHING=$?
     else
@@ -554,33 +601,37 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the newest stable version of TorBox's menu
   elif [ $ARGUMENT = 5 ]; then
+      clear
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/torbox_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-          online_check update
-          if [ $TORCONNECT = 0 ]; then
-            INPUT=$(cat text/clearnet_warning-text)
-            if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-              sleep 1
-            else
-              trap "screen bash update; exit 0" EXIT
-              exit 0
-            fi
-          fi
-          update_torbox_menu
-        fi
-      else
-        online_check update
-        if [ $TORCONNECT = 0 ]; then
-          INPUT=$(cat text/clearnet_warning-text)
-          if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-            sleep 1
-          else
+          online_check default 1 1
+          if [ $OCHECK == 0 ]; then
+            echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
             trap "screen bash update; exit 0" EXIT
             exit 0
           fi
+          # We can only use Clearnet if allowed!
+          if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+            echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+            echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+          else
+            update_torbox_menu
+          fi
         fi
-        update_torbox_menu
+      else
+        # We can only use Clearnet if allowed!
+        if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+          sleep 1
+        else
+          update_torbox_menu
+        fi
       fi
       exit 0
 

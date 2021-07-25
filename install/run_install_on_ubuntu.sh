@@ -324,7 +324,8 @@ if [ "$SELECT_TOR" = "--select-tor" ] ; then
 	  IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
 
 	  #We will build a new array with only the relevant tor versions
-	  while [ $i -lt $number_torversion ]
+    i=0
+    while [ $i -lt $number_torversion ]
 	  do
 	    if [ $n = 0 ] ; then
 	      torversion_versionsorted_new[0]=${torversion_versionsorted[0]}

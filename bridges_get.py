@@ -27,7 +27,10 @@
 # of which we pick one. With the bridges already delivered this should be sufficient.
 #
 # SYNTAX
-# ./bridges_get.py
+# ./bridges_get.py [-n, --network=<tor|inet>] [-h, --help]
+#
+# -h, --help: print the help screen
+# -n, --network=<tor|inet>: force check over specific network
 
 # where we store the temporal captchas to solve (full path)
 TMP_DIR = '/tmp'

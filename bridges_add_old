@@ -84,12 +84,16 @@ if [ $exitstatus = 0 ]; then
       clear
       INPUT=$(cat text/add-bridges-automatically-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        online_check bridges_add_old $TOR_GET_BRIDGES_URL 1 1
+        online_check $TOR_GET_BRIDGES_URL 1 1
         if [ $OCHECK == 1 ]; then
           echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
           trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
           echo " "
-          bridge_address=$(sudo python3 bridges_get.py)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+            bridge_address=$(sudo python3 bridges_get.py)
+          else
+            bridge_address=$(sudo python3 bridges_get.py --network=tor)
+          fi
           if [ "$bridge_address" = "0" ]; then
             echo " "
             echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
@@ -132,8 +136,10 @@ if [ $exitstatus = 0 ]; then
           echo ""
           echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
           echo -e "${WHITE}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
-          sleep 5
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
           clear
+          exit 0
         fi
       fi
 
