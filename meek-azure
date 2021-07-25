@@ -121,7 +121,7 @@ i=0
 			done
 			if [ $MEEK_ON == 0 ] ; then
 				echo " "
-				echo -e "${WHITE}[!] SORRY! - the MEEK-AYURE SERVER seems to be OFFLINE!${NOCOLOR}"
+				echo -e "${WHITE}[!] SORRY! - the MEEK-AZURE SERVER seems to be OFFLINE!${NOCOLOR}"
 				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
 			fi
 			echo " "
