@@ -115,6 +115,9 @@ if [ $exitstatus = 0 ]; then
       VANGUARD_LOG_FILE="/var/log/tor/vanguard.log"
       sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
       sudo sed -i "s/^logfile =.*/logfile = ${VANGUARD_LOG_FILE}/" /etc/tor/vanguards.conf
+      # Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
+      sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
+      sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 
       # Install Script ???
       sudo apt install -y python3-stem
