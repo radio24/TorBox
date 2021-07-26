@@ -252,9 +252,9 @@ clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
-#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
+#sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb
 
-check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat links2 debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor"
+check_install_packages "hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx net-tools ifupdown unzip equivs git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor"
 
 #Install wiringpi
 clear

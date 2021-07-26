@@ -10,7 +10,7 @@
 # During the installation, during updates and communicating with
 # torproject.org, local DNS resolutions are made by default through
 # Google’s and Cloudflare’s Domain Name Servers to avoid cheap censorship
-# mechanisms. However, you can add here your prefered name servers
+# mechanisms. However, you can add here your preferred name servers
 # (separated by a comma). Data traffic from the connected
 # clients, which has to be protected, is completely routed through Tor
 # (including DNS requests). Additionally, TorBox is configured that any
@@ -26,23 +26,51 @@ NAMESERVERS=1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4
 # the Countermeasure sub-menu.
 PING_SERVER=http://google.com
 
+# Used URLs (pre-filled with the default values)
+# Used go version
+GO_VERSION="go1.16.5.linux-armv6l.tar.gz"
+GO_DL_PATH="https://golang.org/dl/"
+# Release Page of the unofficial Tor repositories on GitHub
+# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
+# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
+TORURL="https://github.com/torproject/tor/releases"
+TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
+# Snowflake repositories
+SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
+SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
+# Vanguards Repository
+VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
+VANGUARDS_COMMIT_HASH=10942de
+VANGUARD_LOG_FILE="/var/log/tor/vanguard.log"
+# TorBox Repository
+TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
+# Wiringpi
+WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
+# WiFi drivers from Fars Robotics
+FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
+
+# Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing
 # 1 - Delete pi after running run_install.sh
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard
 FRESH_INSTALLED=0
 
+# SSH access from the Internet
 # 0 - SSH access from the Internet is blocked HTTP (default)
 # 1 - SSH access from the Internet is allowed
 SSH_FROM_INTERNET=0
 
+# Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)
 # 1 - Tor control port access from clients is allowed
 TOR_CONTROL_PORT_ACCESS=0
 
+# HTTP plain text blocking
 # 0 - HTTP plain text traffic can pass through tor (default)
 # 1 - HTTP plain text traffic is blocked
 BLOCK_HTTP=0
 
+# TorBox's automatic countermeasures
 # 0 - TorBox's automatic countermeasures are deactivated (default)
 # 1 - TorBox's automatic countermeasures are activated
 LOGCHECK=0
