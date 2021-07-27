@@ -100,6 +100,8 @@ GO_DL_PATH="https://golang.org/dl/"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL="https://github.com/torproject/tor/releases"
+TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
+TOR_HREF_FOR_SED="<a href=\"\/torproject\/tor\/releases\/tag\/tor-"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
@@ -109,7 +111,7 @@ SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
-VANGUARD_LOG_FILE="/var/log/tor/vanguard.log"
+VANGUARDS_LOG_FILE="/var/log/tor/vanguard.log"
 
 # DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
@@ -237,7 +239,7 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-  readarray -t torversion_datesorted < <(curl --silent $TORURL | grep "/torproject/tor/releases/tag/" | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g")
+	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_datesorted[*]}
@@ -628,7 +630,9 @@ cd
 sudo mv vanguards /var/lib/tor/
 sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
 sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
-sudo sed -i "s/^logfile =.*/logfile = ${VANGUARD_LOG_FILE}/" /etc/tor/vanguards.conf
+#This is necessary to work with special characters in sed
+REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
 # Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
 sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
@@ -690,10 +694,10 @@ else
   fi
 fi
 
-# 8. Downloading and installing the latest version of TorBox
+# 10. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
 #echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget $TORBOXMENUURL
@@ -730,10 +734,10 @@ else
 	sleep 10
 fi
 
-# 10. Installing all configuration files
+# 11. Installing all configuration files
 clear
 cd torbox
-echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Installing all configuration files....${NOCOLOR}"
 echo ""
 # Configuring Shellinabox
 sudo cp etc/default/shellinabox /etc/default/shellinabox
@@ -795,9 +799,9 @@ else
 	sleep 10
 fi
 
-# 11. Disabling Bluetooth
+# 12. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
@@ -815,9 +819,9 @@ else
 	sleep 10
 fi
 
-# 12. Configure the system services
+# 13. Configure the system services
 clear
-echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Configure the system services...${NOCOLOR}"
 sudo systemctl daemon-reload
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
@@ -852,7 +856,7 @@ else
 	sleep 10
 fi
 
-# 13. Installing additional network drivers
+# 14. Installing additional network drivers
 kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 path_8188eu="8188eu-drivers/"
@@ -908,7 +912,7 @@ cd ~
 
 # Installing the RTL8814AU
 clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8814au.git
@@ -995,19 +999,32 @@ fi
 clear
 echo -e "${RED}[+] Step 15: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
-sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=$NAMESERVERS_ORIG/g" ${RUNFILE}
-sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=$GO_VERSION/g" ${RUNFILE}
-sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=$GO_DL_PATH/g" ${RUNFILE}
-sudo sed -i "s/^TORURL=.*/TORURL=$TORURL/g" ${RUNFILE}
-sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=$TORURL_DL_PARTIAL/g" ${RUNFILE}
-sudo sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=$SNOWFLAKE_ORIGINAL/g" ${RUNFILE}
-sudo sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=$SNOWFLAKE_USED/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=$VANGUARDS_USED/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=$VANGUARDS_COMMIT_HASH/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=$VANGUARD_LOG_FILE/g" ${RUNFILE}
-sudo sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=$TORBOXMENUURL/g" ${RUNFILE}
-sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=$WIRINGPI_USED/g" ${RUNFILE}
-sudo sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=$FARS_ROBOTICS_DRIVERS/g" ${RUNFILE}
+sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
+sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TORURL" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TORURL=.*/TORURL=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TORPATH_TO_RELEASE_TAGS" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TORPATH_TO_RELEASE_TAGS=.*/TORPATH_TO_RELEASE_TAGS=${REPLACEMENT_STR}/g" ${RUNFILE}
+sudo sed -i "s/^TOR_HREF_FOR_SED=.*/TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TORURL_DL_PARTIAL" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$SNOWFLAKE_ORIGINAL" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$SNOWFLAKE_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$VANGUARDS_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
+sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TORBOXMENUURL" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=${REPLACEMENT_STR}/g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
