@@ -254,9 +254,9 @@ if [ $exitstatus = 0 ]; then
       	else
           sudo echo ${INPUTHASH} >> ${TORRC}
       	fi
-	if [ -d "/var/lib/tor/vanguards" ]; then
-	  sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
-	fi
+	      if [ -d "/var/lib/tor/vanguards" ]; then
+	        sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
+	      fi
       	restarting_tor menu-config
       fi
 

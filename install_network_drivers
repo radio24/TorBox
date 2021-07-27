@@ -44,6 +44,10 @@ if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
 if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
 if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
+# Read configuration from run/torbox.run
+RUNFILE="run/torbox.run"
+FARS_ROBOTICS_DRIVERS=$(grep "^FARS_ROBOTICS_DRIVERS=" ${RUNFILE} | cut -c23-) 2> /dev/null
+
 ##############################
 ######## FUNCTIONS ###########
 
@@ -60,7 +64,7 @@ install_network_drivers()
 	mkdir install_network_driver
 	cd install_network_driver
 	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
-	wget http://downloads.fars-robotics.net/wifi-drivers/$path$filename
+	wget $FARS_ROBOTICS_DRIVERS$path$filename
 	echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
 	tar xzf $filename
 	chmod a+x install.sh

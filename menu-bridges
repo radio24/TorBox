@@ -407,6 +407,28 @@ if [ $exitstatus = 0 ]; then
           echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
           sleep 5
           tun0up=$(ip link | grep tun0)
+          if [ "$tun0up" != "" ] ; then
+            echo ""
+            echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+            wget -q --spider $CHECK_URL
+            if [ $? -eq 0 ]; then
+              echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+            else
+              echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+              echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
+              echo ""
+              add_open_dns
+              (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+              sleep 2
+              echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
+              wget -q --spider $CHECK_URL
+              if [ $? -eq 0 ]; then
+                echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
+              else
+                echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+              fi
+            fi
+          fi
         fi
       else
         INPUT=$(cat text/disconnecting-VPN-text)

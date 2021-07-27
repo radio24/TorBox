@@ -282,12 +282,6 @@ select_and_install_tor()
     done
     number_torversion=$n
 
-		#Install all necessary packages before starting to install tor - THIS HAS TO BE MOVED!!!
-		echo -e "${RED}[+]         Install necessary packages... ${NOCOLOR}"
-		sudo apt-get -y update
-		sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
-		echo ""
-
     #Display and chose a tor version
 		if [ "$SELECT_TOR" = "--select-tor" ]; then
 			clear
@@ -713,7 +707,7 @@ cd
 wget $TORBOXMENUURL
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
-	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+	echo -e "${RED}[+]         TorBox' menu sucessfully downloaded... ${NOCOLOR}"
 	echo -e "${RED}[+]         Unpacking TorBox menu...${NOCOLOR}"
 	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
