@@ -826,10 +826,10 @@ sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
 sudo systemctl mask tor
-sudo systemctl enable tor
+#sudo systemctl enable tor
 #sudo systemctl start tor
-sudo systemctl umask vanguards@default.service
-sudo systemctl enable vanguards@default.service
+#sudo systemctl umask vanguards@default.service
+#sudo systemctl enable vanguards@default.service
 #sudo systemctl start vanguards@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
