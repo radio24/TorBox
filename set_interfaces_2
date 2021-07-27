@@ -200,5 +200,5 @@ fi
 ###### FINISH ######
 echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
 sleep 5
-sudo systemctl restart tor
+(sudo systemctl stop tor; sleep 5; sudo systemctl start tor)
 sleep 5

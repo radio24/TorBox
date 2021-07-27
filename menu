@@ -55,6 +55,7 @@ TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
 
 #Connectivity check
@@ -86,6 +87,8 @@ finish_default_obfs4()
     if [[ $REPLY =~ ^[Yy]$ ]] ; then
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+      echo
+      echo
       sleep 5
     else
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
@@ -94,6 +97,8 @@ finish_default_obfs4()
       echo -e "${RED}[+] additional newer OBFS4 bridges.${NOCOLOR}"
       echo
       echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+      echo
+      echo
       read -n 1 -s -r -p "Press any key to continue"
       trap "bash menu-bridges; exit 0" EXIT
       if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
@@ -111,7 +116,6 @@ finish_default_obfs4()
     fi
     exit 0
   fi
-
 }
 
 
@@ -167,21 +171,22 @@ check_fresh_install()
       clear
       echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
     fi
-      sudo systemctl unmask tor
-      sudo systemctl enable tor
-      sudo systemctl start tor
-      sudo systemctl umask vanguards@default.service
-      sudo systemctl enable vanguards@default.service
-      sudo systemctl start vanguards@default.service
-      sudo systemctl restart tor &
-      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-      echo -e "    Ignore any error messages, just wait..."
-      echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
-      echo -e "    You can leave the progress report with CTRL-C."
-      echo ""
-      sleep 5
-      trap finish_default_obfs4 SIGINT
-      sudo tail -f -n 0 /var/log/tor/notices.log
+    (sudo systemctl unmask tor) 2> /dev/null
+    (sudo systemctl enable tor) 2> /dev/null
+    (sudo systemctl start tor) 2> /dev/null
+    (sudo systemctl unmask vanguards@default.service) 2> /dev/null
+    (sudo systemctl enable vanguards@default.service) 2> /dev/null
+    (sudo systemctl start vanguards@default.service) 2> /dev/null
+    (sudo systemctl stop tor; sleep 5; sudo systemctl start tor) &
+    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+    echo -e "    Ignore any error messages, this can take minutes just wait..."
+    echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+    echo -e "    You can leave the progress report with CTRL-C."
+    echo ""
+    sleep 5
+    trap finish_default_obfs4 SIGINT
+    sudo tail -f -n 0 /var/log/tor/notices.log
+  fi
 }
 
 # This function opens the ports, after a restart if bridge relay is on

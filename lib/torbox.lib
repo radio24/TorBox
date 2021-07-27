@@ -265,9 +265,9 @@ restarting_tor()
 {
   SOURCE_SCRIPT=$1
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-  sudo systemctl restart tor &
+  (sudo systemctl stop tor; sleep 5; sudo systemctl start tor) &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-  echo -e "    Ignore any error messages, just wait..."
+  echo -e "    Ignore any error messages, this can take minutes just wait..."
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
@@ -377,6 +377,7 @@ list_all_obfs4_bridges()
   BRIDGE_DB_URL="https://onionoo.torproject.org"
   clear
   online_check $BRIDGE_DB_URL 1 1
+  clear
   if [ $OCHECK == 1 ]; then
     echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
     sleep 2

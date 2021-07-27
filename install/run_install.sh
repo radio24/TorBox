@@ -323,7 +323,10 @@ select_and_install_tor()
           	./autogen.sh
           	./configure
           	make
+						sudo systemctl mask tor
           	sudo make install
+						sudo systemctl stop tor
+						sudo systemctl mask tor
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
 						echo -e ""
@@ -387,8 +390,10 @@ select_and_install_tor()
 				./autogen.sh
 				./configure
 				make
+				sudo systemctl mask tor
 				sudo make install
-				#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				sudo systemctl stop tor
+				sudo systemctl mask tor
 			else
 				echo -e ""
 				echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
@@ -491,7 +496,10 @@ fi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl mask tor
-sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor automake libevent-dev libssl-dev asciidoc-base python3-stem raspberrypi-kernel-headers bc build-essential dkms
+# tor-geoipdb installiert auch tor
+sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp build-essential shellinabox automake libevent-dev libssl-dev asciidoc-base python3-stem raspberrypi-kernel-headers bc build-essential dkms nyx obfs4proxy apt-transport-tor tor-geoipdb
+sudo systemctl mask tor
+sudo systemctl stop tor
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -638,7 +646,7 @@ sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.co
 # Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
 sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
-sudo chown -R debian:debian /var/lib/tor/vanguards
+sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 sudo chmod -R go-rwx /var/lib/tor/vanguards
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -830,12 +838,8 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
+sudo systemctl stop tor
 sudo systemctl mask tor
-#sudo systemctl enable tor
-#sudo systemctl start tor
-#sudo systemctl umask vanguards@default.service
-#sudo systemctl enable vanguards@default.service
-#sudo systemctl start vanguards@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh

@@ -69,7 +69,7 @@ if [ $ARGUMENT = 1 ]; then
 #  sudo touch /var/log/tor/notices.log
 #  sudo chown debian-tor /var/log/tor/notices.log
   (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
-  sudo systemctl restart tor
+  (sudo systemctl stop tor; sleep 5; sudo systemctl start tor)
 
 # To implement this in TorBox v.0.4.2, torbox.run has to be replaced!!
 # Also, we have to restrict it to wlan0/wlan1
@@ -81,7 +81,7 @@ elif [ $ARGUMENT = 2 ]; then
     sudo ./torbox_wireless_manager.py -i $INTERNET_IFACE -a
     sleep 2
     (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
-    sudo systemctl restart tor
+    (sudo systemctl stop tor; sleep 5; sudo systemctl start tor)
     sleep 4
   fi
 
@@ -89,6 +89,6 @@ elif [ $ARGUMENT = 2 ]; then
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
   (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
-  sudo systemctl restart tor
+  (sudo systemctl stop tor; sleep 5; sudo systemctl start tor)
   sleep 4
 fi
