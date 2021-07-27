@@ -6,6 +6,9 @@
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
+# Copyright (C) 2021 nyxnor (Contributor)
+# Github:  https://github.com/nyxnor
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -148,8 +151,10 @@ read_config()
   # Is the Countermeasure against attacks to deanonymize server location active?
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
   if [ ${VANGUARDSSTATUS} == "active" ]; then
+    VANGUARDS="Deactivate"
     VANGUARDSSTATUSb="ON"
   else
+    VANGUARDS="Activate"
     VANGUARDSSTATUSb="OFF"
   fi
 
@@ -187,11 +192,13 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASUR
 "===" "=============================================[More bridges]===" \
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
+"===" "================================================[Vanguards]===" \
+" 10" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
+" 11" "Display the Vanguards log (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 10" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
-" 11" "Guard discovery and related traffic analysis protection - $VANGUARDSSTATUSb" \
-" 12" "Countermeasure against a disconnection when idle feature - "$PING \
-" 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
+" 12" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
+" 13" "Countermeasure against a disconnection when idle feature - "$PING \
+" 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -301,12 +308,40 @@ if [ $exitstatus = 0 ]; then
       sudo bash meek-azure $MEEKSTRING $SNOWSTRING
       read_config
 
-    # Activate/deactivate TorBox's automatic countermeasures
+    # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
     elif [ $CHOICE = 10 ] ; then
+      if [ "$VANGUARDS" = "Deactivate" ]; then
+        sudo systemctl stop vanguards@default.service
+        clear
+        echo
+        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection ac deactivated!${NOCOLOR}"
+        sleep 5
+      fi
+      if [ "$VANGUARDS" = "Activate" ]; then
+        sudo systemctl restart vanguards@default.service
+        clear
+        echo
+        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+        sleep 5
+      fi
+      read_config
+
+    # Display the Vanguards log
+      elif [ $CHOICE = 11 ] ; then
+      clear
+      trap "bash menu-bridges; exit 0" SIGINT
+      sudo tail -f -n 25 /var/log/tor/vanguard.log
+
+    # Activate/deactivate TorBox's automatic countermeasures
+      elif [ $CHOICE = 12 ] ; then
       if [ "$LOGCHECK" = "Deactivate" ]; then
         sudo killall log_check.py
         sudo rm log_check_config.py
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
+        clear
+        echo
+        echo -e "${RED}[+] TorBox's automatic countermeasure features are deativated!${NOCOLOR}"
+        sleep 5
       fi
       if [ "$LOGCHECK" = "Activate" ]; then
 
@@ -334,22 +369,17 @@ if [ $exitstatus = 0 ]; then
             (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
             (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
             sudo ./log_check.py &
-            echo -e "${RED}[+] TorBox's automatic countermeasure features activated!${NOCOLOR}"
+            clear
+            echo
+            echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
             sleep 5
           fi
+          read_config
         fi
       fi
 
-    # Countermeasure against attacks to deanonymize server location
-    elif [ $CHOICE = 11 ]; then
-      trap "bash menu-bridges; exit 0" SIGINT
-      INPUT=$(cat text/vanguards-explanation-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        bash menu-vanguards
-      fi
-
     # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 12 ] ; then
+    elif [ $CHOICE = 13 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
         ping -q $PING_SERVER >/dev/null &
@@ -366,7 +396,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 13 ]; then
+    elif [ $CHOICE = 14 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
