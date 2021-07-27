@@ -148,6 +148,7 @@ check_fresh_install()
     sudo ssh-keygen -A
     echo ""
     echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
+    FRESHINSTALLED="FRESH_INSTALLED=3"
     sleep 10
   fi
   # This will ask some questions about the security settings and then unmask tor and vanguards

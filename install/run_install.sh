@@ -111,7 +111,7 @@ SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
-VANGUARDS_LOG_FILE="/var/log/tor/vanguard.log"
+VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
 # DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
@@ -1096,12 +1096,14 @@ echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
+(sudo rm -r debian-packages) 2> /dev/null
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
 sudo apt-get -y autoclean
 sudo apt-get -y autoremove
-
+echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
+sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 for logs in `sudo find /var/log -type f`; do

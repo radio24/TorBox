@@ -330,7 +330,7 @@ if [ $exitstatus = 0 ]; then
       elif [ $CHOICE = 11 ] ; then
       clear
       trap "bash menu-bridges; exit 0" SIGINT
-      sudo tail -f -n 25 /var/log/tor/vanguard.log
+      sudo tail -f -n 25 /var/log/tor/vanguards.log
 
     # Activate/deactivate TorBox's automatic countermeasures
       elif [ $CHOICE = 12 ] ; then
