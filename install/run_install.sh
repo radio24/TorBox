@@ -117,6 +117,7 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguard.log"
 # TorBox Repository
 #TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
 TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
+TORBOXMENU_BRANCHNAME="v.0.4.2"
 
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
@@ -489,6 +490,7 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+sudo systemctl mask tor
 sudo apt-get -y install hostapd isc-dhcp-server obfs4proxy usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen nyx git openvpn ppp tor-geoipdb build-essential shellinabox apt-transport-tor automake libevent-dev libssl-dev asciidoc-base python3-stem raspberrypi-kernel-headers bc build-essential dkms
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -702,17 +704,17 @@ cd
 #echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget $TORBOXMENUURL
 DLCHECK=$?
-if [ $DLCHECK -eq 0 ] && [ -e master.zip ]; then
+if [ $DLCHECK -eq 0 ] ; then
 	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 	echo -e "${RED}[+]         Unpacking TorBox menu...${NOCOLOR}"
-	unzip master.zip
+	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
 	echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
 	(rm -r torbox) 2> /dev/null
 	echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
-	mv TorBox-master torbox
+	mv TorBox-$TORBOXMENU_BRANCHNAME torbox
 	echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
-	(rm -r master.zip) 2> /dev/null
+	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2> /dev/null
 	echo ""
 else
 	echo ""
@@ -722,7 +724,6 @@ else
 	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
 	exit 0
 fi
 
@@ -1021,6 +1022,8 @@ REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$TORBOXMENUURL" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=${REPLACEMENT_STR}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TORBOXMENU_BRANCHNAME" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TORBOXMENU_BRANCHNAME=.*/TORBOXMENU_BRANCHNAME=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
