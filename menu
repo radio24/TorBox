@@ -96,11 +96,19 @@ finish_default_obfs4()
       echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
       read -n 1 -s -r -p "Press any key to continue"
       trap "bash menu-bridges; exit 0" EXIT
-      exit 0 
+      if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+        sudo killall log_check.py
+        sudo /home/torbox/torbox/log_check.py &
+      fi
+      exit 0
     fi
   else
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
     trap "bash menu; exit 0" EXIT
+    if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+      sudo killall log_check.py
+      sudo /home/torbox/torbox/log_check.py &
+    fi
     exit 0
   fi
 
@@ -171,7 +179,7 @@ check_fresh_install()
       echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
       echo -e "    You can leave the progress report with CTRL-C."
       echo ""
-      sleep 2
+      sleep 5
       trap finish_default_obfs4 SIGINT
       sudo tail -f -n 0 /var/log/tor/notices.log
 }
