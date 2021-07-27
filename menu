@@ -55,7 +55,6 @@ TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
 
 #Connectivity check
@@ -67,8 +66,50 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 #include lib
 .  lib/torbox.lib
 
-# This function checks if TorBox is freshly installed by the install script
-# or run the first time after flashing the image file to a SD card.
+# This function is used for check_fresh_install() as a trap for CTRL-C
+# Syntax finish_default_obfs4
+# Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
+finish_default_obfs4()
+{
+  if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
+    echo ""
+    while true
+    do
+      read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+      # The following line is for the prompt to appear on a new line.
+      if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+        echo
+        echo
+        break
+      fi
+    done
+    if [[ $REPLY =~ ^[Yy]$ ]] ; then
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+      sleep 5
+    else
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      echo -e "${RED}[+] Hmmm... We are starting now the Countermeasure sub-menu${NOCOLOR}"
+      echo -e "${RED}[+] We recommend to try next MEEK-AZURE or to get and add${NOCOLOR}"
+      echo -e "${RED}[+] additional newer OBFS4 bridges.${NOCOLOR}"
+      echo
+      echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+      read -n 1 -s -r -p "Press any key to continue"
+      trap "bash menu-bridges; exit 0" EXIT
+      exit 0 
+    fi
+  else
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    trap "bash menu; exit 0" EXIT
+    exit 0
+  fi
+
+}
+
+
+# This function will execute some functions after the first boot and login
+# Syntax check_fresh_install
+# Used predefined variables: TORRC, RUNFILE, WHITE, RED, NOCOLOR, MENU_HEIGHT_25 MENU_WIDTH
 check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
@@ -76,7 +117,7 @@ check_fresh_install()
   # will be set at the end of the run_install.sh
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
     clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
       (sudo userdel -r pi) 2> /dev/null
     fi
@@ -85,10 +126,10 @@ check_fresh_install()
     sleep 5
     sudo reboot
   fi
-  # This will genarate new unique SSH server keys
+  # This will generate new unique SSH server keys (only for images)
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=2" ]; then
     clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
     echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
     (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
@@ -97,6 +138,42 @@ check_fresh_install()
     echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
     sleep 10
   fi
+  # This will ask some questions about the security settings and then unmask tor and vanguards
+  if [ $FRESHINSTALLED = "FRESH_INSTALLED=3" ]; then
+    clear
+    DEFAULT_OBFS4_SUPPORT=0
+    INPUT=$(cat text/recommend-add-bridges-text)
+    if (whiptail --title "TorBox - SECURITY!!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+      sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+      sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+      sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+      sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+      DEFAULT_OBFS4_SUPPORT=1
+      clear
+      echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support!${NOCOLOR}"
+    else
+      clear
+      echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
+    fi
+      sudo systemctl unmask tor
+      sudo systemctl enable tor
+      sudo systemctl start tor
+      sudo systemctl umask vanguards@default.service
+      sudo systemctl enable vanguards@default.service
+      sudo systemctl start vanguards@default.service
+      sudo systemctl restart tor &
+      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+      echo -e "    Ignore any error messages, just wait..."
+      echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+      echo -e "    You can leave the progress report with CTRL-C."
+      echo ""
+      sleep 2
+      trap finish_default_obfs4 SIGINT
+      sudo tail -f -n 0 /var/log/tor/notices.log
 }
 
 # This function opens the ports, after a restart if bridge relay is on

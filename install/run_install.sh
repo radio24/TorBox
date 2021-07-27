@@ -93,7 +93,7 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
-GO_VERSION="go1.16.5.linux-armv6l.tar.gz"
+GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -111,8 +111,10 @@ VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARD_LOG_FILE="/var/log/tor/vanguard.log"
 
+# DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
-TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
+#TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
+TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
 
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
@@ -140,7 +142,6 @@ fi
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
-STEP_BY_STEP=""
 i=0
 n=0
 
@@ -211,7 +212,7 @@ install_network_drivers()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: TORURL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
@@ -222,6 +223,7 @@ select_and_install_tor()
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
 		echo -e "${WHITE}[!]         YES!${NOCOLOR}"
+		echo ""
 	else
 		echo -e "${WHITE}[!]         NO!${NOCOLOR}"
 		echo -e ""
@@ -365,8 +367,8 @@ select_and_install_tor()
 					i=$number_torversion
 				fi
     	done
-			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo ""
+			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
 			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
 			mkdir ~/debian-packages; cd ~/debian-packages
@@ -622,14 +624,16 @@ fi
 sudo chown -R debian-tor:debian-tor vanguards
 cd vanguards
 sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
-cd ..
-sudo -u debian-tor mv vanguards /var/lib/tor/
+cd
+sudo mv vanguards /var/lib/tor/
 sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
 sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
 sudo sed -i "s/^logfile =.*/logfile = ${VANGUARD_LOG_FILE}/" /etc/tor/vanguards.conf
 # Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
 sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
+sudo chown -R debian:debian /var/lib/tor/vanguards
+sudo chmod -R go-rwx /var/lib/tor/vanguards
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -991,19 +995,19 @@ fi
 clear
 echo -e "${RED}[+] Step 15: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
-sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
-sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
-sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${GO_DL_PATH}/g" ${RUNFILE}
-sudo sed -i "s/^TORURL=.*/TORURL=${TORURL}/g" ${RUNFILE}
-sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}/g" ${RUNFILE}
-sudo sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}/g" ${RUNFILE}
-sudo sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=${SNOWFLAKE_USED}/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=${VANGUARDS_USED}/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
-sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${VANGUARD_LOG_FILE}/g" ${RUNFILE}
-sudo sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=${TORBOXMENUURL}/g" ${RUNFILE}
-sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${WIRINGPI_USED}/g" ${RUNFILE}
-sudo sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}/g" ${RUNFILE}
+sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=$NAMESERVERS_ORIG/g" ${RUNFILE}
+sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=$GO_VERSION/g" ${RUNFILE}
+sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=$GO_DL_PATH/g" ${RUNFILE}
+sudo sed -i "s/^TORURL=.*/TORURL=$TORURL/g" ${RUNFILE}
+sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=$TORURL_DL_PARTIAL/g" ${RUNFILE}
+sudo sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=$SNOWFLAKE_ORIGINAL/g" ${RUNFILE}
+sudo sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=$SNOWFLAKE_USED/g" ${RUNFILE}
+sudo sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=$VANGUARDS_USED/g" ${RUNFILE}
+sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=$VANGUARDS_COMMIT_HASH/g" ${RUNFILE}
+sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=$VANGUARD_LOG_FILE/g" ${RUNFILE}
+sudo sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=$TORBOXMENUURL/g" ${RUNFILE}
+sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=$WIRINGPI_USED/g" ${RUNFILE}
+sudo sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=$FARS_ROBOTICS_DRIVERS/g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1088,7 +1092,7 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo hostnamectl set-hostname TorBox041
+(sudo hostnamectl set-hostname TorBox041) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
