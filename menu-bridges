@@ -312,17 +312,30 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 10 ] ; then
       if [ "$VANGUARDS" = "Deactivate" ]; then
         sudo systemctl stop vanguards@default.service
+        sudo systemctl disable vanguards@default.service
+        sudo systemctl daemon-reload
         clear
         echo
-        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection ac deactivated!${NOCOLOR}"
-        sleep 5
+        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
+        echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
+        i=1
+        while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
+        do
+          sleep 1
+          echo -e "${RED}$i${NOCOLOR}"
+        done
       fi
       if [ "$VANGUARDS" = "Activate" ]; then
-        sudo systemctl restart vanguards@default.service
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-        sleep 5
+        INPUT=$(cat text/vanguards-explanation-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo systemctl enable vanguards@default.service
+          sudo systemctl restart vanguards@default.service
+          sudo systemctl daemon-reload
+          clear
+          echo
+          echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+          sleep 5
+        fi
       fi
       read_config
 

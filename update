@@ -164,6 +164,7 @@ update_tor_preparations()
       fi
     done
     number_torversion=$n
+  fi
 }
 
 # This function updates TOR to the latest stable version
@@ -172,6 +173,7 @@ update_tor()
   clear
   update_tor_preparations
   echo -e "${RED}[+]         Selecting a tor version to install.${NOCOLOR}"
+  i=0
   for (( i=0; i<$number_torversion; i++ ))
   do
     if grep -v "-" <<< "${torversion_versionsorted_new[$i]}"; then
@@ -260,6 +262,8 @@ update_tor()
 # Used predefined variables: TORURL, TORURL_DL_PARTIAL
 select_and_install_tor()
 {
+  clear
+  update_tor_preparations
   #Display and chose a tor version
   clear
   echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
@@ -294,6 +298,10 @@ select_and_install_tor()
       if [ $DLCHECK -eq 0 ] ; then
         echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
         tar xzf $filename
+        echo -e "${RED}[+]         Install necessary packages... ${NOCOLOR}"
+        sudo apt-get -y update
+        sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
+        echo ""
         cd `ls -d */`
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
         ./autogen.sh
@@ -320,7 +328,7 @@ select_and_install_tor()
       echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
       echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
       echo ""
-      read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      sleep 5
       trap "screen bash update; exit 0" SIGINT
       return 0
       exit 0
@@ -332,7 +340,7 @@ select_and_install_tor()
     echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
     echo ""
     read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    trap "screen bash update; exit 0" SIGINT
+    sleep 5
     return 0
     exit 0
     clear
@@ -345,6 +353,15 @@ update_torcfg()
   clear
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
   echo ""
+  # Configuring Shellinabox
+  sudo cp etc/default/shellinabox /etc/default/shellinabox
+  sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
+  sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
+  sudo systemctl restart shellinabox.service
+  echo -e "${RED}[+]${NOCOLOR}  Copied /etc/default/shellinabox"
+  # Configuring Vanguards
+  sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
+  echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
   (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
   sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
@@ -483,13 +500,13 @@ if [ $exitstatus = 0 ]; then
       exit 0
     fi
 
-#This updates the base system (because of performance considerations over clearnet)
+#This updates the base system (clearnet)
     if [ $ARGUMENT = 1 ]; then
       clear
       whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
       clear
  			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version|rev|cut -c2-|rev)
+      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
@@ -521,7 +538,7 @@ if [ $exitstatus = 0 ]; then
         BOOTMSG=1
       fi
 
-# This updates additional network drivers (because of performance considerations over clearnet)
+# This updates additional network drivers (clearnet)
   elif [ $ARGUMENT = 2 ]; then
       clear
       kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
@@ -548,7 +565,7 @@ if [ $exitstatus = 0 ]; then
         LOOP_NUMBER=0
       fi
 
-#This updates the firmware on a RPI4 (because of performance considerations over clearnet)
+#This updates the firmware on a RPI4 (clearnet)
   elif [ $ARGUMENT = 3 ]; then
     if [ ! -z "$CHECK_HD3" ] || [ ! -z "$CHECK_HD4" ]; then
       if [ $LOOP_NUMBER = 1 ]; then
@@ -580,20 +597,21 @@ if [ $exitstatus = 0 ]; then
     else
       EXPERT=0
     fi
+    clear
     # Avoid cheap censorship mechanisms
     online_check $TORURL 1 1
-    if [ $OCHECK == 0 ]; then
-      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+    # We can only use Clearnet if allowed!
+    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
       echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
       trap "screen bash update; exit 0" EXIT
       exit 1
     fi
-    # We can only use Clearnet if allowed!
-    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+    if [ $OCHECK == 0 ]; then
+      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
       echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
@@ -637,6 +655,16 @@ if [ $exitstatus = 0 ]; then
         INPUT=$(cat text/torbox_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
           online_check default 1 1
+          # We can only use Clearnet if allowed!
+          if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+            echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+            echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+            echo " "
+            read -n 1 -s -r -p "Press any key to continue"
+            trap "screen bash update; exit 0" EXIT
+            exit 1
+          fi
           if [ $OCHECK == 0 ]; then
             echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
             echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -645,16 +673,7 @@ if [ $exitstatus = 0 ]; then
             trap "screen bash update; exit 0" EXIT
             exit 1
           fi
-          # We can only use Clearnet if allowed!
-          if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-            echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-            echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-          else
-            update_torbox_menu
-          fi
+          update_torbox_menu
         fi
       else
         # We can only use Clearnet if allowed!

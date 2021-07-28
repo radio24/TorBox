@@ -340,7 +340,7 @@ select_and_install_tor()
 					echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
 	       	echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
 					echo ""
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					sleep 5
 					clear
 					exit 0
 				fi
@@ -349,7 +349,7 @@ select_and_install_tor()
 				echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
 				echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
 				echo ""
-				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				sleep 5
 				clear
 				exit 0
 			fi
