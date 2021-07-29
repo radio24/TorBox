@@ -119,6 +119,11 @@ update_firmware()
 # This function prepares the tor update
 update_tor_preparations()
 {
+  echo -e "${RED}[+]         Installing additional packages for the compilation of the tor package... ${NOCOLOR}"
+  # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+  sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
+  sleep 5
+  clear
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
@@ -325,7 +330,7 @@ select_and_install_tor()
       fi
     else
       clear
-      echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
+      echo -e "${WHITE}[!] ABORTED OR WRONG SELECTION!${NOCOLOR}"
       echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
       echo ""
       sleep 5
@@ -630,7 +635,6 @@ if [ $exitstatus = 0 ]; then
     if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
     if [ $FINISHING = 1 ] ; then
       (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-      # sudo apt-get install tor-geoipdb
       # Copy not moving!
       (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
       sudo chmod a+x /usr/bin/geoip*

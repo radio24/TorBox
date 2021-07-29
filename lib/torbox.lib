@@ -189,7 +189,7 @@ online_check()
 add_open_dns()
 {
   echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanisms...${NOCOLOR}"
-  echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}" 
+  echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}"
   echo -e "${RED}[+] resquest are handled through Tor.${NOCOLOR}"
   echo " "
   NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | cut -c13-) 2> /dev/null
@@ -266,13 +266,12 @@ restarting_tor()
 {
   SOURCE_SCRIPT=$1
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-  (sudo systemctl stop tor; sleep 5; sudo systemctl start tor) &
+  sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
   echo -e "    Ignore any error messages, this can take minutes just wait..."
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
-  sleep 2
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
   sudo tail -f -n 0 /var/log/tor/notices.log
 }

@@ -23,7 +23,7 @@
 # This script prepares the freshly installed TorBox for the building of an image
 #
 # SYNTAX
-# ./rprepare_image
+# ./prepare_image.sh
 #
 #
 ###### SET VARIABLES ######
@@ -43,17 +43,42 @@ if command -v snowflake-client &> /dev/null
 then SNOWFLAKE="exists";
 else SNOWFLAKE="is missing"; fi
 
+if ps -ax | grep "[l]og_check.py" ; then
+  clear
+  LOGCHECK="Deactivated!"
+else
+    clear
+    LOGCHECK="Activated!"
+fi
+
+VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
+if [ ${VANGUARDSSTATUS} == "active" ]; then
+  VANGUARDSSTATUSb="Activated!"
+else
+  VANGUARDSSTATUSb="Deactivated!"
+fi
+
+if [ -d "/home/pi" ]; then
+  ROOT_DIR="${WHITE}WARNING! ${RED}User \"pi\" is still active!${NOCOLOR}"
+else
+  ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
+fi
+
+
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
-echo -e "${RED}Hostname           :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
-echo -e "${RED}Kernel version     :${WHITE} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version        :${WHITE} $(tor -v | head -1 | sed "s/Tor version //")${NOCOLOR}"
-echo -e "${RED}Obfs4proxy version :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake          :${WHITE} $SNOWFLAKE ${NOCOLOR}"
-echo -e "${RED}Nyx version        :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version         :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
-echo -e "${RED}Installed time zone:${WHITE} $(cat /etc/timezone)${NOCOLOR}"
+echo -e "${RED}Hostname                              :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
+echo -e "${RED}Kernel version                        :${WHITE} $(uname -a)${NOCOLOR}"
+echo -e "${RED}Tor version                           :${WHITE} $(tor -v | head -1 | sed "s/Tor version //")${NOCOLOR}"
+echo -e "${RED}Obfs4proxy version                    :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
+echo -e "${RED}Snowflake                             :${WHITE} $SNOWFLAKE ${NOCOLOR}"
+echo -e "${RED}Nyx version                           :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
+echo -e "${RED}Go version                            :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Installed time zone                   :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
+echo -e "${RED}TorBox's automatic countermeasures are:${WHITE} $LOGCHECK ${NOCOLOR}"
+echo -e "${RED}Vanguards is                          :${WHITE} $VANGUARDSSTATUSb ${NOCOLOR}"
+wcho -e "$ROOT_DIR"
 echo
 echo
 echo -e "${WHITE}Following requirements are installed:${NOCOLOR}"

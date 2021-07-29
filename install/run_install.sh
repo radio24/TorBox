@@ -86,6 +86,12 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# Include/Exclude parts of the installations
+# "YES" will install Vanguards / "NO" will not install it -> the related entry in the countermeasure menu will have no effect
+VANGUARDS_INSTALL="YES"
+# "YES" will install additional network drivers / "NO" will not install them -> these driver can be installed later from the Update and Reset sub-menu
+ADDITIONAL_NETWORK_DRIVER="YES"
+
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
 # change the values until zou precisely know what you are doing)
@@ -490,8 +496,12 @@ fi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl mask tor
+# Installation of standard packages
+sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
+# Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
 # tor-geoipdb installiert auch tor
-sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp build-essential shellinabox automake libevent-dev libssl-dev asciidoc-base python3-stem raspberrypi-kernel-headers bc build-essential dkms nyx obfs4proxy apt-transport-tor tor-geoipdb
+sudo apt-get -y install tor-geoipdb
 sudo systemctl mask tor
 sudo systemctl stop tor
 
@@ -613,42 +623,50 @@ else
 fi
 
 # 8. Install Vanguards
-clear
-echo -e "${RED}[+] Step 8: Installing Vanguards...${NOCOLOR}"
-(sudo rm -rf /var/lib/tor/vanguards) 2> /dev/null
-sudo git clone $VANGUARDS_USED || FAILING=1
-if [ $FAILING == 1 ]; then
-	echo ""
-	echo -e "${WHITE}[!] COULDN'T CLONE THE VANGUARDS REPOSITORY!${NOCOLOR}"
-	echo -e "${RED}[+] The Vanguards repository may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+VANGUARDS_INSTALL="YES"
+if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	clear
-fi
-sudo chown -R debian-tor:debian-tor vanguards
-cd vanguards
-sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
-cd
-sudo mv vanguards /var/lib/tor/
-sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
-sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
-#This is necessary to work with special characters in sed
-REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
-# Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
-sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
-sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
-sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
-sudo chmod -R go-rwx /var/lib/tor/vanguards
+	cd
+	echo -e "${RED}[+] Step 8: Installing Vanguards...${NOCOLOR}"
+	(sudo rm -rf vanguards) 2> /dev/null
+	(sudo rm -rf /var/lib/tor/vanguards) 2> /dev/null
+	sudo git clone $VANGUARDS_USED
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ]; then
+	  sleep 1
+	else
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T CLONE THE VANGUARDS REPOSITORY!${NOCOLOR}"
+		echo -e "${RED}[+] The Vanguards repository may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	fi
+	sudo chown -R debian-tor:debian-tor vanguards
+	cd vanguards
+	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
+	cd
+	sudo mv vanguards /var/lib/tor/
+	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
+	sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
+	#This is necessary to work with special characters in sed
+	REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
+	sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
+	# Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
+	sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
+	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
+	sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
+	sudo chmod -R go-rwx /var/lib/tor/vanguards
 
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
 fi
 
 # 9. Again checking connectivity
@@ -749,8 +767,10 @@ sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabo
 sudo systemctl restart shellinabox.service
 echo -e "${RED}[+]${NOCOLOR}  Copied /etc/default/shellinabox"
 # Configuring Vanguards
-sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
-echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
+if [ "$VANGUARDS_INSTALL" = "YES" ]; then
+  (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
+  echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
+fi
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
@@ -856,142 +876,145 @@ else
 fi
 
 # 14. Installing additional network drivers
-kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
+ADDITIONAL_NETWORK_DRIVER="NO"
+if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
+	kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
-path_8188eu="8188eu-drivers/"
-filename_8188eu="8188eu-"$kernelversion".tar.gz"
-text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
-install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
+	path_8188eu="8188eu-drivers/"
+	filename_8188eu="8188eu-"$kernelversion".tar.gz"
+	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
+	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
 
-path_8188fu="8188fu-drivers/"
-filename_8188fu="8188fu-"$kernelversion".tar.gz"
-text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
-install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
+	path_8188fu="8188fu-drivers/"
+	filename_8188fu="8188fu-"$kernelversion".tar.gz"
+	text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
+	install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
 
-path_8192eu="8192eu-drivers/"
-filename_8192eu="8192eu-"$kernelversion".tar.gz"
-text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
-install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
+	path_8192eu="8192eu-drivers/"
+	filename_8192eu="8192eu-"$kernelversion".tar.gz"
+	text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
+	install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
 
-# Deactivated because no driver for new kernels available
-#path_8192su="8192su-drivers/"
-#filename_8192su="8192su-"$kernelversion".tar.gz"
-#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
-#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
+	# Deactivated because no driver for new kernels available
+	#path_8192su="8192su-drivers/"
+	#filename_8192su="8192su-"$kernelversion".tar.gz"
+	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
+	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
-path_8812au="8812au-drivers/"
-filename_8812au="8812au-"$kernelversion".tar.gz"
-text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
-install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
+	path_8812au="8812au-drivers/"
+	filename_8812au="8812au-"$kernelversion".tar.gz"
+	text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
+	install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
 
-path_8821cu="8821cu-drivers/"
-filename_8821cu="8821cu-"$kernelversion".tar.gz"
-text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
-install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
+	path_8821cu="8821cu-drivers/"
+	filename_8821cu="8821cu-"$kernelversion".tar.gz"
+	text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
+	install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
 
-path_8822bu="8822bu-drivers/"
-filename_8822bu="8822bu-"$kernelversion".tar.gz"
-text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
-install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
+	path_8822bu="8822bu-drivers/"
+	filename_8822bu="8822bu-"$kernelversion".tar.gz"
+	text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
+	install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
 
-# Deactivated because no driver for new kernels available
-#path_mt7610="mt7610-drivers/"
-#filename_mt7610="mt7610-"$kernelversion".tar.gz"
-#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
-#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
+	# Deactivated because no driver for new kernels available
+	#path_mt7610="mt7610-drivers/"
+	#filename_mt7610="mt7610-"$kernelversion".tar.gz"
+	#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
+	#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
 
-# Deactivated because no driver for new kernels available
-#path_mt7612="mt7612-drivers/"
-#filename_mt7612="mt7612-"$kernelversion".tar.gz"
-#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
-#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
+	# Deactivated because no driver for new kernels available
+	#path_mt7612="mt7612-drivers/"
+	#filename_mt7612="mt7612-"$kernelversion".tar.gz"
+	#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
+	#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
 
-sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
-cd ~
+	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+	cd ~
 
-# Installing the RTL8814AU
-clear
-echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8814au.git
-cd 8814au
-cp ~/torbox/install/Network/install-rtl8814au.sh .
-chmod a+x install-rtl8814au.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	#This has to be checked
-	if uname -r | grep -q "arm64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
-fi
-./install-rtl8814au.sh
-cd ~
-sudo rm -r 8814au
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	# Installing the RTL8814AU
 	clear
-else
-	sleep 2
-fi
+	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	cp ~/torbox/install/Network/install-rtl8814au.sh .
+	chmod a+x install-rtl8814au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		#This has to be checked
+		if uname -r | grep -q "arm64"; then
+			sudo ./raspi64.sh
+		else
+	 	sudo ./raspi32.sh
+ 		fi
+	fi
+	sudo ./install-rtl8814au.sh
+	cd ~
+	sudo rm -r 8814au
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
 
 # Installing the RTL8821AU
-clear
-echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8821au.git
-cd 8821au
-cp ~/torbox/install/Network/install-rtl8821au.sh .
-chmod a+x install-rtl8821au.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
-fi
-./install-rtl8821au.sh
-cd ~
-sudo rm -r 8821au
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
-else
-	sleep 2
-fi
+	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au.git
+	cd 8821au
+	cp ~/torbox/install/Network/install-rtl8821au.sh .
+	chmod a+x install-rtl8821au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+			sudo ./raspi64.sh
+		else
+	 	sudo ./raspi32.sh
+ 		fi
+	fi
+	sudo ./install-rtl8821au.sh
+	cd ~
+	sudo rm -r 8821au
 
-# Installing the RTL88x2BU
-clear
-echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/88x2bu.git
-cd 88x2bu
-cp ~/torbox/install/Network/install-rtl88x2bu.sh .
-chmod a+x install-rtl88x2bu.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
-		 sudo ./raspi64.sh
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-		sudo ./raspi32.sh
- fi
-fi
-sudo ./install-rtl88x2bu.sh
-cd ~
-sudo rm -r 88x2bu
+		sleep 2
+	fi
 
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	# Installing the RTL88x2BU
 	clear
-else
-	sleep 10
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu.git
+	cd 88x2bu
+	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+	chmod a+x install-rtl88x2bu.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -r | grep -q "arm64"; then
+		 	sudo ./raspi64.sh
+		else
+			sudo ./raspi32.sh
+ 		fi
+	fi
+	sudo ./install-rtl88x2bu.sh
+	cd ~
+	sudo rm -r 88x2bu
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
 fi
 
 # 15. Updating run/torbox.run
@@ -1006,7 +1029,8 @@ REPLACEMENT_STR="$(<<< "$TORURL" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^TORURL=.*/TORURL=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$TORPATH_TO_RELEASE_TAGS" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^TORPATH_TO_RELEASE_TAGS=.*/TORPATH_TO_RELEASE_TAGS=${REPLACEMENT_STR}/g" ${RUNFILE}
-sudo sed -i "s/^TOR_HREF_FOR_SED=.*/TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}/g" ${RUNFILE}
+REPLACEMENT_STR="$(<<< "$TOR_HREF_FOR_SED" sed -e 's`[][\\/.*^$]`\\&`g')"
+sudo sed -i "s/^TOR_HREF_FOR_SED=.*/TOR_HREF_FOR_SED=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$TORURL_DL_PARTIAL" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$SNOWFLAKE_ORIGINAL" sed -e 's`[][\\/.*^$]`\\&`g')"

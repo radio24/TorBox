@@ -109,11 +109,13 @@ finish_default_obfs4()
     fi
   else
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-    trap "bash menu; exit 0" EXIT
-    if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+#    trap "bash menu; exit 0" EXIT
+    if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run; then
       sudo killall log_check.py
       sudo /home/torbox/torbox/log_check.py &
     fi
+    #TO REMOVE!!
+    read -n 1 -s -r -p "Press any key to continue"
     exit 0
   fi
 }
@@ -136,6 +138,8 @@ check_fresh_install()
     clear
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
+#TO REMOVE!!
+    read -n 1 -s -r -p "Press any key to continue"
     sudo reboot
   fi
   # This will generate new unique SSH server keys (only for images)
@@ -173,20 +177,27 @@ check_fresh_install()
       echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
     fi
     (sudo systemctl unmask tor) 2> /dev/null
+    sleep 2
     (sudo systemctl enable tor) 2> /dev/null
+    sleep 2
+    sudo systemctl daemon-reload
+# Not activated yet because Vanguard is not activated by default yet - we will probably change that with TorBox v.0.4.3
 #    (sudo systemctl start tor) 2> /dev/null
 #    (sudo systemctl unmask vanguards@default.service) 2> /dev/null
 #    (sudo systemctl enable vanguards@default.service) 2> /dev/null
+#    sudo systemctl daemon-reload
 #    (sudo systemctl start vanguards@default.service) 2> /dev/null
-    (sudo systemctl stop tor; sleep 5; sudo systemctl start tor) &
+    sleep 5
+    sudo systemctl restart tor &
     echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
     echo -e "    Ignore any error messages, this can take minutes just wait..."
     echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
     echo -e "    You can leave the progress report with CTRL-C."
     echo ""
-    sleep 5
     trap finish_default_obfs4 SIGINT
     sudo tail -f -n 0 /var/log/tor/notices.log
+#TO REMOVE!!
+    read -n 1 -s -r -p "Press any key to continue"
   fi
 }
 
