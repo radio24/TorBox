@@ -154,7 +154,6 @@ RUNFILE="torbox/run/torbox.run"
 i=0
 n=0
 
-
 ######## PREPARATIONS ########
 #
 # Configure variable for resolv.conf, if needed
@@ -590,8 +589,11 @@ clear
 echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
 cd ~
 FAILING=0
-git clone $SNOWFLAKE_USED || FAILING=1
-if [ $FAILING == 1 ]; then
+git clone $SNOWFLAKE_USED
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ]; then
+	sleep 1
+else
 	echo ""
 	echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
 	echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
@@ -721,7 +723,6 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
-#echo -e "${RED}[+]         Downloading TorBox menu from GitHub...${NOCOLOR}"
 wget $TORBOXMENUURL
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
@@ -1132,7 +1133,6 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
-
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
