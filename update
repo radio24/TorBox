@@ -514,6 +514,7 @@ if [ $exitstatus = 0 ]; then
       TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
 			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        clear
         # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
         online_check
         if [ $OCHECK == 0 ]; then
@@ -550,6 +551,7 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/install_network_drivers-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+          clear
           # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
           online_check
           if [ $OCHECK == 0 ]; then
@@ -576,6 +578,7 @@ if [ $exitstatus = 0 ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/firmware_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
+          clear
           update_firmware
           BOOTMSG=1
           LOOP_NUMBER=0
@@ -654,40 +657,41 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the newest stable version of TorBox's menu
   elif [ $ARGUMENT = 5 ]; then
-      clear
-      if [ $LOOP_NUMBER = 1 ]; then
-        INPUT=$(cat text/torbox_update-text)
-        if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-          online_check default 1 1
-          # We can only use Clearnet if allowed!
-          if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-            echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-            echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            trap "screen bash update; exit 0" EXIT
-            exit 1
-          fi
-          if [ $OCHECK == 0 ]; then
-            echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            trap "screen bash update; exit 0" EXIT
-            exit 1
-          fi
-          update_torbox_menu
-        fi
-      else
+    clear
+    if [ $LOOP_NUMBER = 1 ]; then
+      INPUT=$(cat text/torbox_update-text)
+      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
+        clear
+        online_check default 1 1
         # We can only use Clearnet if allowed!
         if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-          sleep 1
-        else
-          update_torbox_menu
+          echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+          echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          trap "screen bash update; exit 0" EXIT
+          exit 1
         fi
+        if [ $OCHECK == 0 ]; then
+          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+          echo " "
+          read -n 1 -s -r -p "Press any key to continue"
+          trap "screen bash update; exit 0" EXIT
+          exit 1
+        fi
+        update_torbox_menu
       fi
-      exit 0
+    else
+      # We can only use Clearnet if allowed!
+      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+        sleep 1
+      else
+        update_torbox_menu
+      fi
+    fi
+    exit 0
 
 #This erases all log files
   elif [ $ARGUMENT = 6 ]; then
@@ -701,6 +705,7 @@ if [ $exitstatus = 0 ]; then
   elif [ $ARGUMENT = 7 ]; then
       INPUT=$(cat text/erase_TWM_pwd-text)
       if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        clear
         echo -e "${RED}[+] Erasing all passwords in the Torbox Wireless Manager...${NOCOLOR}"
         (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
         (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
@@ -715,6 +720,7 @@ if [ $exitstatus = 0 ]; then
       if [ $TORBOX_UPDATE = 0 ]; then
         INPUT=$(cat text/torboxcfg_update-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
           update_torcfg
           BOOTMSG=1
         fi
@@ -755,8 +761,7 @@ if [ $exitstatus = 0 ]; then
         sleep 2
         echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
         sudo rm /var/log/tor/notices.log
-        sudo touch /var/log/tor/notices.log
-        sudo chown debian-tor /var/log/tor/notices.log
+        sudo -u debian-tor touch /var/log/tor/notices.log
         echo -e "${RED}[+] Done!${NOCOLOR}"
         sleep 4
         restarting_tor update

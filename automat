@@ -66,8 +66,7 @@ if [ $ARGUMENT = 1 ]; then
   (sudo rm -r /var/lib/tor/state) 2> /dev/null
   sleep 2
 #  sudo rm -r /var/log/tor/*
-#  sudo touch /var/log/tor/notices.log
-#  sudo chown debian-tor /var/log/tor/notices.log
+#  sudo -u debian-tor touch /var/log/tor/notices.log
   (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
   sudo systemctl stop tor
   sudo systemctl restart tor

@@ -120,11 +120,9 @@ echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node 
 (sudo rm -r /var/lib/tor/state) 2> /dev/null
 echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
 sudo rm /var/log/tor/notices.log
-sudo touch /var/log/tor/notices.log
-sudo chown debian-tor /var/log/tor/notices.log
+sudo -u debian-tor touch /var/log/tor/notices.log
 sudo rm /var/log/tor/vanguards.log
-sudo touch /var/log/tor/vanguards.log
-sudo chown debian-tor /var/log/tor/vanguards.log
+sudo -u debian-tor touch /var/log/tor/vanguards.log
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null

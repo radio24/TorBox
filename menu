@@ -135,7 +135,8 @@ check_fresh_install()
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
       sudo killall systemd
-      (sudo userdel -r pi) 2> /dev/null
+      sleep 5
+      sudo userdel -r pi
     fi
     clear
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
@@ -179,10 +180,15 @@ check_fresh_install()
       echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
     fi
     (sudo systemctl unmask tor) 2> /dev/null
+    echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
     sleep 2
+    echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
     (sudo systemctl enable tor) 2> /dev/null
     sleep 2
+    echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
     sudo systemctl daemon-reload
+    echo -e "${RED}[+] Create necessary files...${NOCOLOR}"
+    sudo -u debian-tor touch /var/log/tor/notices.log
 # Not activated yet because Vanguard is not activated by default yet - we will probably change that with TorBox v.0.4.3
 #    (sudo systemctl start tor) 2> /dev/null
 #    (sudo systemctl unmask vanguards@default.service) 2> /dev/null
@@ -190,14 +196,13 @@ check_fresh_install()
 #    sudo systemctl daemon-reload
 #    (sudo systemctl start vanguards@default.service) 2> /dev/null
     sleep 5
-    sudo touch /var/log/tor/notices.log
+    trap "finish_default_obfs4 $DEFAULT_OBFS4_SUPPORT" SIGINT
     sudo systemctl restart tor &
     echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
     echo -e "    Ignore any error messages, this can take minutes just wait..."
     echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
     echo -e "    You can leave the progress report with CTRL-C."
     echo ""
-    trap "finish_default_obfs4 $DEFAULT_OBFS4_SUPPORT" SIGINT
     sudo tail -f -n 0 /var/log/tor/notices.log
   fi
 }

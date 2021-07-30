@@ -118,8 +118,8 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
 # DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
-#TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
-TORBOXMENUURL="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
+#TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
+TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
 TORBOXMENU_BRANCHNAME="v.0.4.2"
 
 # Wiringpi
@@ -681,7 +681,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 cd
-wget $TORBOXMENUURL
+wget $TORBOX_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
 	echo -e "${RED}[+]         TorBox' menu sucessfully downloaded... ${NOCOLOR}"
@@ -1012,10 +1012,11 @@ sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
 sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORBOXMENUURL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TORBOXMENUURL=.*/TORBOXMENUURL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORBOXMENU_BRANCHNAME" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TORBOXMENU_BRANCHNAME=.*/TORBOXMENU_BRANCHNAME=${REPLACEMENT_STR}/g" ${RUNFILE}
+#We will keep the default settings in run/torbox.run
+#REPLACEMENT_STR="$(<<< "$TORBOX_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
+#sudo sed -i "s/^TORBOX_USED=.*/TORBOX_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
+#REPLACEMENT_STR="$(<<< "$TORBOXMENU_BRANCHNAME" sed -e 's`[][\\/.*^$]`\\&`g')"
+#sudo sed -i "s/^TORBOXMENU_BRANCHNAME=.*/TORBOXMENU_BRANCHNAME=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
