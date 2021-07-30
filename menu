@@ -72,6 +72,7 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 # Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
 finish_default_obfs4()
 {
+  DEFAULT_OBFS4_SUPPORT=$1
   if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
     echo ""
     while true
@@ -90,6 +91,8 @@ finish_default_obfs4()
       echo
       echo
       sleep 5
+      trap "bash menu; exit 0" EXIT
+      exit 0
     else
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       echo -e "${RED}[+] Hmmm... We are starting now the Countermeasure sub-menu${NOCOLOR}"
@@ -109,13 +112,11 @@ finish_default_obfs4()
     fi
   else
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-#    trap "bash menu; exit 0" EXIT
+    trap "bash menu; exit 0" EXIT
     if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run; then
       sudo killall log_check.py
       sudo /home/torbox/torbox/log_check.py &
     fi
-    #TO REMOVE!!
-    read -n 1 -s -r -p "Press any key to continue"
     exit 0
   fi
 }
@@ -133,6 +134,7 @@ check_fresh_install()
     clear
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
+      sudo killall systemd
       (sudo userdel -r pi) 2> /dev/null
     fi
     clear
@@ -188,16 +190,15 @@ check_fresh_install()
 #    sudo systemctl daemon-reload
 #    (sudo systemctl start vanguards@default.service) 2> /dev/null
     sleep 5
+    sudo touch /var/log/tor/notices.log
     sudo systemctl restart tor &
     echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
     echo -e "    Ignore any error messages, this can take minutes just wait..."
     echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
     echo -e "    You can leave the progress report with CTRL-C."
     echo ""
-    trap finish_default_obfs4 SIGINT
+    trap "finish_default_obfs4 $DEFAULT_OBFS4_SUPPORT" SIGINT
     sudo tail -f -n 0 /var/log/tor/notices.log
-#TO REMOVE!!
-    read -n 1 -s -r -p "Press any key to continue"
   fi
 }
 
