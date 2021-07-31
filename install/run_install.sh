@@ -419,7 +419,7 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
 wget -q --spider $CHECK_URL1

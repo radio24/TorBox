@@ -141,8 +141,6 @@ check_fresh_install()
     clear
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
-#TO REMOVE!!
-    read -n 1 -s -r -p "Press any key to continue"
     sudo reboot
   fi
   # This will generate new unique SSH server keys (only for images)

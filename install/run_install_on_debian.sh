@@ -271,7 +271,7 @@ select_and_install_tor()
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
         	download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
-        	if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
+        	if [ -d ~/debian-packages ]; then rm -r ~/debian-packages ; fi
         	mkdir ~/debian-packages; cd ~/debian-packages
 
 					# Difference to the update-function - we cannot use torsocks yet
@@ -285,10 +285,10 @@ select_and_install_tor()
           	./autogen.sh
           	./configure
           	make
-						sudo systemctl mask tor
-          	sudo make install
-						sudo systemctl stop tor
-						sudo systemctl mask tor
+						systemctl mask tor
+          	make install
+						systemctl stop tor
+						systemctl mask tor
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
 						echo -e ""
@@ -338,7 +338,7 @@ select_and_install_tor()
 			echo ""
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
-			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
+			if [ -d ~/debian-packages ]; then rm -r ~/debian-packages ; fi
 			mkdir ~/debian-packages; cd ~/debian-packages
 
 			# Difference to the update-function - we cannot use torsocks yet
@@ -352,10 +352,10 @@ select_and_install_tor()
 				./autogen.sh
 				./configure
 				make
-				sudo systemctl mask tor
-				sudo make install
-				sudo systemctl stop tor
-				sudo systemctl mask tor
+				systemctl mask tor
+				make install
+				systemctl stop tor
+				systemctl mask tor
 			else
 				echo -e ""
 				echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
@@ -383,8 +383,8 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-cp /etc/resolv.conf /etc/resolv.conf.bak
-( printf "$RESOLVCONF" |  tee /etc/resolv.conf) 2>&1
+(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+(printf "$RESOLVCONF" |  tee /etc/resolv.conf) 2>&1
 sleep 5
 # On some Debian systems, wget is not installed, yet
 ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -453,11 +453,11 @@ fi
 # Installation of standard packages
 apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
+apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
 # tor-geoipdb installiert auch tor
-sudo apt-get -y install tor-geoipdb
-sudo systemctl mask tor
-sudo systemctl stop tor
+apt-get -y install tor-geoipdb
+systemctl mask tor
+systemctl stop tor
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -496,7 +496,7 @@ rm -rf /usr/local/go
 wget $GO_DL_PATH$GO_VERSION
 tar -C /usr/local -xzvf $GO_VERSION
 if ! grep "# Added by TorBox (001)" .profile ; then
-	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+	printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
 fi
 export PATH=$PATH:/usr/local/go/bin
 rm $GO_VERSION
@@ -570,8 +570,8 @@ cd ~/snowflake/client
 /usr/local/go/bin/go build
 cp client /usr/bin/snowflake-client
 cd ~
-sudo rm -rf snowflake
-sudo rm -rf go*
+rm -rf snowflake
+rm -rf go*
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -719,10 +719,10 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-sudo cp etc/default/shellinabox /etc/default/shellinabox
-sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-sudo systemctl restart shellinabox.service
+cp etc/default/shellinabox /etc/default/shellinabox
+mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
+mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
+systemctl restart shellinabox.service
 echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
@@ -771,7 +771,7 @@ sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR} Changing .profile"
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
-	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -800,8 +800,8 @@ systemctl start hostapd
 systemctl unmask isc-dhcp-server
 systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server
-sudo systemctl stop tor
-sudo systemctl mask tor
+systemctl stop tor
+systemctl mask tor
 systemctl unmask ssh
 systemctl enable ssh
 systemctl start ssh
