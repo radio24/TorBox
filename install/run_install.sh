@@ -100,6 +100,7 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
 GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -410,7 +411,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password (see at the end of the installation). This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -498,7 +499,7 @@ sudo systemctl mask tor
 # Installation of standard packages
 sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
+sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev
 # tor-geoipdb installiert auch tor
 sudo apt-get -y install tor-geoipdb
 sudo systemctl mask tor
@@ -511,6 +512,11 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 #Install wiringpi
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
+echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
@@ -522,6 +528,11 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 # Additional installations for Python
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
+echo ""
 sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install PySocks
@@ -534,22 +545,38 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 # Additional installation for GO
+clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo ""
 cd ~
 sudo rm -rf /usr/local/go
 wget $GO_DL_PATH$GO_VERSION
-sudo tar -C /usr/local -xzvf $GO_VERSION
-if ! grep "# Added by TorBox (001)" .profile ; then
-	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
-fi
-export PATH=$PATH:/usr/local/go/bin
-rm $GO_VERSION
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ] ; then
+	sudo tar -C /usr/local -xzvf $GO_VERSION
+	if ! grep "# Added by TorBox (001)" .profile ; then
+		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+	fi
+	export PATH=$PATH:/usr/local/go/bin
+	sudo rm $GO_VERSION
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
+else
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
+	exit 0
 fi
 
 # 5. Install Tor
@@ -766,50 +793,50 @@ sudo cp etc/default/shellinabox /etc/default/shellinabox
 sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
 sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
 sudo systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}  Copied /etc/default/shellinabox"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox"
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
-  echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
+  echo -e "${RED}[+]${NOCOLOR}         Copied vanguards@default.service"
 fi
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
 (sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/isc-dhcp-server -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
 (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
 (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
 (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
 (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 (sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
 sudo cp etc/motd /etc/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 sudo cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 sudo cp etc/rc.local /etc/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
+  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
-echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR} Changing .profile"
+echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
@@ -1023,6 +1050,7 @@ clear
 echo -e "${RED}[+] Step 15: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
+sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" ${RUNFILE}

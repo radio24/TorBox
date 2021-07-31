@@ -121,7 +121,7 @@ update_tor_preparations()
 {
   echo -e "${RED}[+]         Installing additional packages for the compilation of the tor package... ${NOCOLOR}"
   # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-  sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
+  sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev
   sleep 5
   clear
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"

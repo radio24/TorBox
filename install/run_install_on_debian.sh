@@ -97,6 +97,7 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
 GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -123,7 +124,7 @@ TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
 TORBOXMENU_BRANCHNAME="v.0.4.2"
 
 # Wiringpi
-WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
+WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
@@ -373,7 +374,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Debian for Raspberry Pi (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "            WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_on_debian\" in /root.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION.\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"CHANGE-IT\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian for Raspberry Pi (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "            WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_on_debian\" in /root.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION.\n\nDuring the installation,  we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -453,7 +454,7 @@ fi
 # Installation of standard packages
 apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt
+apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev
 # tor-geoipdb installiert auch tor
 apt-get -y install tor-geoipdb
 systemctl mask tor
@@ -465,20 +466,42 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-#Install wiringpi - however, it is not sure if it works correctly under Debian
+#Install wiringpi
+clear
+echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
+echo ""
 cd ~
-git clone https://github.com/WiringPi/WiringPi.git
-cd WiringPi
-./build
-cd ~
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+git clone $WIRINGPI_USED
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ]; then
+	cd WiringPi
+	./build
+	cd ~
+	rm -r WiringPi
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	fi
+else
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
+	echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
 fi
 
 # Additional installations for Python
+clear
+echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
+echo ""
 pip3 install pytesseract
 pip3 install mechanize
 pip3 install PySocks
@@ -491,22 +514,38 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 # Additional installation for GO
+clear
+echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo ""
 cd ~
 rm -rf /usr/local/go
 wget $GO_DL_PATH$GO_VERSION
-tar -C /usr/local -xzvf $GO_VERSION
-if ! grep "# Added by TorBox (001)" .profile ; then
-	printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-fi
-export PATH=$PATH:/usr/local/go/bin
-rm $GO_VERSION
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ] ; then
+	sudo tar -C /usr/local -xzvf $GO_VERSION
+	if ! grep "# Added by TorBox (001)" .profile ; then
+		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+	fi
+	export PATH=$PATH:/usr/local/go/bin
+	sudo rm $GO_VERSION
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
+else
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
+	exit 0
 fi
 
 # 4. Installing tor
@@ -526,9 +565,13 @@ fi
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with the pluggable transports....${NOCOLOR}"
 (mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-chmod a+x /usr/share/tor/geoip*
+(chmod a+x /usr/share/tor/geoip*) 2> /dev/null
+# Debian specific
+(chmod a+x /usr/local/share/tor/geoip*) 2> /dev/null
 # Copy not moving!
 (cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+# Debian specific
+(cp /usr/local/share/tor/geoip* /usr/bin) 2> /dev/null
 setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
@@ -562,6 +605,7 @@ else
 fi
 export GO111MODULE="on"
 cd ~/snowflake/proxy
+#These paths to go are Debian specific
 /usr/local/go/bin/go get
 /usr/local/go/bin/go build
 cp proxy /usr/bin/snowflake-proxy
@@ -605,7 +649,7 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	fi
 	chown -R debian-tor:debian-tor vanguards
 	cd vanguards
-	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
+	git reset --hard ${VANGUARDS_COMMIT_HASH}
 	cd
 	mv vanguards /var/lib/tor/
 	cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
@@ -629,7 +673,6 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 fi
 
 # 8. Again checking connectivity
-sleep 10
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
 wget -q --spider http://$CHECK_URL1
@@ -723,52 +766,52 @@ cp etc/default/shellinabox /etc/default/shellinabox
 mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
 mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
 systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/shellinabox -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox -- backup done"
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
-  echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
+  echo -e "${RED}[+]${NOCOLOR}         Copied vanguards@default.service"
 fi
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
 (cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
 cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/isc-dhcp-server -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
 (cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
 cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
 (cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
 cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
 (cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
 cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
 (cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
 cp etc/iptables.ipv4.nat /etc/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 (cp /etc/motd /etc/motd.bak) 2> /dev/null
 cp etc/motd /etc/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
 cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
+  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
 (cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 cp etc/tor/torrc /etc/tor/
-echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
-echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
+echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR} Changing .profile"
+echo -e "${RED}[+]${NOCOLOR}          hanging .profile"
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
@@ -830,7 +873,6 @@ else
 fi
 
 # 13. Installing additional network drivers
-sleep 10
 clear
 echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
@@ -992,6 +1034,7 @@ clear
 echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
+sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" ${RUNFILE}
@@ -1021,7 +1064,7 @@ REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=${REPLACEMENT_STR}/g" ${RUNFILE}
-sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
+sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  echo ""
@@ -1035,16 +1078,16 @@ fi
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
-echo -e "${RED}[+]          password \"CHANGE-IT\" is created.  ${NOCOLOR}"
+echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the default password \"CHANGE-IT\"!!${NOCOLOR}"
+echo -e "${WHITE}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
 echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 adduser --disabled-password --gecos "" torbox
-echo -e "CHANGE-IT\nCHANGE-IT\n" |  passwd torbox
+echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
 adduser torbox
 adduser torbox netdev
 mv /root/* /home/torbox/
@@ -1081,7 +1124,7 @@ echo -e "${RED}[+]          This will erase all log files and cleaning up the sy
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"CHANGE-IT\"!! ${NOCOLOR}"
+echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
@@ -1098,8 +1141,6 @@ apt-get -y autoclean
 apt-get -y autoremove
 echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 timedatectl set-timezone UTC
-# TO BE REMOVED !!
-read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
@@ -1121,4 +1162,11 @@ cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
+fi
 sudo reboot
