@@ -516,6 +516,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 # Additional installation for GO
+clear
 if uname -r | grep -q "arm64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
