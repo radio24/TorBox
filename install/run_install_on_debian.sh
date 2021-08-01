@@ -384,8 +384,10 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-(printf "$RESOLVCONF" |  tee /etc/resolv.conf) 2>&1
+if [ -f "/etc/resolv.conf" ]; then
+	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+fi
+(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
 sleep 5
 # On some Debian systems, wget is not installed, yet
 ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -514,51 +516,60 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 fi
 
 # Additional installation for GO
-clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-echo ""
-echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
-echo ""
-cd ~
-rm -rf /usr/local/go
-wget $GO_DL_PATH$GO_VERSION
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ] ; then
-	sudo tar -C /usr/local -xzvf $GO_VERSION
-	if ! grep "# Added by TorBox (001)" .profile ; then
-		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
-	fi
-	export PATH=$PATH:/usr/local/go/bin
-	sudo rm $GO_VERSION
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
-	fi
+if uname -r | grep -q "arm64"; then
+  wget https://golang.org/dl/$GO_VERSION_64
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ] ; then
+  	sudo tar -C /usr/local -xzvf $GO_VERSION_64
+  	if ! grep "# Added by TorBox (001)" .profile ; then
+  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  	fi
+  	export PATH=$PATH:/usr/local/go/bin
+  	sudo rm $GO_VERSION_64
+    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+    	echo ""
+    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    	clear
+    else
+    	sleep 10
+    fi
+  else
+  	echo ""
+  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
+  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+  	echo ""
+  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  	exit 0
+  fi
 else
-	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	exit 0
-fi
-
-# 4. Installing tor
-clear
-echo -e "${RED}[+] Step 4: Installing tor...${NOCOLOR}"
-select_and_install_tor
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
+  wget https://golang.org/dl/$GO_VERSION
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ] ; then
+  	sudo tar -C /usr/local -xzvf $GO_VERSION
+  	if ! grep "# Added by TorBox (001)" .profile ; then
+  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  	fi
+  	export PATH=$PATH:/usr/local/go/bin
+  	sudo rm $GO_VERSION
+    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+    	echo ""
+    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    	clear
+    else
+    	sleep 10
+    fi
+  else
+  	echo ""
+  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+  	echo ""
+  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  	exit 0
+  fi
 fi
 
 # 5. Configuring Tor with the pluggable transports
@@ -700,8 +711,10 @@ else
     else
       echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
 			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
-			cp /etc/resolv.conf /etc/resolv.conf.bak
-			( printf "$RESOLVCONF" |  tee /etc/resolv.conf) 2>&1
+			if [ -f "/etc/resolv.conf" ]; then
+				(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+			fi
+			(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
       sleep 5
       echo ""
       echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
@@ -1156,7 +1169,7 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-hostnamectl set-hostname TorBox041
+hostnamectl set-hostname TorBox042
 (cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

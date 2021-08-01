@@ -71,9 +71,6 @@ if [ $ARGUMENT = 1 ]; then
   sudo systemctl stop tor
   sudo systemctl restart tor
 
-
-# To implement this in TorBox v.0.4.2, torbox.run has to be replaced!!
-# Also, we have to restrict it to wlan0/wlan1
 # Entry 2: After losing a wireless connection, we try to get a new one and restart Tor
 # This should work only with wlan0 and wlan1 and if the password of the wifi is stored
 elif [ $ARGUMENT = 2 ]; then

@@ -179,7 +179,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "============================================[Informational]===" \
 "  1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "===" "============================================[OBFS4 bridges]==="  \
@@ -359,7 +359,7 @@ if [ $exitstatus = 0 ]; then
       if [ "$LOGCHECK" = "Activate" ]; then
 
         ###### DISPLAY THE AVAILABLE OPTIONS ######
-        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.1 - AUTOMATIC COUNTERMEASURES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
+        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERMEASURES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
         "1" "Protection against entry guard failing and overloaded tor network" ON \
         "2" "Protection against interrupted WiFi connection with the Internet" ON \
         "3" "Protection against excessive number of failing tor circuits" ON \
