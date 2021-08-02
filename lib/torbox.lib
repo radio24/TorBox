@@ -395,6 +395,7 @@ list_all_obfs4_bridges()
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
     echo " "
     trap "bash menu-bridges; exit 0" SIGINT
+    i=0
     while [ $i -lt $number_configured_bridges_deactivated ]
     do
         bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})

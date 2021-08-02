@@ -148,12 +148,24 @@ if [ $exitstatus = 0 ]; then
       clear
       whiptail --title "TorBox - INFO" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
       number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      if [ $number_bridges > 0 ]; then
+      if ! [[ "$number_bridges" =~ ^[0-9]+$  ]]; then
+        trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+        echo ""
+        echo -e "${WHITE}[!] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+        echo " "
+        sleep 5
+        exit 1
+      fi
+      if [ $number_bridges -gt 0 ]; then
         i=1
         while [ $i -le $number_bridges ]
         do
           bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx.:xxxx cert=abcd.. iat-mode=0)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
           bridge_address="$(<<< "$bridge_address" sed -e 's/[[:blank:]]*$//')"
+          if [ "$bridge_address" = "" ]; then
+            trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+            exit 0
+          fi
           if grep -q "$bridge_address" $TORRC ; then
             echo -e "${WHITE}[!] Bridge number $i is already added!${NOCOLOR}"
             sleep 3
@@ -165,7 +177,7 @@ if [ $exitstatus = 0 ]; then
               bridge_address="#Bridge $bridge_address"
             fi
             echo -e "${RED}[+] Saved bridge number $i!${NOCOLOR}"
-            sudo echo $bridge_address >> $TORRC
+            (printf "$bridge_address\n" | sudo tee -a $TORRC) 2> /dev/null
             i=$(( $i+1 ))
           fi
         done

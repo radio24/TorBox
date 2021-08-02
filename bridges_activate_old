@@ -110,6 +110,7 @@ else
           echo " "
           echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
           trap "bash bridges_activate_old; exit 0" SIGINT
+          i=0
           while [ $i -lt $number_configured_bridges_deactivated ]
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})

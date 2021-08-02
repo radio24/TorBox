@@ -252,7 +252,7 @@ if [ $exitstatus = 0 ]; then
       	if grep -q "^HashedControlPassword\ " ${TORRC}; then
           sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
       	else
-          sudo echo ${INPUTHASH} >> ${TORRC}
+          (printf "${INPUTHASH}\n" | sudo tee -a $TORRC) 2> /dev/null
       	fi
 	      if [ -d "/var/lib/tor/vanguards" ]; then
 	        sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
@@ -604,7 +604,7 @@ if [ $exitstatus = 0 ]; then
 			  if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
       	  sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
 			  else
-      	  sudo echo ${INPUT} >> ${HOSTAPD}
+          (printf "${INPUT}\n" | sudo tee -a ${HOSTAPD}) 2> /dev/null
 			  fi
         if (whiptail --yesno "TorBox's WLAN (SSID) is now $TOGGLE08.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear

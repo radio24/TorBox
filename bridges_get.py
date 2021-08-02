@@ -92,7 +92,7 @@ while bridges == False:
 
     if network == 'tor':
         try:
-            print("tor")
+#            print("tor")
             res = br.open(BRIDGES_URL)
         except:
             print(-1)
@@ -100,7 +100,7 @@ while bridges == False:
     elif network == 'inet':
         # Clearnet request
         try:
-            print("inet")
+#            print("inet")
             # unset socks proxy
             socks.setdefaultproxy()
 

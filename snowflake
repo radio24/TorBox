@@ -93,6 +93,7 @@ i=0
 			sleep 2
 			echo " "
 			SNOW_ON=0
+			i=0
 			while [ $i -lt $number_configured_snowflake_deactivated ]
 			do
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_deactivated[$i]})

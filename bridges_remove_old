@@ -126,6 +126,7 @@ if [ $exitstatus = 0 ]; then
         sudo cp ${TORRC} ${BAK}
         trap "bash bridges_remove_old; exit 0" SIGINT
         j=0
+        i=0
         while [ $i -lt $number_configured_bridges_deactivated ]
         do
           bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
@@ -201,7 +202,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 3 ]; then
       INPUT=$(cat text/delete-selected-bridges-text)
       if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
         delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
         clear

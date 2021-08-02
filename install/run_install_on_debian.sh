@@ -517,7 +517,7 @@ fi
 
 # Additional installation for GO
 clear
-if uname -r | grep -q "arm64"; then
+if uname -a | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
@@ -948,7 +948,7 @@ cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 chmod a+x install-rtl8812au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -969,7 +969,7 @@ cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -990,7 +990,7 @@ cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1011,7 +1011,7 @@ cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 chmod a+x install-rtl8821cu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1032,7 +1032,7 @@ cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 chmod a+x install-rtl88x2bu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh

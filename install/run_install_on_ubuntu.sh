@@ -507,15 +507,15 @@ fi
 # 3. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-systemctl mask tor
+sudo systemctl mask tor
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
-check_install_packages net-tools ifupdown unzip equivs
+check_install_packages "net-tools ifupdown unzip equivs"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-check_install_packages install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev
+check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
 sudo apt-get -y install tor-geoipdb
 sudo systemctl mask tor
@@ -583,7 +583,7 @@ echo ""
 cd ~
 sudo rm -rf /usr/local/go
 
-if uname -r | grep -q "arm64"; then
+if uname -a | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
@@ -733,9 +733,8 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
 	fi
-	sudo chown -R debian-tor:debian-tor vanguards
 	cd vanguards
-	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
+	sudo git reset --hard ${VANGUARDS_COMMIT_HASH}
 	cd
 	sudo mv vanguards /var/lib/tor/
 	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
@@ -854,11 +853,11 @@ sudo cp etc/default/shellinabox /etc/default/shellinabox
 sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
 sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
 sudo systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}           Copied /etc/default/shellinabox"
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox"
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
-  echo -e "${RED}[+]${NOCOLOR}          Copied vanguards@default.service"
+  echo -e "${RED}[+]${NOCOLOR}         Copied vanguards@default.service"
 fi
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
@@ -929,7 +928,6 @@ else
 fi
 
 # 11. Disabling Bluetooth
-sleep 10
 clear
 echo -e "${RED}[+] Step 11: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
@@ -999,7 +997,7 @@ echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
 sudo apt-get install -y linux-headers-$(uname -r)
 # firmware-realtek is missing on ubuntu, but it should work without it
 sudo apt-get install -y dkms libelf-dev build-essential
-cd ~
+cd
 sleep 2
 
 # Installing the RTL8188EU
@@ -1055,7 +1053,7 @@ cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 sudo chmod a+x install-rtl8812au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1076,7 +1074,7 @@ cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 sudo chmod a+x install-rtl8814au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1097,7 +1095,7 @@ cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 sudo chmod a+x install-rtl8821au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1118,7 +1116,7 @@ cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 sudo chmod a+x install-rtl8821cu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1139,14 +1137,14 @@ cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 sudo chmod a+x install-rtl88x2bu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -r | grep -q "arm64"; then
+	if uname -a | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
  fi
 fi
 sudo ./install-rtl88x2bu.sh
-cd ~
+cd
 sudo rm -r 88x2bu
 sleep 2
 
@@ -1196,7 +1194,6 @@ else
 fi
 
 # 15. Adding the user torbox
-sleep 10
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1212,17 +1209,11 @@ sudo adduser --disabled-password --gecos "" torbox
 echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" | sudo passwd torbox
 sudo adduser torbox sudo
 sudo adduser torbox netdev
-sudo mv /home/ubuntu/* /home/torbox/
-(sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
-sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
-cd /home/torbox/
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1254,13 +1245,24 @@ echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 (sudo rm -r get-pip.py) 2> /dev/null
 (sudo rm -r python-urwid*) 2> /dev/null
 # Find the bigest space waster packages: dpigs -H
-apt-get -y remove libgl1-mesa-dri texlive* lmodern
-apt-get -y clean
-apt-get -y autoclean
-apt-get -y autoremove
+sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
+sudo apt-get -y clean
+sudo apt-get -y autoclean
+sudo apt-get -y autoremove
 echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
-timedatectl set-timezone UTC
-
+sudo timedatectl set-timezone UTC
+echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+# This has to be at the end to avoid unnecessary error messages
+sudo hostnamectl set-hostname TorBox042
+(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
+sudo cp torbox/etc/hosts /etc/
+echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
+sudo mv /home/ubuntu/* /home/torbox/
+(sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+sudo mkdir /home/torbox/openvpn
+(sudo rm .bash_history) 2> /dev/null
+sudo chown -R torbox.torbox /home/torbox/
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 for logs in `sudo find /var/log -type f`; do
@@ -1272,12 +1274,6 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
 echo ""
-echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-# This has to be at the end to avoid unnecessary error messages
-sudo hostnamectl set-hostname TorBox042
-(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-sudo cp torbox/etc/hosts /etc/
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
