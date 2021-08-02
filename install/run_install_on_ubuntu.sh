@@ -43,15 +43,17 @@
 #  3. Installing all necessary packages
 #  4. Install Tor
 #  5. Configuring Tor with the pluggable transports
-#  6. Install Vanguards
-#  7. Re-checking Internet connectivity
-#  8. Downloading and installing the latest version of TorBox
-#  9. Installing all configuration files
-# 10. Disabling Bluetooth
-# 11. Configure the system services
-# 12. Installing additional network drivers
-# 13. Adding and implementing the user torbox
-# 14. Finishing, cleaning and booting
+#  6. Install Snowflake
+#  7. Install Vanguards
+#  8. Re-checking Internet connectivity
+#  9. Downloading and installing the latest version of TorBox
+# 10. Installing all configuration files
+# 11. Disabling Bluetooth
+# 12. Configure the system services
+# 13. Installing additional network drivers
+# 14. Updating run/torbox.run
+# 15. Adding and implementing the user torbox
+# 16. Finishing, cleaning and booting
 
 ##########################################################
 

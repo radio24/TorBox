@@ -45,10 +45,10 @@ else SNOWFLAKE="is missing"; fi
 
 if ps -ax | grep "[l]og_check.py" ; then
   clear
-  LOGCHECK="Deactivated!"
+  LOGCHECK="Activated!"
 else
     clear
-    LOGCHECK="Activated!"
+    LOGCHECK="Deactivated!"
 fi
 
 VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
@@ -64,21 +64,24 @@ else
   ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
 fi
 
+TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
+
 
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
-echo -e "${RED}Hostname                              :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
-echo -e "${RED}Kernel version                        :${WHITE} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version                           :${WHITE} $(tor -v | head -1 | sed "s/Tor version //")${NOCOLOR}"
-echo -e "${RED}Obfs4proxy version                    :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                             :${WHITE} $SNOWFLAKE ${NOCOLOR}"
-echo -e "${RED}Nyx version                           :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version                            :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
-echo -e "${RED}Installed time zone                   :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
-echo -e "${RED}TorBox's automatic countermeasures are:${WHITE} $LOGCHECK ${NOCOLOR}"
-echo -e "${RED}Vanguards is                          :${WHITE} $VANGUARDSSTATUSb ${NOCOLOR}"
-wcho -e "$ROOT_DIR"
+echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
+echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
+echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //")${NOCOLOR}"
+echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
+echo -e "${RED}Snowflake                                    :${WHITE} $SNOWFLAKE ${NOCOLOR}"
+echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
+echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
+echo -e "${RED}TorBox's automatic countermeasures are       :${WHITE} $LOGCHECK ${NOCOLOR}"
+echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDSSTATUSb ${NOCOLOR}"
+echo -e "${RED}TorBox Menu is locked to the following Branch:${WHITE} $TORBOXMENU_BRANCHNAME ${NOCOLOR}"
+echo -e "$ROOT_DIR"
 echo
 echo
 echo -e "${WHITE}Following requirements are installed:${NOCOLOR}"
@@ -119,10 +122,10 @@ echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node 
 (sudo rm -r /var/lib/tor/lock) 2> /dev/null
 (sudo rm -r /var/lib/tor/state) 2> /dev/null
 echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
-sudo rm /var/log/tor/notices.log
-sudo -u debian-tor touch /var/log/tor/notices.log
-sudo rm /var/log/tor/vanguards.log
-sudo -u debian-tor touch /var/log/tor/vanguards.log
+(sudo rm /var/log/tor/notices.log) 2> /dev/null
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+(sudo rm /var/log/tor/vanguards.log) 2> /dev/null
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
