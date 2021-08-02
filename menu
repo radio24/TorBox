@@ -50,9 +50,6 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Connectivity check
-CHECK_URL1="http://google.com"
-
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
 HOSTAPD="/etc/hostapd/hostapd.conf"
@@ -61,14 +58,73 @@ TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
 
+#Connectivity check
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+
 ##############################
 ######## FUNCTIONS ###########
 
 #include lib
 .  lib/torbox.lib
 
-# This function checks if TorBox is freshly installed by the install script
-# or run the first time after flashing the image file to a SD card.
+# This function is used for check_fresh_install() as a trap for CTRL-C
+# Syntax finish_default_obfs4
+# Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
+finish_default_obfs4()
+{
+  DEFAULT_OBFS4_SUPPORT=$1
+  if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
+    echo ""
+    while true
+    do
+      read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+      # The following line is for the prompt to appear on a new line.
+      if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+        echo
+        echo
+        break
+      fi
+    done
+    if [[ $REPLY =~ ^[Yy]$ ]] ; then
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+      echo
+      echo
+      sleep 5
+      trap "bash menu; exit 0" EXIT
+      exit 0
+    else
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      echo -e "${RED}[+] Hmmm... We are starting now the Countermeasure sub-menu${NOCOLOR}"
+      echo -e "${RED}[+] We recommend to try next MEEK-AZURE or to get and add${NOCOLOR}"
+      echo -e "${RED}[+] additional newer OBFS4 bridges.${NOCOLOR}"
+      echo
+      echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+      echo
+      echo
+      read -n 1 -s -r -p "Press any key to continue"
+      trap "bash menu-bridges; exit 0" EXIT
+      if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+        sudo killall log_check.py
+        sudo /home/torbox/torbox/log_check.py &
+      fi
+      exit 0
+    fi
+  else
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    trap "bash menu; exit 0" EXIT
+    if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run; then
+      sudo killall log_check.py
+      sudo /home/torbox/torbox/log_check.py &
+    fi
+    exit 0
+  fi
+}
+
+
+# This function will execute some functions after the first boot and login
+# Syntax check_fresh_install
+# Used predefined variables: TORRC, RUNFILE, WHITE, RED, NOCOLOR, MENU_HEIGHT_25 MENU_WIDTH
 check_fresh_install()
 {
   FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
@@ -76,26 +132,76 @@ check_fresh_install()
   # will be set at the end of the run_install.sh
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
     clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     if [ -d "/home/pi" ]; then
-      (sudo userdel -r pi) 2> /dev/null
+      sudo killall systemd
+      sleep 5
+      sudo userdel -r pi
     fi
     clear
     echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
     sleep 5
     sudo reboot
   fi
-  # This will genarate new unique SSH server keys
+  # This will generate new unique SSH server keys (only for images)
   if [ $FRESHINSTALLED = "FRESH_INSTALLED=2" ]; then
     clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
     echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
     (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
     sudo ssh-keygen -A
     echo ""
     echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
+    FRESHINSTALLED="FRESH_INSTALLED=3"
     sleep 10
+  fi
+  # This will ask some questions about the security settings and then unmask tor and vanguards
+  if [ $FRESHINSTALLED = "FRESH_INSTALLED=3" ]; then
+    clear
+    DEFAULT_OBFS4_SUPPORT=0
+    INPUT=$(cat text/recommend-add-bridges-text)
+    if (whiptail --title "TorBox - SECURITY!!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+      sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+      sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+      sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+      sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+      DEFAULT_OBFS4_SUPPORT=1
+      clear
+      echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support!${NOCOLOR}"
+    else
+      clear
+      echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
+    fi
+    (sudo systemctl unmask tor) 2> /dev/null
+    echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
+    sleep 2
+    echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
+    (sudo systemctl enable tor) 2> /dev/null
+    sleep 2
+    echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
+    sudo systemctl daemon-reload
+    echo -e "${RED}[+] Create necessary files...${NOCOLOR}"
+    sudo -u debian-tor touch /var/log/tor/notices.log
+# Not activated yet because Vanguard is not activated by default yet - we will probably change that with TorBox v.0.4.3
+#    (sudo systemctl start tor) 2> /dev/null
+#    (sudo systemctl unmask vanguards@default.service) 2> /dev/null
+#    (sudo systemctl enable vanguards@default.service) 2> /dev/null
+#    sudo systemctl daemon-reload
+#    (sudo systemctl start vanguards@default.service) 2> /dev/null
+    sleep 5
+    trap "finish_default_obfs4 $DEFAULT_OBFS4_SUPPORT" SIGINT
+    sudo systemctl restart tor &
+    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+    echo -e "    Ignore any error messages, this can take minutes just wait..."
+    echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+    echo -e "    You can leave the progress report with CTRL-C."
+    echo ""
+    sudo tail -f -n 0 /var/log/tor/notices.log
   fi
 }
 
@@ -135,12 +241,12 @@ else
 fi
 if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
   IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; fi
-  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; fi
-  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; fi
-  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; fi
-  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; fi
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
 fi
 }
 
@@ -148,11 +254,11 @@ fi
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-
 check_fresh_install
 check_bridge_relay
 check_interface_with_internet
 check_tor
+
 
 if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="VPN is up & TOR working"
 elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ] ; then TOR_STATUS="         TOR is working"
@@ -160,12 +266,20 @@ elif [ "$TOR_STATUS" = "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="      
 else TOR_STATUS=""
 fi
 
+if grep "^TOR_CONTROL_PORT_ACCESS=1" ${RUNFILE} ; then
+  CONTROLPORT_WLAN="s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/"
+  CONTROLPORT_ETH="s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/"
+else
+  CONTROLPORT_WLAN="s/^ControlPort 192.168.42.1:9051/#ControlPort 192.168.42.1:9051/"
+  CONTROLPORT_ETH="s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/"
+fi
+
 ###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "  1" "Tor statistics (press m for menu / q to quit)" \
 "  2" "Enforce a new exit node with a new IP" \
 "  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"  4" "Show the Tor log file - quick and dirty (press CTRL-C to leave)" \
+"  4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
 "===" "===================================[Where is the Internet?]===" \
 "  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
 "  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -258,15 +372,17 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
           sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth1/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         elif [ -z "$WLAN0_IP" ] && [ -n "$ETH1_IP" ] ; then
@@ -279,10 +395,12 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces eth0 eth1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
@@ -290,7 +408,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
           sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -299,6 +417,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces eth0 wlan0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
           finish
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         fi
@@ -348,15 +468,17 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -369,10 +491,12 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces wlan1 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -380,7 +504,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -389,6 +513,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces wlan1 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -442,15 +568,17 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
           sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 eth0/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         elif [ -z "$WLAN1_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -463,10 +591,12 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 eth0 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         else
@@ -474,7 +604,7 @@ if [ $exitstatus = 0 ]; then
           sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
           sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-          sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+          sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
           sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
           sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
           sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -483,6 +613,8 @@ if [ $exitstatus = 0 ]; then
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           sudo bash set_interfaces wlan0 wlan1 $CAPTIVE
+          sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+          sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1/" ${RUNFILE}
           finish
           # iptables cannot be saved !!
         fi
@@ -532,15 +664,17 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -553,10 +687,12 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces usb0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -564,7 +700,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -573,6 +709,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces usb0 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -598,15 +736,17 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-              sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+              sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
               sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
               sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-              sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+              sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -619,10 +759,12 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-              sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+              sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces ppp0 eth0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             else
@@ -630,7 +772,7 @@ if [ $exitstatus = 0 ]; then
               sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
               sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-              sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+              sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
               sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
               sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
               sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -639,6 +781,8 @@ if [ $exitstatus = 0 ]; then
               # The following line should minimize those cases where a restart is required.
               sudo systemctl restart isc-dhcp-server
               sudo bash set_interfaces ppp0 wlan0 $CAPTIVE
+              sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+              sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
               finish
               (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
             fi
@@ -692,15 +836,17 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -713,10 +859,12 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces eth1 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -724,7 +872,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -733,6 +881,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces eth1 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -779,16 +929,23 @@ if [ $exitstatus = 0 ]; then
         if [ "$tun0up" != "" ] ; then
           clear
           echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-          wget -q --spider $CHECK_URL1
+          wget -q --spider $CHECK_URL
           if [ $? -eq 0 ]; then
             echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
           else
             echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-            echo -e "${RED}[+] We will add a bunch of public nameservers to /etc/resolv.conf and try again...${NOCOLOR}"
-            echo -e "${RED}[+] This nameservers are only used for local resolution. All clients DNS resquest are handled through Tor.${NOCOLOR}"
-            sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-            (sudo resolvconf -a tun0 <etc/resolv.conf) 2> /dev/null
+            echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
+            echo ""
+            add_open_dns
+            (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
             sleep 2
+            echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
+            wget -q --spider $CHECK_URL
+            if [ $? -eq 0 ]; then
+              echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
+            else
+              echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+            fi
           fi
           if ip link | grep wlan0 | grep "state UP" ; then
             WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -803,15 +960,17 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           elif [ -z "$WLAN0_IP" ] && [ -n "$ETH0_IP" ] ; then
@@ -824,10 +983,12 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces tun0 eth0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
@@ -835,7 +996,7 @@ if [ $exitstatus = 0 ]; then
             sudo sed -i "s/^#DNSPort 192.168.42.1:9053/DNSPort 192.168.42.1:9053/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9050/SocksPort 192.168.42.1:9050/" ${TORRC}
             sudo sed -i "s/^#SocksPort 192.168.42.1:9052/SocksPort 192.168.42.1:9052/" ${TORRC}
-            sudo sed -i "s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/" ${TORRC}
+            sudo sed -i "$CONTROLPORT_WLAN" ${TORRC}
             sudo sed -i "s/^TransPort 192.168.43.1:9040/#TransPort 192.168.43.1:9040/" ${TORRC}
             sudo sed -i "s/^DNSPort 192.168.43.1:9053/#DNSPort 192.168.43.1:9053/" ${TORRC}
             sudo sed -i "s/^SocksPort 192.168.43.1:9050/#SocksPort 192.168.43.1:9050/" ${TORRC}
@@ -844,6 +1005,8 @@ if [ $exitstatus = 0 ]; then
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
             sudo bash set_interfaces tun0 wlan0 $CAPTIVE
+            sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+            sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0/" ${RUNFILE}
             finish
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           fi
@@ -867,7 +1030,7 @@ if [ $exitstatus = 0 ]; then
 
 # Reboot or Shotdown TorBox
     elif [ $CHOICE = 15 ]; then
-      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.1 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+      CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
       "  1" "REBOOT   TorBox" \
       "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)
       exitstatus=$?

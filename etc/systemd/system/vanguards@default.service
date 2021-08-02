@@ -1,0 +1,16 @@
+[Unit]
+Description=Additional protections for Tor onion services
+Wants=tor@default.service
+After=network.target nss-lookup.target
+
+[Service]
+WorkingDirectory=/var/lib/tor/vanguards
+ExecStart=/usr/bin/python3 src/vanguards.py --control_port 9051
+Environment=VANGUARDS_CONFIG=/etc/tor/vanguards.conf
+User=debian-tor
+Group=debian-tor
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

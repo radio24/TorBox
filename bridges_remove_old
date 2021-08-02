@@ -54,6 +54,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
@@ -89,7 +90,7 @@ if [ $EXITID = "EXITID=1" ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==============================================================" \
 "  1" "Remove ALL configured OBFS4 bridges and directly connect tor"  \
 "  2" "Remove only OBFS4 bridges, which do not exist anymore"  \
@@ -117,21 +118,24 @@ if [ $exitstatus = 0 ]; then
     # Remove only bridges, which do not exist anymore
     elif [ $CHOICE = 2 ]; then
       clear
-      echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-      OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-      if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
-      if [ $OCHECK == 0 ]; then
+      online_check $BRIDGE_DB_URL 1 1
+      if [ $OCHECK == 1 ]; then
         echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
         echo " "
         echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
         sudo cp ${TORRC} ${BAK}
         trap "bash bridges_remove_old; exit 0" SIGINT
         j=0
+        i=0
         while [ $i -lt $number_configured_bridges_deactivated ]
         do
           bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
           if [ $bridge_status == 2 ]; then
             j=$(($j + 1))
             echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
@@ -148,7 +152,11 @@ if [ $exitstatus = 0 ]; then
         do
           bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
           bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
           if [ $bridge_status == 2 ]; then
             j=$(($j + 1))
             echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
@@ -170,7 +178,7 @@ if [ $exitstatus = 0 ]; then
           read -n 1 -s -r -p "Press any key to continue"
           clear
           number_of_bridges
-          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear
@@ -194,7 +202,7 @@ if [ $exitstatus = 0 ]; then
     elif [ $CHOICE = 3 ]; then
       INPUT=$(cat text/delete-selected-bridges-text)
       if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
         delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
         clear
@@ -240,7 +248,7 @@ if [ $exitstatus = 0 ]; then
           read -n 1 -s -r -p "Press any key to continue"
           clear
           number_of_bridges
-          if [ $MODE_BRIDGES = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
             if [ $number_configured_bridges_activated = 0 ]; then
               deactivate_obfs4_bridges
               clear

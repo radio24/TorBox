@@ -8,6 +8,8 @@ if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wl
   sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
   sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
   sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
+  sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
+  sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
   sudo ifup wlan0 &>/dev/null &
   sudo ifup wlan1 &>/dev/null &
   sudo systemctl restart hostapd
@@ -17,6 +19,12 @@ fi
 
 if ip link | grep wlan1 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
+  sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
+  sleep 5
+fi
+
+if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+  sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
   sleep 5
 fi
 

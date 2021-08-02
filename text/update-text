@@ -1,9 +1,10 @@
-This updates the base system of your TorBox including, the firmware and the
-kernel. You don't have additionally to select menu entries 3. However,
-without selecting menu entry 5, the TorBox menu will not be actualized.
+This updates the base system of your TorBox including, the firmware, the
+kernel and a LTS version of tor. It is recommended to use menu entries
+3, 4, and 5 additionally to update the Raspi firmware, the newest stable
+version of tor, and the TorBox menu.
 
 IMPORTANT
-- Don't remove power from your TorBox during the update.
+- Don't remove the power from your TorBox during the update.
 - If you close your terminal or if you lose network connectivity to
   your TorBox during the update process, then stay calm. The update
   runs within a "screen" session, meaning that the update is completed
@@ -12,7 +13,7 @@ IMPORTANT
   the screen session:
   - Log into your TorBox
   - Leave the menu with the ESC key
-  - At the command line execute the following command: screen -x
+  - At the command, line execute the following command: screen -x
 - You have to reboot the system to load a new kernel.
 
 Duration: up to 30 minutes

@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file, together with log_check.py, automatically reacts to log-related events.
+#
+# SYNTAX
+# sudo bash automat <entry>
+#
+# <entry> Entry number which will be executed
+#
+#
+##### SET VARIABLES ######
+
+
+#Other variables
+LOOP_NUMBER=0
+RECOMPILE=0
+TORBOX_UPDATE=0
+#TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
+NEW_IDENT="new_ident"
+BOOTMSG=0
+ARGUMENT=$1
+i=0
+n=0
+
+##############################
+######## FUNCTIONS ###########
+
+# include lib
+.  lib/torbox.lib
+
+# Entry 1: Reset Tor and force a change of the permanent entry node
+# This should work in every configuration
+if [ $ARGUMENT = 1 ]; then
+#  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+  sudo systemctl stop tor
+  (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
+  (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
+  (sudo rm -r /var/lib/tor/lock) 2> /dev/null
+  (sudo rm -r /var/lib/tor/state) 2> /dev/null
+  sleep 2
+#  sudo rm -r /var/log/tor/*
+#  sudo -u debian-tor touch /var/log/tor/notices.log
+  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  sudo systemctl stop tor
+  sudo systemctl restart tor
+
+# Entry 2: After losing a wireless connection, we try to get a new one and restart Tor
+# This should work only with wlan0 and wlan1 and if the password of the wifi is stored
+elif [ $ARGUMENT = 2 ]; then
+  (INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | cut -c16-)) 2> /dev/null
+  if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
+    sudo ./torbox_wireless_manager.py -i $INTERNET_IFACE -a
+    sleep 2
+    (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+    sudo systemctl stop tor
+    sudo systemctl restart tor
+  fi
+
+# Entry 3: Restart Tor, if needed.
+# This should work in every configuration
+elif [ $ARGUMENT = 3 ]; then
+  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  sudo systemctl stop tor
+  sudo systemctl restart tor
+fi

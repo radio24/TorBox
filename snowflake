@@ -45,6 +45,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 SNOWSTRING=$1
@@ -77,31 +78,44 @@ i=0
 			read -n 1 -s -r -p "Press any key to continue"
 			exit 1
 		else
+			echo " "
+			echo -e "${WHITE}[!] SNOWFLAKE is configured and ready!${NOCOLOR}"
 			number_configured_snowflake_deactivated=${#configured_snowflake_deactivated[*]}
+			sleep 5
 		fi
 		echo " "
-		echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-		#-m 6 must not be lower, otherwise it looks like there is no connection!
-		OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-		if [ $? == 0 ]; then
+		online_check $BRIDGE_DB_URL 1 1
+		if [ $OCHECK == 1 ]; then
+			echo " "
 			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			echo -e "${RED}[+] Checking next the SNOWFLAKE SERVER${NOCOLOR}"
 			echo -e "${RED}[+] You can only use SNOWFLAKE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2
 			echo " "
+			SNOW_ON=0
+			i=0
 			while [ $i -lt $number_configured_snowflake_deactivated ]
 			do
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-				bridge_status=$(./bridges_check.py -f $bridge_hash)
-				if [ $bridge_status == 1 ]; then bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-			elif [ $bridge_status == 0 ]; then bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
-		elif [ $bridge_status == 2 ]; then bridge_status_txt="- DOESN'T EXIST" ; fi
+				if [ $CLEARNET_DECISSION == 1 ]; then
+					bridge_status=$(./bridges_check.py -f $bridge_hash)
+				else
+					bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+				fi
+				if [ $bridge_status == 1 ]; then
+					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+					SNOW_ON=$(( $SNOW_ON + 1 ))
+				elif [ $bridge_status == 0 ]; then
+					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
+				elif [ $bridge_status == 2 ]; then
+					bridge_status_txt="- DOESN'T EXIST"
+				fi
 				i=$(( $i + 1 ))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
-				echo -e $bridge_address
+				echo -e "$bridge_address"
 			done
-			if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+			if [ $SNOW_ON == 0 ] ; then
 				echo " "
 				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
 				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
@@ -109,6 +123,7 @@ i=0
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
+			echo " "
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
 			echo -e "${RED}[+] We cannot check the SNOWFLAKE SERVER - we try to use it anyway!${NOCOLOR}"
 			echo " "

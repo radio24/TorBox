@@ -1,0 +1,13 @@
+For security reasons, the Tor control port is only used locally on the TorBox itself and is protected by a password.
+
+If someone needs to control Tor from a client, he can enable the Tor control port access for clients.
+
+IMPORTANT
+- To take effect of the change, you must (re-)select the Internet connection
+  in the Main Menu (entry 5-10).
+- You are strongly advised to change the password of your Tor control port
+  (entry 3 in the Configuration sub-menu).
+- Enabled Tor control port access for clients generates warning messages
+  in the Tor log.
+
+Would you like to enable Tor control port access for clients?

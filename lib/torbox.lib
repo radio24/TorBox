@@ -32,6 +32,7 @@
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
 
 #Colors
@@ -39,12 +40,12 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-#Connectivity check
-CHECK_URL1="http://google.com"
-
 #Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
+
+#Connectivity check
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
@@ -88,21 +89,128 @@ fi
 }
 
 # online_check()
-# Syntax online_check <source_script>
-# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15 MENU_WIDTH
-# This function checks the internet connection and exits to <source_script> if none.
+# Syntax online_check [<check_url>] [<no_connection_warning>] [<clearnet_warning>]
+# <check_url> -> Check if TorBox can reach this URL. If <check_url> is missing or "default", the URL defined under "PING_SERVER=" in run/torbox.run is used.
+# <no_connection_warning> -> missing or 0 don't warn if no connection / 1 warn if no connection
+# <clearnet_warning> -> missing or 0 doesn't warn and doesn't check clearnet - enforces tor connection only / 1 warn before accessing clearnet
+# <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+# Used predefined variables: RED, NOCOLOR, MENU_HEIGHT_15, MENU_HEIGHT_20, MENU_WIDTH
+# This function checks the internet connection, if the connection made through tor or clearnet and if no connection, it exits to <source_script>.
+# Following variables can be used:
+# OCHECK = 0     -> No internet conection
+# OCHECK = 1     -> Internet is connected
+# TORCONNECT = 0 -> Connection through tor not possible
+# TORCONNECT = 1 -> Connection through tor possible
+# CLEARNET_DECISSION = 0 -> The calling script should not use clearnet (this is not really necessary, because the function will stop the execution).
+# CLEARNET_DECISSION = 1 -> The calling script can use clearnet
 online_check()
 {
+  CHECK_URL=$1
+  NO_CONNECTION_WARNING=$2
+  CLEARNET_WARNING=$3
+  OCHECK=0
+  TORCONNECT=0
+  CLEARNET_DECISSION=0
+  CLEARNET_ONLY=0
+  if [ -z $CHECK_URL ] || [ "$CHECK_URL" == "default" ]; then
+    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+  fi
+  if [ -z $NO_CONNECTION_WARNING ] && [ -z $CLEARNET_WARNING ]; then
+    CLEARNET_ONLY=1
+  fi
+  add_open_dns
+  echo " "
+  echo -e "${RED}[+] Please wait...${NOCOLOR}"
+  sleep 15
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
-  JUMPTO=$1
-  clear
-  OCHECK=$(curl -m 5 -s $CHECK_URL1)
-  if [ $? -gt 0 ]; then
-    whiptail --title "TorBox - INFO" --msgbox "\n\nIt seems that your TorBox is not properly connected to the internet! For this operation, TorBox has to properly connected with the internet!" $MENU_HEIGHT_15 $MENU_WIDTH
-    trap "bash $JUMPTO; exit 0" EXIT
-    exit 0
+
+  # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update)
+  if [ $CLEARNET_ONLY == 0 ]; then
+    #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
+    OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
+    if [ $? == 0 ]; then
+      OCHECK=1
+      TORCONNECT=1
+    else
+      sleep 10
+      OCHECK=0
+      TORCONNECT=0
+      if [ $CLEARNET_WARNING == 1 ]; then
+        INPUT=$(cat text/clearnet_warning-text)
+        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+          CLEARNET_DECISSION=1
+          OCHECK=$(curl -m 6 -s $CHECK_URL)
+          if [ $? == 0 ]; then
+            OCHECK=1
+            TORCONNECT=0
+          else
+            OCHECK=0
+            TORCONNECT=0
+          fi
+        else
+          CLEARNET_DECISSION=0
+          OCHECK=0;
+          TORCONNECT=0
+        fi
+      else
+        CLEARNET_DECISSION=0
+        OCHECK=0;
+        TORCONNECT=0
+      fi
+    fi
   fi
+
+# Only executed for not tor related URL (usually, in this case online_check was executed without options; used in menu-config and in update)
+  if [ $CLEARNET_ONLY == 1 ]; then
+    CLEARNET_DECISSION=1
+    OCHECK=$(curl -m 6 -s $CHECK_URL)
+    if [ $? == 0 ]; then
+      OCHECK=1
+      TORCONNECT=0
+    else
+      OCHECK=0
+      TORCONNECT=0
+    fi
+  fi
+
+  if [ $OCHECK == 0 ] && [ $NO_CONNECTION_WARNING != 1 ]; then
+    INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+      OCHECK=1
+    fi
+  fi
+}
+
+# add_open_dns()
+# Syntax add_open_dns
+# Used predefined variables: RED, NOCOLOR, RUNFILE
+# This function adds some open nameservers to avoid cheap censorship mechanisms.
+add_open_dns()
+{
+  echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanisms...${NOCOLOR}"
+  echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}"
+  echo -e "${RED}[+] resquest are handled through Tor.${NOCOLOR}"
+  echo " "
+  NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | cut -c13-) 2> /dev/null
+  ONE_NAMESERVER=$(cut -d ',' -f1 <<< $NAMESERVERS)
+  NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
+  i=0
+  while [ "$ONE_NAMESERVER" != " " ]
+  do
+    if [ $i = 0 ]; then
+      (sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2> /dev/null
+      (printf "# Generated by TorBox instead of resolvconf\n" | sudo tee /etc/resolv.conf) 2> /dev/null
+    fi
+    (printf "nameserver $ONE_NAMESERVER\n" | sudo tee -a /etc/resolv.conf) 2> /dev/null
+    i=$(($i + 1))
+    if [ "$ONE_NAMESERVER" = "$NAMESERVERS" ]; then
+      ONE_NAMESERVER=" "
+    else
+      ONE_NAMESERVER=$(cut -d ',' -f1 <<< $NAMESERVERS)
+      NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
+    fi
+  done
 }
 
 # erase_logs()
@@ -142,6 +250,7 @@ deactivating_bridge_relay()
   	sudo sed -i "s/^ServerTransportListenAddr/#ServerTransportListenAddr/g" ${TORRC}
   	sudo sed -i "s/^ContactInfo/#ContactInfo/g" ${TORRC}
   	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
+    sudo sed -i "s/^BridgeDistribution/#BridgeDistribution/g" ${TORRC}
   	sleep 2
     echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
   	sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT
@@ -159,11 +268,10 @@ restarting_tor()
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
   sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-  echo -e "    Ignore any error messages, just wait..."
+  echo -e "    Ignore any error messages, this can take minutes just wait..."
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
-  sleep 2
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
   sudo tail -f -n 0 /var/log/tor/notices.log
 }
@@ -235,6 +343,7 @@ recommended_reboot()
 }
 
 # number_of_bridges()
+# Used predefined variables: TORRC
 # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
 # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
@@ -260,19 +369,19 @@ number_of_bridges()
 }
 
 # list_all_obfs4_bridges()
+# Used predefined variables: RED, NOCOLOR, WHITE, GREEN
+# Used predefined function: number_of_bridges()
 # List all OBFS4 bridges
 list_all_obfs4_bridges()
 {
+  BRIDGE_DB_URL="https://onionoo.torproject.org"
   clear
-  echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-  #-m 6 must not be lower, otherwise it looks like there is no connection!
-  OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-  if [ $? == 0 ]; then
-    OCHECK="0"
+  online_check $BRIDGE_DB_URL 1 1
+  clear
+  if [ $OCHECK == 1 ]; then
     echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
     sleep 2
   else
-    OCHECK="1"
     echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
     sleep 2
   fi
@@ -286,15 +395,21 @@ list_all_obfs4_bridges()
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
     echo " "
     trap "bash menu-bridges; exit 0" SIGINT
+    i=0
     while [ $i -lt $number_configured_bridges_deactivated ]
     do
         bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
-        if [ $OCHECK == 0 ]; then
+        if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
-          elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+          elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST"
+          fi
         else bridge_status=" "
         fi
         i=$(( $i + 1 ))
@@ -315,9 +430,13 @@ list_all_obfs4_bridges()
     while [ $j -lt $number_configured_bridges_activated ]
     do
         bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
-        if [ $OCHECK == 0 ]; then
+        if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-          bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
           elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
@@ -339,6 +458,7 @@ list_all_obfs4_bridges()
 }
 
 # deactivate_obfs4_bridges()
+# Used predefined variables: TORRC
 # Dectivates OBFS4 if the number of activated obfs4 bridge entries in torrc is 0
 deactivate_obfs4_bridges()
 {
@@ -349,6 +469,8 @@ deactivate_obfs4_bridges()
 }
 
 # activate_obfs4_bridges(<source script>)
+# Used predefined variables: TORRC
+# Used predefined function: restarting_tor(), deactivate_obfs4_bridges()
 # Activates OBFS4 if the number of activated obfs4 bridge entries in torrc is >0
 activate_obfs4_bridges()
 {
@@ -370,6 +492,3 @@ activate_obfs4_bridges()
     fi
   fi
 }
-
-# deactivate_meek_snow()
-# Deactivates MEEK-AZURE and SNOWFLAKE if necessary

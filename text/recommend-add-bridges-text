@@ -1,0 +1,19 @@
+Congratulation, you got TorBox running!
+
+So far, we didn't establish contact with the Tor network but will do so
+after this dialogue box. In a highly authoritarian country, that may be
+risky because the ISP could see your tor connections, which could be
+seen as suspicious. For such situations and to circumvent sophisticated
+censorship, Tor introduced BRIDGES, which supports pluggable transports.
+These transports manipulate all Tor traffic between the client and its first
+hop such that it is not identifiable as a Tor connection.
+
+First, we try to activate TorBox's already added OBFS4 bridges. If that
+fails, we will start the Countermeasure sub-menu so that you can try 
+SNOWFLAKE or MEEK as well as manually add new OBFS4 bridge information.
+
+We highlight it again: If your well-being depends on your anonymity, it is
+strongly advised not to use TorBox, but Tails!
+
+Are you located in a highly authoritarian country and want to ACTIVATE OBFS4
+bridges for TorBox?

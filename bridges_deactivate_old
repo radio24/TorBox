@@ -51,6 +51,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID=$(grep "^EXITID=" ${RUNFILE})
@@ -88,7 +89,7 @@ if [ $number_configured_bridges_activated = 0 ]; then
   exit 0
 else
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.1 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "===" "==============================================================" \
   "  1" "Deactivate ALL configured OBFS4 bridges and directly connect tor"  \
   "  2" "Deactivate only OBFS4 bridges, which are not longer ONLINE"  \
@@ -111,20 +112,23 @@ else
       # Deactivate only bridges, which are OFFLINE or do not exist anymore
       elif [ $CHOICE = 2 ]; then
         clear
-        echo -e "${RED}[+] Checking connectivity to the bridge database - please wait...${NOCOLOR}"
-        OCHECK=$(curl -m 6 -s https://onionoo.torproject.org)
-        if [ $? == 0 ]; then OCHECK="0"; else OCHECK="1"; fi
-        if [ $OCHECK == 0 ]; then
+        online_check $BRIDGE_DB_URL 1 1
+        if [ $OCHECK == 1 ]; then
           echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
           echo " "
           echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
           trap "bash bridges_deactivate_old; exit 0" SIGINT
           j=0
+          i=0
           while [ $i -lt $number_configured_bridges_activated ]
           do
             bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
             bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            if [ $CLEARNET_DECISSION == 1 ]; then
+              bridge_status=$(./bridges_check.py -f $bridge_hash)
+            else
+              bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            fi
             if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
               j=$(($j + 1))
               echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
