@@ -573,6 +573,18 @@ else
   fi
 fi
 
+# 4. Installing tor
+clear
+echo -e "${RED}[+] Step 4: Installing tor...${NOCOLOR}"
+select_and_install_tor
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
+fi
+
 # 5. Configuring Tor with the pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with the pluggable transports....${NOCOLOR}"
