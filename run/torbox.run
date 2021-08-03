@@ -77,9 +77,9 @@ TOR_CONTROL_PORT_ACCESS=0
 # 1 - HTTP plain text traffic is blocked
 BLOCK_HTTP=0
 
-# TorBox's automatic countermeasures
-# 0 - TorBox's automatic countermeasures are deactivated (default)
-# 1 - TorBox's automatic countermeasures are activated
+# TorBox's automatic counteractions
+# 0 - TorBox's automatic counteractions are deactivated (default)
+# 1 - TorBox's automatic counteractions are activated
 LOGCHECK=0
 
 ## Global variables to help inter-script communication - don't change them!!

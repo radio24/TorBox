@@ -681,7 +681,7 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	#This is necessary to work with special characters in sed
 	REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
 	sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
-	# Because of the automatic countermeasures, Vanguard cannot interfere with tor's log file
+	# Because of TorBox's automatic counteractions, Vanguard cannot interfere with tor's log file
 	sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 	sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 	chown -R debian-tor:debian-tor /var/lib/tor/vanguards

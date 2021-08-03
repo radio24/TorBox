@@ -128,7 +128,7 @@ read_config()
     VPNSTRING2="from"
   fi
 
-  # Is the automatic countermeasure feature activated?
+  # Is the automatic counteractions feature activated?
     if ps -ax | grep "[l]og_check.py" ; then
       clear
       LOGCHECK="Deactivate"
@@ -196,7 +196,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 " 10" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
 " 11" "Display the Vanguards log (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 12" $LOGCHECK" TorBox's automatic countermeasures - $LOGCHECKSTATUSb"  \
+" 12" $LOGCHECK" TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
 " 13" "Countermeasure against a disconnection when idle feature - "$PING \
 " 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
@@ -345,7 +345,7 @@ if [ $exitstatus = 0 ]; then
       trap "bash menu-bridges; exit 0" SIGINT
       sudo tail -f -n 25 /var/log/tor/vanguards.log
 
-    # Activate/deactivate TorBox's automatic countermeasures
+    # Activate/deactivate TorBox's automatic counteractions
       elif [ $CHOICE = 12 ] ; then
       if [ "$LOGCHECK" = "Deactivate" ]; then
         sudo killall log_check.py
@@ -353,13 +353,13 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
         clear
         echo
-        echo -e "${RED}[+] TorBox's automatic countermeasure features are deativated!${NOCOLOR}"
+        echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
         sleep 5
       fi
       if [ "$LOGCHECK" = "Activate" ]; then
 
         ###### DISPLAY THE AVAILABLE OPTIONS ######
-        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERMEASURES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
+        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
         "1" "Protection against entry guard failing and overloaded tor network" ON \
         "2" "Protection against interrupted WiFi connection with the Internet" ON \
         "3" "Protection against excessive number of failing tor circuits" ON \
