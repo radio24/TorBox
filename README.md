@@ -78,4 +78,4 @@ gNKTldrMtAg=
 -----END PGP PUBLIC KEY BLOCK-----
 ```
 
-<img src="https://www.torbox.ch/wp-content/uploads/2021/08/pgp_asc-e1628022322939.jpeg" style="width:200px;"/>OpenPGP key file: [publickey.anonym@torbox.ch-69e114c5c446133a0489a6c0e84929538341e840.asc](http://torbox.ch/data/publickey.anonym@torbox.ch-69e114c5c446133a0489a6c0e84929538341e840.asc)
+<img src="https://www.torbox.ch/wp-content/uploads/2021/08/pgp_asc-e1628022322939.jpeg" style="width:32px;"/>OpenPGP key file: [publickey.anonym@torbox.ch-69e114c5c446133a0489a6c0e84929538341e840.asc](http://torbox.ch/data/publickey.anonym@torbox.ch-69e114c5c446133a0489a6c0e84929538341e840.asc)
