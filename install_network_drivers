@@ -65,11 +65,25 @@ install_network_drivers()
 	cd install_network_driver
 	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
 	wget $FARS_ROBOTICS_DRIVERS$path$filename
-	echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
-	tar xzf $filename
-	chmod a+x install.sh
-	echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
-	sudo ./install.sh
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ] ; then
+		echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
+		tar xzf $filename
+		chmod a+x install.sh
+		echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
+		sudo ./install.sh
+	else
+		echo -e ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD $FARS_ROBOTICS_DRIVERS$path$filename!${NOCOLOR}"
+		echo -e "${RED}[+] Probably, the Kernel is too new, and the driver is not ready yet.${NOCOLOR}"
+		echo -e "${RED}[+] If necessary, install an older Linux Kernel, which is supported${NOCOLOR}"
+		echo -e "${RED}[+] with the following command: ${WHITE}cd ~/torbox; sudo bash install/step_back_to_kernel_5.10.49${NOCOLOR}"
+		echo -e "${RED}[+] After rebooting TorBox, rerun this menu entry.${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later, and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo ""
+		sleep 10
+	fi
 	cd ~
 	sudo rm -r install_network_driver
 	sleep 2
