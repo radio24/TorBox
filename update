@@ -112,7 +112,7 @@ update_firmware()
     echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
     echo " "
-    read -n 1 -s -r -p "Press any key to continue"
+    sleep 5
   fi
 }
 
@@ -344,7 +344,7 @@ select_and_install_tor()
     echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
     echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
     echo ""
-    read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    sleep 5
     sleep 5
     return 0
     exit 0
@@ -540,7 +540,8 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl daemon-reload
         echo ""
         echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
-        sleep 5
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
         BOOTMSG=1
       fi
 
