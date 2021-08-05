@@ -36,8 +36,7 @@ LOOP_NUMBER=0
 RECOMPILE=0
 TORBOX_UPDATE=0
 #TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
-NEW_IDENT="new_ident"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 LOG="/var/log/tor/automat.log"
 BOOTMSG=0
 ARGUMENT=$1
@@ -48,7 +47,7 @@ n=0
 ######## FUNCTIONS ###########
 
 # include lib
-.  lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # Check and create log file
 DATE=$(date)
@@ -85,7 +84,7 @@ if [ $ARGUMENT = 1 ]; then
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-    sudo ./torbox_wireless_manager.py -i $INTERNET_IFACE -a
+    sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a
     sleep 2
     (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
     sudo systemctl stop tor
