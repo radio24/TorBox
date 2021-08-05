@@ -3,5 +3,5 @@
         "match": "*Tor has not observed any network activity for the past*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash automat 2',
+        "command": 'sudo bash /home/torbox/torbox/automat 2',
     },

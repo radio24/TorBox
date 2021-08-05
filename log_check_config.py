@@ -28,27 +28,27 @@ matches = [
         "match": "*Most likely this means the Tor network is overloaded*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash automat 1',
+        "command": 'sudo bash /home/torbox/torbox/automat 1',
     },
     {
         "file": '/var/log/tor/notices.log',
         "match": "*Tor has not observed any network activity for the past*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash automat 2',
+        "command": 'sudo bash /home/torbox/torbox/automat 2',
     },
     {
         "file": '/var/log/tor/notices.log',
         "match": "We tried for * seconds to connect to * using exit *",  # use * as wildcard
         "match_count": 40,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash automat 3',
+        "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
     {
         "file": '/var/log/tor/notices.log',
         "match": "Tried for * seconds to get a connection to * Giving up.",  # use * as wildcard
         "match_count": 100,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash automat 3',
+        "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
 ]

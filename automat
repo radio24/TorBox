@@ -38,6 +38,7 @@ TORBOX_UPDATE=0
 #TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 NEW_IDENT="new_ident"
+LOG="/var/log/tor/automat.log"
 BOOTMSG=0
 ARGUMENT=$1
 i=0
@@ -49,36 +50,44 @@ n=0
 # include lib
 .  lib/torbox.lib
 
+# Check and create log file
+DATE=$(date)
+if [ -f "/var/log/tor/automat.log" ]; then
+	sleep 1
+else
+  (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
+fi
+
 # Entry 1: Reset Tor and force a change of the permanent entry node
 # This should work in every configuration
 if [ $ARGUMENT = 1 ]; then
 #  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
   sudo systemctl stop tor
-  (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
-  (sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
-  (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
-  (sudo rm -r /var/lib/tor/lock) 2> /dev/null
-  (sudo rm -r /var/lib/tor/state) 2> /dev/null
+  (sudo rm -r /var/lib/tor/cached-certs) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-consensus) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-descriptors) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-descriptors.new) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-microdesc-consensus) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-microdescs) &>/dev/null
+  (sudo rm -r /var/lib/tor/cached-microdescs.new) &>/dev/null
+  (sudo rm -r /var/lib/tor/diff-cache) &>/dev/null
+  (sudo rm -r /var/lib/tor/lock) &>/dev/null
+  (sudo rm -r /var/lib/tor/state) &>/dev/null
   sleep 2
 #  sudo rm -r /var/log/tor/*
 #  sudo -u debian-tor touch /var/log/tor/notices.log
-  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #1!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor
   sudo systemctl restart tor
 
 # Entry 2: After losing a wireless connection, we try to get a new one and restart Tor
 # This should work only with wlan0 and wlan1 and if the password of the wifi is stored
 elif [ $ARGUMENT = 2 ]; then
-  (INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | cut -c16-)) 2> /dev/null
+  INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
     sudo ./torbox_wireless_manager.py -i $INTERNET_IFACE -a
     sleep 2
-    (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+    (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
     sudo systemctl stop tor
     sudo systemctl restart tor
   fi
@@ -86,7 +95,7 @@ elif [ $ARGUMENT = 2 ]; then
 # Entry 3: Restart Tor, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
-  (printf "# !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo tee -a /var/log/tor/notices.log) 2> /dev/null
+  (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor
   sudo systemctl restart tor
 fi
