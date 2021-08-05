@@ -67,9 +67,10 @@ if [ $ARGUMENT = 1 ]; then
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
+		(printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2 - restart wifi connection.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
     sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a
     sleep 2
-    (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+    (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2 - restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
     sudo systemctl stop tor
     sudo systemctl restart tor
   fi
@@ -77,7 +78,13 @@ elif [ $ARGUMENT = 2 ]; then
 # Entry 3: Restart Tor, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
-  (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #3!!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
+	if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
+		(printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #3 - restart wifi connection.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+		sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a
+		sleep 2
+	fi
+  (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #3 - restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor
   sudo systemctl restart tor
 fi

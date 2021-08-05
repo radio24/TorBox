@@ -46,7 +46,7 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
-        "match": "Tried for * seconds to get a connection to * Giving up.",  # use * as wildcard
+        "match": "Tried for * seconds to get a connection to * Giving up*",  # use * as wildcard
         "match_count": 100,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 3',

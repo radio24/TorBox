@@ -348,7 +348,22 @@ if [ $exitstatus = 0 ]; then
     # Activate/deactivate TorBox's automatic counteractions
       elif [ $CHOICE = 12 ] ; then
       if [ "$LOGCHECK" = "Deactivate" ]; then
-        sudo killall log_check.py
+        echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
+        PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
+        set -- $PS_OUTPUT
+        PID=$2
+        echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
+        sudo kill $PID
+        sleep 2
+        sudo kill -9 $PID >/dev/null 2>&1
+        PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
+        set -- $PS_OUTPUT
+        PID=$2
+        echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
+        sudo kill $PID >/dev/null 2>&1
+        sleep 2
+        sudo kill -9 $PID >/dev/null 2>&1
+        echo -e "${RED}[+] ...configuration removed!${NOCOLOR}"
         sudo rm log_check_config.py
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
         clear
@@ -383,7 +398,6 @@ if [ $exitstatus = 0 ]; then
             (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
             sudo ./log_check.py &
             clear
-            echo
             echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
             sleep 5
           fi
