@@ -59,7 +59,7 @@ COMMIT="dc6dc9bc6692d808fcce5ace9d6209d33d5afbac"
 # include lib
 .  lib/torbox.lib
 
-
+cd ~/torbox
 INPUT=$(cat text/step_back-text)
 if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 	sudo rpi-update $COMMIT
