@@ -129,6 +129,8 @@ echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+echo -e "${RED}[+] Copy /etc/iptables.ipv4.nat${NOCOLOR}"
+sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
