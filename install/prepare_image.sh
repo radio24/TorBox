@@ -129,15 +129,9 @@ echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
-echo
-erase_logs
-echo
-echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
-sudo /usr/sbin/ntpdate pool.ntp.org
-sleep 3
-echo " "
-echo -e "${RED}[+] Setting the right start trigger${NOCOLOR}"
-sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
+echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
+# Find the bigest space waster packages: dpigs -H
+sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
@@ -145,6 +139,14 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 sudo systemctl daemon-reload
+echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
+sudo /usr/sbin/ntpdate pool.ntp.org
+sleep 3
+echo
+erase_logs
+echo
+echo -e "${RED}[+] Setting the right start trigger${NOCOLOR}"
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
 echo ""
 echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
 echo -e "${RED}[+] We will shutdown the TorBox now.${NOCOLOR}"
