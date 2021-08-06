@@ -569,6 +569,8 @@ sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install PySocks
 sudo pip3 install urwid
+sudo pip3 install Pillow
+sudo pip3 install requests
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""

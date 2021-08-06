@@ -500,7 +500,7 @@ sudo systemctl mask tor
 sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev
-# tor-geoipdb installiert auch tor
+# IMPORTANT tor-geoipdb installs also the tor package
 sudo apt-get -y install tor-geoipdb
 sudo systemctl mask tor
 sudo systemctl stop tor
@@ -537,6 +537,8 @@ sudo pip3 install pytesseract
 sudo pip3 install mechanize
 sudo pip3 install PySocks
 sudo pip3 install urwid
+sudo pip3 install Pillow
+sudo pip3 install requests
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
