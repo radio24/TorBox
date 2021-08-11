@@ -229,7 +229,9 @@ check_bridge_relay()
 # This function tests from where the Internet is coming
 check_interface_with_internet()
 {
+clear
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
+sleep 1
 IINTERFACE=""
 IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
 if [ "$IINTERFACE" != "" ] ; then
@@ -250,13 +252,31 @@ if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<-
 fi
 }
 
+# This function tests if TorBox's automatic counteractions are activated and still running
+check_log_check()
+{
+clear
+if ps -ax | grep "[l]og_check.py" ; then
+  clear
+else
+  clear
+  if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+    clear
+    sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
+    sleep 1
+  fi
+fi
+}
+
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
+sleep 1
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 check_fresh_install
 check_bridge_relay
 check_interface_with_internet
+check_log_check
 check_tor
 
 

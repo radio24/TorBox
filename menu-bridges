@@ -366,6 +366,7 @@ if [ $exitstatus = 0 ]; then
         echo -e "${RED}[+] ...configuration removed!${NOCOLOR}"
         sudo rm log_check_config.py
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
+        sleep 1
         clear
         echo
         echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
