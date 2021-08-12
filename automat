@@ -31,15 +31,16 @@
 ##### SET VARIABLES ######
 # IMPORTANT: rc.local needs absolute paths, it is not recommended to use the torbox.lib!
 ARGUMENT=$1
-LOG="/var/log/tor/automat.log"
+ARGUMENT2=$2
+LOG=""
 i=0
 n=0
 
 # Check and create log file
 DATE=$(date)
-if [ -f $LOG ]; then
-	sleep 1
-else
+sudo -u debian-tor test -f /var/log/tor/automat.log && LOG="/var/log/tor/automat.log"
+if [ "$LOG" == "" ]; then
+	LOG="/var/log/tor/automat.log"
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
 fi
 
@@ -64,16 +65,24 @@ if [ $ARGUMENT = 1 ]; then
 
 # Entry 2: After losing a wireless connection, we try to get a new one and restart Tor
 # This should work only with wlan0 and wlan1 and if the password of the wifi is stored
+# In case of tor bootstrapping problems (matching "*connections have failed*")
+# automat 2 1 is executed, which tries to reconnect the wireless connection (if available)
+# and flushes the tor configuration.
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
 		(printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2 - restart wifi connection.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
     sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a
     sleep 2
-    (printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2 - restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
-    sudo systemctl stop tor
-    sudo systemctl restart tor
+		if [ "$ARGUMENT2" != "" ]; then
+			bash automat $ARGUMENT2
+		else
+			(printf "[$DATE] - !! AUTOMAT RESTARTED TOR -- TRIGGER #2 - restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+    	sudo systemctl stop tor
+    	sudo systemctl restart tor
+		fi
   fi
+
 
 # Entry 3: Restart Tor, if needed.
 # This should work in every configuration

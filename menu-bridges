@@ -368,18 +368,18 @@ if [ $exitstatus = 0 ]; then
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
         sleep 1
         clear
-        echo
         echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
         sleep 5
       fi
       if [ "$LOGCHECK" = "Activate" ]; then
 
         ###### DISPLAY THE AVAILABLE OPTIONS ######
-        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT_10 $MENU_WIDTH 4 \
+        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
         "1" "Protection against entry guard failing and overloaded tor network" ON \
         "2" "Protection against interrupted WiFi connection with the Internet" ON \
         "3" "Protection against excessive number of failing tor circuits" ON \
-        "4" "Protection against excessive connection failing with tor circuits" ON 3>&1 1>&2 2>&3)
+        "4" "Protection against excessive connection failing with tor circuits" ON \
+        "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
 
         exitstatus=$?
 
@@ -393,6 +393,7 @@ if [ $exitstatus = 0 ]; then
             if [ $ARGUMENT = 2 ]; then (cat install/log_check_config/002 >> log_check_config.py) 2>/dev/null; fi
             if [ $ARGUMENT = 3 ]; then (cat install/log_check_config/003 >> log_check_config.py) 2>/dev/null; fi
             if [ $ARGUMENT = 4 ]; then (cat install/log_check_config/004 >> log_check_config.py) 2>/dev/null; fi
+            if [ $ARGUMENT = 5 ]; then (cat install/log_check_config/005 >> log_check_config.py) 2>/dev/null; fi
           done
           if [ $LOOP_NUMBER -gt 0 ]; then
             (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
