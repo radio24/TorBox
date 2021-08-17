@@ -1,19 +1,18 @@
 Congratulation, you got TorBox running!
 
-So far, we didn't establish contact with the Tor network but will do so
-after this dialogue box. In a highly authoritarian country, that may be
-risky because the ISP could see your tor connections, which could be
-seen as suspicious. For such situations and to circumvent sophisticated
-censorship, Tor introduced BRIDGES, which supports pluggable transports.
-These transports manipulate all Tor traffic between the client and its first
-hop such that it is not identifiable as a Tor connection.
+TorBox didn't connect the Tor network yet, but it will do so after this 
+dialogue box. In a highly authoritarian country, that may be risky because 
+connecting the tor network could be seen as suspicious. OBFS4 bridges with 
+pluggable transports hide the connection to the tor network. However, we 
+recommend only using this option if necessary because it is slower and 
+doesn't work if you are behind a tight configured firewall.
 
-First, we try to activate TorBox's already added OBFS4 bridges. If that
-fails, we will start the Countermeasure sub-menu so that you can try 
-SNOWFLAKE or MEEK as well as manually add new OBFS4 bridge information.
+Choosing this option, TorBox tries to activate its internal OBFS4 bridges. 
+If this fails, we will start the Countermeasure sub-menu so that you can 
+try SNOWFLAKE or MEEK as well as manually add new OBFS4 bridge information.
 
-We highlight it again: If your well-being depends on your anonymity, it is
-strongly advised not to use TorBox, but Tails!
+Again, we highlight that if your well-being depends on your anonymity, it 
+is strongly advised not to use TorBox, but Tails!
 
-Are you located in a highly authoritarian country and want to ACTIVATE OBFS4
-bridges for TorBox?
+Are you located in a highly authoritarian country and want to ACTIVATE 
+OBFS4 bridges with pluggable transports for TorBox (default is NO)?

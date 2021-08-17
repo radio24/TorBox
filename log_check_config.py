@@ -32,6 +32,13 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
+        "match": "*This could indicate a route manipulation attack, network overload, bad local network connectivity, or a bug.*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
         "match": "*Tor has not observed any network activity for the past*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
@@ -47,7 +54,7 @@ matches = [
     {
         "file": '/var/log/tor/notices.log',
         "match": "*Tried for * seconds to get a connection to * Giving up*",  # use * as wildcard
-        "match_count": 75,  # min matches to execute command
+        "match_count": 40,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
