@@ -49,7 +49,7 @@ HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7
 ## means that your firewall allows connections to everything inside net 99,
 ## rejects port 80 connections to net 18, and accepts connections to port 80
 ## otherwise.
-#ReachableAddresses *:80, *:443
+#ReachableAddresses accept *:443, accept *:80
 
 ## TO OVERCOME CENSORSHIP, START HERE!
 ######################################################
