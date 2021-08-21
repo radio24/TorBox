@@ -34,7 +34,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=15
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -192,13 +192,11 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "===" "=============================================[More bridges]===" \
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
-"===" "================================================[Vanguards]===" \
-" 10" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-" 11" "Display the Vanguards log (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 12" $LOGCHECK" TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
-" 13" "Countermeasure against a disconnection when idle feature - "$PING \
-" 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
+" 10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
+" 11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
+" 12" "Countermeasure against a disconnection when idle feature - "$PING \
+" 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -308,45 +306,8 @@ if [ $exitstatus = 0 ]; then
       sudo bash meek-azure $MEEKSTRING $SNOWSTRING
       read_config
 
-    # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
-    elif [ $CHOICE = 10 ] ; then
-      if [ "$VANGUARDS" = "Deactivate" ]; then
-        sudo systemctl stop vanguards@default.service
-        sudo systemctl disable vanguards@default.service
-        sudo systemctl daemon-reload
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
-        echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
-        i=1
-        while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
-        do
-          sleep 1
-          echo -e "${RED}$i${NOCOLOR}"
-        done
-      fi
-      if [ "$VANGUARDS" = "Activate" ]; then
-        INPUT=$(cat text/vanguards-explanation-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo systemctl enable vanguards@default.service
-          sudo systemctl restart vanguards@default.service
-          sudo systemctl daemon-reload
-          clear
-          echo
-          echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-          sleep 5
-        fi
-      fi
-      read_config
-
-    # Display the Vanguards log
-      elif [ $CHOICE = 11 ] ; then
-      clear
-      trap "bash menu-bridges; exit 0" SIGINT
-      sudo tail -f -n 25 /var/log/tor/vanguards.log
-
     # Activate/deactivate TorBox's automatic counteractions
-      elif [ $CHOICE = 12 ] ; then
+    elif [ $CHOICE = 10 ] ; then
       if [ "$LOGCHECK" = "Deactivate" ]; then
         echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
         PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
@@ -407,8 +368,39 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
 
+    # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
+    elif [ $CHOICE = 11 ] ; then
+      if [ "$VANGUARDS" = "Deactivate" ]; then
+        sudo systemctl stop vanguards@default.service
+        sudo systemctl disable vanguards@default.service
+        sudo systemctl daemon-reload
+        clear
+        echo
+        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
+        echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
+        i=1
+        while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
+        do
+          sleep 1
+          echo -e "${RED}$i${NOCOLOR}"
+        done
+      fi
+      if [ "$VANGUARDS" = "Activate" ]; then
+        INPUT=$(cat text/vanguards-explanation-text)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo systemctl enable vanguards@default.service
+          sudo systemctl restart vanguards@default.service
+          sudo systemctl daemon-reload
+          clear
+          echo
+          echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+          sleep 5
+        fi
+      fi
+      read_config
+
     # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 13 ] ; then
+    elif [ $CHOICE = 12 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
         whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
         ping -q $PING_SERVER >/dev/null &
@@ -425,7 +417,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 14 ]; then
+    elif [ $CHOICE = 13 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
