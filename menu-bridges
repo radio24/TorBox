@@ -376,7 +376,7 @@ if [ $exitstatus = 0 ]; then
         sudo systemctl daemon-reload
         clear
         echo
-        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
+        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
         echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
         i=1
         while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
@@ -393,7 +393,7 @@ if [ $exitstatus = 0 ]; then
           sudo systemctl daemon-reload
           clear
           echo
-          echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+          echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
           sleep 5
         fi
       fi

@@ -24,7 +24,7 @@
 # entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces <outgoing interface> <incoming interface> <captive portal>
+# ./set_interfaces <outgoing interface> <incoming interface> <captive portal> <restarting_tor>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
@@ -45,6 +45,11 @@
 # 1	->	For a sucessful connection to the Internet login/password/phone number etc. is required (this is usually the case
 #       with provider of free wireless network access in hotels, airports, Internet cafées etc.).
 #
+# Possible values for <restarting_tor>:
+# 0	->	Don't restart tor.
+# 1	->	Restart tor
+#
+#
 ###### SET VARIABLES ######
 
 #Colors
@@ -64,6 +69,7 @@ INT_NET="$MY_OWN_IP/8"
 O_DEVICE=$1
 I_DEVICE=$2
 CAPTIVE=$3
+RESTARTTOR=$4
 RUNFILE="run/torbox.run"
 
 
@@ -188,7 +194,8 @@ else
 fi
 
 ###### FINISH ######
-echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
-sleep 5
-sudo systemctl stop tor
-sudo systemctl restart tor
+if [ $RESTARTTOR -eq 1 ]; then
+	echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
+	sudo systemctl stop tor
+	sudo systemctl restart tor
+fi

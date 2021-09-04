@@ -23,9 +23,9 @@
 # This file, together with log_check.py, automatically reacts to log-related events.
 #
 # SYNTAX
-# sudo bash automat <entry>
+# sudo bash automat <entry1> [<entry2>]
 #
-# <entry> Entry number which will be executed
+# <entryX> Entry number which will be executed
 #
 #
 ##### SET VARIABLES ######
