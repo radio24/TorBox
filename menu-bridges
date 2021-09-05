@@ -34,7 +34,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=13
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -83,6 +83,7 @@ read_config()
 
   # OBFS4STRING represents the status of the Meek-Azure bridging mode
   MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
+  clear
   if [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
       OBFS4STRING="ON!"
       OBFS4STRINGb="Deactivate"
@@ -94,6 +95,7 @@ read_config()
 
   # MEEKSTRING represents the status of the Meek-Azure bridging mode
   MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
+  clear
   if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
       MEEKSTRING="ON!"
       MEEKSTRINGb="Deactivate"
@@ -105,6 +107,7 @@ read_config()
 
   # SNOWSTRING represents the status of the Snowflake bridging mode
   MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)
+  clear
   if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
       SNOWSTRING="ON!"
       SNOWSTRINGb="Deactivate"
@@ -120,6 +123,7 @@ read_config()
 
   # Is TorBox connected to a VPN?
   tun0up=$(ip link | grep tun0)
+  clear
   if [ "$tun0up" = "" ]; then
     VPNSTRING1="Connect"
     VPNSTRING2="to"
@@ -137,6 +141,15 @@ read_config()
       clear
       LOGCHECK="Activate"
       LOGCHECKSTATUSb="OFF"
+    fi
+
+    # Is the Countermeasure against a tightly configured firewall active?
+    MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
+    clear
+    if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
+      FIREWALL="ON"
+    else
+      FIREWALL="OFF"
     fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
@@ -195,8 +208,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "===" "=====================================[More Countermeasures]===" \
 " 10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
 " 11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-" 12" "Countermeasure against a disconnection when idle feature - "$PING \
-" 13" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
+" 12" "Countermeasure against a tightly configured firewall - "$FIREWALL \
+" 13" "Countermeasure against a disconnection when idle feature - "$PING \
+" 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
@@ -399,17 +413,57 @@ if [ $exitstatus = 0 ]; then
       fi
       read_config
 
+      # Countermeasure against a tightly configured firewall
+      elif [ $CHOICE = 12 ] ; then
+        if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
+          INPUT=$(cat text/firewall-text-on)
+          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+            sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+            INPUT=$(cat text/restart-tor-text)
+            if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+              clear
+              restarting_tor menu-bridges
+              clear
+              echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
+              sleep 2
+            else
+              clear
+              echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet actiuvated!${NOCOLOR}"
+              sleep 2
+            fi
+          fi
+        fi
+        if [ "$FIREWALL" = "ON" ]; then
+          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+            sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+            INPUT=$(cat text/restart-tor-text)
+            if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+              clear
+              restarting_tor menu-bridges
+              clear
+              echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
+              sleep 2
+            else
+              clear
+              echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactiuvated!${NOCOLOR}"
+              sleep 2
+            fi
+          fi
+        fi
+
     # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 12 ] ; then
+    elif [ $CHOICE = 13 ] ; then
       if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
-        whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-        ping -q $PING_SERVER >/dev/null &
-        #Alternative Möglichkeit: screen -dm ping google.com
-        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-        sleep 2
+        INPUT=$(cat text/ping-text-on)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+          ping -q $PING_SERVER >/dev/null &
+          #Alternative Möglichkeit: screen -dm ping google.com
+          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+          sleep 2
+        fi
       fi
       if [ "$PING" = "ON" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo killall ping
           echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
           sleep 2
@@ -417,7 +471,7 @@ if [ $exitstatus = 0 ]; then
       fi
 
     # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 13 ]; then
+    elif [ $CHOICE = 14 ]; then
       if [ "$tun0up" = "" ] ; then
         INPUT=$(cat text/connecting-VPN-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
