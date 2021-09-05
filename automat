@@ -72,12 +72,11 @@ if [ $ARGUMENT = 1 ]; then
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-		(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - " | sudo -u debian-tor tee -a $LOG) &>/dev/null
     RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
-			(printf "successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else
-			(printf "failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
     sleep 2
 		if [ "$ARGUMENT2" != "" ]; then
@@ -95,12 +94,11 @@ elif [ $ARGUMENT = 2 ]; then
 elif [ $ARGUMENT = 3 ]; then
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
 	if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-		(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - " | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
-			(printf "successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else
-			(printf "failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
 		sleep 2
 	fi
