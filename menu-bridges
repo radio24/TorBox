@@ -338,8 +338,10 @@ if [ $exitstatus = 0 ]; then
         sudo kill $PID >/dev/null 2>&1
         sleep 2
         sudo kill -9 $PID >/dev/null 2>&1
-        echo -e "${RED}[+] ...configuration removed!${NOCOLOR}"
+        echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
         sudo rm log_check_config.py
+        echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+        sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm
         sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
         sleep 1
         clear
@@ -385,9 +387,13 @@ if [ $exitstatus = 0 ]; then
     # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
     elif [ $CHOICE = 11 ] ; then
       if [ "$VANGUARDS" = "Deactivate" ]; then
+        echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
         sudo systemctl stop vanguards@default.service
         sudo systemctl disable vanguards@default.service
         sudo systemctl daemon-reload
+        echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+        sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
+        sleep 1
         clear
         echo
         echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
