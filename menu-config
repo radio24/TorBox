@@ -54,6 +54,12 @@ NOCOLOR='\033[0m'
 if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
 
+# Identify the Operation System
+CHECK_OS="OTHER"
+if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
+if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
+if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+
 #Other variables
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
@@ -636,16 +642,20 @@ if [ $exitstatus = 0 ]; then
       		    if [ $DISABLED_CHOICE = 1 ]; then
                 clear
                 echo " "
-                echo -e "${RED}[+] Disabling TorBox's WLAN temporary now...${NOCOLOR}"
+                echo -e "${RED}[+] Temporary disabling TorBox's WLAN...${NOCOLOR}"
                 sudo systemctl stop hostapd
+                sudo systemctl daemon-reload
                 sleep 2
       		    elif [ $DISABLED_CHOICE = 2 ]; then
                 clear
-                echo -e "${RED}[+] Disabling TorBox's WLAN now...${NOCOLOR}"
-                sudo systemctl stop hostapd
-                echo -e "${RED}[+] Make it permanent...${NOCOLOR}"
-                sudo systemctl disable hostapd
-                sleep 2
+                echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
+                sudo systemctl mask --now hostapd
+                sudo systemctl daemon-reload
+                if [ "$CHECK_OS" == "Ubuntu" ]; then
+                  sudo cp etc/rc.local.disable_wlan.ubuntu /etc/rc.local
+                else
+                  sudo cp etc/rc.local.disable_wlan /etc/rc.local
+                fi
               fi
             fi
           else
@@ -661,8 +671,15 @@ if [ $exitstatus = 0 ]; then
           clear
           echo " "
           echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
+          if [ "$CHECK_OS" == "Ubuntu" ]; then
+            sudo cp etc/rc.local.ubuntu /etc/rc.local
+          else
+            sudo cp etc/rc.local /etc/rc.local
+          fi
+          sudo systemctl unmask hostapd
           sudo systemctl enable hostapd
           sudo systemctl start hostapd
+          sudo systemctl daemon-reload
           sleep 2
         fi
       fi

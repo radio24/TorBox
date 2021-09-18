@@ -1,0 +1,20 @@
+#!/bin/sh -e
+#
+# Added by TorBox
+if ip link | grep wlan1 | grep "state DOWN" ; then
+  sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
+  sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
+  sleep 5
+fi
+
+if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+  sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
+  sleep 5
+fi
+
+sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+sudo systemctl start dnsmasq
+sleep 10
+sudo /usr/sbin/ntpdate pool.ntp.org
+sleep 5
+sudo systemctl stop dnsmasq

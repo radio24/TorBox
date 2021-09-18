@@ -518,6 +518,7 @@ if [ $exitstatus = 0 ]; then
         # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
         online_check
         if [ $OCHECK == 0 ]; then
+          clear
           echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
           echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
           echo " "
@@ -556,6 +557,7 @@ if [ $exitstatus = 0 ]; then
           # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
           online_check
           if [ $OCHECK == 0 ]; then
+            clear
             echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
             echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
             echo " "
@@ -611,6 +613,7 @@ if [ $exitstatus = 0 ]; then
     online_check $TORURL 1 1
     # We can only use Clearnet if allowed!
     if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+      clear
       echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
       echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
       echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -620,6 +623,7 @@ if [ $exitstatus = 0 ]; then
       exit 1
     fi
     if [ $OCHECK == 0 ]; then
+      clear
       echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
       echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
       echo " "
@@ -666,6 +670,7 @@ if [ $exitstatus = 0 ]; then
         online_check default 1 1
         # We can only use Clearnet if allowed!
         if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+          clear
           echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
           echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
           echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -675,6 +680,7 @@ if [ $exitstatus = 0 ]; then
           exit 1
         fi
         if [ $OCHECK == 0 ]; then
+          clear
           echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
           echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
           echo " "
