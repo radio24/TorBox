@@ -25,8 +25,7 @@
 # such a portal, it is necessary to establish a direct connection to the wireless
 # network provider. This procedure temporarily uses an INSECURE CONNECTION. The user
 # may CLOSE ALL HIS APPLICATIONS ON HIS CLIENT DEVICES to prevent the leakage of information
-# during the established INSECURE CONNECTION. This version of set_captive supports
-# two different interfaces.
+# during the established INSECURE CONNECTION. 
 #
 # SYNTAX
 # ./set_captive_2 <outgoing interface> <incoming interface> <incoming interface>

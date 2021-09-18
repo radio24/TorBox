@@ -21,10 +21,10 @@
 #
 # DESCRIPTION
 # This file sets all preconditions and defines all iptables rules to route the
-# entire data stream from the connected clients (from two different interfaces) through the Tor network.
+# entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces_2 <outgoing interface> <incoming interface> <incoming interface> <captive portal> <restarting_tor>
+# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <captive portal> <restarting_tor>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
@@ -34,11 +34,16 @@
 # usb0  ->  TorBox is connected to the Internet through an USB adapter or a cellular interface.
 # ppp0 ->   TorBox is connected to the Internet through a cellular interface
 #
-# The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
+# The <incoming interface 1> and <incoming interface 2> represent the interfaces where the client-devices
+# are connected to the TorBox. Possible values for <incoming interface 1> and <incoming interface 2>:
 # eth0  -> 	The device is connected with a cable (ethernet interface).
 # eth1  -> 	The device is connected with a cable (USB ethernet adapter).
 # wlan0 -> 	The device is connected via wireless network (onboard chip)
 # wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
+#
+# Both, <incoming interface 1> and <incoming interface 2>, have to be set.
+# If <incoming interface 1> is not used, the default should be "wlan0".
+# If <incoming interface 2> is not used, the default should be "eth0".
 #
 # Possible values for <captive portal>:
 # 0	->	The network connection is open -- no login/password/phone number etc. is required.
