@@ -1,6 +1,12 @@
 #!/bin/sh -e
 #
 # Added by TorBox
+if ip link | grep wlan0 | grep "state DOWN" ; then
+  sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a
+  sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" /home/torbox/torbox/run/torbox.run
+  sleep 5
+fi
+
 if ip link | grep wlan1 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
   sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
