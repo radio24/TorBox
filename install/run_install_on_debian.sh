@@ -117,9 +117,7 @@ VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
-# DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
-#TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
 TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
 TORBOXMENU_BRANCHNAME="master"
 
