@@ -120,11 +120,10 @@ VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
-# DONT FORGET TO CHANGE IT BACK !!
 # TorBox Repository
-#TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
-TORBOX_USED="https://github.com/radio24/TorBox/archive/refs/heads/v.0.4.2.zip"
-TORBOXMENU_BRANCHNAME="v.0.4.2"
+TORBOXURL="https://github.com/radio24/TorBox/"
+TORBOXMENU_BRANCHNAME="master"
+TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
