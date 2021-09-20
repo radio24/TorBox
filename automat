@@ -79,6 +79,15 @@ elif [ $ARGUMENT = 2 ]; then
 			(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
     sleep 2
+		# Is INTERNET_IFACE ready?
+		STATICIP1=$(ip addr show $INTERNET_IFACE | grep -w inet)
+		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP1" ] ; then
+			(printf "[$DATE] - TACA TRIGGER #2a - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			sudo ifdown $INTERNET_IFACE
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup $INTERNET_IFACE
+		fi
 		if [ "$ARGUMENT2" != "" ]; then
 			(printf "[$DATE] - TACA TRIGGER #2b - Changing to TACA TRIGGER $ARGUMENT2.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 			bash automat $ARGUMENT2
@@ -101,6 +110,15 @@ elif [ $ARGUMENT = 3 ]; then
 			(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
 		sleep 2
+		# Is INTERNET_IFACE ready?
+		STATICIP1=$(ip addr show $INTERNET_IFACE | grep -w inet)
+		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP1" ] ; then
+			(printf "[$DATE] - TACA TRIGGER #3  - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			sudo ifdown $INTERNET_IFACE
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup $INTERNET_IFACE
+		fi
 	fi
   (printf "[$DATE] - TACA TRIGGER #3  - Restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor
