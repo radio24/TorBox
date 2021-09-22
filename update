@@ -128,7 +128,7 @@ update_tor_preparations()
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
   else
-    readarray -t torversion_datesorted < <(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
+    readarray -t torversion_datesorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
   fi
   #How many tor version did we fetch?
 	number_torversion=${#torversion_datesorted[*]}

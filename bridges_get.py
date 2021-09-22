@@ -37,7 +37,7 @@ TMP_DIR = '/tmp'
 # url where we get the bridges
 BRIDGES_URL = 'https://bridges.torproject.org/bridges?transport=obfs4'
 # Tor socks
-SOCKS_HOST = '192.168.42.1'
+SOCKS_HOST = '127.0.0.1'
 SOCKS_PORT = 9050
 
 # -

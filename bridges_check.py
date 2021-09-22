@@ -47,7 +47,7 @@ from binascii import a2b_hex
 from hashlib import sha1
 
 # Tor socks
-SOCKS_HOST = '192.168.42.1'
+SOCKS_HOST = '127.0.0.1'
 SOCKS_PORT = 9050
 
 # get the options from cmd line
