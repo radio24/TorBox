@@ -65,7 +65,7 @@ BRIDGESTRING=""
 LOOP_NUMBER=0
 i=0
 j=0
-PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13- | sed 's`^https://``g' | sed 's`^http://``g') 2> /dev/null
+PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2> /dev/null
 
 
 
@@ -117,14 +117,14 @@ read_config()
       SNOWSTRINGb="Activate"
   fi
 
-  if [ "${BRIDGESTRING}" = "" ]; then
+  if [ -z "${BRIDGESTRING}" ]; then
     BRIDGESTRING="Bridge mode OFF!"
   fi
 
   # Is TorBox connected to a VPN?
   tun0up=$(ip link | grep tun0)
   clear
-  if [ "$tun0up" = "" ]; then
+  if [ -z "$tun0up" ]; then
     VPNSTRING1="Connect"
     VPNSTRING2="to"
   else
@@ -212,325 +212,322 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 " 13" "Countermeasure against a disconnection when idle feature - "$PING \
 " 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
-exitstatus=$?
+case "$CHOICE" in
 
-if [ $exitstatus = 0 ]; then
-  if [ "$CHOICE" != " " ]; then
+  # Display the read.me
+  1)
+    INPUT=$(cat text/help-bridges-text)
+    if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      clear
+    fi
+  ;;
 
-    # Display the read.me
-    if [ $CHOICE = 1 ]; then
-      INPUT=$(cat text/help-bridges-text)
-      if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        clear
-      fi
-
-    # Activate bridges
-    elif [ $CHOICE = 2 ]; then
-      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-        whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-      fi
-      if [ $number_configured_bridges_total = 0 ]; then
-        INPUT=$(cat text/add-bridges-first-text)
-        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo bash bridges_add_old "$MODE_BRIDGES" 0
-        else
-          deactivate_obfs4_bridges
-          trap "bash menu-bridges; exit 0" EXIT
-          exit 0
-        fi
-      fi
-      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-        INPUT=$(cat text/activate-bridges-text)
-        if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo bash bridges_activate_old
-        else
-          trap "bash menu-bridges; exit 0" EXIT
-          exit 0
-        fi
+  # Activate bridges
+  2)
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+    if [ -z $number_configured_bridges_total ]; then
+      INPUT=$(cat text/add-bridges-first-text)
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo bash bridges_add_old "$MODE_BRIDGES" 0
       else
-        sudo bash bridges_activate_old
-      fi
-      read_config
-
-    # Add bridges
-    elif [ $CHOICE = 3 ]; then
-      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-        whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-      fi
-      sudo bash bridges_add_old "$MODE_BRIDGES" 1
-      read_config
-
-    # List all bridges configured in torrc and if online display the status of the bridges
-    elif [ $CHOICE = 4 ]; then
-      list_all_obfs4_bridges
-
-    # Remove bridges
-    elif [ $CHOICE = 5 ]; then
-      if [ $number_configured_bridges_total = 0 ]; then
-        clear
-        echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
-        sleep 5
-      else
-        whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
-        sudo bash bridges_remove_old "$MODE_BRIDGES"
-        read_config
-      fi
-
-    # Deactivate bridges
-    elif [ $CHOICE = 6 ]; then
-      if [ $number_configured_bridges_total = 0 ]; then
-        clear
-        echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
-        sleep 5
-      else
-        if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-          clear
-          echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
-          echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
-          sleep 5
-        else
-          whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-          sudo bash bridges_deactivate_old
-          read_config
-        fi
-      fi
-
-    # Enter the advanced configuration editor
-    elif [ $CHOICE = 7 ]; then
-      INPUT=$(cat text/advanced-bridges-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo cp ${TORRC} ${BAK}
-        sudo nano ${TORRC}
-        read_config
-      fi
-
-    # Use Snowflake to circumvent censorship
-    elif [ $CHOICE = 8 ]; then
-      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
-        whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-      fi
-      sudo bash snowflake $SNOWSTRING $MEEKSTRING
-      read_config
-
-    # Use Meek-Azure to circumvent censorship
-    elif [ $CHOICE = 9 ]; then
-      if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-        whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-      fi
-      sudo bash meek-azure $MEEKSTRING $SNOWSTRING
-      read_config
-
-    # Activate/deactivate TorBox's automatic counteractions
-    elif [ $CHOICE = 10 ] ; then
-      if [ "$LOGCHECK" = "Deactivate" ]; then
-        echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
-        PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
-        set -- $PS_OUTPUT
-        PID=$2
-        echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
-        sudo kill $PID
-        sleep 2
-        sudo kill -9 $PID >/dev/null 2>&1
-        PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
-        set -- $PS_OUTPUT
-        PID=$2
-        echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
-        sudo kill $PID >/dev/null 2>&1
-        sleep 2
-        sudo kill -9 $PID >/dev/null 2>&1
-        echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
-        sudo rm log_check_config.py
-        echo -e "${RED}[+] ...log removed!${NOCOLOR}"
-        sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm
-        sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
-        sleep 1
-        clear
-        echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
-        sleep 5
-      fi
-      if [ "$LOGCHECK" = "Activate" ]; then
-
-        ###### DISPLAY THE AVAILABLE OPTIONS ######
-        CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
-        "1" "Protection against entry guard failing and overloaded tor network" ON \
-        "2" "Protection against interrupted WiFi connection with the Internet" ON \
-        "3" "Protection against excessive number of failing tor circuits" ON \
-        "4" "Protection against excessive connection failing with tor circuits" ON \
-        "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
-
-        exitstatus=$?
-
-        if [ $exitstatus = 0 ]; then
-          mapfile -t CHOICE2 <<< "$CHOICE2"
-          for ARGUMENT in "${CHOICE2[@]}"; do
-            if [ "$ARGUMENT" = "" ]; then exit 0 ; fi
-            LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-            if [ $LOOP_NUMBER = 1 ]; then (cp install/log_check_config/header log_check_config.py) 2>/dev/null; fi
-            if [ $ARGUMENT = 1 ]; then (cat install/log_check_config/001 >> log_check_config.py) 2>/dev/null; fi
-            if [ $ARGUMENT = 2 ]; then (cat install/log_check_config/002 >> log_check_config.py) 2>/dev/null; fi
-            if [ $ARGUMENT = 3 ]; then (cat install/log_check_config/003 >> log_check_config.py) 2>/dev/null; fi
-            if [ $ARGUMENT = 4 ]; then (cat install/log_check_config/004 >> log_check_config.py) 2>/dev/null; fi
-            if [ $ARGUMENT = 5 ]; then (cat install/log_check_config/005 >> log_check_config.py) 2>/dev/null; fi
-          done
-          if [ $LOOP_NUMBER -gt 0 ]; then
-            (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
-            (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
-            sudo ./log_check.py &
-            clear
-            echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
-            sleep 5
-          fi
-          read_config
-        fi
-      fi
-
-    # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
-    elif [ $CHOICE = 11 ] ; then
-      if [ "$VANGUARDS" = "Deactivate" ]; then
-        echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
-        sudo systemctl stop vanguards@default.service
-        sudo systemctl disable vanguards@default.service
-        sudo systemctl daemon-reload
-        echo -e "${RED}[+] ...log removed!${NOCOLOR}"
-        sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
-        sleep 1
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
-        echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
-        i=1
-        while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
-        do
-          sleep 1
-          echo -e "${RED}$i${NOCOLOR}"
-        done
-      fi
-      if [ "$VANGUARDS" = "Activate" ]; then
-        INPUT=$(cat text/vanguards-explanation-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo systemctl enable vanguards@default.service
-          sudo systemctl restart vanguards@default.service
-          sudo systemctl daemon-reload
-          clear
-          echo
-          echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-          sleep 5
-        fi
-      fi
-      read_config
-
-      # Countermeasure against a tightly configured firewall
-      elif [ $CHOICE = 12 ] ; then
-        if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
-          INPUT=$(cat text/firewall-text-on)
-          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-            sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              clear
-              restarting_tor menu-bridges
-              clear
-              echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
-              sleep 2
-            else
-              clear
-              echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet actiuvated!${NOCOLOR}"
-              sleep 2
-            fi
-          fi
-        fi
-        if [ "$FIREWALL" = "ON" ]; then
-          if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-            sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-            INPUT=$(cat text/restart-tor-text)
-            if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-              clear
-              restarting_tor menu-bridges
-              clear
-              echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
-              sleep 2
-            else
-              clear
-              echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactiuvated!${NOCOLOR}"
-              sleep 2
-            fi
-          fi
-        fi
-
-    # Countermeasure against a disconnection when idle feature
-    elif [ $CHOICE = 13 ] ; then
-      if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
-        INPUT=$(cat text/ping-text-on)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-          ping -q $PING_SERVER >/dev/null &
-          #Alternative Möglichkeit: screen -dm ping google.com
-          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-          sleep 2
-        fi
-      fi
-      if [ "$PING" = "ON" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          sudo killall ping
-          echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
-          sleep 2
-        fi
-      fi
-
-    # Connect/Disconnect TorBox to/from VPN
-    elif [ $CHOICE = 14 ]; then
-      if [ "$tun0up" = "" ] ; then
-        INPUT=$(cat text/connecting-VPN-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          connecting_to_VPN
-          sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-          echo ""
-          echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-          echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
-          sleep 5
-          tun0up=$(ip link | grep tun0)
-          if [ "$tun0up" != "" ] ; then
-            echo ""
-            echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-            wget -q --spider $CHECK_URL
-            if [ $? -eq 0 ]; then
-              echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-            else
-              echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-              echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-              echo ""
-              add_open_dns
-              (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
-              sleep 2
-              echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-              wget -q --spider $CHECK_URL
-              if [ $? -eq 0 ]; then
-                echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-              else
-                echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-              fi
-            fi
-          fi
-        fi
-      else
-        INPUT=$(cat text/disconnecting-VPN-text)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-          clear
-          echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
-          sudo killall openvpn
-          echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
-          sleep 15
-          echo ""
-          echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-          echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
-          sleep 5
-          tun0up=$(ip link | grep tun0)
-        fi
+        deactivate_obfs4_bridges
+        trap "bash menu-bridges; exit 0" EXIT
+        exit 0
       fi
     fi
-  fi
-else
-  clear
-  exit 0
-fi
+    if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+      INPUT=$(cat text/activate-bridges-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo bash bridges_activate_old
+      else
+        trap "bash menu-bridges; exit 0" EXIT
+        exit 0
+      fi
+    else
+      sudo bash bridges_activate_old
+    fi
+    read_config
+  ;;
+
+  # Add bridges
+  3)
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+    sudo bash bridges_add_old "$MODE_BRIDGES" 1
+    read_config
+  ;;
+
+  # List all bridges configured in torrc and if online display the status of the bridges
+  4)
+    list_all_obfs4_bridges
+  ;;
+
+  # Remove bridges
+  5)
+    if [ -z $number_configured_bridges_total ]; then
+      clear
+      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
+      sleep 5
+    else
+      whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
+      sudo bash bridges_remove_old "$MODE_BRIDGES"
+      read_config
+    fi
+  ;;
+
+  # Deactivate bridges
+  6)
+    if [ -z $number_configured_bridges_total ]; then
+      clear
+      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
+      sleep 5
+    else
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ] || [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+        clear
+        echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
+        echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
+        sleep 5
+      else
+        whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+        sudo bash bridges_deactivate_old
+        read_config
+      fi
+    fi
+  ;;
+
+  # Enter the advanced configuration editor
+  7)
+    INPUT=$(cat text/advanced-bridges-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      sudo cp ${TORRC} ${BAK}
+      sudo nano ${TORRC}
+      read_config
+    fi
+  ;;
+
+  # Use Snowflake to circumvent censorship
+  8)
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+    sudo bash snowflake $SNOWSTRING $MEEKSTRING
+    read_config
+  ;;
+
+  # Use Meek-Azure to circumvent censorship
+  9)
+    if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
+    read_config
+  ;;
+
+  # Activate/deactivate TorBox's automatic counteractions
+  10)
+    if [ "$LOGCHECK" = "Deactivate" ]; then
+      echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
+      PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
+      set -- $PS_OUTPUT
+      PID=$2
+      echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
+      sudo kill $PID
+      sleep 2
+      sudo kill -9 $PID >/dev/null 2>&1
+      PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
+      set -- $PS_OUTPUT
+      PID=$2
+      echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
+      sudo kill $PID >/dev/null 2>&1
+      sleep 2
+      sudo kill -9 $PID >/dev/null 2>&1
+      echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
+      sudo rm log_check_config.py
+      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+      sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm
+      sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
+      sleep 1
+      clear
+      echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
+      sleep 5
+    fi
+    if [ "$LOGCHECK" = "Activate" ]; then
+
+      ###### DISPLAY THE AVAILABLE OPTIONS ######
+      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+      "1" "Protection against entry guard failing and overloaded tor network" ON \
+      "2" "Protection against interrupted WiFi connection with the Internet" ON \
+      "3" "Protection against excessive number of failing tor circuits" ON \
+      "4" "Protection against excessive connection failing with tor circuits" ON \
+      "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
+
+      if [ -z "$CHOICE2" ]; then
+        mapfile -t CHOICE2 <<< "$CHOICE2"
+        for ARGUMENT in "${CHOICE2[@]}"; do
+          [ -z "$ARGUMENT" ] && exit 0
+          LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+          [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) 2>/dev/null
+          [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" log_check_config.py) 2>/dev/null
+        done
+        if [ -n $LOOP_NUMBER ]; then
+          (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
+          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
+          sudo ./log_check.py &
+          clear
+          echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
+          sleep 5
+        fi
+        read_config
+      fi
+    fi
+  ;;
+
+  # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
+  11)
+    if [ "$VANGUARDS" = "Deactivate" ]; then
+      echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
+      sudo systemctl stop vanguards@default.service
+      sudo systemctl disable vanguards@default.service
+      sudo systemctl daemon-reload
+      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+      sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
+      sleep 1
+      clear
+      echo
+      echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
+      echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
+      i=1
+      while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
+      do
+        sleep 1
+        echo -e "${RED}$i${NOCOLOR}"
+      done
+    fi
+    if [ "$VANGUARDS" = "Activate" ]; then
+      INPUT=$(cat text/vanguards-explanation-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo systemctl enable vanguards@default.service
+        sudo systemctl restart vanguards@default.service
+        sudo systemctl daemon-reload
+        clear
+        echo
+        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+        sleep 5
+      fi
+    fi
+    read_config
+  ;;
+
+    # Countermeasure against a tightly configured firewall
+    12)
+      if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
+        INPUT=$(cat text/firewall-text-on)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+          sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+          INPUT=$(cat text/restart-tor-text)
+          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            restarting_tor menu-bridges
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
+            sleep 2
+          else
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet actiuvated!${NOCOLOR}"
+            sleep 2
+          fi
+        fi
+      fi
+      if [ "$FIREWALL" = "ON" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+          INPUT=$(cat text/restart-tor-text)
+          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            restarting_tor menu-bridges
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
+            sleep 2
+          else
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactiuvated!${NOCOLOR}"
+            sleep 2
+          fi
+        fi
+      fi
+    ;;
+
+  # Countermeasure against a disconnection when idle feature
+  13)
+    if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+      INPUT=$(cat text/ping-text-on)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        ping -q $PING_SERVER >/dev/null &
+        #Alternative Möglichkeit: screen -dm ping google.com
+        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+        sleep 2
+      fi
+    fi
+    if [ "$PING" = "ON" ]; then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        sudo killall ping
+        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
+        sleep 2
+      fi
+    fi
+  ;;
+
+  # Connect/Disconnect TorBox to/from VPN
+  14)
+    if [ -z "$tun0up" ] ; then
+      INPUT=$(cat text/connecting-VPN-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        connecting_to_VPN
+        sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+        echo ""
+        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+        wget -q --spider $CHECK_URL
+        if [ $? -eq 0 ]; then
+          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+        else
+          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
+          echo ""
+          add_open_dns
+          (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+          sleep 2
+          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
+          wget -q --spider $CHECK_URL
+          if [ $? -eq 0 ]; then
+            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
+          else
+            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+          fi
+        fi
+      fi
+    else
+      INPUT=$(cat text/disconnecting-VPN-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        clear
+        echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
+        sudo killall openvpn
+        echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
+        sleep 15
+        echo ""
+        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
+        echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
+        sleep 5
+        tun0up=$(ip link | grep tun0)
+      fi
+    fi
+  ;;
+
+  *)
+    clear
+    exit 0
+esac
+
 bash menu-bridges
-exit 0
