@@ -67,7 +67,7 @@ TORURL=$(grep "^TORURL=" ${RUNFILE} | cut -c8-) 2> /dev/null
 TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | cut -c25-) 2> /dev/null
 TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | cut -c18-) 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | cut -c19-) 2> /dev/null
-TORBOX_USED=$(grep "^TORBOX_USED=" ${RUNFILE} | cut -c13-) 2> /dev/null
+TORBOXURL=$(grep "^TORBOXURL=" ${RUNFILE} | cut -c11-) 2> /dev/null
 TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
 
 #Other variables
@@ -128,7 +128,7 @@ update_tor_preparations()
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
   else
-    readarray -t torversion_datesorted < <(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
+    readarray -t torversion_datesorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
   fi
   #How many tor version did we fetch?
 	number_torversion=${#torversion_datesorted[*]}
@@ -433,8 +433,26 @@ update_torcfg()
 }
 
 # This function updates the TorBox menu
+# Syntax update_torbox_menu <expert>
+# <expert> -> 0 = default installation; 1 = expert installation
 update_torbox_menu()
 {
+  clear
+  EXPERT=$1
+  if [ $EXPERT = 1 ]; then
+    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    exitstatus=$?
+    if [ $exitstatus -gt 0 ]; then exit 1; fi
+    if [ "$INPUT" != "" ]; then
+      TORBOXMENU_BRANCHNAME=$INPUT
+      TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+    else
+      EXPERT=0
+    fi
+  fi
+  if [ $EXPERT = 0 ]; then
+    TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+  fi
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
@@ -604,60 +622,64 @@ if [ $exitstatus = 0 ]; then
     clear
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      exitstatus=$?
       EXPERT=1
     else
+      exitstatus=$?
       EXPERT=0
     fi
-    clear
-    # Avoid cheap censorship mechanisms
-    online_check $TORURL 1 1
-    # We can only use Clearnet if allowed!
-    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+    if [ $exitstatus = 0 ]; then
       clear
-      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $OCHECK == 0 ]; then
-      clear
-      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $EXPERT == 1 ]; then
-      select_and_install_tor
-      FINISHING=$?
-    else
-      update_tor
-      FINISHING=$?
-    fi
-    # Finishing
-    cd ~/torbox
-    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
-    if [ $FINISHING = 1 ] ; then
-      (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-      # Copy not moving!
-      (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
-      sudo chmod a+x /usr/bin/geoip*
-      sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-      sudo systemctl stop tor
-      sudo systemctl enable tor
-      sudo systemctl daemon-reload
-      sudo systemctl start tor
-      TOR_VERS=""
-      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
-      echo ""
-      echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
-      read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      # Avoid cheap censorship mechanisms
+      online_check $TORURL 1 1
+      # We can only use Clearnet if allowed!
+      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $OCHECK == 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $EXPERT == 1 ]; then
+        select_and_install_tor
+        FINISHING=$?
+      else
+        update_tor
+        FINISHING=$?
+      fi
+      # Finishing
+      cd ~/torbox
+      if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+      if [ $FINISHING = 1 ] ; then
+        (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+        # Copy not moving!
+        (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+        sudo chmod a+x /usr/bin/geoip*
+        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+        sudo systemctl stop tor
+        sudo systemctl enable tor
+        sudo systemctl daemon-reload
+        sudo systemctl start tor
+        TOR_VERS=""
+        TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+        echo ""
+        echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      fi
     fi
 
 #This updates the newest stable version of TorBox's menu
@@ -665,9 +687,16 @@ if [ $exitstatus = 0 ]; then
     clear
     if [ $LOOP_NUMBER = 1 ]; then
       INPUT=$(cat text/torbox_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        exitstatus=$?
+        EXPERT=1
+      else
+        exitstatus=$?
+        EXPERT=0
+      fi
+      if [ $exitstatus = 0 ]; then
         clear
-        online_check default 1 1
+        online_check $TORBOXURL 1 1
         # We can only use Clearnet if allowed!
         if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
           clear
@@ -688,14 +717,14 @@ if [ $exitstatus = 0 ]; then
           trap "screen bash update; exit 0" EXIT
           exit 1
         fi
-        update_torbox_menu
+        update_torbox_menu $EXPERT
       fi
     else
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         sleep 1
       else
-        update_torbox_menu
+        update_torbox_menu $EXPERT
       fi
     fi
     exit 0

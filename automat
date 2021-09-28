@@ -23,9 +23,9 @@
 # This file, together with log_check.py, automatically reacts to log-related events.
 #
 # SYNTAX
-# sudo bash automat <entry>
+# sudo bash automat <entry1> [<entry2>]
 #
-# <entry> Entry number which will be executed
+# <entryX> Entry number which will be executed
 #
 #
 ##### SET VARIABLES ######
@@ -72,14 +72,22 @@ if [ $ARGUMENT = 1 ]; then
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-		(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - " | sudo -u debian-tor tee -a $LOG) &>/dev/null
     RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
-			(printf "successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else
-			(printf "failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #2a - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
     sleep 2
+		# Is INTERNET_IFACE ready?
+		STATICIP1=$(ip addr show $INTERNET_IFACE | grep -w inet)
+		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP1" ] ; then
+			(printf "[$DATE] - TACA TRIGGER #2a - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			sudo ifdown $INTERNET_IFACE
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup $INTERNET_IFACE
+		fi
 		if [ "$ARGUMENT2" != "" ]; then
 			(printf "[$DATE] - TACA TRIGGER #2b - Changing to TACA TRIGGER $ARGUMENT2.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 			bash automat $ARGUMENT2
@@ -95,14 +103,22 @@ elif [ $ARGUMENT = 2 ]; then
 elif [ $ARGUMENT = 3 ]; then
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | cut -c16-)
 	if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-		(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - " | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
-			(printf "successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else
-			(printf "failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			(printf "[$DATE] - TACA TRIGGER #3  - Restart wifi connection - failed!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		fi
 		sleep 2
+		# Is INTERNET_IFACE ready?
+		STATICIP1=$(ip addr show $INTERNET_IFACE | grep -w inet)
+		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP1" ] ; then
+			(printf "[$DATE] - TACA TRIGGER #3  - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+			sudo ifdown $INTERNET_IFACE
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup $INTERNET_IFACE
+		fi
 	fi
   (printf "[$DATE] - TACA TRIGGER #3  - Restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor

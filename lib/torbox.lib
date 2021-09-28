@@ -58,7 +58,7 @@ check_tor()
 clear
 echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
 sleep 1
-TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
+TOR_SERVICE=$(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
 TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
 
 if [ "$TOR_SERVICE" = "Congratulations" ]; then
@@ -67,6 +67,34 @@ else
   TOR_STATUS=""
 fi
 clear
+}
+
+# check_interface_with_internet()
+# Used predefined variables: RED, NOCOLOR, RUNFILE
+# This function tests from where the Internet is coming
+check_interface_with_internet()
+{
+clear
+echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
+sleep 1
+IINTERFACE=""
+IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+if [ "$IINTERFACE" != "" ] ; then
+  VPN_STATUS="VPN is up"
+  IIPTABLES=""
+  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
+else
+  VPN_STATUS=""
+fi
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
+  IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
+fi
 }
 
 # finish()
@@ -129,7 +157,7 @@ online_check()
   # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update)
   if [ $CLEARNET_ONLY == 0 ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
+    OCHECK=$(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 6 -s $CHECK_URL)
     if [ $? == 0 ]; then
       OCHECK=1
       TORCONNECT=1
@@ -266,14 +294,14 @@ restarting_tor()
 {
   SOURCE_SCRIPT=$1
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-  sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
   echo -e "    Ignore any error messages, this can take minutes just wait..."
   echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
-  sudo tail -f -n 0 /var/log/tor/notices.log
+  sudo systemctl restart tor &
+  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't"
 }
 
 # connecting_to_VPN()

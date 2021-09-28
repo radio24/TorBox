@@ -34,7 +34,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=15
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -83,6 +83,7 @@ read_config()
 
   # OBFS4STRING represents the status of the Meek-Azure bridging mode
   MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
+  clear
   if [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
       OBFS4STRING="ON!"
       OBFS4STRINGb="Deactivate"
@@ -94,6 +95,7 @@ read_config()
 
   # MEEKSTRING represents the status of the Meek-Azure bridging mode
   MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
+  clear
   if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
       MEEKSTRING="ON!"
       MEEKSTRINGb="Deactivate"
@@ -105,6 +107,7 @@ read_config()
 
   # SNOWSTRING represents the status of the Snowflake bridging mode
   MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)
+  clear
   if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
       SNOWSTRING="ON!"
       SNOWSTRINGb="Deactivate"
@@ -120,6 +123,7 @@ read_config()
 
   # Is TorBox connected to a VPN?
   tun0up=$(ip link | grep tun0)
+  clear
   if [ -z "$tun0up" ]; then
     VPNSTRING1="Connect"
     VPNSTRING2="to"
@@ -137,6 +141,15 @@ read_config()
       clear
       LOGCHECK="Activate"
       LOGCHECKSTATUSb="OFF"
+    fi
+
+    # Is the Countermeasure against a tightly configured firewall active?
+    MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
+    clear
+    if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
+      FIREWALL="ON"
+    else
+      FIREWALL="OFF"
     fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
@@ -192,11 +205,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "===" "=============================================[More bridges]===" \
 "  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
 "  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
-"===" "================================================[Vanguards]===" \
-" 10" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-" 11" "Display the Vanguards log (press CTRL-C to leave)"  \
 "===" "=====================================[More Countermeasures]===" \
-" 12" $LOGCHECK" TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
+" 10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
+" 11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
+" 12" "Countermeasure against a tightly configured firewall - "$FIREWALL \
 " 13" "Countermeasure against a disconnection when idle feature - "$PING \
 " 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
@@ -314,47 +326,8 @@ case "$CHOICE" in
     read_config
   ;;
 
-  # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
-  10)
-    if [ "$VANGUARDS" = "Deactivate" ]; then
-      sudo systemctl stop vanguards@default.service
-      sudo systemctl disable vanguards@default.service
-      sudo systemctl daemon-reload
-      clear
-      echo
-      echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
-      echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
-      i=1
-      while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
-      do
-        sleep 1
-        echo -e "${RED}$i${NOCOLOR}"
-      done
-    fi
-    if [ "$VANGUARDS" = "Activate" ]; then
-      INPUT=$(cat text/vanguards-explanation-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo systemctl enable vanguards@default.service
-        sudo systemctl restart vanguards@default.service
-        sudo systemctl daemon-reload
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards to Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-        sleep 5
-      fi
-    fi
-    read_config
-  ;;
-
-  # Display the Vanguards log
-  11)
-    clear
-    trap "bash menu-bridges; exit 0" SIGINT
-    sudo tail -f -n 25 /var/log/tor/vanguards.log
-  ;;
-
   # Activate/deactivate TorBox's automatic counteractions
-  12)
+  10)
     if [ "$LOGCHECK" = "Deactivate" ]; then
       echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
       PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
@@ -371,8 +344,10 @@ case "$CHOICE" in
       sudo kill $PID >/dev/null 2>&1
       sleep 2
       sudo kill -9 $PID >/dev/null 2>&1
-      echo -e "${RED}[+] ...configuration removed!${NOCOLOR}"
+      echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
       sudo rm log_check_config.py
+      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+      sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm
       sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
       sleep 1
       clear
@@ -398,7 +373,7 @@ case "$CHOICE" in
           [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" log_check_config.py) 2>/dev/null
         done
         if [ -n $LOOP_NUMBER ]; then
-          (cat install/log_check_config/footer log_check_config.py) 2>/dev/null
+          (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
           (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
           sudo ./log_check.py &
           clear
@@ -410,17 +385,94 @@ case "$CHOICE" in
     fi
   ;;
 
+  # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
+  11)
+    if [ "$VANGUARDS" = "Deactivate" ]; then
+      echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
+      sudo systemctl stop vanguards@default.service
+      sudo systemctl disable vanguards@default.service
+      sudo systemctl daemon-reload
+      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
+      sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
+      sleep 1
+      clear
+      echo
+      echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
+      echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
+      i=1
+      while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
+      do
+        sleep 1
+        echo -e "${RED}$i${NOCOLOR}"
+      done
+    fi
+    if [ "$VANGUARDS" = "Activate" ]; then
+      INPUT=$(cat text/vanguards-explanation-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo systemctl enable vanguards@default.service
+        sudo systemctl restart vanguards@default.service
+        sudo systemctl daemon-reload
+        clear
+        echo
+        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
+        sleep 5
+      fi
+    fi
+    read_config
+  ;;
+
+    # Countermeasure against a tightly configured firewall
+    12)
+      if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
+        INPUT=$(cat text/firewall-text-on)
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+          sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+          INPUT=$(cat text/restart-tor-text)
+          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            restarting_tor menu-bridges
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
+            sleep 2
+          else
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet actiuvated!${NOCOLOR}"
+            sleep 2
+          fi
+        fi
+      fi
+      if [ "$FIREWALL" = "ON" ]; then
+        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+          INPUT=$(cat text/restart-tor-text)
+          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            restarting_tor menu-bridges
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
+            sleep 2
+          else
+            clear
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactiuvated!${NOCOLOR}"
+            sleep 2
+          fi
+        fi
+      fi
+    ;;
+
   # Countermeasure against a disconnection when idle feature
   13)
-    if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
-      whiptail --title "TorBox - INFO" --textbox text/ping-text-on $MENU_HEIGHT_25 $MENU_WIDTH
-      ping -q $PING_SERVER >/dev/null &
-      #Alternative Möglichkeit: screen -dm ping google.com
-      echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
-      sleep 2
+    if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+      INPUT=$(cat text/ping-text-on)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        ping -q $PING_SERVER >/dev/null &
+        #Alternative Möglichkeit: screen -dm ping google.com
+        echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
+        sleep 2
+      fi
     fi
     if [ "$PING" = "ON" ]; then
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         sudo killall ping
         echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
         sleep 2
@@ -436,30 +488,23 @@ case "$CHOICE" in
         connecting_to_VPN
         sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
         echo ""
-        echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
-        echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"
-        sleep 5
-        tun0up=$(ip link | grep tun0)
-        if [ ! -z "$tun0up" ] ; then
+        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+        wget -q --spider $CHECK_URL
+        if [ $? -eq 0 ]; then
+          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+        else
+          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
           echo ""
-          echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+          add_open_dns
+          (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+          sleep 2
+          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
           wget -q --spider $CHECK_URL
           if [ $? -eq 0 ]; then
-            echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
           else
-            echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-            echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-            echo ""
-            add_open_dns
-            (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
-            sleep 2
-            echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-            wget -q --spider $CHECK_URL
-            if [ $? -eq 0 ]; then
-              echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-            else
-              echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-            fi
+            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
           fi
         fi
       fi

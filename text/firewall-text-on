@@ -1,0 +1,10 @@
+Most likely, a tightly configured firewall stays in the way of a proper
+working TorBox. Tor commonly uses ports 80, 443, 9001 and 9030 for
+network traffic and directory information.
+
+Activating the countermeasure against a tightly configured firewall takes
+care that tor uses only port 80 and 443 for its data stream, which should
+help with a tightly configured firewall.
+
+Do you want to activate the countermeasure against a tightly configured
+firewall?

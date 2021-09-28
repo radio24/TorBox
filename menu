@@ -23,8 +23,10 @@
 # This file displays the main menu and executes all relevant scripts.
 #
 # SYNTAX
-# ./menu
+# ./menu <INTERNETSELECTION>
 #
+# <INTERNETSELECTION> will execute one of the routines, which configures
+# TorBox to route the data from an internal to an external interface.
 #
 ###### SET VARIABLES ######
 #
@@ -57,153 +59,19 @@ HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
+INTERNETSELECTION=$1
 
 #Connectivity check
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+
+#Check freshinstalled
+FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
 
 ##############################
 ######## FUNCTIONS ###########
 
 #include lib
 .  lib/torbox.lib
-
-# This function is used for check_fresh_install() as a trap for CTRL-C
-# Syntax finish_default_obfs4
-# Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
-finish_default_obfs4()
-{
-  DEFAULT_OBFS4_SUPPORT=$1
-  if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
-    echo ""
-    while true
-    do
-      read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
-      # The following line is for the prompt to appear on a new line.
-      if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-        echo
-        echo
-        break
-      fi
-    done
-    if [[ $REPLY =~ ^[Yy]$ ]] ; then
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
-      echo
-      echo
-      sleep 5
-      trap "bash menu; exit 0" EXIT
-      exit 0
-    else
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      echo -e "${RED}[+] Hmmm... We are starting now the Countermeasure sub-menu${NOCOLOR}"
-      echo -e "${RED}[+] We recommend to try next MEEK-AZURE or to get and add${NOCOLOR}"
-      echo -e "${RED}[+] additional newer OBFS4 bridges.${NOCOLOR}"
-      echo
-      echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
-      echo
-      echo
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "bash menu-bridges; exit 0" EXIT
-      if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
-        sudo killall log_check.py
-        sudo /home/torbox/torbox/log_check.py &
-      fi
-      exit 0
-    fi
-  else
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-    trap "bash menu; exit 0" EXIT
-    if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run; then
-      sudo killall log_check.py
-      sudo /home/torbox/torbox/log_check.py &
-    fi
-    exit 0
-  fi
-}
-
-
-# This function will execute some functions after the first boot and login
-# Syntax check_fresh_install
-# Used predefined variables: TORRC, RUNFILE, WHITE, RED, NOCOLOR, MENU_HEIGHT_25 MENU_WIDTH
-check_fresh_install()
-{
-  FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
-  # This will completely remove pi (only for Raspbian OS). The parameter
-  # will be set at the end of the run_install.sh
-  if [ $FRESHINSTALLED = "FRESH_INSTALLED=1" ]; then
-    clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-    if [ -d "/home/pi" ]; then
-      sudo killall systemd
-      sleep 5
-      sudo userdel -r pi
-    fi
-    clear
-    echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
-    sleep 5
-    sudo reboot
-  fi
-  # This will generate new unique SSH server keys (only for images)
-  if [ $FRESHINSTALLED = "FRESH_INSTALLED=2" ]; then
-    clear
-    sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-    echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
-    echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
-    (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
-    sudo ssh-keygen -A
-    echo ""
-    echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
-    FRESHINSTALLED="FRESH_INSTALLED=3"
-    sleep 10
-  fi
-  # This will ask some questions about the security settings and then unmask tor and vanguards
-  if [ $FRESHINSTALLED = "FRESH_INSTALLED=3" ]; then
-    clear
-    DEFAULT_OBFS4_SUPPORT=0
-    INPUT=$(cat text/recommend-add-bridges-text)
-    if (whiptail --title "TorBox - SECURITY!!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-      sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-      sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-      sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
-      sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
-      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-      sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-      DEFAULT_OBFS4_SUPPORT=1
-      clear
-      echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support!${NOCOLOR}"
-    else
-      clear
-      echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
-    fi
-    (sudo systemctl unmask tor) 2> /dev/null
-    echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
-    sleep 2
-    echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
-    (sudo systemctl enable tor) 2> /dev/null
-    sleep 2
-    echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
-    sudo systemctl daemon-reload
-    echo -e "${RED}[+] Create necessary files...${NOCOLOR}"
-    sudo -u debian-tor touch /var/log/tor/notices.log
-# Not activated yet because Vanguard is not activated by default yet - we will probably change that with TorBox v.0.4.3
-#    (sudo systemctl start tor) 2> /dev/null
-#    (sudo systemctl unmask vanguards@default.service) 2> /dev/null
-#    (sudo systemctl enable vanguards@default.service) 2> /dev/null
-#    sudo systemctl daemon-reload
-#    (sudo systemctl start vanguards@default.service) 2> /dev/null
-    sleep 5
-    trap "finish_default_obfs4 $DEFAULT_OBFS4_SUPPORT" SIGINT
-    sudo systemctl restart tor &
-    echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-    echo -e "    Ignore any error messages, this can take minutes just wait..."
-    echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
-    echo -e "    You can leave the progress report with CTRL-C."
-    echo ""
-    sudo tail -f -n 0 /var/log/tor/notices.log
-  fi
-}
 
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
@@ -224,32 +92,6 @@ check_bridge_relay()
     (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
     (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
   fi
-}
-
-# This function tests from where the Internet is coming
-check_interface_with_internet()
-{
-clear
-echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
-sleep 1
-IINTERFACE=""
-IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ "$IINTERFACE" != "" ] ; then
-  VPN_STATUS="VPN is up"
-  IIPTABLES=""
-  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
-else
-  VPN_STATUS=""
-fi
-if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
-  IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
-fi
 }
 
 # This function tests if TorBox's automatic counteractions are activated and still running
@@ -273,20 +115,21 @@ fi
 sleep 1
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-check_fresh_install
+if [ -z "$INTERNETSELECTION" ]; then
+  if [ $FRESHINSTALLED > 0 ]; then ./first_use; fi
+fi
 check_bridge_relay
 check_interface_with_internet
 check_log_check
 check_tor
 
-
-if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="VPN is up & TOR working"
-elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ] ; then TOR_STATUS="         TOR is working"
-elif [ "$TOR_STATUS" = "" ] && [ "$VPN_STATUS" != "" ] ; then TOR_STATUS="              VPN is up"
+if [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" != "" ]; then TOR_STATUS="VPN is up & TOR working"
+elif [ "$TOR_STATUS" != "" ] && [ "$VPN_STATUS" = "" ]; then TOR_STATUS="         TOR is working"
+elif [ "$TOR_STATUS" = "" ] && [ "$VPN_STATUS" != "" ]; then TOR_STATUS="              VPN is up"
 else TOR_STATUS=""
 fi
 
-if grep "^TOR_CONTROL_PORT_ACCESS=1" ${RUNFILE} ; then
+if grep "^TOR_CONTROL_PORT_ACCESS=1" ${RUNFILE}; then
   CONTROLPORT_WLAN="s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/"
   CONTROLPORT_ETH="s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/"
 else
@@ -294,27 +137,33 @@ else
   CONTROLPORT_ETH="s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/"
 fi
 
-###### DISPLAY THE MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"  1" "Tor statistics (press m for menu / q to quit)" \
-"  2" "Enforce a new exit node with a new IP" \
-"  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"  4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
-"===" "===================================[Where is the Internet?]===" \
-"  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-"  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-"  7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-"  8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-"  9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-" 10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-"===" "===============================================[Sub-Menues]===" \
-" 11" "Go to the countermeasure sub-menu..." \
-" 12" "Go to the configuration sub-menu..." \
-" 13" "Go to defend the open internet..." \
-" 14" "Go to the update and reset sub-menu..." \
-"===" "========================================[Reboot & Shutdown]===" \
-" 15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
-exitstatus=$?
+#If first_use is at play, only the configuration where the Internet is coming from will be made without displaying the Main Menu
+if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
+  CHOICE=$INTERNETSELECTION
+  exitstatus=0
+else
+  ###### DISPLAY THE MAIN MENU ######
+  CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  "  1" "Tor statistics (press m for menu / q to quit)" \
+  "  2" "Enforce a new exit node with a new IP" \
+  "  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+  "  4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
+  "===" "===================================[Where is the Internet?]===" \
+  "  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+  "  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+  "  7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+  "  8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+  "  9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+  " 10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+  "===" "===============================================[Sub-Menues]===" \
+  " 11" "Go to the countermeasure sub-menu..." \
+  " 12" "Go to the configuration sub-menu..." \
+  " 13" "Go to defend the open internet..." \
+  " 14" "Go to the update and reset sub-menu..." \
+  "===" "========================================[Reboot & Shutdown]===" \
+  " 15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
+  exitstatus=$?
+fi
 
 if [ $exitstatus = 0 ]; then
 	if [ "$CHOICE" != " " ]; then
@@ -343,11 +192,12 @@ if [ $exitstatus = 0 ]; then
         restarting_tor menu
       fi
 
-# This displays the Tor LOG file (quick and dirty)
+# This displays the tor log file (quick and dirty)
     elif [ $CHOICE = 4 ]; then
       clear
       trap "bash menu; exit 0" SIGINT
-      sudo tail -f -n 25 /var/log/tor/notices.log
+      echo -e "${RED}[+] See below the tor log file:${NOCOLOR}"
+      sudo tail -f -n 30 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't"
 
 # Ethernet cable internet eth0 --> wlan0 / eth1
     elif [ $CHOICE = 5 ]; then
@@ -429,8 +279,12 @@ if [ $exitstatus = 0 ]; then
         fi
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
-        sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE
-        finish
+        if [ -z "$INTERNETSELECTION" ]; then
+          sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 1
+        else
+          sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
+        fi
+        if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
       fi
 
@@ -515,8 +369,12 @@ if [ $exitstatus = 0 ]; then
           fi
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
-          sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE
-          finish
+          if [ -z "$INTERNETSELECTION" ]; then
+            sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 1
+          else
+            sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
+          fi
+          if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
           whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -605,8 +463,12 @@ if [ $exitstatus = 0 ]; then
         fi
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
-        sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE
-        finish
+        if [ -z "$INTERNETSELECTION" ]; then
+          sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 1
+        else
+          sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 0
+        fi
+        if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         # iptables cannot be saved !!
       fi
 
@@ -691,8 +553,12 @@ if [ $exitstatus = 0 ]; then
           fi
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
-          sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE
-          finish
+          if [ -z "$INTERNETSELECTION" ]; then
+            sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 1
+          else
+            sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
+          fi
+          if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
           echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
@@ -753,8 +619,12 @@ if [ $exitstatus = 0 ]; then
             fi
             # The following line should minimize those cases where a restart is required.
             sudo systemctl restart isc-dhcp-server
-            sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE
-            finish
+            if [ -z "$INTERNETSELECTION" ]; then
+              sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 1
+            else
+              sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
+            fi
+            if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
           else
             whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -843,8 +713,12 @@ if [ $exitstatus = 0 ]; then
           fi
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
-          sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE
-          finish
+          if [ -z "$INTERNETSELECTION" ]; then
+            sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 1
+          else
+            sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
+          fi
+          if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
           whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -957,8 +831,12 @@ if [ $exitstatus = 0 ]; then
           fi
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE
-          finish
+          if [ -z "$INTERNETSELECTION" ]; then
+            sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 1
+          else
+            sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 0
+          fi
+          if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         else
           whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -1008,6 +886,7 @@ if [ $exitstatus = 0 ]; then
         fi
       fi
     fi
+    if [[ $INTERNETSELECTION > 4 && $INTERNETSELECTION < 11 ]]; then exit; fi
   fi
 else
 clear
