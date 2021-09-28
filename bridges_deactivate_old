@@ -182,7 +182,7 @@ case "$CHOICE" in
       clear
       echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
       j=0
-      while [[ "$deactivate_number" != " " && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
+      while [[ ! -z "$deactivate_number" && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
       do
         i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})

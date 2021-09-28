@@ -210,7 +210,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
       j=0
-      while [[ "$delete_number" != " " && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
+      while [[ ! -z "$delete_number" && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
       do
         if [ $delete_number -gt $number_configured_bridges_deactivated ]; then
           echo -e "${RED}[+] Removing bridge number $delete_number${NOCOLOR}"

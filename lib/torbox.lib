@@ -79,7 +79,7 @@ echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOL
 sleep 1
 IINTERFACE=""
 IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ -z "$IINTERFACE" ] ; then
+if [ ! -z "$IINTERFACE" ] ; then
   VPN_STATUS="VPN is up"
   IIPTABLES=""
   IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
