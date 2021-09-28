@@ -212,6 +212,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 " 13" "Countermeasure against a disconnection when idle feature - "$PING \
 " 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
 
   # Display the read.me
@@ -423,7 +424,7 @@ case "$CHOICE" in
 
     # Countermeasure against a tightly configured firewall
     12)
-      if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
+      if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
         INPUT=$(cat text/firewall-text-on)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
@@ -462,7 +463,7 @@ case "$CHOICE" in
 
   # Countermeasure against a disconnection when idle feature
   13)
-    if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+    if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
       INPUT=$(cat text/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         ping -q $PING_SERVER >/dev/null &

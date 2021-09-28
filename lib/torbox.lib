@@ -79,14 +79,14 @@ echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOL
 sleep 1
 IINTERFACE=""
 IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ "$IINTERFACE" != "" ] ; then
+if [ -z "$IINTERFACE" ] ; then
   VPN_STATUS="VPN is up"
   IIPTABLES=""
   IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
 else
   VPN_STATUS=""
 fi
-if [ "$IINTERFACE" = "0.0.0.0" ] && [ "$IIPTABLES" != "" ] ; then FLASH_TUN0="<--" ; else
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then FLASH_TUN0="<--" ; else
   IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
@@ -311,7 +311,7 @@ connecting_to_VPN()
 {
   clear
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
-  if [ "${ovpnlist[0]}" = "" ] ; then
+  if [ -z "${ovpnlist[0]}" ] ; then
     whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     trap "bash menu; exit 0" EXIT
     exit 0
@@ -361,7 +361,7 @@ recommended_reboot()
     sleep 2
     sudo reboot
   else
-    if [ "$TRAP_DESTINATION" = "" ] ; then
+    if [ -z "$TRAP_DESTINATION" ] ; then
       clear
       exit 0
     else

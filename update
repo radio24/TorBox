@@ -443,7 +443,7 @@ update_torbox_menu()
     INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     exitstatus=$?
     if [ $exitstatus -gt 0 ]; then exit 1; fi
-    if [ "$INPUT" != "" ]; then
+    if [ ! -z "$INPUT" ]; then
       TORBOXMENU_BRANCHNAME=$INPUT
       TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
     else
@@ -519,7 +519,7 @@ if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
     LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-    if [ "$ARGUMENT" = "" ]; then
+    if [ -z "$ARGUMENT" ]; then
       exit 0
     fi
 

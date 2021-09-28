@@ -40,7 +40,7 @@ n=0
 # Check and create log file
 DATE=$(date)
 sudo -u debian-tor test -f /var/log/tor/automat.log && LOG="/var/log/tor/automat.log"
-if [ "$LOG" == "" ]; then
+if [ -z "$LOG" ]; then
 	LOG="/var/log/tor/automat.log"
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
 fi
@@ -88,7 +88,7 @@ elif [ $ARGUMENT = 2 ]; then
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup $INTERNET_IFACE
 		fi
-		if [ "$ARGUMENT2" != "" ]; then
+		if [ ! -z "$ARGUMENT2" ]; then
 			(printf "[$DATE] - TACA TRIGGER #2b - Changing to TACA TRIGGER $ARGUMENT2.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 			bash automat $ARGUMENT2
 		else

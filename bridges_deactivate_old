@@ -96,139 +96,140 @@ else
   "  3" "Deactivate only selected OBFS4 bridges"  \
   "  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
   "===" "==============================================================" 3>&1 1>&2 2>&3)
-  exitstatus=$?
 
-  if [ $exitstatus = 0 ]; then
-    if [ "$CHOICE" != " " ]; then
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
+case "$CHOICE" in
 
-      # Deactivate ALL configured bridges
-      if [ $CHOICE = 1 ]; then
+  # Deactivate ALL configured bridges
+  1)
+    deactivate_obfs4_bridges
+    clear
+    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+    restarting_tor bridges_deactivate_old
+    exit 0
+  ;;
+
+  # Deactivate only bridges, which are OFFLINE or do not exist anymore
+  2)
+    clear
+    online_check $BRIDGE_DB_URL 1 1
+    if [ $OCHECK == 1 ]; then
+      echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+      echo " "
+      echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
+      trap "bash bridges_deactivate_old; exit 0" SIGINT
+      j=0
+      i=0
+      while [ $i -lt $number_configured_bridges_activated ]
+      do
+        bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
+        bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+        if [ $CLEARNET_DECISSION == 1 ]; then
+          bridge_status=$(./bridges_check.py -f $bridge_hash)
+        else
+          bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+        fi
+        if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+          j=$(($j + 1))
+          echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
+          #This is necessary to work with special characters in sed
+          ORIGINAL_STR="Bridge $bridge_address"
+          ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+          ORIGINAL_STR="^$ORIGINAL_STR"
+          REPLACEMENT_STR="#Bridge $bridge_address"
+          REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+          sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
+        fi
+        i=$(( $i + 1 ))
+      done
+      if [ $j = 0 ]; then
+        echo " "
+        echo -e "${WHITE}[!] All checked OBFS4 do exist and are online -> nothing to deactivate!${NOCOLOR}"
+        sleep 5
+        clear
+      else
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        clear
+        number_of_bridges
+        if [ $number_configured_bridges_activated = 0 ]; then
+          deactivate_obfs4_bridges
+          clear
+          sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+          restarting_tor bridges_deactivate_old
+        else
+          activate_obfs4_bridges bridges_deactivate_old
+          exit 0
+        fi
+      fi
+    else
+      echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+      echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+      sleep 5
+      clear
+    fi
+    exit 0
+  ;;
+
+  # Deactivate only selected bridges
+  3)
+    INPUT=$(cat text/deactivate-selected-bridges-text)
+    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      number_to_be_deactivated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to deactivate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      number_to_be_deactivated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deactivated)
+      deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
+      number_configured_bridges_activated=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+      clear
+      echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
+      j=0
+      while [[ "$deactivate_number" != " " && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
+      do
+        i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
+        bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
+        # Row below is not necessary?
+        # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
+        j=$(($j + 1))
+        echo -e "${RED}[+] Dectivating bridge number $deactivate_number${NOCOLOR}"
+        #This is necessary to work with special characters in sed
+        ORIGINAL_STR="Bridge $bridge_address"
+        ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+        ORIGINAL_STR="^$ORIGINAL_STR"
+        REPLACEMENT_STR="#Bridge $bridge_address"
+        REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+        sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
+        if [ "$deactivate_number" = "$number_to_be_deactivated" ]; then
+          deactivate_number=0
+        else
+          number_to_be_deactivated=$(cut -d ' ' -f2- <<< $number_to_be_deactivated)
+          deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
+        fi
+      done
+      echo " "
+      read -n 1 -s -r -p "Press any key to continue"
+      clear
+      number_of_bridges
+      if [ $number_configured_bridges_activated = 0 ]; then
         deactivate_obfs4_bridges
         clear
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         restarting_tor bridges_deactivate_old
-        exit 0
-
-      # Deactivate only bridges, which are OFFLINE or do not exist anymore
-      elif [ $CHOICE = 2 ]; then
-        clear
-        online_check $BRIDGE_DB_URL 1 1
-        if [ $OCHECK == 1 ]; then
-          echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-          echo " "
-          echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
-          trap "bash bridges_deactivate_old; exit 0" SIGINT
-          j=0
-          i=0
-          while [ $i -lt $number_configured_bridges_activated ]
-          do
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
-            bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            if [ $CLEARNET_DECISSION == 1 ]; then
-              bridge_status=$(./bridges_check.py -f $bridge_hash)
-            else
-              bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
-            fi
-            if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
-              j=$(($j + 1))
-              echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
-              #This is necessary to work with special characters in sed
-              ORIGINAL_STR="Bridge $bridge_address"
-              ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-              ORIGINAL_STR="^$ORIGINAL_STR"
-              REPLACEMENT_STR="#Bridge $bridge_address"
-              REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-              sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
-            fi
-            i=$(( $i + 1 ))
-          done
-          if [ $j = 0 ]; then
-            echo " "
-            echo -e "${WHITE}[!] All checked OBFS4 do exist and are online -> nothing to deactivate!${NOCOLOR}"
-            sleep 5
-            clear
-          else
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            clear
-            number_of_bridges
-            if [ $number_configured_bridges_activated = 0 ]; then
-              deactivate_obfs4_bridges
-              clear
-              sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-              restarting_tor bridges_deactivate_old
-            else
-              activate_obfs4_bridges bridges_deactivate_old
-              exit 0
-            fi
-          fi
-        else
-          echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-          echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
-          sleep 5
-          clear
+      else
+        if [ $j -gt 0 ]; then
+          activate_obfs4_bridges bridges_deactivate_old
+          exit 0
         fi
-        exit 0
-
-      # Deactivate only selected bridges
-      elif [ $CHOICE = 3 ]; then
-        INPUT=$(cat text/deactivate-selected-bridges-text)
-        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          number_to_be_deactivated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to deactivate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-          number_to_be_deactivated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deactivated)
-          deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
-          number_configured_bridges_activated=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
-          clear
-          echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
-          j=0
-          while [[ "$deactivate_number" != " " && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
-          do
-            i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
-            bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
-            # Row below is not necessary?
-            # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-            j=$(($j + 1))
-            echo -e "${RED}[+] Dectivating bridge number $deactivate_number${NOCOLOR}"
-            #This is necessary to work with special characters in sed
-            ORIGINAL_STR="Bridge $bridge_address"
-            ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-            ORIGINAL_STR="^$ORIGINAL_STR"
-            REPLACEMENT_STR="#Bridge $bridge_address"
-            REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-            sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
-            if [ "$deactivate_number" = "$number_to_be_deactivated" ]; then
-              deactivate_number=0
-            else
-              number_to_be_deactivated=$(cut -d ' ' -f2- <<< $number_to_be_deactivated)
-              deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
-            fi
-          done
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          clear
-          number_of_bridges
-          if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges
-            clear
-            sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_deactivate_old
-          else
-            if [ $j -gt 0 ]; then
-              activate_obfs4_bridges bridges_deactivate_old
-              exit 0
-            fi
-          fi
-        fi
-
-      # List all bridges configured in torrc and if online display the status of the bridges
-      elif [ $CHOICE = 4 ]; then
-        list_all_obfs4_bridges
       fi
     fi
-  else
+  ;;
+
+  # List all bridges configured in torrc and if online display the status of the bridges
+  4)
+    list_all_obfs4_bridges
+  ;;
+
+  *)
     clear
     exit 0
-  fi
-fi
+esac
 bash bridges_deactivate_old
 exit 0
