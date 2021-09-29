@@ -212,6 +212,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 " 13" "Countermeasure against a disconnection when idle feature - "$PING \
 " 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
 
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
 
   # Display the read.me
