@@ -2,8 +2,9 @@
 
 Contributions to the TorBox project are more than welcome. Fixes, clean-ups and improvements of existing code are much appreciated, as are completion functions for new commands.
 
-However, it may well be that certain features were not implemented on purpose or were implemented in the manner found. It is, therefore, worth submitting a suggestion under "(Issues)[https://github.com/radio24/TorBox/issues]" before starting work. The central question that should be answered is what added value will be generated with the contribution.
+However, it may well be that certain features were not implemented on purpose or were implemented in the manner found. It is, therefore, worth submitting a suggestion under [Issues](https://github.com/radio24/TorBox/issues) before starting work. The central question that should be answered is what added value will be generated with the contribution.
 
+## Coding Guidelines
 Please bear the following coding guidelines in mind:
 - Whenever, shell script should be used. Because sh is too limited, the shell script should be compatible with bash >= 4.2.
 
@@ -25,10 +26,10 @@ Please bear the following coding guidelines in mind:
   if grep -q "Raspberry Pi" /proc/cpuinfo; then CHECK_HD2="Raspberry Pi"; fi
   ```
 
-  (...and for the version of Raspberry Pi, see (here)[https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12])
+  (...and for the version of Raspberry Pi, see [here](https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12))
   ```shell
-  if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
-  if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
+  if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model; then CHECK_HD1="Raspberry Pi 3 Model B Rev"; fi
+  if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo; then CHECK_HD2="Raspberry Pi 3 Model B Rev"; fi
   ```
 
   **Check if the OS is 64bit**
@@ -112,12 +113,10 @@ Please bear the following coding guidelines in mind:
   # with the rest. The failsave is part of the rc.local script.
   ```
 
-- The TorBox Library (torbox.lib) comprises only functions. Paths and configuration values are stored in the run-file (torbox.run).
+- The TorBox Library ([torbox.lib](https://github.com/radio24/TorBox/blob/master/lib/torbox.lib)) comprises only functions. Paths and configuration values are stored in the run-file ([torbox.run](https://github.com/radio24/TorBox/blob/master/run/torbox.run)).
 
 - Make small, incremental commits that do one thing. Don't cram unrelated changes into a single commit.
 
-- Use an editor that supports EditorConfig; see (here)[https://editorconfig.org/], and format source code according to our settings.
+- Use an editor that supports [EditorConfig](https://editorconfig.org/) (for example [Atom](https://atom.io)), and format source code according to [our settings](https://editorconfig.org/).
 
-- Please test your code thoroughly before creating a pull-request! If your code is accepted into the distribution, a lot of people will try it out, so try to do a thorough job of eradicating all the bugs before you send it to us.
-
-	It is recommended to use (editorconfig)[https://editorconfig.org/] to check the indentation in combination with the projects '.editorconfig'. With shell scripts, it is recommended to use (shellcheck)[https://github.com/koalaman/shellcheck].
+- Please test your code thoroughly before creating a pull-request! With shell scripts, it is recommended to use [shellcheck](https://github.com/koalaman/shellcheck). If your code is accepted into the distribution, a lot of people will try it out, so try to do a thorough job of eradicating all the bugs before you send it to us.
