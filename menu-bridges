@@ -60,11 +60,9 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
-TMP="/tmp/torrc.tmp"
 BRIDGESTRING=""
 LOOP_NUMBER=0
 i=0
-j=0
 PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2> /dev/null
 
 
@@ -133,7 +131,7 @@ read_config()
   fi
 
   # Is the automatic counteractions feature activated?
-    if ps -ax | grep "[l]og_check.py" ; then
+    if pgrep -f "log_check.py"; then
       clear
       LOGCHECK="Deactivate"
       LOGCHECKSTATUSb="ON"
@@ -153,7 +151,7 @@ read_config()
     fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
-    if ps -ax | grep "[p]ing -q $PING_SERVER" ; then
+    if pgrep -f "ping -q $PING_SERVER" ; then
       clear
       PING="ON"
     else
@@ -163,17 +161,13 @@ read_config()
 
   # Is the Countermeasure against attacks to deanonymize server location active?
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  if [ ${VANGUARDSSTATUS} == "active" ]; then
+  if [ "${VANGUARDSSTATUS}" == "active" ]; then
     VANGUARDS="Deactivate"
     VANGUARDSSTATUSb="ON"
   else
     VANGUARDS="Activate"
     VANGUARDSSTATUSb="OFF"
   fi
-
-  # NECESSARY FOR THE DEACTIVATION OF THE BRIDGE RELAY
-  sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-  sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
 
   # number_of_bridges()
   # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
@@ -198,7 +192,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "===" "============================================[OBFS4 bridges]==="  \
 "  2" "Activate configured OBFS4 bridges to circumvent censorship"  \
 "  3" "Add additional OBFS4 bridges"  \
-"  4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
+"  4" "List all $number_configured_bridges_total OBFS4 bridges"  \
 "  5" "Remove configured OBFS4 bridges"  \
 "  6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
 "  7" "Enter the advanced configuration editor"  \
@@ -208,9 +202,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "===" "=====================================[More Countermeasures]===" \
 " 10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
 " 11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-" 12" "Countermeasure against a tightly configured firewall - "$FIREWALL \
-" 13" "Countermeasure against a disconnection when idle feature - "$PING \
-" 14" $VPNSTRING1" TorBox "$VPNSTRING2" a VPN" 3>&1 1>&2 2>&3)
+" 12" "Countermeasure against a tightly configured firewall - $FIREWALL" \
+" 13" "Countermeasure against a disconnection when idle feature - $PING" \
+" 14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -228,7 +222,7 @@ case "$CHOICE" in
     if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
       whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     fi
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z "$number_configured_bridges_total" ]; then
       INPUT=$(cat text/add-bridges-first-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo bash bridges_add_old "$MODE_BRIDGES" 0
@@ -268,7 +262,7 @@ case "$CHOICE" in
 
   # Remove bridges
   5)
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z "$number_configured_bridges_total" ]; then
       clear
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
       sleep 5
@@ -281,7 +275,7 @@ case "$CHOICE" in
 
   # Deactivate bridges
   6)
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z "$number_configured_bridges_total" ]; then
       clear
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
       sleep 5
@@ -330,29 +324,26 @@ case "$CHOICE" in
   # Activate/deactivate TorBox's automatic counteractions
   10)
     if [ "$LOGCHECK" = "Deactivate" ]; then
-      echo -e "${RED}[+] Deactivating TorBox's automatic counteractions features...${NOCOLOR}"
-      PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
-      set -- $PS_OUTPUT
-      PID=$2
+      echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
+      PID=$(pgrep -f -n "log_check.py")
       echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
-      sudo kill $PID
+      (sudo kill "$PID") &>/dev/null
       sleep 2
-      sudo kill -9 $PID >/dev/null 2>&1
-      PS_OUTPUT=$(ps aux|grep -m 1 [l]og_check)
-      set -- $PS_OUTPUT
-      PID=$2
+      (sudo kill -9 "$PID") &>/dev/null
+      unset PID
+      PID=$(pgrep -f -n "log_check.py")
       echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
-      sudo kill $PID >/dev/null 2>&1
+      [ ! -z "$PID" ] && (sudo kill "$PID") &>/dev/null
       sleep 2
-      sudo kill -9 $PID >/dev/null 2>&1
+      [ ! -z "$PID" ] && (sudo kill -9 "$PID") &>/dev/null
       echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
-      sudo rm log_check_config.py
+      (sudo rm log_check_config.py) &>/dev/null
       echo -e "${RED}[+] ...log removed!${NOCOLOR}"
-      sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm
-      sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run
+      (sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
+      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" ~/torbox/run/torbox.run) &>/dev/null
       sleep 1
       clear
-      echo -e "${RED}[+] TorBox's automatic counteractions features are deativated!${NOCOLOR}"
+      echo -e "${RED}[+] TorBox's automatic counteractions feature is deativated!${NOCOLOR}"
       sleep 5
     fi
     if [ "$LOGCHECK" = "Activate" ]; then
@@ -365,20 +356,22 @@ case "$CHOICE" in
       "4" "Protection against excessive connection failing with tor circuits" ON \
       "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
 
-      if [ -z "$CHOICE2" ]; then
+      if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"
         for ARGUMENT in "${CHOICE2[@]}"; do
           [ -z "$ARGUMENT" ] && exit 0
+          echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"
+          sleep 1
           LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-          [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) 2>/dev/null
-          [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" log_check_config.py) 2>/dev/null
+          [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
+          [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
         done
-        if [ -n $LOOP_NUMBER ]; then
-          (cat install/log_check_config/footer >> log_check_config.py) 2>/dev/null
-          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) 2>/dev/null
+        if [ ! -z "$LOOP_NUMBER" ]; then
+          (cat install/log_check_config/footer >> log_check_config.py) &>/dev/null
+          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) &>/dev/null
           sudo ./log_check.py &
           clear
-          echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
+          echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
           sleep 5
         fi
         read_config
@@ -466,7 +459,7 @@ case "$CHOICE" in
     if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
       INPUT=$(cat text/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-        ping -q $PING_SERVER >/dev/null &
+        ping -q "$PING_SERVER" >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
         echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
         sleep 2
@@ -490,8 +483,7 @@ case "$CHOICE" in
         sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
         echo ""
         echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        wget -q --spider $CHECK_URL
-        if [ $? -eq 0 ]; then
+        if wget -q --spider "$CHECK_URL"; then
           echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
         else
           echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
@@ -501,8 +493,7 @@ case "$CHOICE" in
           (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
           sleep 2
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          wget -q --spider $CHECK_URL
-          if [ $? -eq 0 ]; then
+          if wget -q --spider "$CHECK_URL"; then
             echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
           else
             echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"

@@ -67,7 +67,13 @@ Please bear the following coding guidelines in mind:
   esac
   ```
 
-- '! -z' for non zero or not null and '-z' for zero/null (this guideline is currently being implemented).
+- To suppress undesired terminal outputs, '&>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
+
+  ```shell
+  (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
+  ```
+  
+- '! -z' for non zero/not null and '-z' for zero/null (this guideline is currently being implemented).
 
   **Examples for a short menu**
   ```shell
@@ -81,6 +87,8 @@ Please bear the following coding guidelines in mind:
     VPN_STATUS=""
   fi
   ```
+
+- Check exit code directly with e.g. 'if mycmd;', not indirectly with '$?' (for more information, see [shellcheck #SC2181](https://github.com/koalaman/shellcheck/wiki/SC2181); this guideline is currently being implemented)
 
 - In general, variable names should be short and in upper case. However, there are exceptions; if the complexity needs longer, self-explaining variable names, then they can also be in lower case.
 
