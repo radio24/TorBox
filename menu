@@ -899,4 +899,4 @@ case "$CHOICE" in
 esac
 
 ./menu
-exi 0
+exit 0
