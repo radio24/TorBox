@@ -86,7 +86,7 @@ if [ ! -z "$IINTERFACE" ] ; then
 else
   VPN_STATUS=""
 fi
-if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then FLASH_TUN0="<--" ; else
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}; else
   IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
   if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
   if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi

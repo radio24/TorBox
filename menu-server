@@ -127,21 +127,21 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - DEFEND THE OPEN INTERNET" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"===" "============================================[Informational]===" \
-"  1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
-"===" "======================================[OBFS4 bridges relay]==="  \
-"  2" "Toggle OBFS4 Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
-"  3" "Check and/or change the configuration"  \
-"  4" "Reset configuration to default"  \
-"  5" "Show me my personal OBFS4 bridge address"  \
-"  6" "Enter the advanced configuration editor"  \
-"  7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"===" "=========================================[Backup & Restore]===" \
-"  8" "Backup the OBFS4 Bridge Relay configuration"  \
-"  9" "Restore the OBFS4 Bridge Relay configuration"  \
-"===" "=======================================[How can I support?]===" \
-" 10" "PLEASE SUPPORT THE TOR PROJECT!" \
-" 11" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
+"==" "=============================================[Informational]===" \
+" 1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
+"==" "=======================================[OBFS4 bridges relay]==="  \
+" 2" "Toggle OBFS4 Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
+" 3" "Check and/or change the configuration"  \
+" 4" "Reset configuration to default"  \
+" 5" "Show me my personal OBFS4 bridge address"  \
+" 6" "Enter the advanced configuration editor"  \
+" 7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+"==" "==========================================[Backup & Restore]===" \
+" 8" "Backup the OBFS4 Bridge Relay configuration"  \
+" 9" "Restore the OBFS4 Bridge Relay configuration"  \
+"==" "========================================[How can I support?]===" \
+"10" "PLEASE SUPPORT THE TOR PROJECT!" \
+"11" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

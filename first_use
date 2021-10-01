@@ -183,14 +183,16 @@ case $FRESHINSTALLED in
     fi
     check_interface_with_internet
 
-    ###### DISPLAY THE MENU ######
-    CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "Frome where is the Internet coming? (ESC -> don't change)" $MENU_HEIGHT_15 $MENU_WIDTH 6 \
-    " 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-    " 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-    " 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-    " 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-    " 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-    " 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 3>&1 1>&2 2>&3)
+	###### DISPLAY THE MENU ######
+	CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "Frome where is the Internet coming? (ESC -> don't change)" $MENU_HEIGHT_15 $MENU_WIDTH 8 \
+  "==" "===============================================================" \
+	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+	" 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+	" 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+	" 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+	" 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+  "==" "===============================================================" 3>&1 1>&2 2>&3)
 
     # This will configure the origin of the Internet.
     CHOICE=$(echo "$CHOICE" | tr -d ' ')

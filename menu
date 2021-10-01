@@ -144,24 +144,24 @@ if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
 else
   ###### DISPLAY THE MAIN MENU ######
   CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  "  1" "Tor statistics (press m for menu / q to quit)" \
-  "  2" "Enforce a new exit node with a new IP" \
-  "  3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-  "  4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
+  " 1" "Tor statistics (press m for menu / q to quit)" \
+  " 2" "Enforce a new exit node with a new IP" \
+  " 3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+  " 4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
   "===" "===================================[Where is the Internet?]===" \
-  "  5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-  "  6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-  "  7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-  "  8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-  "  9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-  " 10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+  " 5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+  " 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+  " 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+  " 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+  " 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+  "10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
   "===" "===============================================[Sub-Menues]===" \
-  " 11" "Go to the countermeasure sub-menu..." \
-  " 12" "Go to the configuration sub-menu..." \
-  " 13" "Go to defend the open internet..." \
-  " 14" "Go to the update and reset sub-menu..." \
+  "11" "Go to the countermeasure sub-menu..." \
+  "12" "Go to the configuration sub-menu..." \
+  "13" "Go to defend the open internet..." \
+  "14" "Go to the update and reset sub-menu..." \
   "===" "========================================[Reboot & Shutdown]===" \
-  " 15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
+  "15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
 fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
