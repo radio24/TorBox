@@ -193,6 +193,7 @@ case $FRESHINSTALLED in
     " 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 3>&1 1>&2 2>&3)
 
     # This will configure the origin of the Internet.
+    CHOICE=$(echo "$CHOICE" | tr -d ' ')
     if [ ! -z "$CHOICE" ]; then
       if [[ $CHOICE > 0  && $CHOICE < 7 ]]; then
         CHOICE=$(( $CHOICE+4 ))
@@ -204,9 +205,10 @@ case $FRESHINSTALLED in
     INPUT=$(cat text/first_use-TACA-text)
     ##### DISPLAY THE AVAILABLE OPTIONS ######
     CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 3 \
-    "1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
-    "2" "Activate Vanguards to protect against Guard discovery" ON 3>&1 1>&2 2>&3)
+    " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
+    " 2" "Activate Vanguards to protect against Guard discovery" ON 3>&1 1>&2 2>&3)
 
+    CHOICE=$(echo "$CHOICE" | tr -d ' ')
     if [ ! -z "$CHOICE" ]; then
       mapfile -t CHOICE <<< "$CHOICE"
       for ARGUMENT in "${CHOICE[@]}"; do
