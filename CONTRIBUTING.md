@@ -38,16 +38,16 @@ Please bear the following coding guidelines in mind:
   if uname -a | grep -q -E "arm64|aarch64"; then CHECK_64="32bit"; fi
   ```
 
-- The menu selection should be implemented with `case` for clarity and not, for example, with `elif` (this guideline is currently being implemented).
+- All menus should start with a one-digit number with a leading space or a two-digit number. The menu selection should be implemented with `case` for clarity and not, for example, with `elif` (this guideline is currently being implemented).
 
   **Example for a short menu**
   ```shell
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  "===" "==============================================================" \
-  "  1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
-  "  2" "Add OBFS4 bridges manually"  \
-  "===" "==============================================================" 3>&1 1>&2 2>&3)
+  "==" "===============================================================" \
+  " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+  " 2" "Add OBFS4 bridges manually"  \
+  "==" "===============================================================" 3>&1 1>&2 2>&3)
   CHOICE=$(echo "$CHOICE" | tr -d ' ')
   case "$CHOICE" in
 

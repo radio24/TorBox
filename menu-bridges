@@ -187,24 +187,24 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"===" "============================================[Informational]===" \
-"  1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
-"===" "============================================[OBFS4 bridges]==="  \
-"  2" "Activate configured OBFS4 bridges to circumvent censorship"  \
-"  3" "Add additional OBFS4 bridges"  \
-"  4" "List all $number_configured_bridges_total OBFS4 bridges"  \
-"  5" "Remove configured OBFS4 bridges"  \
-"  6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
-"  7" "Enter the advanced configuration editor"  \
-"===" "=============================================[More bridges]===" \
-"  8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
-"  9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
-"===" "=====================================[More Countermeasures]===" \
-" 10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
-" 11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-" 12" "Countermeasure against a tightly configured firewall - $FIREWALL" \
-" 13" "Countermeasure against a disconnection when idle feature - $PING" \
-" 14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" 3>&1 1>&2 2>&3)
+"==" "=============================================[Informational]===" \
+" 1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
+"==" "=============================================[OBFS4 bridges]==="  \
+" 2" "Activate configured OBFS4 bridges to circumvent censorship"  \
+" 3" "Add additional OBFS4 bridges"  \
+" 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
+" 5" "Remove configured OBFS4 bridges"  \
+" 6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
+" 7" "Enter the advanced configuration editor"  \
+"==" "==============================================[More bridges]===" \
+" 8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
+" 9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
+"==" "======================================[More Countermeasures]===" \
+"10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
+"11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
+"12" "Countermeasure against a tightly configured firewall - $FIREWALL" \
+"13" "Countermeasure against a disconnection when idle feature - $PING" \
+"14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

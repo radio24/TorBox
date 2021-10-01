@@ -190,28 +190,28 @@ read_config
 clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"===" "===============================================[Passwords]===" \
-"  1" "Change admin (user torbox) password"  \
-"  2" "Change the password of TorBox's WLAN (reboot required)"  \
-"  3" "Change the password of your Tor control port (restarts Tor!)"  \
-"===" "=================================================[Network]===" \
-"  4" "Change the name of TorBox's WLAN"  \
-"  5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
-"  6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
-"  7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-"  8" "$TOGGLE08 TorBox's WLAN"  \
-"  9" "$TOGGLE09 TorBox's WLAN"  \
-"===" "================================================[Security]===" \
-" 10" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
-" 11" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-" 12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
-"===" "============================================[Logging "$TOGGLE03 \
-" 13" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
-" 14" "Erase all log files" \
-"===" "============================================[Add Features]===" \
-" 15" "Support for Adafruit's PiTFT displays (reboot required)" \
-" 16" "Support for 3.5\" no-name TFT displays (reboot required)" \
-" 17" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+"==" "================================================[Passwords]===" \
+" 1" "Change admin (user torbox) password"  \
+" 2" "Change the password of TorBox's WLAN (reboot required)"  \
+" 3" "Change the password of your Tor control port (restarts Tor!)"  \
+"==" "==================================================[Network]===" \
+" 4" "Change the name of TorBox's WLAN"  \
+" 5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
+" 6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
+" 7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
+" 8" "$TOGGLE08 TorBox's WLAN"  \
+" 9" "$TOGGLE09 TorBox's WLAN"  \
+"==" "=================================================[Security]===" \
+"10" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"11" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"==" "=============================================[Logging "$TOGGLE03 \
+"13" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
+"14" "Erase all log files" \
+"==" "=============================================[Add Features]===" \
+"15" "Support for Adafruit's PiTFT displays (reboot required)" \
+"16" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"17" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
