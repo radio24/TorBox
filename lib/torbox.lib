@@ -144,7 +144,7 @@ online_check()
   if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
     CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
   fi
-  if [ -z "$NO_CONNECTION_WARNING" ] && [ -z "$CLEARNET_WARNING" ]; then
+  if [ -z $NO_CONNECTION_WARNING ] && [ -z $CLEARNET_WARNING ]; then
     CLEARNET_ONLY=1
   fi
   add_open_dns
@@ -155,7 +155,7 @@ online_check()
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
 
   # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update)
-  if [ -z "$CLEARNET_ONLY" ]; then
+  if [ -z $CLEARNET_ONLY ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
     if curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
@@ -164,7 +164,7 @@ online_check()
       sleep 10
       OCHECK=0
       TORCONNECT=0
-      if [ ! -z "$CLEARNET_WARNING" ]; then
+      if [ ! -z $CLEARNET_WARNING ]; then
         INPUT=$(cat text/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
@@ -200,7 +200,7 @@ online_check()
     fi
   fi
 
-  if [ -z "$OCHECK" ] && [ $NO_CONNECTION_WARNING != 1 ]; then
+  if [ -z $OCHECK ] && [ $NO_CONNECTION_WARNING != 1 ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=1
