@@ -45,7 +45,7 @@ TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 
 #Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
@@ -137,7 +137,7 @@ online_check()
   # Define all variables
   CHECK_URL=$1
   if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
-    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   fi
   NO_CONNECTION_WARNING=$2
   if [ -z $NO_CONNECTION_WARNING ]; then NO_CONNECTION_WARNING=0; fi
@@ -226,7 +226,7 @@ add_open_dns()
   echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanisms...${NOCOLOR}"
   echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}"
   echo -e "${RED}[+] resquest are handled through Tor.${NOCOLOR}"
-  NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | cut -c13-) 2> /dev/null
+  NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   ONE_NAMESERVER=$(cut -d ',' -f1 <<< $NAMESERVERS)
   NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
   i=0

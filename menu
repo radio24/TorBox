@@ -62,10 +62,10 @@ EXITID="EXITID=0"
 INTERNETSELECTION=$1
 
 #Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 #Check freshinstalled
-FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE})
+FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
