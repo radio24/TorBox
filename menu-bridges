@@ -48,7 +48,7 @@ MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -362,7 +362,7 @@ case "$CHOICE" in
           [ -z "$ARGUMENT" ] && exit 0
           echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"
           sleep 1
-          LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+          LOOP_NUMBER=$((LOOP_NUMBER+1))
           [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
           [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
         done
@@ -417,7 +417,7 @@ case "$CHOICE" in
 
     # Countermeasure against a tightly configured firewall
     12)
-      if [ "$FIREWALL" = "OFF" ] || [ "$FIREWALL" = "" ]; then
+      if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
         INPUT=$(cat text/firewall-text-on)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
@@ -456,7 +456,7 @@ case "$CHOICE" in
 
   # Countermeasure against a disconnection when idle feature
   13)
-    if [ "$PING" = "OFF" ] || [ "$PING" = "" ]; then
+    if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
       INPUT=$(cat text/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         ping -q "$PING_SERVER" >/dev/null &

@@ -62,11 +62,14 @@ i=0
 ######## PREPARATIONS ########
 ###########################
 
-	if [ $EXITID = "EXITID=1" ]; then
-		sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
-		exit 0
-	fi
-	if [ "$SNOWSTRING" = "OFF" ]; then
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
+
+case $SNOWSTRING in
+
+	"OFF")
 		clear
 		trap "bash snowflake; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
@@ -105,13 +108,13 @@ i=0
 				fi
 				if [ $bridge_status == 1 ]; then
 					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					SNOW_ON=$(( $SNOW_ON + 1 ))
+					SNOW_ON=$((SNOW_ON+1))
 				elif [ $bridge_status == 0 ]; then
 					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
 				elif [ $bridge_status == 2 ]; then
 					bridge_status_txt="- DOESN'T EXIST"
 				fi
-				i=$(( $i + 1 ))
+				i=$((i+1))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e "$bridge_address"
 			done
@@ -145,19 +148,20 @@ i=0
 			clear
 			restarting_tor snowflake
 		fi
-	else
-		if [ "$SNOWSTRING" = "ON!" ]; then
-			INPUT=$(cat text/deactivate-snowflake-text)
-			if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-				clear
-				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-				sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-				restarting_tor snowflake
-			fi
-		fi
-	fi
+  ;;
+
+	"ON!")
+    INPUT=$(cat text/deactivate-snowflake-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      clear
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+      sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+      sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+      sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+      sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+      sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+      restarting_tor snowflake
+    fi
+  ;;
+esac
