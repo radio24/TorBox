@@ -73,7 +73,7 @@ Please bear the following coding guidelines in mind:
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
   ```
   
-- `! -z` for non zero/not null and `-z` for zero/null. ATTENTION: zero/null means `""` or `0`, but not `"0"` because this is a string! In this case, you have to ignore Shellcheck's warnings.
+- `! -z` for non zero/not null and `-z` for zero/null. ATTENTION: zero/null means `""` or `0`, but not `"0"` because this is a string!
 
   **Examples for a short menu**
   ```shell
@@ -89,7 +89,7 @@ Please bear the following coding guidelines in mind:
   ```
   
   **Examples for "0" is not `0`**
-  If `CLEARNET_ONLY=0` then `if [ -z "$CLEARNET_ONLY" ]; then` will be `false`, but `if [ -z $CLEARNET_ONLY ]; then` will be true.
+  If `CLEARNET_ONLY=0` then `if [ -z "$CLEARNET_ONLY" ]; then` will be `false`, but `if [ "$CLEARNET_ONLY" == "0" ]; then` will be true.
   
 
 - Check exit code directly with e.g. 'if mycmd;', not indirectly with '$?' (for more information, see [Shellcheck #SC2181](https://github.com/koalaman/shellcheck/wiki/SC2181); this guideline is currently being implemented)

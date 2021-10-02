@@ -134,19 +134,25 @@ fi
 # CLEARNET_DECISSION = 1 -> The calling script can use clearnet
 online_check()
 {
+  # Define all variables
   CHECK_URL=$1
+  if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
+    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+  fi
   NO_CONNECTION_WARNING=$2
+  if [ -z $NO_CONNECTION_WARNING ]; then NO_CONNECTION_WARNING=0; fi
   CLEARNET_WARNING=$3
+  if [ -z $CLEARNET_WARNING ]; then CLEARNET_WARNING=0; fi
+  # Don't change it to "-z" !
+  if [ "$NO_CONNECTION_WARNING" == "0" ] && [ "$CLEARNET_WARNING" == "0" ]; then
+    CLEARNET_ONLY=1
+  fi
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
   CLEARNET_ONLY=0
-  if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
-    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
-  fi
-  if [ -z $NO_CONNECTION_WARNING ] && [ -z $CLEARNET_WARNING ]; then
-    CLEARNET_ONLY=1
-  fi
+
+  # Start working!
   add_open_dns
   echo " "
   echo -e "${RED}[+] Please wait...${NOCOLOR}"
@@ -154,8 +160,9 @@ online_check()
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
 
-  # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update)
-  if [ -z $CLEARNET_ONLY ]; then
+  # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update).
+  # Don't change it to "-z" !
+  if [ "$CLEARNET_ONLY" == "0" ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
     if curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
@@ -164,7 +171,8 @@ online_check()
       sleep 10
       OCHECK=0
       TORCONNECT=0
-      if [ ! -z $CLEARNET_WARNING ]; then
+      # Don't change it to "! -z" !
+      if [ "$CLEARNET_WARNING" == "1" ]; then
         INPUT=$(cat text/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
@@ -189,7 +197,7 @@ online_check()
   fi
 
 # Only executed for not tor related URL (usually, in this case online_check was executed without options; used in menu-config and in update)
-  if [ $CLEARNET_ONLY == 1 ]; then
+  if [ "$CLEARNET_ONLY" == "1" ]; then
     CLEARNET_DECISSION=1
     if curl -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
@@ -200,7 +208,8 @@ online_check()
     fi
   fi
 
-  if [ -z $OCHECK ] && [ $NO_CONNECTION_WARNING != 1 ]; then
+  # Don't change it to "-z" !
+  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" != "1" ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=1
@@ -473,7 +482,7 @@ list_all_obfs4_bridges()
         echo -e "$bridge_address"
     done
   fi
-  if [ $number_configured_bridges_total = 0 ]; then
+  if [ "$number_configured_bridges_total" == "0" ]; then
     echo " "
     echo " "
     echo -e "${WHITE}[!] SORRY! - there are no configured OBFS4 bridges!${NOCOLOR}"

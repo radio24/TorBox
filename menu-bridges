@@ -222,7 +222,7 @@ case "$CHOICE" in
     if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
       whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     fi
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       INPUT=$(cat text/add-bridges-first-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo bash bridges_add_old "$MODE_BRIDGES" 0
@@ -262,7 +262,7 @@ case "$CHOICE" in
 
   # Remove bridges
   5)
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
       sleep 5
@@ -275,7 +275,7 @@ case "$CHOICE" in
 
   # Deactivate bridges
   6)
-    if [ -z $number_configured_bridges_total ]; then
+    if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
       sleep 5
