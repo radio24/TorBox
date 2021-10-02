@@ -595,7 +595,7 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the firmware on a RPI4 (clearnet)
   elif [ $ARGUMENT = 3 ]; then
-    if [ ! -z "$CHECK_HD3" ] || [ ! -z "$CHECK_HD4" ]; then
+    if [ ! -z "$CHECK_HD3" ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/firmware_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
