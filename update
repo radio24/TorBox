@@ -68,7 +68,7 @@ TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/.
 TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORBOXURL=$(grep "^TORBOXURL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut sed "s/.*=//g") 2> /dev/null
+TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 #Other variables
 LOOP_NUMBER=0
@@ -694,7 +694,8 @@ if [ $exitstatus = 0 ]; then
         exitstatus=$?
         EXPERT=0
       fi
-      if [ $exitstatus = 0 ]; then
+      # exitstatus == 255 means that the ESC key was pressed
+      if [ $exitstatus -lt 255 ]; then
         clear
         online_check $TORBOXURL 1 1
         # We can only use Clearnet if allowed!
