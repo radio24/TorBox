@@ -43,7 +43,7 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -130,7 +130,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - DEFEND THE OP
 "==" "=============================================[Informational]===" \
 " 1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
-" 2" "Toggle OBFS4 Bridge Relay Mode from "$TOGGLE07b" to "$TOGGLE08b  \
+" 2" "Toggle OBFS4 Bridge Relay Mode from $TOGGLE07b to $TOGGLE08b"  \
 " 3" "Check and/or change the configuration"  \
 " 4" "Reset configuration to default"  \
 " 5" "Show me my personal OBFS4 bridge address"  \
@@ -198,7 +198,7 @@ case "$CHOICE" in
       nORPORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (ENTER -> $sORPORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nORPORT" ] && nORPORT=$sORPORT
       nOBFS4PORT=$(whiptail --title "Changing the configuration the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (ENTER -> $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      [ -z "$nOBFS4PORT" ] && nOBFS4PORT="$sOBSF4PORT "
+      [ -z "$nOBFS4PORT" ] && nOBFS4PORT=$sOBSF4PORT
         nCONTACT=$(whiptail --title "Changing the configuration the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
       nNICK=$(whiptail --title "Changing the configuration the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -309,7 +309,7 @@ case "$CHOICE" in
   9)
     INPUT=$(cat text/restore-bridge_relay_conf-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      INPUT=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_bridge_relay_"${sNICK}".tgz):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      INPUT=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_bridge_relay_${sNICK}.tgz):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       cd
       if [ -e "$INPUT" ]; then
         clear

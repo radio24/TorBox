@@ -45,7 +45,7 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -116,7 +116,7 @@ sleep 1
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 if [ -z "$INTERNETSELECTION" ]; then
-  if [ $FRESHINSTALLED > 0 ]; then ./first_use; fi
+  if [ $FRESHINSTALLED -gt 0 ]; then ./first_use; fi
 fi
 check_bridge_relay
 check_interface_with_internet
@@ -140,7 +140,6 @@ fi
 #If first_use is at play, only the configuration where the Internet is coming from will be made without displaying the Main Menu
 if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
   CHOICE=$INTERNETSELECTION
-  exitstatus=0
 else
   ###### DISPLAY THE MAIN MENU ######
   CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -771,8 +770,7 @@ case "$CHOICE" in
       if [ ! -z "$tun0up" ] ; then
         clear
         echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        wget -q --spider $CHECK_URL
-        if [ $? -eq 0 ]; then
+        if wget -q --spider $CHECK_URL; then
           echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
         else
           echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
@@ -782,8 +780,7 @@ case "$CHOICE" in
           (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
           sleep 2
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          wget -q --spider $CHECK_URL
-          if [ $? -eq 0 ]; then
+          if wget -q --spider $CHECK_URL; then
             echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
           else
             echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"

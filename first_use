@@ -197,8 +197,8 @@ case $FRESHINSTALLED in
     # This will configure the origin of the Internet.
     CHOICE=$(echo "$CHOICE" | tr -d ' ')
     if [ ! -z "$CHOICE" ]; then
-      if [[ $CHOICE > 0  && $CHOICE < 7 ]]; then
-        CHOICE=$(( $CHOICE+4 ))
+      if [[ $CHOICE -gt 0  && $CHOICE -lt 7 ]]; then
+        CHOICE=$((CHOICE+4))
         ./menu $CHOICE
       fi
     fi
@@ -214,7 +214,7 @@ case $FRESHINSTALLED in
     if [ ! -z "$CHOICE" ]; then
       mapfile -t CHOICE <<< "$CHOICE"
       for ARGUMENT in "${CHOICE[@]}"; do
-        LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+        LOOP_NUMBER=$((LOOP_NUMBER+1))
 
         #This activates TACA
         if [ $ARGUMENT = 1 ]; then

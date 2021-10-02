@@ -108,13 +108,13 @@ case $SNOWSTRING in
 				fi
 				if [ $bridge_status == 1 ]; then
 					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					SNOW_ON=$(( $SNOW_ON + 1 ))
+					SNOW_ON=$((SNOW_ON+1))
 				elif [ $bridge_status == 0 ]; then
 					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
 				elif [ $bridge_status == 2 ]; then
 					bridge_status_txt="- DOESN'T EXIST"
 				fi
-				i=$(( $i + 1 ))
+				i=$((i+1))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e "$bridge_address"
 			done

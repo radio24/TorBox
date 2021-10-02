@@ -115,11 +115,11 @@ case $MEEKSTRING in
           0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
           1)
 					  bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					  MEEK_ON=$(( $MEEK_ON + 1 ))
+					  MEEK_ON=$((MEEK_ON+1))
           ;;
           2) bridge_status_txt="- DOESN'T EXIST";;
         esac
-				i=$(( $i + 1 ))
+				i=$((i+1))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e "$bridge_address"
 			done

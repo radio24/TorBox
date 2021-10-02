@@ -43,7 +43,7 @@ MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -155,16 +155,16 @@ update_tor_preparations()
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(( $i + 1 ))
-        n=$(( $n + 1 ))
+        i=$((i+1))
+        n=$((n+1))
       else
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
-        if [ "$actual_version" == "$covered_version" ]; then i=$(( $i + 1 ))
+        if [ "$actual_version" == "$covered_version" ]; then i=$((i+1))
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
           covered_version=$actual_version
-          i=$(( $i + 1 ))
-          n=$(( $n + 1 ))
+          i=$((i+1))
+          n=$((n+1))
         fi
       fi
     done
@@ -179,7 +179,7 @@ update_tor()
   update_tor_preparations
   echo -e "${RED}[+]         Selecting a tor version to install.${NOCOLOR}"
   i=0
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
     if grep -v "-" <<< "${torversion_versionsorted_new[$i]}"; then
       version_string="$(<<< ${torversion_versionsorted_new[$i]} sed -e 's/ //g')"
@@ -273,17 +273,17 @@ select_and_install_tor()
   clear
   echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
   echo ""
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
-    menuitem=$(( $i + 1 ))
+    menuitem=$((i+1))
     echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
   done
   echo ""
   read -r -p $'\e[1;37mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
   echo
   if [[ $REPLY =~ ^[1234567890]$ ]]; then
-    if [ $REPLY -gt 0 ] && [ $(( $REPLY - 1 )) -le $number_torversion ]; then
-      CHOICE_TOR=$(( $REPLY - 1 ))
+    if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
+      CHOICE_TOR=$((REPLY-1))
       clear
       echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
@@ -518,7 +518,7 @@ exitstatus=$?
 if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
-    LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
+    LOOP_NUMBER=$((LOOP_NUMBER+1))
     if [ -z "$ARGUMENT" ]; then
       exit 0
     fi

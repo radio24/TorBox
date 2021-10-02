@@ -42,7 +42,7 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -81,6 +81,7 @@ if [ $EXITID = "EXITID=1" ]; then
   sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
   exit 0
 fi
+
 if [ $number_configured_bridges_activated = 0 ]; then
   clear
   echo -e "${WHITE}[!] There are no activated OBFS4 bridges. ${NOCOLOR}"
@@ -94,8 +95,9 @@ else
   " 1" "Deactivate ALL configured OBFS4 bridges and directly connect tor"  \
   " 2" "Deactivate only OBFS4 bridges, which are not longer ONLINE"  \
   " 3" "Deactivate only selected OBFS4 bridges"  \
-  " 4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
+  " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
   "==" "===============================================================" 3>&1 1>&2 2>&3)
+fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -130,7 +132,7 @@ case "$CHOICE" in
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi
         if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
-          j=$(($j + 1))
+          j=$((j+1))
           echo -e "${RED}[+] Deactivating bridge with the hash $bridge_hash${NOCOLOR}"
           #This is necessary to work with special characters in sed
           ORIGINAL_STR="Bridge $bridge_address"
@@ -140,7 +142,7 @@ case "$CHOICE" in
           REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
         fi
-        i=$(( $i + 1 ))
+        i=$((i+1))
       done
       if [ $j = 0 ]; then
         echo " "
@@ -178,17 +180,17 @@ case "$CHOICE" in
       number_to_be_deactivated=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to deactivate? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_25 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       number_to_be_deactivated=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deactivated)
       deactivate_number=$(cut -d ' ' -f1 <<< $number_to_be_deactivated)
-      number_configured_bridges_activated=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+      number_configured_bridges_activated=$((number_configured_bridges_deactivated+number_configured_bridges_activated))
       clear
       echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
       j=0
       while [[ ! -z "$deactivate_number" && $deactivate_number -gt 0 && $deactivate_number -gt $number_configured_bridges_deactivated && $deactivate_number -le $number_configured_bridges_activated ]]
       do
-        i=$(( $deactivate_number - $number_configured_bridges_deactivated - 1 ))
+        i=$((deactivate_number-number_configured_bridges_deactivated-1))
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
         # Row below is not necessary?
         # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-        j=$(($j + 1))
+        j=$((j+1))
         echo -e "${RED}[+] Dectivating bridge number $deactivate_number${NOCOLOR}"
         #This is necessary to work with special characters in sed
         ORIGINAL_STR="Bridge $bridge_address"

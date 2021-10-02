@@ -43,7 +43,7 @@ MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -206,7 +206,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - CONFIGURATION
 "11" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
 "12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "=============================================[Logging "$TOGGLE03 \
-"13" "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" \
+"13" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
 "14" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
 "15" "Support for Adafruit's PiTFT displays (reboot required)" \
@@ -260,7 +260,7 @@ case "$CHOICE" in
       if grep -q "^HashedControlPassword\ " ${TORRC}; then
         sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
       else
-        (printf "${INPUTHASH}\n" | sudo tee -a $TORRC) 2> /dev/null
+        (printf %s"${INPUTHASH}\n" | sudo tee -a $TORRC) 2> /dev/null
       fi
       if [ -d "/var/lib/tor/vanguards" ]; then
         sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
@@ -617,7 +617,7 @@ case "$CHOICE" in
       if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
         sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
       else
-        (printf "${INPUT}\n" | sudo tee -a ${HOSTAPD}) 2> /dev/null
+        (printf %s"${INPUT}\n" | sudo tee -a ${HOSTAPD}) 2> /dev/null
       fi
       if (whiptail --yesno "TorBox's WLAN (SSID) is now $TOGGLE08.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         clear
@@ -792,7 +792,7 @@ case "$CHOICE" in
 
   #This changes the extent of the logging
   13)
-    if (whiptail --title "Changing the extent of logging ("$TOGGLE03b" -> "$TOGGLE04b")" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
+    if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
       if [ $LOG_STATUS = inactive ]; then
         sudo systemctl enable rsyslog
@@ -867,7 +867,7 @@ case "$CHOICE" in
         sudo chmod -R 755 LCD-show/
         cd LCD-show/
         if [ ! -z "$INPUT" ]; then
-          if [ "$INPUT" = 0 ] || [ "$INPUT" = 90] || [ "$INPUT" = 180] || [ "$INPUT" = 270] ; then
+          if [ "$INPUT" = 0 ] || [ "$INPUT" = 90 ] || [ "$INPUT" = 180 ] || [ "$INPUT" = 270 ] ; then
             sudo ./LCD35-show $INPUT
           else
             sudo ./LCD35-show

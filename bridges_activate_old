@@ -42,7 +42,7 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -88,8 +88,9 @@ else
   " 1" "Activate ALL configured OBFS4 bridges"  \
   " 2" "Activate only OBFS4 bridges, which are ONLINE"  \
   " 3" "Activate only selected OBFS4 bridges"  \
-  " 4" "List all "$number_configured_bridges_total" OBFS4 bridges"  \
+  " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
   "==" "===============================================================" 3>&1 1>&2 2>&3)
+fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -122,7 +123,7 @@ case "$CHOICE" in
         fi
         j=0
         if [ $bridge_status == 1 ]; then
-          j=$(($i + 1))
+          j=$((i+1))
           echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
           #This is necessary to work with special characters in sed
           ORIGINAL_STR="#Bridge $bridge_address"
@@ -132,7 +133,7 @@ case "$CHOICE" in
           REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
         fi
-        i=$(( $i + 1 ))
+        i=$((i+1))
       done
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
@@ -173,11 +174,11 @@ case "$CHOICE" in
       j=0
       while [[ ! -z "$activate_number" && $activate_number -gt 0 && $activate_number -le $number_configured_bridges_deactivated ]]
       do
-        i=$(( $activate_number - 1 ))
+        i=$((activate_number-1))
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
         # Row below is not necessary?
         # bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-        j=$(($i + 1))
+        j=$((i+1))
         echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
         #This is necessary to work with special characters in sed
         ORIGINAL_STR="#Bridge $bridge_address"
