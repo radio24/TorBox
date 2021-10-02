@@ -79,7 +79,9 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
   clear
   echo -e "${WHITE}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
   echo -e "${RED}[+] You may use the menu entry \"Deactivate OBFS4...\". ${NOCOLOR}"
-  sleep 5
+  echo " "
+  read -n 1 -s -r -p "Press any key to continue"
+  clear
   exit 0
 fi
 
@@ -135,11 +137,12 @@ case "$CHOICE" in
         fi
         i=$((i+1))
       done
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
+      # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
+      sleep 5
       clear
       if [ $j -gt 0 ]; then
         activate_obfs4_bridges bridges_activate_old
+        clear
         exit 0
       else
         echo ""
@@ -194,8 +197,8 @@ case "$CHOICE" in
           activate_number=$(cut -d ' ' -f1 <<< $number_to_be_activated)
         fi
       done
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
+      # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
+      sleep 5
       clear
       if [ $j -gt 0 ]; then
         activate_obfs4_bridges bridges_activate_old
