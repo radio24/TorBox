@@ -128,7 +128,7 @@ finish_default_obfs4_step1()
      fi
  	 fi
  else
- 	 trap "bash menu; exit 0" EXIT
+# 	 trap "bash menu; exit 0" EXIT
  	 exit 0
  fi
 }
@@ -180,12 +180,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sleep 1
       else
         sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-        exit
+        exit 0
       fi
       check_interface_with_internet
 
     ###### DISPLAY THE MENU ######
-    CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "Frome where is the Internet coming? (ESC -> don't change)" $MENU_HEIGHT_15 $MENU_WIDTH 8 \
+    CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     "==" "===============================================================" \
     " 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
     " 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
