@@ -67,6 +67,8 @@ else
 fi
 
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
+# ps -ax | grep "[d]hclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
+# no need to change anything if INTERFACE1 was already the AP
 # New: we have also to take down th Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
