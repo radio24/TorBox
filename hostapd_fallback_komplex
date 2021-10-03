@@ -67,23 +67,37 @@ else
 fi
 
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
+# New: we have also to take down th Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE1
+	# New - hast to be tested
+	sudo ifdown $INTERFACE3
+	###
 	INTERFACE1_DOWN=1
 fi
 if ps -ax | grep "[d]hclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2
+	# New - hast to be tested
+	sudo ifdown $INTERFACE4
+	###
 	INTERFACE2_DOWN=1
 fi
 sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
+sleep 1
 if [ $INTERFACE1_DOWN = 1 ] ; then
 		sudo ifup $INTERFACE1
+		# New - hast to be tested
+		sudo ifup $INTERFACE3
+		###
 		INTERFACE1_DOWN=0
 fi
 if [ $INTERFACE2_DOWN = 1 ] ; then
 		sudo ifup $INTERFACE2
+		# New - hast to be tested
+		sudo ifup $INTERFACE4
+		###
 		INTERFACE2_DOWN=0
 fi
 
@@ -114,6 +128,7 @@ if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 fi
 
 # Is INTERFACE2 ready?
+# Only executed if the interface is down and not used for a cable client
 if ip link | grep $INTERFACE2 | grep "state UP" ; then
 	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
 	if [ -z "$STATICIP2" ] ; then
@@ -133,7 +148,6 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	if [ -z "$STATICIP3" ] ; then
 		sudo ifdown $INTERFACE3
 		sudo ifup $INTERFACE3
-#		sudo ifup $INTERFACE3 &>/dev/null &
 	fi
 	unset STATICIP3
 	STATICIP3=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
