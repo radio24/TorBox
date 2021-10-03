@@ -186,12 +186,20 @@ class wireless_manager:
                 output = subprocess.check_output(cmd)
                 output = output.decode("utf-8")
                 output = output.split("\n")
-                status = output[8].split("=")[1]
+
+                ssid = status = ip_addr = '-'
+                for line in output:
+                    if line:
+                        key, val = line.split("=")
+                        if key == 'ssid':
+                            ssid = val
+                        if key == 'wpa_state':
+                            status = val
+                        if key == 'ip_address':
+                            ip_addr = val
 
                 if status == 'COMPLETED':
                     # Connected
-                    ssid = output[2].split("=")[1]
-                    ip_addr = output[9].split("=")[1]
                     _netstatus = urwid.AttrMap(
                             urwid.Text('Connected: %s [%s]' % (ssid, ip_addr)),
                             'network_status_on'
@@ -830,33 +838,33 @@ class wireless_manager:
 
             """Popup: Password wrong. Enter a new one or cancel"""
             # Header
-            _header = urwid.Text('Password error', align = 'center')
+            if password is False:
+                _header = urwid.Text('Network error', align = 'center')
+            else:
+                _header = urwid.Text('Password error', align = 'center')
             _header = urwid.AttrMap(_header, 'connect_title')
             _divider = urwid.Divider('-')
             _divider = urwid.AttrMap(_divider, 'connect_title_divider')
-            _header = urwid.Pile([
-                _divider,
-                _header,
-                _divider
-            ])
+            _header = urwid.Pile([_divider,
+                                _header,
+                                _divider])
 
-            _text = urwid.Text(
-                    'Password is not valid for this network.',
-                    align='center'
-                )
+            if password is False:
+                _text = urwid.Text('Cannot connect to this network.',
+                                    align='center')
+            else:
+                _text = urwid.Text('Password is not valid for this network.',
+                                    align='center')
             _text = urwid.AttrMap(_text, 'connect_wrong_pass')
-            _text = urwid.Padding(
-                    _text,
-                    align='center',
-                    left=15,
-                    right=15,
-                    min_width=20
-                )
-            _text = urwid.Pile([
-                urwid.Divider(' '),
-                _text,
-                urwid.Divider(' ')
-            ])
+            _text = urwid.Padding(_text,
+                                align='center',
+                                left=15,
+                                right=15,
+                                min_width=20)
+
+            _text = urwid.Pile([urwid.Divider(' '),
+                                _text,
+                                urwid.Divider(' ')])
 
             # Args to pass to __connect_dialog
             _network = [essid,0,0,bssid]
@@ -894,16 +902,23 @@ class wireless_manager:
                     min_width=15
                 )
 
-            _button = urwid.Columns([
-                _button_new_password,
-                _button_cancel
-            ])
-            _button = urwid.Padding(
-                    _button, align='center',
-                    left=15,
-                    right=15,
-                    min_width=15
-                )
+            if password is False:
+                _button = urwid.Columns([_button_cancel])
+                _button = urwid.Padding(
+                        _button, align='center',
+                        left=30,
+                        right=30,
+                        min_width=15
+                    )
+            else:
+                _button = urwid.Columns([_button_new_password,
+                                    _button_cancel])
+                _button = urwid.Padding(
+                        _button, align='center',
+                        left=15,
+                        right=15,
+                        min_width=15
+                    )
             _button = urwid.AttrMap(_button, 'connect_buttons')
 
             _body = urwid.Pile([
