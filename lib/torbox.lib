@@ -52,16 +52,15 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 # check_tor()
 # Used predefined variables: RED, NOCOLOR
-# This function checks the status on https://check.torproject.org/
+# This function checks the status on https://check.torproject.org/api/ip
 check_tor()
 {
 clear
 echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
 sleep 1
-TOR_SERVICE=$(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
-TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
+IS_TOR=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
 
-if [ "$TOR_SERVICE" = "Congratulations" ]; then
+if [ $IS_TOR = true ]; then
   TOR_STATUS="TOR is working"
 else
   TOR_STATUS=""
