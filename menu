@@ -54,8 +54,6 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
-HOSTAPD="/etc/hostapd/hostapd.conf"
-HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
@@ -98,7 +96,7 @@ check_bridge_relay()
 check_log_check()
 {
 clear
-if ps -ax | grep "[l]og_check.py" ; then
+if pgrep -f "log_check.py"; then
   clear
 else
   clear
@@ -766,7 +764,9 @@ case "$CHOICE" in
   14)
     screen bash update
     clear
+    # shellcheck disable=SC2164
     cd
+    # shellcheck disable=SC2164
     cd torbox
   ;;
 
