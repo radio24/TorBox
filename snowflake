@@ -121,14 +121,14 @@ case $SNOWSTRING in
 			if [ $SNOW_ON == 0 ] ; then
 				echo " "
 				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
-				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
+				echo -e "${RED}[+] However, we will try to use it anyway!${NOCOLOR}"
 			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
 			echo " "
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
-			echo -e "${RED}[+] We cannot check the SNOWFLAKE SERVER - we try to use it anyway!${NOCOLOR}"
+			echo -e "${RED}[+] We cannot check the SNOWFLAKE SERVER. However, we will try to use it anyway!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		fi
