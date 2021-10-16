@@ -74,8 +74,8 @@ sudo cp unchanged_files/provider .
 sudo cp unchanged_files/configure_modem.sh .
 
 clear
-echo -e "${RED}What is your carrier APN?${SET}"
-echo -e "${RED}For more information see here: https://www.torbox.ch/?page_id=1030${SET}"
+echo -e "${RED}Enter your carrier APN:${SET}"
+echo -e "${RED}(for more information see here: https://www.torbox.ch/?page_id=1030)${SET}"
 read carrierapn
 
 while [ 1 ]
