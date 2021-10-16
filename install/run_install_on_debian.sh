@@ -1079,8 +1079,6 @@ REPLACEMENT_STR="$(<<< "$TORURL" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^TORURL=.*/TORURL=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$TORPATH_TO_RELEASE_TAGS" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^TORPATH_TO_RELEASE_TAGS=.*/TORPATH_TO_RELEASE_TAGS=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TOR_HREF_FOR_SED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TOR_HREF_FOR_SED=.*/TOR_HREF_FOR_SED=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$TORURL_DL_PARTIAL" sed -e 's`[][\\/.*^$]`\\&`g')"
 sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${REPLACEMENT_STR}/g" ${RUNFILE}
 REPLACEMENT_STR="$(<<< "$SNOWFLAKE_ORIGINAL" sed -e 's`[][\\/.*^$]`\\&`g')"

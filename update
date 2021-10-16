@@ -65,7 +65,6 @@ RUNFILE="run/torbox.run"
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORURL=$(grep "^TORURL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
-TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORBOXURL=$(grep "^TORBOXURL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
