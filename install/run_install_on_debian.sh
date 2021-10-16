@@ -105,7 +105,6 @@ GO_DL_PATH="https://golang.org/dl/"
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL="https://github.com/torproject/tor/releases"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-TOR_HREF_FOR_SED="<a href=\"\/torproject\/tor\/releases\/tag\/tor-"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
@@ -208,7 +207,7 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
+	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_datesorted[*]}
@@ -225,26 +224,37 @@ select_and_install_tor()
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
   else
-    #The fetched tor versions are sorted by dates, but we need it sorted by version
-    IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
-
-    #We will build a new array with only the relevant tor versions
+		#We will build a new array with only the relevant tor versions
     i=0
     while [ $i -lt $number_torversion ]
     do
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+        covered_version_full=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(( $i + 1 ))
-        n=$(( $n + 1 ))
+        i=$((i+1))
+        n=$((n+1))
       else
+        actual_version_full=${torversion_versionsorted[$i]}
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
-        if [ "$actual_version" == "$covered_version" ]; then i=$(( $i + 1 ))
+        if [ "$actual_version" == "$covered_version" ]; then
+          covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
+          else
+            n=$((n-1))
+            torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+            covered_version_full=$actual_version_full
+            covered_version=$actual_version
+            i=$((i+1))
+            n=$((n+1))
+          fi
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+          covered_version_full=$actual_version_full
           covered_version=$actual_version
-          i=$(( $i + 1 ))
-          n=$(( $n + 1 ))
+          i=$((i+1))
+          n=$((n+1))
         fi
       fi
     done
