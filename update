@@ -65,7 +65,6 @@ RUNFILE="run/torbox.run"
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
 TORURL=$(grep "^TORURL=" ${RUNFILE} | cut -c8-) 2> /dev/null
 TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | cut -c25-) 2> /dev/null
-TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | cut -c18-) 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | cut -c19-) 2> /dev/null
 TORBOX_USED=$(grep "^TORBOX_USED=" ${RUNFILE} | cut -c13-) 2> /dev/null
 TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
@@ -125,13 +124,14 @@ update_tor_preparations()
   sleep 5
   clear
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-  if [ $TORCONNECT -eq 0 ]; then
-    readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
-  else
-    readarray -t torversion_datesorted < <(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
-  fi
+	if [ $TORCONNECT -eq 0 ]; then
+		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	else
+		readarray -t torversion_versionsorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	fi
+
   #How many tor version did we fetch?
-	number_torversion=${#torversion_datesorted[*]}
+	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
@@ -145,26 +145,37 @@ update_tor_preparations()
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
   else
-    #The fetched tor versions are sorted by dates, but we need it sorted by version
-    IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
-
     #We will build a new array with only the relevant tor versions
     i=0
     while [ $i -lt $number_torversion ]
     do
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+				covered_version_full=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(( $i + 1 ))
-        n=$(( $n + 1 ))
+        i=$(($i+1))
+        n=$(($n+1))
       else
+				actual_version_full=${torversion_versionsorted[$i]}
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
-        if [ "$actual_version" == "$covered_version" ]; then i=$(( $i + 1 ))
+        if [ "$actual_version" == "$covered_version" ]; then
+					covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+				  actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+				  if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
+				  else
+				  	n=$((n-1))
+				    torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+				    covered_version_full=$actual_version_full
+				    covered_version=$actual_version
+				    i=$((i+1))
+				    n=$((n+1))
+				  fi
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+					covered_version_full=$actual_version_full
           covered_version=$actual_version
-          i=$(( $i + 1 ))
-          n=$(( $n + 1 ))
+          i=$(($i+1))
+          n=$(($n+1))
         fi
       fi
     done
