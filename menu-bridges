@@ -390,7 +390,6 @@ case "$CHOICE" in
       sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
       sleep 1
       clear
-      echo
       echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
       echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
       i=1
