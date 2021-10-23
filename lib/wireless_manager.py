@@ -208,10 +208,16 @@ class WirelessManager:
     scan_times_current = 1
     scan_times = 3
 
+    network_list = []
+    network_list_hidden = []
+    network_list_hidden_show = False
+
+
     # Default color palette
     _palette = [
         ("column_headers",          "white, bold",      ""),
         ("reveal_focus",            "black",            "dark cyan",    "standout"),
+        ("reveal_focus_hidden",     "black",            "light gray",    "standout"),
         ("start_msg",               "white, bold",      "",             "standout"),
         ("network_status_off",      "dark red, bold",   ""),
         ("network_status_on",       "light green, bold",""),
@@ -237,7 +243,7 @@ class WirelessManager:
         self.interface = interface
 
         # wpa_supplicant log
-        self.wpa_logfile = "/tmp/tbm-%s.log"% self.interface
+        self.wpa_logfile = "/var/log/tor/twm-%s.log"% self.interface
         open(self.wpa_logfile, 'w+').close()  # Clean/create wpa_logfile
 
         # wifi scanner
@@ -325,9 +331,97 @@ class WirelessManager:
         if key in ('R','r'):
             self.scan()
 
+        # (H) Show/hide Hidden networks
+        if key in ('H','h'):
+            self.__hidden_network_toggle()
+
         # (D) Disconnect from network
         #if key in ('D','d'):
         #    self.__disconnect()
+
+    def __hidden_network_toggle(self):
+        # Check if we have hidden networks to show
+        if len(self.network_list_hidden):
+            self.network_list_hidden_show = not self.network_list_hidden_show
+            self.loop.set_alarm_in(0.1,
+                                self.__network_scan_list,
+                                user_data=[self.network_list_hidden_show])
+        else:
+            # Inform that there are no hidden networks
+            _header = urwid.Text('TorBox Wireless Manager', align = 'center')
+            _header = urwid.AttrMap(_header, 'connect_title')
+
+            _divider = urwid.Divider('-')
+            _divider = urwid.AttrMap(_divider, 'connect_title_divider')
+            _header = urwid.Pile([_divider,
+                                _header,
+                                _divider])
+
+            _text = urwid.Text('No hidden networks found.',
+                                align='center')
+            _text = urwid.AttrMap(_text, 'connect_wrong_pass')
+            _text = urwid.Padding(_text,
+                                align='center',
+                                left=15,
+                                right=15,
+                                min_width=20)
+
+            _text = urwid.Pile([urwid.Divider(' '),
+                                _text,
+                                urwid.Divider(' ')])
+
+            # buttons
+            _button_cancel = urwid.Button('OK', self.__network_scan_list)
+            _button_cancel = urwid.AttrMap(
+                    _button_cancel,
+                    "connect_buttons",
+                    "connect_button_connect"
+                )
+            _button_cancel = urwid.Padding(
+                    _button_cancel,
+                    align='center',
+                    left=5,
+                    min_width=15
+                )
+
+            _button = urwid.Columns([_button_cancel])
+            _button = urwid.Padding(
+                    _button, align='center',
+                    left=30,
+                    right=30,
+                    min_width=15
+                )
+            _button = urwid.AttrMap(_button, 'connect_buttons')
+
+            _body = urwid.Pile([
+                _header,
+                _text,
+                _button,
+                _divider
+            ])
+
+            _body = urwid.Filler(_body)
+            _body = urwid.AttrMap(_body, 'connect_ask')
+
+            _connect_box = urwid.Frame(
+                _body,
+                header=urwid.Divider(' '),
+                focus_part='body'
+            )
+
+            # Create a popup
+            overlay = urwid.Overlay(
+                _connect_box,
+                self.loop.widget,
+                align = 'center',
+                valign = 'middle',
+                width = ('relative', 35),
+                height = ('relative', 20),
+                min_width = 35,
+                min_height = 9
+            )
+
+            self.loop.widget = overlay
 
     def __disconnect(self):
         """Disconnect from any network"""
@@ -366,7 +460,7 @@ class WirelessManager:
         if r:
             header = urwid.Pile([
                 urwid.Divider('-'),
-                urwid.Text('Torbox Wireless Manager', 'center'),
+                urwid.Text('TorBox Wireless Manager', 'center'),
                 urwid.Divider('-'),
             ])
 
@@ -416,7 +510,7 @@ class WirelessManager:
 
             _footer = urwid.Pile([
                     urwid.Text(
-                            '[ENTER]: Connect [R]efresh [Q]uit',
+                            '[ENTER]: Connect | [R]efresh | [H]idden | [Q]uit',
                             align="center"
                         ),
                     _netstatus
@@ -432,66 +526,49 @@ class WirelessManager:
         )
         return _frame
 
-    def __network_scan_list(self, _loop=object, _data=[]):
+    def __network_scan_list(self, _loop=object, _data=[False]):
         """Show network list after scan is done"""
 
-        self.network_list = self.scanner.scan()
+        hidden_show = _data[0]
 
-        # If we didn't hit the counter of scans, we scan again
-        if self.scan_times_current < self.scan_times:
-            # We add count on current scans
-            self.scan_times_current += 1
+        terminal_cols, terminal_rows = urwid.raw_display.Screen()\
+                                        .get_cols_rows()
 
-            # Sleep for a second
-            time.sleep(2)
+        # Headers columns
+        _headers = ["SSID", "%", "Sec", "MAC", "CH", "dBm"]
+        _network_header = urwid.AttrMap(
+                urwid.Columns(
+                        [urwid.Text(c) for c in _headers]
+                    ),
+                "network_header"
+            )
 
-            # Scan again
-            self.scan()
-
+        # Networks found
+        if hidden_show:
+            network_list = self.network_list_hidden
         else:
-            terminal_cols, terminal_rows = urwid.raw_display.Screen()\
-                                            .get_cols_rows()
+            network_list = self.network_list
 
-            # Headers columns
-            _headers = ["SSID", "%", "Sec", "MAC", "CH", "dBm"]
-            _network_header = urwid.AttrMap(
-                    urwid.Columns(
-                            [urwid.Text(c) for c in _headers]
-                        ),
-                    "network_header"
-                )
+        _netlist = []
+        for network in network_list:
+            row = SelectableRow(network, hidden_show, self.__connect_network)
+            _netlist.append(row)
 
-            # clean hidden ssid for UI
-            networks = self.network_list
-            for row in networks:
-                essid = row[0]
-                if '\\x00' in essid or '?' in essid or essid == '':
-                    essid = '-HIDDEN-'
-                row[0] = essid
+        _netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
 
-            # Networks found
-            _netlist = [
-                SelectableRow(
-                        network,
-                        self.__connect_network
-                    ) for network in networks
-                ]
-            _netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
+        _pile = urwid.Pile([
+            urwid.Text('Networks found:'),
+            urwid.Divider('-'),
+            _network_header,
+            urwid.Divider('-'),
+            # 9 rows used by container
+            urwid.BoxAdapter(_netlist, terminal_rows-9),
+        ])
 
+        _widget = urwid.Filler(_pile)
+        _widget = self.__get_container(_widget)
 
-            _pile = urwid.Pile([
-                urwid.Text('Networks found:'),
-                urwid.Divider('-'),
-                _network_header,
-                urwid.Divider('-'),
-                # 9 rows used by container
-                urwid.BoxAdapter(_netlist, terminal_rows-9),
-            ])
-
-            _widget = urwid.Filler(_pile)
-            _widget = self.__get_container(_widget)
-
-            self.loop.widget = _widget
+        self.loop.widget = _widget
 
     def __connect_network(self, network):
         """
@@ -555,7 +632,8 @@ class WirelessManager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 9)
+                height = ('relative', 9),
+                min_height = 6
             )
 
             self.loop.widget = overlay
@@ -614,7 +692,8 @@ class WirelessManager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 9)
+                height = ('relative', 9),
+                min_height = 6
             )
 
             self.loop.widget = overlay
@@ -858,6 +937,7 @@ class WirelessManager:
         # Clean wpa_supplicant log
         try:
             os.remove(self.wpa_logfile)
+            #open(self.wpa_logfile, 'w+').close()
             cmd = [
                     "wpa_cli",
                     "-i",
@@ -880,7 +960,10 @@ class WirelessManager:
         f = open(self.wpa_logfile, 'r')
         wpa_supplicant_event = False
 
+        connect_count = 0
         while wpa_supplicant_event is False:
+            connect_count += 1
+
             f.seek(0)
             if 'CTRL-EVENT-CONNECTED' in f.read():
                 wpa_supplicant_event = 'CONNECTED'
@@ -896,6 +979,13 @@ class WirelessManager:
             f.seek(0)
             if 'CTRL-EVENT-ASSOC-REJECT' in f.read():
                 wpa_supplicant_event = 'DISCONNECTED'
+            
+            # Limit 10 seconds to wait for a connection, otherwise cancel
+            if connect_count == 10 and wpa_supplicant_event is False:
+                wpa_supplicant_event = 'DISCONNECTED'
+                password = False  # Don't ask for new password
+            else:
+                time.sleep(1)
         f.close()
 
         # Password error
@@ -1026,7 +1116,8 @@ class WirelessManager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 20)
+                height = ('relative', 20),
+                min_height = 10
             )
 
             self.loop.widget = overlay
@@ -1045,6 +1136,37 @@ class WirelessManager:
                                       stderr=subprocess.DEVNULL)
 
             self.__network_scan_list(self.loop, [False])
+
+    def __network_scan(self, _loop=object, data=[]):
+        self.network_list = self.scanner.scan()
+
+        # If we didn't hit the counter of scans, we scan again
+        if self.scan_times_current < self.scan_times:
+            # We add count on current scans
+            self.scan_times_current += 1
+
+            # Sleep for a second
+            time.sleep(2)
+
+            # Scan again
+            self.scan()
+        else:
+            from pprint import pprint
+
+            # Separate hidden networks
+            hidden_idx = []
+            self.network_list_hidden = []
+
+            for idx,network in enumerate(self.network_list):
+                essid = network[0]
+                if '\\x00' in essid or '?' in essid or essid == '':
+                    network[0] = '-HIDDEN-'
+                    self.network_list_hidden.append(network)
+            
+            for network in self.network_list_hidden:
+                self.network_list.remove(network)
+            
+            self.loop.set_alarm_in(0.1, self.__network_scan_list, user_data=[False])
 
     def start(self):
         """Start the urwid interface"""
@@ -1086,25 +1208,33 @@ class WirelessManager:
             align = 'center',
             valign = 'middle',
             width = ('relative', 40),
-            height = ('relative', 12)
+            height = ('relative', 12),
+            min_height = 6,
         )
 
         self.loop.widget = overlay
-        self.loop.set_alarm_in(0.1, self.__network_scan_list)
+        self.loop.set_alarm_in(0.1, self.__network_scan)
 
 
 class SelectableRow(urwid.WidgetWrap):
     """Urwid class for custom list"""
-    def __init__(self, contents, on_select=None):
+    def __init__(self, contents, hidden, on_select=None):
         self.contents = contents
         self.on_select = on_select
 
         self._columns = urwid.Columns([urwid.Text(str(c)) for c in contents])
-        self._focusable_columns = urwid.AttrMap(
-                self._columns,
-                '',
-                'reveal_focus'
-            )
+        if hidden:
+            self._focusable_columns = urwid.AttrMap(
+                    self._columns,
+                    '',
+                    'reveal_focus_hidden'
+                )
+        else:
+            self._focusable_columns = urwid.AttrMap(
+                    self._columns,
+                    '',
+                    'reveal_focus'
+                )
 
         super(SelectableRow, self).__init__(self._focusable_columns)
 
