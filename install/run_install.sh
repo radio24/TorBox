@@ -557,7 +557,7 @@ fi
 
 # Additional installation for GO
 clear
-if uname -a | grep -q -E "arm64|aarch64"; then
+if uname -m | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
@@ -1004,7 +1004,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		#This has to be checked
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			sudo ./raspi64.sh
 		else
 	 	sudo ./raspi32.sh
@@ -1032,7 +1032,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			sudo ./raspi64.sh
 		else
 	 	sudo ./raspi32.sh
@@ -1060,7 +1060,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 		 	sudo ./raspi64.sh
 		else
 			sudo ./raspi32.sh

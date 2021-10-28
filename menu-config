@@ -55,10 +55,7 @@ if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CH
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
 
 # Identify the Operation System
-CHECK_OS="OTHER"
-if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
-if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
-if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+CHECK_OS="$(lsb_release -si)"
 
 #Other variables
 CRDAFILE="/etc/default/crda"

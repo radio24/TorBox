@@ -14,10 +14,7 @@ Please bear the following coding guidelines in mind:
 
   **Identify the Operation System**
   ```shell
-  CHECK_OS="OTHER"
-  if hostnamectl | grep -q "Raspbian"; then CHECK_OS="Raspbian"; fi
-  if hostnamectl | grep -q "Debian"; then CHECK_OS="Debian"; fi
-  if hostnamectl | grep -q "Ubuntu"; then CHECK_OS="Ubuntu"; fi
+  CHECK_OS="$(lsb_release -si)"
   ```
 
   **Check if it is a Raspbarry Pi**
@@ -35,7 +32,7 @@ Please bear the following coding guidelines in mind:
   **Check if the OS is 64bit**
   ```shell
   CHECK_64="32bit"
-  if uname -a | grep -q -E "arm64|aarch64"; then CHECK_64="32bit"; fi
+  if uname -m | grep -q -E "arm64|aarch64"; then CHECK_64="32bit"; fi
   ```
 
 - All menus should start with a one-digit number with a leading space or a two-digit number. The menu selection should be implemented with `case` for clarity and not, for example, with `elif` (this guideline is currently being implemented).
@@ -74,7 +71,7 @@ Please bear the following coding guidelines in mind:
   ```shell
   REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
   sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
-  ```  
+  ```
 
 - To suppress undesired terminal outputs, '&>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
 
@@ -86,9 +83,7 @@ Please bear the following coding guidelines in mind:
 
   **Examples for a short menu**
   ```shell
-  if [ -z "${BRIDGESTRING}" ]; then
-    BRIDGESTRING="Bridge mode OFF!"
-  fi
+  [ -z "${BRIDGESTRING}" ] && BRIDGESTRING="Bridge mode OFF!"
 
   if [ ! -z "$IINTERFACE" ] ; then
     VPN_STATUS="VPN is up"
