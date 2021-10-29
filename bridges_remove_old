@@ -96,7 +96,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE REMOVA
 " 2" "Remove only OBFS4 bridges, which do not exist anymore"  \
 " 3" "Remove only selected OBFS4 bridges"  \
 " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
-"==" "===============================================================" 3>&1 1>&2 2>&3)
+"==" "===============================================================" \
+3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

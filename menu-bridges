@@ -355,7 +355,8 @@ case "$CHOICE" in
       "2" "Protection against interrupted WiFi connection with the Internet" ON \
       "3" "Protection against excessive number of failing tor circuits" ON \
       "4" "Protection against excessive connection failing with tor circuits" ON \
-      "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
+      "5" "Protection against tor bootstrapping problems" ON \
+      3>&1 1>&2 2>&3)
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"
