@@ -141,7 +141,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - DEFEND THE OP
 " 9" "Restore the OBFS4 Bridge Relay configuration"  \
 "==" "========================================[How can I support?]===" \
 "10" "PLEASE SUPPORT THE TOR PROJECT!" \
-"11" "How can I help with TorBox?" 3>&1 1>&2 2>&3)
+"11" "How can I help with TorBox?" \
+3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -207,7 +208,8 @@ case "$CHOICE" in
 "HTTPS" "Distributed through the bridge website" OFF \
 "MOAT" "Directly fetched and used by the Torbrowser" OFF \
 "EMAIL" "Distributed by email (bridges@torproject.org)" OFF \
-"NONE" "Avoid distributing the bridge address" OFF 3>&1 1>&2 2>&3)
+"NONE" "Avoid distributing the bridge address" OFF \
+3>&1 1>&2 2>&3)
       nBRIDGEDISTRIBUTION=${nBRIDGEDISTRIBUTION,,}
       [ -z "$nBRIDGEDISTRIBUTION" ] && nBRIDGEDISTRIBUTION="sBRIDGEDISTRIBUTION"
       change_config

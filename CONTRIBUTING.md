@@ -47,7 +47,8 @@ Please bear the following coding guidelines in mind:
   "==" "===============================================================" \
   " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
   " 2" "Add OBFS4 bridges manually"  \
-  "==" "===============================================================" 3>&1 1>&2 2>&3)
+  "==" "===============================================================" \
+  3>&1 1>&2 2>&3)
   CHOICE=$(echo "$CHOICE" | tr -d ' ')
   case "$CHOICE" in
 
@@ -74,7 +75,7 @@ Please bear the following coding guidelines in mind:
   ```shell
   REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
   sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
-  ```  
+  ```
 
 - To suppress undesired terminal outputs, '&>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
 

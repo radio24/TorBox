@@ -193,7 +193,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     " 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
     " 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
     " 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-    "==" "===============================================================" 3>&1 1>&2 2>&3)
+    "==" "===============================================================" \
+    3>&1 1>&2 2>&3)
 
       # This will configure the origin of the Internet.
       CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -209,7 +210,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       ##### DISPLAY THE AVAILABLE OPTIONS ######
       CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 3 \
       " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
-      " 2" "Activate Vanguards to protect against Guard discovery" ON 3>&1 1>&2 2>&3)
+      " 2" "Activate Vanguards to protect against Guard discovery" ON \
+      3>&1 1>&2 2>&3)
 
       CHOICE=$(echo "$CHOICE" | tr -d ' ')
       if [ ! -z "$CHOICE" ]; then

@@ -204,7 +204,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 "11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
 "12" "Countermeasure against a tightly configured firewall - $FIREWALL" \
 "13" "Countermeasure against a disconnection when idle feature - $PING" \
-"14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" 3>&1 1>&2 2>&3)
+"14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
+3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -354,7 +355,8 @@ case "$CHOICE" in
       "2" "Protection against interrupted WiFi connection with the Internet" ON \
       "3" "Protection against excessive number of failing tor circuits" ON \
       "4" "Protection against excessive connection failing with tor circuits" ON \
-      "5" "Protection against tor bootstrapping problems" ON 3>&1 1>&2 2>&3)
+      "5" "Protection against tor bootstrapping problems" ON \
+      3>&1 1>&2 2>&3)
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"

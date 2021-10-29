@@ -211,7 +211,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - CONFIGURATION
 "==" "=============================================[Add Features]===" \
 "15" "Support for Adafruit's PiTFT displays (reboot required)" \
 "16" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"17" "Support for Sixfab Shields/HATs for cellular connections" 3>&1 1>&2 2>&3)
+"17" "Support for Sixfab Shields/HATs for cellular connections" \
+3>&1 1>&2 2>&3)
 exitstatus=$?
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -375,7 +376,8 @@ case "$CHOICE" in
         "O" "Channel  8 at 20 MHz" OFF \
         "Q" "Channel  9 at 20 MHz" OFF \
         "S" "Channel 10 at 20 MHz" OFF \
-        "U" "Channel 11 at 20 MHz" OFF 3>&1 1>&2 2>&3)
+        "U" "Channel 11 at 20 MHz" OFF \
+        3>&1 1>&2 2>&3)
         exitstatus=$?
       else
         CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nChoose a channel (default is 6)" 18 60 8 \
@@ -400,7 +402,8 @@ case "$CHOICE" in
         "S" "Channel 10 at 20 MHz" OFF \
         "T" "Channel 10 at 40 MHz" OFF \
         "U" "Channel 11 at 20 MHz" OFF \
-        "V" "Channel 11 at 40 MHz" OFF  3>&1 1>&2 2>&3)
+        "V" "Channel 11 at 40 MHz" OFF  \
+        3>&1 1>&2 2>&3)
         exitstatus=$?
       fi
       if [ $exitstatus = 0 ]; then
@@ -527,7 +530,8 @@ case "$CHOICE" in
       "E" "Channel 44 at 40 MHz" OFF \
       "F" "Channel 44 at 80 MHz" OFF \
       "G" "Channel 48 at 40 MHz" OFF \
-      "H" "Channel 48 at 80 MHz" OFF 3>&1 1>&2 2>&3)
+      "H" "Channel 48 at 80 MHz" OFF \
+      3>&1 1>&2 2>&3)
       exitstatus=$?
 
       if [ $exitstatus = 0 ]; then
@@ -700,7 +704,8 @@ case "$CHOICE" in
       INPUT=$(cat text/ssh_i_access-on-txt)
       ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
       "1" "Temporary until reconfiguration or restart" OFF \
-      "2" "Permanently until disabled again" OFF 3>&1 1>&2 2>&3)
+      "2" "Permanently until disabled again" OFF \
+      3>&1 1>&2 2>&3)
       exitstatus=$?
       if [ $exitstatus = 0 ]; then
         INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g)

@@ -158,7 +158,8 @@ else
   "13" "Go to defend the open internet..." \
   "14" "Go to the update and reset sub-menu..." \
   "===" "========================================[Reboot & Shutdown]===" \
-  "15" "Reboot / Shutdown TorBox" 3>&1 1>&2 2>&3)
+  "15" "Reboot / Shutdown TorBox" \
+  3>&1 1>&2 2>&3)
 fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -774,7 +775,8 @@ case "$CHOICE" in
   15)
     CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
-    "  2" "SHUTDOWN TorBox" 3>&1 1>&2 2>&3)
+    "  2" "SHUTDOWN TorBox" \
+    3>&1 1>&2 2>&3)
     if [ "$CHOICE_EXIT" != " " ]; then
       if [ $CHOICE_EXIT = 1 ]; then
         clear
