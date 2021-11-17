@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FileSharing</title>
+        <link rel="icon" href="/static/img/torbox-icon-150x150.jpeg" sizes="32x32" />
+        <link rel="stylesheet" href="/static/css/bulma.min.css">
+        <link rel="stylesheet" href="/static/css/all.css">
+        <link rel="stylesheet" href="/static/css/torbox.css">
+    </head>
+    <body>
+        <div id="torbox-screen-border"></div>
+        <!-- header -->
+        <div id="torbox-header" class="level">
+            <div class="level-item">
+                <span id="torbox-title" class="icon-text">
+                    <span class="icon">
+                        T
+                    </span>
+                    <span class="text">
+                        FileSharing
+                    </span>
+                </span>
+            </div>
+        </div>
+        <!-- /header -->
+
+        <!-- Upload file -->
+        <section class="section">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-8">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <!-- upload panel -->
+                            <div id="torbox-upload-panel" class="panel">
+                                <div class="panel-heading">
+                                    <a href="{% url 'index' %}" class="is-small"><i class="far fa-arrow-alt-circle-left"></i></a> &nbsp;
+                                    Upload files
+                                </div>
+                                
+                                <div class="panel-block content has-text-justified">
+                                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis, quas. Eaque obcaecati veritatis consequatur ducimus iure repellendus beatae! Cumque nulla obcaecati dolorum repellat sequi doloribus quos vel nihil quidem possimus.</p>
+                                </div>
+                                <div class="panel-block columns is-centered">
+                                    <!-- upload button-->
+                                    <div class="column is-narrow">
+                                        <div class="file has-name is-boxed is-centered">
+                                            <label class="file-label">
+                                                <input type="file" class="file-input" name="file" multiple>
+                                                <span class="file-cta">
+                                                    <span class="file-icon">
+                                                        <i class="fas fa-upload"></i>
+                                                    </span>
+                                                    <span class="file-label">Choose files</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- /upload button -->
+                                </div>
+                                <div class="panel-block columns is-centered">
+                                    <div class="column is-narrow has-text-centered">
+                                        <button class="button is-primary is-small" type="submit">Upload</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /upload panel -->
+                        </form>
+                    </div>
+                </div>
+                {% if error %}
+                <div class="columns is-centered">
+                    <div class="column is-6 has-text-centered">
+                        <p class="notification is-warning is-4">Please choose files to upload</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+            </div>
+        </section>
+        <!-- /Upload file -->
+    </body>
+</html>
