@@ -60,6 +60,9 @@
         font-size: 25px;
         font-weight: bold;
     }
+    #torbox-header a {
+        color: inherit;
+    }
 
 /* Footer */
     footer {

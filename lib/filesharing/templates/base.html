@@ -19,26 +19,28 @@
         <!-- header -->
         <div id="torbox-header" class="level">
             <div class="level-item">
-                <span id="torbox-title" class="icon-text">
-                    <span class="icon">
-                        T
+                <a href="{% url 'index' %}">
+                    <span id="torbox-title" class="icon-text">
+                        <span class="icon">
+                            T
+                        </span>
+                        <span class="text">
+                            FileSharing
+                        </span>
                     </span>
-                    <span class="text">
-                        FileSharing
-                    </span>
-                </span>
+                </a>
             </div>
         </div>
         <!-- /header -->
 
         <!-- admin msg -->
+        {% if MSG_HEADER %}
         <section class="section is-small">
-            {% if MSG_HEADER %}
             <div class="notification has-text-centered">
                 <p>{{ MSG_HEADER }}</p>
             </div>
-            {% endif %}
         </section>
+        {% endif %}
         <!-- /admin msg -->
 
         <!-- content -->
