@@ -66,10 +66,9 @@
 
 /* Footer */
     footer {
-        position:absolute;
+        position: relative;
         width: 100vw;
         bottom: 0;
-        z-index: -1;
     }
 
 /* Content */
