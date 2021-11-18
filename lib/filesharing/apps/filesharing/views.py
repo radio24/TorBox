@@ -35,7 +35,7 @@ class DownloadListView(ListView):
     model = DownloadFileModel
     template_name = 'download.html'
     context_object_name = 'files'
-    paginate_by = 8
+    paginate_by = 10
 
     def dispatch(self, request, *args, **kwargs):
         if not settings.ALLOW_DOWNLOAD:
