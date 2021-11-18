@@ -109,7 +109,7 @@ def run_webserver(dev=True):
     # Production
     gunicorn_cmd = [
         'gunicorn',
-        '-p', 'tbs.pid',
+        '-p', 'tfs.pid',
         'filesharing.wsgi'
     ]
     subprocess.call(gunicorn_cmd)

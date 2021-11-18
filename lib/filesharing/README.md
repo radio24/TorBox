@@ -5,7 +5,7 @@ A web-client used to share files over in the TorBox Project.
 ###### Note: Instructions are exclusive for TorBox Project.
 
 ### Requirements
-**TBS** was coded in Python 3.8 and only depend on 3 libraries:
+**TFS** was coded in Python 3.8 and only depend on 3 libraries:
 - Django v3.2.9
 - click v8.0.3
 - gunicorn v20.1.0
@@ -17,14 +17,14 @@ To install dependencies, run
 ## Usage
 To allow download and upload to one of your directories, simply run
 
-```./tbs -fp /path/to/shared/dir```
+```./tfs -fp /path/to/shared/dir```
 
 For more options see
 
 ```
-./tbs --help
+./tfs --help
 
-Usage: tbs [OPTIONS]
+Usage: tfs [OPTIONS]
 
 Options:
   -fp, --file-path TEXT          Path to save uploaded files
@@ -36,5 +36,5 @@ Options:
 ```
 
 ## Considerations
-**TBS** is running with Django Framework, so the file-path directory should be set on the
+**TFS** is running with Django Framework, so the file-path directory should be set on the
 web server to point static and media directories. This will be handled by TorBox Menu.
