@@ -28,26 +28,28 @@
 
         <!-- admin msg -->
         <section class="section is-small">
-            <div class="notification has-text-centered" style="display:none">
-                <p>Message from admin</p>
+            {% if MSG_HEADER %}
+            <div class="notification has-text-centered">
+                <p>{{ MSG_HEADER }}</p>
             </div>
+            {% endif %}
         </section>
         <!-- /admin msg -->
 
         <!-- content -->
         <section id="torbox-content" class="section">
             <div class="container">
-                
+                {% block content %}{% endblock %}
             </div>
         </section>
         <!-- /content -->
 
         <!-- footer -->
-        <footer class="footer">
+        <!-- <footer class="footer">
             <div class="content has-text-centered">
                 <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Recusandae, necessitatibus.</p>
             </div>
-        </footer>
+        </footer> -->
         <!-- /footer -->
     </body>
 </html>

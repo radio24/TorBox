@@ -1,34 +1,5 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>FileSharing</title>
-        <link rel="icon" href="/static/img/torbox-icon-150x150.jpeg" sizes="32x32" />
-        <link rel="stylesheet" href="/static/css/bulma.min.css">
-        <link rel="stylesheet" href="/static/css/all.css">
-        <link rel="stylesheet" href="/static/css/torbox.css">
-    </head>
-    <body>
-        <div id="torbox-screen-border"></div>
-        <!-- header -->
-        <div id="torbox-header" class="level">
-            <div class="level-item">
-                <span id="torbox-title" class="icon-text">
-                    <span class="icon">
-                        T
-                    </span>
-                    <span class="text">
-                        FileSharing
-                    </span>
-                </span>
-            </div>
-        </div>
-        <!-- /header -->
-
-        <!-- Upload file -->
-        <section class="section">
-            <div class="container">
+{% extends 'base.html' %}
+{% block content %}
                 <div class="columns is-centered">
                     <div class="column is-8">
                         <form method="post" enctype="multipart/form-data">
@@ -77,9 +48,4 @@
                     </div>
                 </div>
                 {% endif %}
-                
-            </div>
-        </section>
-        <!-- /Upload file -->
-    </body>
-</html>
+{% endblock %}
