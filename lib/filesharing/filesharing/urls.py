@@ -21,9 +21,11 @@ from django.conf.urls.static import static
 from apps.filesharing import views
 
 urlpatterns = [
-    #path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('upload/', views.upload, name='upload'),
-    #path('download/', views.download, name='download'),
     path('download/<int:pk>/', views.DownloadListView.as_view(), name='download'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # FIXME: Dev only
+]
+
+if settings.DEBUG:
+    # Serve files in dev mode
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

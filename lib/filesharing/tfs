@@ -45,6 +45,7 @@ def main(file_path, allow_download, allow_upload, msg, dev):
     os.environ['ALLOW_UPLOAD'] = "1" if allow_upload else "0"
     os.environ['ALLOW_DOWNLOAD'] = "1" if allow_download else "0"
     os.environ['MSG_HEADER'] = msg
+    os.environ['DEBUG'] = "1" if dev else "0"
 
     # Start django
     django.setup()
