@@ -1,13 +1,14 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>FileSharing</title>
-        <link rel="icon" href="/static/img/torbox-icon-150x150.jpeg" sizes="32x32" />
-        <link rel="stylesheet" href="/static/css/bulma.min.css">
-        <link rel="stylesheet" href="/static/css/all.css">
-        <link rel="stylesheet" href="/static/css/torbox.css">
+        <link rel="icon" href="{% static 'img/torbox-icon-150x150.jpeg'%}" sizes="32x32" />
+        <link rel="stylesheet" href="{% static 'css/bulma.min.css'%}">
+        <link rel="stylesheet" href="{% static 'css/all.css'%}">
+        <link rel="stylesheet" href="{% static 'css/torbox.css'%}">
     </head>
     <body>
         <div id="torbox-screen-border"></div>
