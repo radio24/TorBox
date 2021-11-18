@@ -7,7 +7,7 @@
                             <div class="panel-heading">
                                 {% if pk > 1 %}
                                 <a href="{% url 'download' pk=parent %}" class="is-small"><i class="far fa-arrow-alt-circle-left"></i></a> &nbsp;
-                                /{{ dir_name }}
+                                {{ dir_name }}
                                 {% else %}
                                 <a href="{% url 'index' %}" class="is-small"><i class="fas fa-home"></i></a> &nbsp;
                                 Download files
