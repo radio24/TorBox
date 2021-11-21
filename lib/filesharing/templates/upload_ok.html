@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+                <div class="columns">
+                    <div class="column is-8 is-offset-2">
+                        <form method="post" enctype="multipart/form-data">
+                            <div id="torbox-upload-ok" class="panel">
+                                <p class="panel-heading">Upload files</p>
+                                
+                                <div class="panel-block columns is-centered">
+                                    <!-- upload success-->
+                                    <div class="column is-narrow">
+                                        <i class="far fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="panel-block columns is-centered">
+                                    <span>Upload success!</span>
+                                </div>
+                                    <!-- /upload success -->
+                                <div class="panel-block columns is-centered">
+                                    <div class="column is-narrow">
+                                        <a href="{% url 'index' %}" class="button is-info is-small">Home</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+{% endblock %}
