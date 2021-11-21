@@ -54,13 +54,13 @@ INTERFACE1_DOWN=0
 INTERFACE2_DOWN=0
 
 # INTERFACE1 and INTERFACE2 are clients - INTERFACE3 and INTERFACE4 are potential Internet sources
-if [ $INTERFACE1 = wlan1 ] ; then
+if [ "$INTERFACE1" == "wlan1" ] ; then
 	INTERFACE3="wlan0"
 else
 	INTERFACE3="wlan1"
 fi
 
-if [ $INTERFACE2 = eth1 ] ; then
+if [ "$INTERFACE2" == "eth1" ] ; then
 	INTERFACE4="eth0"
 else
 	INTERFACE4="eth1"
@@ -70,6 +70,7 @@ fi
 # ps -ax | grep "[d]hclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
 # New: we have also to take down th Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
+# ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE1

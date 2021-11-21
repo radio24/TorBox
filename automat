@@ -84,9 +84,9 @@ elif [ $ARGUMENT = 2 ]; then
 		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
 		if [ -z "$STATICIP1" ] ; then
 			(printf %s"[$DATE] - TACA TRIGGER #2a - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
-			sudo ifdown $INTERNET_IFACE
+			(sudo ifdown $INTERNET_IFACE) &>/dev/null
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
-			sudo ifup $INTERNET_IFACE
+			(sudo ifup $INTERNET_IFACE) &>/dev/null
 		fi
 		if [ ! -z "$ARGUMENT2" ]; then
 			(printf %s"[$DATE] - TACA TRIGGER #2b - Changing to TACA TRIGGER $ARGUMENT2.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
@@ -115,12 +115,17 @@ elif [ $ARGUMENT = 3 ]; then
 		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
 		if [ -z "$STATICIP1" ] ; then
 			(printf %s"[$DATE] - TACA TRIGGER #3  - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
-			sudo ifdown $INTERNET_IFACE
+			(sudo ifdown $INTERNET_IFACE) &>/dev/null
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
-			sudo ifup $INTERNET_IFACE
+			(sudo ifup $INTERNET_IFACE) &>/dev/null
 		fi
 	fi
   (printf %s"[$DATE] - TACA TRIGGER #3  - Restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
   sudo systemctl stop tor
   sudo systemctl restart tor
+
+# Entry 4: Synchronize time
+# This should work in every configuration
+elif [ $ARGUMENT = 4 ]; then
+	(sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null
 fi

@@ -71,8 +71,10 @@ clear
 # check_interface_with_internet()
 # Used predefined variables: RED, NOCOLOR, RUNFILE
 # This function tests from where the Internet is coming
+# Following variables can be used: FLASH_*, CONNECTED
 check_interface_with_internet()
 {
+CONNECTED=0
 clear
 echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
 sleep 1
@@ -85,13 +87,17 @@ if [ ! -z "$IINTERFACE" ] ; then
 else
   VPN_STATUS=""
 fi
-if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}; else
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then
+  FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+  CONNECTED=1
+else
   IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; fi
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
   if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
 fi
 }

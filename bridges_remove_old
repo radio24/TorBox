@@ -19,7 +19,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file removes already configured bridges in /etc/tor/torrc.
+# This file deletes already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
 # ./bridges_remove_old <bridge mode>
@@ -90,11 +90,11 @@ if [ $EXITID = "EXITID=1" ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
-" 1" "Remove ALL configured OBFS4 bridges and directly connect tor"  \
-" 2" "Remove only OBFS4 bridges, which do not exist anymore"  \
-" 3" "Remove only selected OBFS4 bridges"  \
+" 1" "Delete ALL configured OBFS4 bridges and directly connect tor"  \
+" 2" "Delete only OBFS4 bridges, which do not exist anymore"  \
+" 3" "Delete only selected OBFS4 bridges"  \
 " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
 "==" "===============================================================" \
 3>&1 1>&2 2>&3)
@@ -102,10 +102,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - BRIDGE REMOVA
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
 
-  # Remove ALL configured bridges
+  # Delete ALL configured bridges
   1)
     INPUT=$(cat text/delete-all-bridges-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "REMOVE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
         deactivate_obfs4_bridges
         sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
@@ -116,14 +116,14 @@ case "$CHOICE" in
     exit 0
   ;;
 
-  # Remove only bridges, which do not exist anymore
+  # Delete only bridges, which do not exist anymore
   2)
     clear
     online_check $BRIDGE_DB_URL 1 1
     if [ $OCHECK == 1 ]; then
       echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
-      echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
+      echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
       trap "bash bridges_remove_old; exit 0" SIGINT
       j=0
@@ -171,7 +171,7 @@ case "$CHOICE" in
       done
       if [ $j = 0 ]; then
         echo " "
-        echo -e "${WHITE}[!] All checked OBFS4 do exist -> nothing to remove!${NOCOLOR}"
+        echo -e "${WHITE}[!] All checked OBFS4 do exist -> nothing to delete!${NOCOLOR}"
         sleep 5
         clear
       else
@@ -206,11 +206,11 @@ case "$CHOICE" in
   3)
     INPUT=$(cat text/delete-selected-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to remove? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      number_to_be_deleted=$(whiptail --title "TorBox - INFO" --inputbox "\n\nWhich bridge number(s) do you like to delete? Put in all bridge numbers separated by a comma (for example 1,2,3,10)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       number_to_be_deleted=$(cut -f1- -d ',' --output-delimiter=' ' <<< $number_to_be_deleted)
       delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
       clear
-      echo -e "${RED}[+] Checking for bridges to remove - please wait...${NOCOLOR}"
+      echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
       j=0
       while [[ ! -z "$delete_number" && $delete_number -gt 0 && $delete_number -le $number_configured_bridges_total ]]
@@ -244,7 +244,7 @@ case "$CHOICE" in
       number_of_bridges
       if [ $j = 0 ]; then
         echo " "
-        echo -e "${WHITE}[!] We had nothing to remove! Did we?${NOCOLOR}"
+        echo -e "${WHITE}[!] We had nothing to delete! Did we?${NOCOLOR}"
         sleep 5
         clear
       else

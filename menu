@@ -23,7 +23,7 @@
 # This file displays the main menu and executes all relevant scripts.
 #
 # SYNTAX
-# ./menu <INTERNETSELECTION>
+# ./menu [<INTERNETSELECTION>]
 #
 # <INTERNETSELECTION> will execute one of the routines, which configures
 # TorBox to route the data from an internal to an external interface.
@@ -207,7 +207,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
       clear
-      rm nohup.out
+      sudo rm nohup.out
       INPUT=$(cat text/captive_or_not-text)
       if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         CAPTIVE=1
@@ -283,7 +283,7 @@ case "$CHOICE" in
         display_net_reconfiguration_info
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
         clear
-        rm nohup.out
+        sudo rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
@@ -363,7 +363,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
       clear
-      rm nohup.out
+      sudo rm nohup.out
       INPUT=$(cat text/captive_or_not-text)
       if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         CAPTIVE=1
@@ -438,7 +438,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
       clear
-      rm nohup.out
+      sudo rm nohup.out
       INPUT=$(cat text/captive_or_not-text)
       if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         CAPTIVE=1
@@ -585,7 +585,7 @@ case "$CHOICE" in
         display_net_reconfiguration_info
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
         clear
-        rm nohup.out
+        sudo rm nohup.out
         INPUT=$(cat text/captive_or_not-text)
         if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           CAPTIVE=1
@@ -663,7 +663,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
       clear
-      rm nohup.out
+      sudo rm nohup.out
       INPUT=$(cat text/captive_or_not-text)
       if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         CAPTIVE=1
@@ -761,7 +761,7 @@ case "$CHOICE" in
   # Sub-menues
   11) bash menu-bridges;;
   12) bash menu-config;;
-  13) bash menu-server;;
+  13) bash menu-defender;;
   14)
     screen bash update
     clear

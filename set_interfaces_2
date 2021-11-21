@@ -79,6 +79,7 @@ I_DEVICE2=$3
 CAPTIVE=$4
 RESTARTTOR=$5
 RUNFILE="run/torbox.run"
+EXITLOOP=0
 
 
 ##############################
@@ -93,33 +94,106 @@ clear
 deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
-if [ "$O_DEVICE" = "eth0" ]; then
-	if [ $CAPTIVE = 1 ]; then
-		sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+while [ $EXITLOOP == 0 ]; do
+	if [ "$O_DEVICE" = "eth0" ]; then
+		if [ $CAPTIVE = 1 ]; then
+			sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+			EXITLOOP=$?
+			if [ $EXITLOOP == 0 ]; then
+				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+				echo ""
+				# TEST: that should improve the connectivity with the captive portal
+				sudo ifdown $O_DEVICE
+				# The next line should help TorBox to forget the old IP
+				ip addr flush dev $O_DEVICE
+				sudo ifup $O_DEVICE &>/dev/null &
+				echo ""
+				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+				echo ""
+				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+			fi
+		else
+			EXITLOOP=1
+		fi
+	elif [ "$O_DEVICE" = "eth1" ]; then
+		if [ $CAPTIVE = 1 ]; then
+    	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+			EXITLOOP=$?
+			if [ $EXITLOOP == 0 ]; then
+				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+				echo ""
+				# TEST: that should improve the connectivity with the captive portal
+				sudo ifdown $O_DEVICE
+				# The next line should help TorBox to forget the old IP
+				ip addr flush dev $O_DEVICE
+				sudo ifup $O_DEVICE &>/dev/null &
+				echo ""
+				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+				echo ""
+				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+			fi
+		else
+			EXITLOOP=1
+		fi
+	elif [ "$O_DEVICE" = "wlan0" ]; then
+		clear
+		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
+		sleep 2
+		sudo ./torbox_wireless_manager.py -i $O_DEVICE
+		clear
+		if [ $CAPTIVE = 1 ]; then
+	   	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+			EXITLOOP=$?
+			if [ $EXITLOOP == 0 ]; then
+				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+				echo ""
+				# TEST: that should improve the connectivity with the captive portal
+				sudo ifdown $O_DEVICE
+				# The next line should help TorBox to forget the old IP
+				ip addr flush dev $O_DEVICE
+				sudo ifup $O_DEVICE &>/dev/null &
+				echo ""
+				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+				echo ""
+				echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
+				echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
+				echo ""
+				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+			fi
+		else
+			EXITLOOP=1
+		fi
+	elif [ "$O_DEVICE" = "wlan1" ]; then
+		clear
+		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
+		sleep 2
+		sudo ./torbox_wireless_manager.py -i $O_DEVICE
+		clear
+		if [ $CAPTIVE = 1 ]; then
+	   	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+			EXITLOOP=$?
+			if [ $EXITLOOP == 0 ]; then
+				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+				echo ""
+				# TEST: that should improve the connectivity with the captive portal
+				sudo ifdown $O_DEVICE
+				# The next line should help TorBox to forget the old IP
+				ip addr flush dev $O_DEVICE
+				sudo ifup $O_DEVICE &>/dev/null &
+				echo ""
+				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+				echo ""
+				echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
+				echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
+				echo ""
+				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+			fi
+		else
+			EXITLOOP=1
+		fi
 	fi
-elif [ "$O_DEVICE" = "eth1" ]; then
-	if [ $CAPTIVE = 1 ]; then
-    sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-	fi
-elif [ "$O_DEVICE" = "wlan0" ]; then
-	clear
-	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
-	sleep 2
-	sudo ./torbox_wireless_manager.py -i $O_DEVICE
-	clear
-	if [ $CAPTIVE = 1 ]; then
-	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-	fi
-elif [ "$O_DEVICE" = "wlan1" ]; then
-	clear
-	echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
-	sleep 2
-	sudo ./torbox_wireless_manager.py -i $O_DEVICE
-	clear
-	if [ $CAPTIVE = 1 ]; then
-	   sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-	fi
-fi
+done
+
 
 ###### PREPARATIONS ######
 clear

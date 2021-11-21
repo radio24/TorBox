@@ -1,0 +1,18 @@
+This menu entry creates or reactivates an Onion Service.
+To do so, you have to type in the name of the service. If the service is not existing, it will be created (including a shared folder). If the service exists, it may be deactivated. You can try to reactivate it.
+
+If you create the Onion Service, you can type in up to two virtual ports. You can configure up to two virtual ports. However, for sharing a folder or files, TORBOX USES ONLY THE FIRST VIRTUAL PORT (for example, 80 for a website). So don't break your head about it, and just type in a number you wish to use (good numbers are 80, 8080, or something above 10000).
+
+At the end, when the Onion Service is successfully created, TorBox will present you with all necessary information, including a QR-code.
+
+IMPORTANT
+- The newly created Onion Service is not accessible right away. You have
+  still to share the newly created folder (menu entry 12). This method is
+  a quick and good solution to share documents and websites statically.
+- Without client authorization (menu entry 7-11), this shared folder will
+  be publicly available. If you want to restrict the client's access,
+  you have to generate a key pair (menu entry 7), send the client his
+  private key or register a client's public key (menu entry 8) if he is
+  providing you with it.
+
+Do you want to create, replaces or reactivate an Onion Service?

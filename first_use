@@ -21,7 +21,7 @@
 #
 # DESCRIPTION
 # This file, is only use once during the first start-up.
-# The purpose is to configure some important settings bevor TorBox is
+# The purpose is to configure some important settings before or TorBox is
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
@@ -208,7 +208,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       INPUT=$(cat text/first_use-TACA-text)
       ##### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 3 \
+      CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
       " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
       " 2" "Activate Vanguards to protect against Guard discovery" ON \
       3>&1 1>&2 2>&3)

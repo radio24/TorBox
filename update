@@ -517,7 +517,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - UPDATE & RESET OPTIONS" -
 "4" "Change/update the version of Tor" OFF \
 "5" "Update to the newest stable version of the TorBox menu" OFF \
 "6" "Erase all log files" OFF \
-"7" "Erase all passwords in the TWM (reboot required!)" OFF \
+"7" "Reset TWM and erase all wifi passwords (reboot required!)" OFF \
 "8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
 "9" "Reset Tor and force a change of the permanent entry node" OFF \
 "10" "Remove permanently OBFS4 Bridge Relay data" OFF \
@@ -839,11 +839,14 @@ if [ $exitstatus = 0 ]; then
   done
 
 # Fixing and Cleaning - Regardless of whether something has been changed or not. Just to be sure that all works properly.
+  check_interface_with_internet
   clear
-  echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
-  sudo /usr/sbin/ntpdate pool.ntp.org
-  sleep 3
-  echo " "
+  if [ $CONNECTED == 1 ]; then
+    echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
+    sudo /usr/sbin/ntpdate pool.ntp.org
+    sleep 3
+    echo " "
+  fi
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove

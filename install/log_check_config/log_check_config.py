@@ -65,6 +65,13 @@ matches = [
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 2 1',
     },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*Tor needs an accurate clock to work correctly*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
+    },
     #{
     #    "file": '/var/log/tor/notices.log',
     #    "match": "Have tried resolving or connecting to address '[scrubbed]' at * different places. Giving up",  # use * as wildcard

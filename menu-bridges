@@ -193,7 +193,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - COUNTERMEASUR
 " 2" "Activate configured OBFS4 bridges to circumvent censorship"  \
 " 3" "Add additional OBFS4 bridges"  \
 " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
-" 5" "Remove configured OBFS4 bridges"  \
+" 5" "Delete configured OBFS4 bridges"  \
 " 6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
 " 7" "Enter the advanced configuration editor"  \
 "==" "==============================================[More bridges]===" \
@@ -213,9 +213,7 @@ case "$CHOICE" in
   # Display the read.me
   1)
     INPUT=$(cat text/help-bridges-text)
-    if (whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      clear
-    fi
+    whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
   ;;
 
   # Activate bridges
@@ -261,11 +259,11 @@ case "$CHOICE" in
     list_all_obfs4_bridges
   ;;
 
-  # Remove bridges
+  # Delete bridges
   5)
     if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
-      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to remove!${NOCOLOR}"
+      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
       whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
@@ -300,6 +298,11 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
       sudo nano ${TORRC}
+      INPUT=$(cat text/restart-tor-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        clear
+        restarting_tor menu-bridges
+      fi
       read_config
     fi
   ;;
@@ -350,13 +353,13 @@ case "$CHOICE" in
     if [ "$LOGCHECK" = "Activate" ]; then
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.4.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
       "1" "Protection against entry guard failing and overloaded tor network" ON \
       "2" "Protection against interrupted WiFi connection with the Internet" ON \
       "3" "Protection against excessive number of failing tor circuits" ON \
       "4" "Protection against excessive connection failing with tor circuits" ON \
-      "5" "Protection against tor bootstrapping problems" ON \
-      3>&1 1>&2 2>&3)
+      "5" "Protection against tor bootstrapping problems" ON  \
+      "6" "Protection against out of sync time" ON 3>&1 1>&2 2>&3)
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"
@@ -366,7 +369,7 @@ case "$CHOICE" in
           sleep 1
           LOOP_NUMBER=$((LOOP_NUMBER+1))
           [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
-          [[ "$ARGUMENT" =~ [1-5] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
+          [[ "$ARGUMENT" =~ [1-6] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
         done
         if [ ! -z "$LOOP_NUMBER" ]; then
           (cat install/log_check_config/footer >> log_check_config.py) &>/dev/null

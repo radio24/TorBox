@@ -3,3 +3,4 @@ disable=SC1091  # (not following source): run for the torbox.lib separately
 disable=SC2024  # (sudo doesn't affect redirects): does not consider that the redirection is bound to another command, not to sudo
 disable=SC2236  # (-n instead of ! -z): does not consider the variable is not an integer
 disable=SC2086  # (Double quote to prevent globbing and word splitting): This have to be done with attention (see here: https://github.com/radio24/TorBox/issues/94)
+disable=SC2164  # ( Use 'cd ... || exit'): This doesn't work and is handled otherwice if necessary

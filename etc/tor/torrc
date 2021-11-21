@@ -26,6 +26,10 @@ ControlPort 127.0.0.1:9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
 DisableDebuggerAttachment 0
 
+## THE CONFIGURATION OF THE ONION SERVICES STARTS HERE!
+#######################################################
+## This will configure the Onion Services (do not remove or change that line - this is an anchor)
+
 ## THE CONFIGURATION OF THE BRIDGE RELAY STARTS HERE!
 ######################################################
 ## This will setup an obfs4 bridge relay.
