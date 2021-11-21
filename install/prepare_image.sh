@@ -64,7 +64,7 @@ else
   ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
 fi
 
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
+TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 
 clear

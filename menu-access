@@ -1,0 +1,382 @@
+#!/bin/bash
+# shellcheck disable=SC2001,SC2016
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2021 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# The code in this script is an adaption from the incredible OnionService project.
+# Copyright (C) 2021 OnionService developers (GPLv3)
+# Github:  https://github.com/nyxnor/onionservice
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file manages the TorBox user's access to Onion Services with
+# client access controls
+#
+# SYNTAX
+# ./menu-access
+#
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=11
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=4
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+TORRC="/etc/tor/torrc"
+TOR_USER="debian-tor"
+DATA_DIR_ROOT="/var/lib"
+DATA_DIR="${DATA_DIR_ROOT}/tor"
+DATA_DIR_OS="${DATA_DIR}/services"
+WEBSERVER="nginx" ## [nginx|apache2]
+WEBSITE_DIR="/var/www"
+
+##############################
+######## FUNCTIONS ########
+
+# include lib
+.  lib/torbox.lib
+
+
+
+# This functions loops through a list
+# Syntax is_integer <function_to_loop> <service> [<client>]
+# <service> are usually services, but can be any other parameter (accepts list -> serv1,serv2,...)
+# [<client>] are usually clients, but can be any other (accepts list -> client1,client2...)
+# From onionservice-cli
+#loop_list(){
+#  for ITEM in $(printf %s"${2}" | tr "," " "); do
+#		[ -z "${3}" ] && "${1}" "${ITEM}"
+#    [ -z "${3}" ] || for SUBITEM in $(printf %s"${3}" | tr "," " "); do "${1}" "${ITEM}" "${SUBITEM}"; done
+#  done
+#}
+
+
+
+# This function is represents the "onionservice client auth on [ONION_HOSTNAME] <[CLIENT_PRIV_KEY]" command
+# From onionservice-cli
+# As the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
+# The suffix '.auth_private' should not be mentioned, it will be automatically inserted when mentioning the name of the file.
+# private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
+# Use the onion hostname as the file name, this avoid overriding the file by mistake and it indicates outside of the file for which service it refers to (of course it is written inside also)
+# adding to Tor Browser automatically not supported yet
+
+client_auth_on()
+{
+  ONION_HOSTNAME="${1}"
+  CLIENT_PRIV_KEY="${2}" ## optional
+  ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
+  SUFFIX_ONION=${ONION_HOSTNAME##*.}
+  [ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_msg "ONION_DOMAIN is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]"
+  [ "${#ONION_HOSTNAME}" = "62" ] || error_msg "ONION_DOMAIN is invalid, LENGTH=${#ONION_HOSTNAME} is different than 62 characters (<56-char-base32>.onion)"
+  [ "${SUFFIX_ONION}" = "onion" ] || error_msg "ONION_DOMAIN is invalid, suffix is not '.onion'"
+  grep -q "ClientOnionAuthDir" "${TORRC}" && { printf %s"\nClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n\n" | sudo tee -a "${TORRC}"; }
+  sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+  if [ "${CLIENT_PRIV_KEY}" = "" ]; then
+    ## Generate pem and derive pub and priv keys
+    openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+    grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+    openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v "PUBLIC KEY" | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+    ## save variables
+    CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
+    CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
+    ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
+    CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+    CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
+    ## Delete pem and keys
+    sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+    # Client side configuration
+    printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+    printf "# Client side authorization configured\n"
+    printf "# This is your private key, keep it safe, keep it hidden:\n\n"
+    printf %s" CLIENT_PRIV_KEY=${CLIENT_PRIV_KEY}\n"
+    printf %s" CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
+    printf "\n# Now it depends on the service operator to authorize you client public key\n\n"
+    ## Server side configuration
+    printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+    printf "# Send the public key and instructions to the onion service operator\n\n"
+    printf %s" ONION_HOSTNAME=${ONION_HOSTNAME}\n"
+    printf %s" CLIENT_PUB_KEY=${CLIENT_PUB_KEY}\n"
+    printf %s" CLIENT_PUB_KEY_CONFIG=descriptor:x25519:${CLIENT_PUB_KEY}\n\n"
+    printf "# Create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder\n"
+    printf %s"#  '<HiddenServiceDir>/authorized_clients/' where the service hostname is ${ONION_HOSTNAME}\n\n"
+    printf %s" printf '${CLIENT_PUB_KEY_CONFIG}' | sudo tee /var/lib/tor/hidden_service/authorized_clients/alice.auth\n\n"
+    printf "# Reload tor\n\n"
+    printf " sudo chown -R debian-tor:debian-tor /var/lib/tor\n"
+    printf " sudo systemctl restart tor\n"
+    printf ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n"
+  else
+    CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+    printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}"/"${ONION_HOSTNAME}".auth_private >/dev/null
+    printf "\n# Client side authorization configured\n"
+    printf %s"\n CLIENT_PRIV_KEY_CONFIG=${CLIENT_PRIV_KEY_CONFIG}\n"
+    printf "\n# As you inserted the private key manually, we expect that you have already sent/received the public key to/from the onion service operator\n"
+    echo " "
+    read -n 1 -s -r -p "Press any key to continue"
+  fi
+}
+
+######## PREPARATIONS ########
+# read_config
+
+###### DISPLAY THE MENU ######
+clear
+
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ACCESS CONTROL" --menu "Choose an option (ESC -> go back)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"==" "=============================================[Informational]===" \
+" 1" "CLIENT AUTHORIZATION - READ ME FIRST"  \
+"==" "==========================================[Manage my access]==="  \
+" 2" "Generate a new key pair (public and private key) for an admin"  \
+" 3" "Register an Onion Service with its private key"  \
+" 4" "Edit a server access authorization"  \
+" 5" "Remove a server access authorization"  \
+" 6" "List all server access authorizations"  \
+"==" "==========================================[Backup & Restore]===" \
+" 7" "Backup access authorizations"  \
+" 8" "Restore access authorizations" 3>&1 1>&2 2>&3)
+
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
+case "$CHOICE" in
+
+  # HAS TO BE CHANGED!!
+  # Displays the read.me
+	1)
+    INPUT=$(cat text/help-onion_services-text)
+    whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+  ;;
+
+  # Generate a new key pair (public and private key) for an admin
+  2)
+    ONION_HOSTNAME=$(whiptail --title "Onion Services -- onion service name" --inputbox "\n\nInsert the onion address of the service you want to authenticate (e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    if [ -n "${ONION_HOSTNAME}" ]; then
+      clear
+      client_auth_on "${ONION_HOSTNAME}"
+    fi
+  ;;
+
+  # Register an Onion Service with its private key
+  3)
+    ONION_HOSTNAME=$(whiptail --title "Onion Services -- onion service name" --inputbox "\n\nInsert the onion address of the service you want to authenticate (e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    CLIENT_PRIV_KEY=$(whiptail --title "Onion Services -- client authorization" --inputbox "\n\nType in the client's private key (private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
+      clear
+      client_auth_on "${ONION_HOSTNAME}" "${CLIENT_PRIV_KEY}"
+    fi
+  ;;
+
+  # Edit a server access authorization
+  4)
+    #From onionservice-tui
+    i=0
+    for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
+      i=$((i+1))
+      ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" ".")"
+    done
+    if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
+      whiptail --title "TorBox - INFO" --msgbox "You don't have any server access authorizations!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    else
+      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Edit one of your authorizations" --menu "Choose an autorization to edit (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
+      [ -n "${CHOICE_ONION_AUTH}" ] && sudo nano "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
+    fi
+  ;;
+
+  #Remove a server access authorization
+  5)
+    #From onionservice-tui
+    i=0
+    for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
+      i=$((i+1))
+      ONION_AUTH_LIST="$(printf "%s\n%s\n%s\n%s\n" "${ONION_AUTH_LIST}" "${ONION_AUTH}" "." 0)"
+    done
+    if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
+      whiptail --title "TorBox - INFO" --msgbox "You don't have any server access authorizations!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    else
+      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Edit one of your authorizations" --menu "Choose an autorization to delete (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
+      [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
+    fi
+    if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
+      clear
+
+      #From onionservice-cli
+      [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
+      if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+        for ITEM in $(printf %s"${ONION_HOSTNAME}" | tr "," " "); do
+          if [ -z "${3}" ]; then
+            printf %s"\n# Removing ${CLIENT_ONION_AUTH_DIR}/${ITEM}.auth_private"
+            sudo rm -fv "${CLIENT_ONION_AUTH_DIR}"/"${ITEM}".auth_private
+          fi
+        done
+        printf "\n# Client side authorization removed\n"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+      else
+        printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+      fi
+    fi
+  ;;
+
+  # List all server access authorizations
+  6)
+    #From onionservice-cli
+    if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
+      printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
+      for AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
+        printf %s"\n# File name: ${AUTH}\n"
+        printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
+      done
+      echo " "
+      read -n 1 -s -r -p "Press any key to continue"
+    else
+      printf %s"${FOREGROUND_RED}INFO: ClientOnionAuthDir is empty\n${UNSET_FORMAT}"
+    fi
+  ;;
+
+  # Backup Onion Services
+  # Full backup needede to restore all of your hidden services and client keys
+  # Folders/files included: <torrc>, <DataDir>/services/, <DataDir>/onion_auth/
+  7)
+    # HAS TO BE CHANGED!!
+    INPUT=$(cat text/backup-onion_service-text)
+    if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      SCP_TARGET_FULL=$(whiptail --title "Onion Services -- scp destination address" --inputbox "\n\nIf you want to export the backup file to a remote server with scp then enter the destination address (syntax: username@to_host:/remote/directory/;; blank = skip):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      clear
+      OS_BK_TAR="~/torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz"
+      echo -e "${RED}[+] Backup bridge relay configuration to $OS_BK_TAR ${NOCOLOR}"
+      echo ""
+      # HAS TO BE CHANGED!! - muss die selbe Grösse sein!
+      # Possible pull request for onionservice?
+      NEEDED_SIZE=$(tar -cz "$OS_BK_TAR" "${DATA_DIR_OS}" "${CLIENT_ONION_AUTH_DIR}" "${TORRC}.part" | wc -c)
+      AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}')
+      AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
+      if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
+        sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "${CLIENT_ONION_AUTH_DIR}" "${TORRC}.part"
+      else
+        clear
+        echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        clear
+        exit 1
+      fi
+      if [ -n $SCP_TARGET_FULL ]; then
+        echo -e "${RED}[+] Sending the backup file to $SCP_TARGET_FULL${NOCOLOR}"
+        sudo scp -r $OS_BK_TAR $SCP_TARGET_FULL
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Do you want to delete the local backup file on the TorBox?" $MENU_HEIGHT_25 $MENU_WIDTH); then
+          sudo rm $OS_BK_TAR
+        fi
+      fi
+      printf %s"\nsha256sum=$(sha256sum "$OS_BK_TAR")\n\n"
+    fi
+#  ## upload to remote
+#    printf "# Export backup file uploading to remote. On this terminal instance, run:\n"
+#    printf %s"\tsudo scp -r ${HS_BK_DIR}/${HS_BK_TAR} ${SCP_TARGET_FULL}\n\n"
+#    ## download from this instance on remote
+#    printf "# Export backup file downloading from remote. On the remote terminal, run:\n"
+#    printf %s"\tsudo scp -r ${USER}@${LOCAL_IP}:${HS_BK_DIR}/${HS_BK_TAR} .\n"
+  ;;
+
+  # Restore Onion Services
+  # Backup tar file will be extracted and integrated into their respective tor folders
+  8)
+    # HAS TO BE CHANGED!!
+    INPUT=$(cat text/restore-onion_service-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      # Possible pull request for onionservice?
+      SCP_TARGET_FULL=$(whiptail --title "Onion Services -- scp source address" --inputbox "\n\nIf you want to import the backup file from a remote server with scp then enter the source address (syntax: username@from_host:/remote/directory/; blank = skip):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      if [ -n $SCP_TARGET_FULL ]; then
+        echo -e "${RED}[+] Receiving the backup file from $SCP_TARGET_FULL${NOCOLOR}"
+        sudo scp -r ${SCP_TARGET_FULL}/$OS_BK_TAR ~
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+      fi
+      cd
+      NEEDED_SIZE=$(tar tzvf $OS_BK_TAR | sed 's/ \+/ /g' | cut -f3 -d' ' | sed '2,$s/^/+ /' | paste -sd' ' | bc)
+      AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}')
+      AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
+      if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
+        sudo mkdir backup.tbx
+        printf %s"# Restoring backup from file: ${OS_BK_TAR}\n\n"
+        printf "# Extracting the archive\n\n"
+        sudo tar -xpzvf $OS_BK_TAR -C backup.tbx
+        sudo mv backup.tbx"${DATA_DIR_OS}"/* "${DATA_DIR_OS}"/
+        sudo mv backup.tbx"${CLIENT_ONION_AUTH_DIR}"/* "${CLIENT_ONION_AUTH_DIR}"/
+        CLIENT_ONION_AUTH_DIR_BAK=$(sudo grep "ClientOnionAuthDir" backup.tbx/etc/tor/torrc)
+  	    if [ -n "${CLIENT_ONION_AUTH_DIR_BK}" ]; then
+          HIDDEN_SERVICE_DIR_BAK=$(sudo grep "HiddenServiceDir" backup.tbx/etc/tor/torrc)
+          printf '\n%s\n\n' "${CLIENT_ONION_AUTH_DIR_BAK}" | sudo tee -a "${TORRC}" >/dev/null
+          printf '\n%s\n\n' "${HIDDEN_SERVICE_DIR_BAK}" | sudo tee -a "${TORRC}" >/dev/null
+          ## avoid duplication of services, it will keep the current machine config lines for safety
+          # for SERVICE in $(sudo -u "${CONF_DIR_OWNER}" grep "HiddenServiceDir" "${TORRC}" | cut -d " " -f2); do
+          #   SERVICE_NAME=$(printf %s"${SERVICE##*/}")
+          #   sudo sed -n "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{p}" "${TORRC}" > "${TORRC}".tmp
+          #   sudo sed -i'' "/HiddenServiceDir .*\/${SERVICE_NAME}$/,/^\s*$/{d}" "${TORRC}"
+          # 	sudo sed '/^\s*$/Q' "${TORRC}".tmp > "${TORRC}".mod
+          # 	sudo sed -i'' '1 i \ ' "${TORRC}".mod; sudo sed -i'' "\$a\ " "${TORRC}".mod
+          #   sudo cat "${TORRC}".mod | sudo tee -a "${TORRC}" >/dev/null
+          # done
+          # sudo rm -f "${TORRC}".tmp "${TORRC}".mod
+          #sudo cat -s "${TORRC}" | sudo tee "${TORRC}".tmp >/dev/null && sudo mv "${TORRC}".tmp "${TORRC}"
+        fi
+      else
+        clear
+        echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        clear
+        exit 1
+      fi
+      echo -e "${RED}[+] Cleaning...${NOCOLOR}"
+      sudo rm -r backup.tbx
+      cd torbox
+      INPUT=$(cat text/restart-bridge_server-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        restarting_tor menu-onion
+      fi
+    fi
+  ;;
+
+  *)
+    clear
+    exit 0
+esac
+bash menu-onion

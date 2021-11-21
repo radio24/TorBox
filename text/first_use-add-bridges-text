@@ -1,0 +1,17 @@
+In highly authoritarian countries connecting the tor network could be seen
+as suspicious. OBFS4 bridges with pluggable transports hide the connection
+to the tor network. However, we recommend only using this option if
+necessary because it is slower and doesn't work if you are behind a
+tightly configured firewall.
+
+Choosing this option, TorBox tries to activate its internal OBFS4 bridges.
+If this fails, we will try to activate a possible measure against a
+tightly configured firewall. If this fails too, we start the
+Countermeasure sub-menu so that you can try SNOWFLAKE, MEEK or manually
+add new OBFS4 bridge information.
+
+Again, we highlight that if your well-being depends on your anonymity, it
+is strongly advised not to use TorBox, but Tails!
+
+Are you located in a highly authoritarian country and need to ACTIVATE
+OBFS4 bridges with pluggable transports for TorBox (default is NO)?

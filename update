@@ -43,7 +43,7 @@ MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -62,12 +62,12 @@ if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
 
 # Read configuration from run/torbox.run
 RUNFILE="run/torbox.run"
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
-TORURL=$(grep "^TORURL=" ${RUNFILE} | cut -c8-) 2> /dev/null
-TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | cut -c25-) 2> /dev/null
-TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | cut -c19-) 2> /dev/null
-TORBOX_USED=$(grep "^TORBOX_USED=" ${RUNFILE} | cut -c13-) 2> /dev/null
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+TORURL=$(grep "^TORURL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+TORBOXURL=$(grep "^TORBOXURL=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 #Other variables
 LOOP_NUMBER=0
@@ -124,12 +124,11 @@ update_tor_preparations()
   sleep 5
   clear
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	if [ $TORCONNECT -eq 0 ]; then
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	else
-		readarray -t torversion_versionsorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	fi
-
+  if [ $TORCONNECT -eq 0 ]; then
+    readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+  else
+    readarray -t torversion_versionsorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+  fi
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
@@ -151,31 +150,31 @@ update_tor_preparations()
     do
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
-				covered_version_full=${torversion_versionsorted[0]}
+        covered_version_full=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(($i+1))
-        n=$(($n+1))
+        i=$((i+1))
+        n=$((n+1))
       else
-				actual_version_full=${torversion_versionsorted[$i]}
+        actual_version_full=${torversion_versionsorted[$i]}
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
         if [ "$actual_version" == "$covered_version" ]; then
-					covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
-				  actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
-				  if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
-				  else
-				  	n=$((n-1))
-				    torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
-				    covered_version_full=$actual_version_full
-				    covered_version=$actual_version
-				    i=$((i+1))
-				    n=$((n+1))
-				  fi
+          covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
+          else
+            n=$((n-1))
+            torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+            covered_version_full=$actual_version_full
+            covered_version=$actual_version
+            i=$((i+1))
+            n=$((n+1))
+          fi
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
-					covered_version_full=$actual_version_full
+          covered_version_full=$actual_version_full
           covered_version=$actual_version
-          i=$(($i+1))
-          n=$(($n+1))
+          i=$((i+1))
+          n=$((n+1))
         fi
       fi
     done
@@ -190,7 +189,7 @@ update_tor()
   update_tor_preparations
   echo -e "${RED}[+]         Selecting a tor version to install.${NOCOLOR}"
   i=0
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
     if grep -v "-" <<< "${torversion_versionsorted_new[$i]}"; then
       version_string="$(<<< ${torversion_versionsorted_new[$i]} sed -e 's/ //g')"
@@ -284,17 +283,17 @@ select_and_install_tor()
   clear
   echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
   echo ""
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
-    menuitem=$(( $i + 1 ))
+    menuitem=$((i+1))
     echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
   done
   echo ""
   read -r -p $'\e[1;37mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
   echo
   if [[ $REPLY =~ ^[1234567890]$ ]]; then
-    if [ $REPLY -gt 0 ] && [ $(( $REPLY - 1 )) -le $number_torversion ]; then
-      CHOICE_TOR=$(( $REPLY - 1 ))
+    if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
+      CHOICE_TOR=$((REPLY-1))
       clear
       echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
@@ -444,8 +443,26 @@ update_torcfg()
 }
 
 # This function updates the TorBox menu
+# Syntax update_torbox_menu <expert>
+# <expert> -> 0 = default installation; 1 = expert installation
 update_torbox_menu()
 {
+  clear
+  EXPERT=$1
+  if [ $EXPERT = 1 ]; then
+    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    exitstatus=$?
+    if [ $exitstatus -gt 0 ]; then exit 1; fi
+    if [ ! -z "$INPUT" ]; then
+      TORBOXMENU_BRANCHNAME=$INPUT
+      TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+    else
+      EXPERT=0
+    fi
+  fi
+  if [ $EXPERT = 0 ]; then
+    TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+  fi
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
@@ -500,19 +517,20 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - UPDATE & RESET OPTIONS" -
 "4" "Change/update the version of Tor" OFF \
 "5" "Update to the newest stable version of the TorBox menu" OFF \
 "6" "Erase all log files" OFF \
-"7" "Erase all passwords in the TWM (reboot required!)" OFF \
+"7" "Reset TWM and erase all wifi passwords (reboot required!)" OFF \
 "8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
 "9" "Reset Tor and force a change of the permanent entry node" OFF \
 "10" "Remove permanently OBFS4 Bridge Relay data" OFF \
-"11" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
+"11" "Just fixing and cleaning" OFF \
+3>&1 1>&2 2>&3)
 
 exitstatus=$?
 
 if [ $exitstatus = 0 ]; then
   mapfile -t CHOICE <<< "$CHOICE"
   for ARGUMENT in "${CHOICE[@]}"; do
-    LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-    if [ "$ARGUMENT" = "" ]; then
+    LOOP_NUMBER=$((LOOP_NUMBER+1))
+    if [ -z "$ARGUMENT" ]; then
       exit 0
     fi
 
@@ -588,7 +606,7 @@ if [ $exitstatus = 0 ]; then
 
 #This updates the firmware on a RPI4 (clearnet)
   elif [ $ARGUMENT = 3 ]; then
-    if [ ! -z "$CHECK_HD3" ] || [ ! -z "$CHECK_HD4" ]; then
+    if [ ! -z "$CHECK_HD3" ]; then
       if [ $LOOP_NUMBER = 1 ]; then
         INPUT=$(cat text/firmware_update-text)
         if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
@@ -615,60 +633,64 @@ if [ $exitstatus = 0 ]; then
     clear
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      exitstatus=$?
       EXPERT=1
     else
+      exitstatus=$?
       EXPERT=0
     fi
-    clear
-    # Avoid cheap censorship mechanisms
-    online_check $TORURL 1 1
-    # We can only use Clearnet if allowed!
-    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+    if [ $exitstatus = 0 ]; then
       clear
-      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $OCHECK == 0 ]; then
-      clear
-      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $EXPERT == 1 ]; then
-      select_and_install_tor
-      FINISHING=$?
-    else
-      update_tor
-      FINISHING=$?
-    fi
-    # Finishing
-    cd ~/torbox
-    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
-    if [ $FINISHING = 1 ] ; then
-      (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-      # Copy not moving!
-      (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
-      sudo chmod a+x /usr/bin/geoip*
-      sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-      sudo systemctl stop tor
-      sudo systemctl enable tor
-      sudo systemctl daemon-reload
-      sudo systemctl start tor
-      TOR_VERS=""
-      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
-      echo ""
-      echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
-      read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      # Avoid cheap censorship mechanisms
+      online_check $TORURL 1 1
+      # We can only use Clearnet if allowed!
+      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $OCHECK == 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p "Press any key to continue"
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $EXPERT == 1 ]; then
+        select_and_install_tor
+        FINISHING=$?
+      else
+        update_tor
+        FINISHING=$?
+      fi
+      # Finishing
+      cd ~/torbox
+      if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+      if [ $FINISHING = 1 ] ; then
+        (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+        # Copy not moving!
+        (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+        sudo chmod a+x /usr/bin/geoip*
+        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+        sudo systemctl stop tor
+        sudo systemctl enable tor
+        sudo systemctl daemon-reload
+        sudo systemctl start tor
+        TOR_VERS=""
+        TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+        echo ""
+        echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      fi
     fi
 
 #This updates the newest stable version of TorBox's menu
@@ -676,9 +698,17 @@ if [ $exitstatus = 0 ]; then
     clear
     if [ $LOOP_NUMBER = 1 ]; then
       INPUT=$(cat text/torbox_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        exitstatus=$?
+        EXPERT=1
+      else
+        exitstatus=$?
+        EXPERT=0
+      fi
+      # exitstatus == 255 means that the ESC key was pressed
+      if [ $exitstatus -lt 255 ]; then
         clear
-        online_check default 1 1
+        online_check $TORBOXURL 1 1
         # We can only use Clearnet if allowed!
         if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
           clear
@@ -699,14 +729,14 @@ if [ $exitstatus = 0 ]; then
           trap "screen bash update; exit 0" EXIT
           exit 1
         fi
-        update_torbox_menu
+        update_torbox_menu $EXPERT
       fi
     else
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         sleep 1
       else
-        update_torbox_menu
+        update_torbox_menu $EXPERT
       fi
     fi
     exit 0
@@ -809,11 +839,14 @@ if [ $exitstatus = 0 ]; then
   done
 
 # Fixing and Cleaning - Regardless of whether something has been changed or not. Just to be sure that all works properly.
+  check_interface_with_internet
   clear
-  echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
-  sudo /usr/sbin/ntpdate pool.ntp.org
-  sleep 3
-  echo " "
+  if [ $CONNECTED == 1 ]; then
+    echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
+    sudo /usr/sbin/ntpdate pool.ntp.org
+    sleep 3
+    echo " "
+  fi
   echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   sudo apt --fix-broken install
   sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove

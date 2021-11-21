@@ -1,4 +1,6 @@
 # This configuration file was modified by TorBox
+# Remark: eth1 has to be auto because it is handled this way in hostapd_fallback_komplex
+#         Inet -> wlan0 -> eth1 -> client is not possible; eth0 hast to be used
 
 # interfaces(5) file used by ifup(8) and ifdown(8)
 # Include files from /etc/network/interfaces.d:

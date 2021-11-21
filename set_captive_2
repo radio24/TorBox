@@ -25,7 +25,7 @@
 # such a portal, it is necessary to establish a direct connection to the wireless
 # network provider. This procedure temporarily uses an INSECURE CONNECTION. The user
 # may CLOSE ALL HIS APPLICATIONS ON HIS CLIENT DEVICES to prevent the leakage of information
-# during the established INSECURE CONNECTION. 
+# during the established INSECURE CONNECTION.
 #
 # SYNTAX
 # ./set_captive_2 <outgoing interface> <incoming interface> <incoming interface>
@@ -77,9 +77,11 @@ clear
 INPUT=$(cat text/is-it-captive-text)
 if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
   CAPTIVE=1
+  EXITLOOP=0
 else
   sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-  exit 0
+  EXITLOOP=1
+  exit $EXITLOOP
 fi
 
 ######## PREPARATIONS ########
@@ -109,9 +111,14 @@ $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT
 
 ########## DIALOG BOX #########
 clear
-whiptail --title "TorBox - INFO" --textbox text/browser-text 25 80
+INPUT=$(cat text/browser-text)
+if (whiptail --title "TorBox - INFO" --defaultno --no-button "CONTINUE" --yes-button "TRY IT AGAIN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+  EXITLOOP=0
+else
+  EXITLOOP=1
+fi
 echo -e "${RED}[+] Stopping DNS forwarder...${NOCOLOR}"
 sudo systemctl stop $DNSPROG
 
 ########## FINISHING ##########
-exit 0
+exit $EXITLOOP

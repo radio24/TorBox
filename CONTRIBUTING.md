@@ -38,16 +38,17 @@ Please bear the following coding guidelines in mind:
   if uname -a | grep -q -E "arm64|aarch64"; then CHECK_64="32bit"; fi
   ```
 
-- The menu selection should be implemented with `case` for clarity and not, for example, with `elif` (this guideline is currently being implemented).
+- All menus should start with a one-digit number with a leading space or a two-digit number. The menu selection should be implemented with `case` for clarity and not, for example, with `elif` (this guideline is currently being implemented).
 
   **Example for a short menu**
   ```shell
   clear
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  "===" "==============================================================" \
-  "  1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
-  "  2" "Add OBFS4 bridges manually"  \
-  "===" "==============================================================" 3>&1 1>&2 2>&3)
+  "==" "===============================================================" \
+  " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+  " 2" "Add OBFS4 bridges manually"  \
+  "==" "===============================================================" \
+  3>&1 1>&2 2>&3)
   CHOICE=$(echo "$CHOICE" | tr -d ' ')
   case "$CHOICE" in
 
@@ -67,7 +68,22 @@ Please bear the following coding guidelines in mind:
   esac
   ```
 
-- '! -z' for non zero or not null and '-z' for zero/null (this guideline is currently being implemented).
+- Writing URLs to a file, use `|` as a delimiter (this guideline is currently being implemented):
+  `sed "s|GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|" torbox.run`
+
+  Depreciated and should be replaced:
+  ```shell
+  REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+  sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
+  ```
+
+- To suppress undesired terminal outputs, '&>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
+
+  ```shell
+  (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
+  ```
+
+- `! -z` for non zero/not null and `-z` for zero/null. ATTENTION: zero/null means `""` or `0`, but not `"0"` because this is a string!
 
   **Examples for a short menu**
   ```shell
@@ -81,6 +97,12 @@ Please bear the following coding guidelines in mind:
     VPN_STATUS=""
   fi
   ```
+
+  **Examples for "0" is not `0`**
+  If `CLEARNET_ONLY=0` then `if [ -z "$CLEARNET_ONLY" ]; then` will be `false`, but `if [ "$CLEARNET_ONLY" == "0" ]; then` will be true.
+
+
+- Check exit code directly with e.g. 'if mycmd;', not indirectly with '$?' (for more information, see [Shellcheck #SC2181](https://github.com/koalaman/shellcheck/wiki/SC2181); this guideline is currently being implemented)
 
 - In general, variable names should be short and in upper case. However, there are exceptions; if the complexity needs longer, self-explaining variable names, then they can also be in lower case.
 

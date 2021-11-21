@@ -23,24 +23,201 @@
 # by the Torbox Wireless Manager.
 
 import os
+import re
 import subprocess
 import time
 import urwid
 import asyncio
 
-from .wifi_scanner import wifi_scanner
+class WirelessManagerScanner:
+    """Scan wifi networks and return the result as a list"""
+
+    networks = {}
+
+    def __init__(self, interface):
+        # Interface to work
+        self.interface = interface
+
+        # Frequency of channels
+        self.channel_freq = {
+            2: 2417,
+            3: 2422,
+            1: 2412,
+            5: 2432,
+            6: 2437,
+            7: 2442,
+            4: 2427,
+            8: 2447,
+            9: 2452,
+            10: 2457,
+            11: 2462,
+            12: 2467,
+            13: 2472,
+            14: 2484
+        }
+
+        self.channel_freq_5ghz = {
+            7: 5035,
+            8: 5040,
+            9: 5045,
+            11: 5055,
+            12: 5060,
+            16: 5080,
+            32: 5160,
+            34: 5170,
+            36: 5180,
+            38: 5190,
+            40: 5200,
+            42: 5210,
+            44: 5220,
+            46: 5230,
+            48: 5240,
+            50: 5250,
+            52: 5260,
+            54: 5270,
+            56: 5280,
+            58: 5290,
+            60: 5300,
+            62: 5310,
+            64: 5320,
+            68: 5340,
+            96: 5480,
+            100: 5500,
+            102: 5510,
+            104: 5520,
+            106: 5530,
+            108: 5540,
+            110: 5550,
+            112: 5560,
+            114: 5570,
+            116: 5580,
+            118: 5590,
+            120: 5600,
+            122: 5610,
+            124: 5620,
+            126: 5630,
+            128: 5640,
+            132: 5660,
+            134: 5670,
+            136: 5680,
+            138: 5690,
+            140: 5700,
+            142: 5710,
+            144: 5720,
+            149: 5745,
+            151: 5755,
+            153: 5765,
+            155: 5775,
+            157: 5785,
+            159: 5795,
+            161: 5805,
+            165: 5825,
+            169: 5845,
+            173: 5865,
+            183: 4915,
+            184: 4920,
+            185: 4925,
+            187: 4935,
+            188: 4940,
+            189: 4945,
+            192: 4960,
+            196: 4980
+        }
+
+        # Flag for hidden networks scan
+        self.keep_scanning = True
+
+    def scan(self):
+        # scan
+        cmd = "wpa_cli", "-i", self.interface, "scan"
+        cmd = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        time.sleep(1)
+
+        # NOTE: sometimes wpa_cli doesn't scan at the 1st time,
+        # so we run it 2 times.
+        cmd = "wpa_cli", "-i", self.interface, "scan"
+        cmd = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+
+        # Process scan result
+        cmd = ["wpa_cli", "-i", self.interface, "scan_results"]
+        cmd = subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        r = cmd.strip().split(b"\n")
+
+        # Remove headers from response
+        r.remove(r[0])
+
+        # sort the list
+        output = []
+        for line in r:
+            c = line.split(b"\t")
+
+            # Net MAC
+            bssid = c[0].decode('utf-8')
+            
+            # Net Channel
+            try:
+                channel	= [
+                        k for k, v in self.channel_freq.items()\
+                            if v == int(c[1])
+                        ][0]
+            except:
+                try:
+                    channel = [
+                            k for k, v in self.channel_freq_5ghz.items()\
+                                if v == int(c[1])
+                            ][0]
+                except:
+                    channel = '?'
+
+            # Net dbm
+            dbm_signal = c[2].decode('utf-8')
+
+            # Net Quality
+            quality = 2 * (int(c[2]) + 100)
+            if quality > 100:
+                quality = 100
+
+            # Net Security
+            security = c[3].decode('utf-8')
+            q = re.search(r'\[(.*?)\]', security)
+            security = q[0]
+
+            # Net Name
+            try:
+                essid		= c[4].decode('utf-8')
+            except:
+                essid		= '?'
+            
+            output.append([essid, quality, security, bssid, channel, dbm_signal])
+            #0        essid,
+            #1        quality,
+            #2        security,
+            #3        bssid,
+            #4        channel,
+            #5        dbm_signal
+
+        # Sort by signal strength
+        output.sort(key=lambda x: x[1], reverse=True)
+
+        return output
 
 
-class wireless_manager:
+class WirelessManager:
 
     # Flags counting scanning between different methods inside the class
     scan_times_current = 1
     scan_times = 3
 
+    network_list = []
+    network_list_hidden = []
+    network_list_hidden_show = False
+
+
     # Default color palette
     _palette = [
         ("column_headers",          "white, bold",      ""),
         ("reveal_focus",            "black",            "dark cyan",    "standout"),
+        ("reveal_focus_hidden",     "black",            "light gray",    "standout"),
         ("start_msg",               "white, bold",      "",             "standout"),
         ("network_status_off",      "dark red, bold",   ""),
         ("network_status_on",       "light green, bold",""),
@@ -66,11 +243,11 @@ class wireless_manager:
         self.interface = interface
 
         # wpa_supplicant log
-        self.wpa_logfile = "/tmp/tbm-%s.log"% self.interface
+        self.wpa_logfile = "/var/log/tor/twm-%s.log"% self.interface
         open(self.wpa_logfile, 'w+').close()  # Clean/create wpa_logfile
 
         # wifi scanner
-        self.scanner = wifi_scanner(self.interface)
+        self.scanner = WirelessManagerScanner(self.interface)
 
         # config for wpa_supplicant
         wpa_config = "/etc/wpa_supplicant/wpa_supplicant-%s.conf" % self.interface
@@ -100,20 +277,16 @@ class wireless_manager:
 
             # Disable dhcp connection from current interface
             cmd = ["dhclient", "-r", self.interface]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             # Check if we got connect by wpa_supplicant
             # run dhcp for getting ip
             cmd = ["dhclient", self.interface]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             # Give some time to dhclient
             time.sleep(5)
@@ -140,13 +313,128 @@ class wireless_manager:
         self._event_loop = urwid.AsyncioEventLoop(loop=self._async_loop)
 
         # urwid main loop
-        self.loop = urwid.MainLoop(
-            widget,
-            self._palette,
-            unhandled_input = self._manage_hotkeys,
-            event_loop = self._event_loop
-        )
-        self.loop.set_alarm_in(0.1, self.scan, user_data=[False])
+        self.loop = urwid.MainLoop(widget,
+                                   self._palette,
+                                   unhandled_input = self.__manage_hotkeys,
+                                   event_loop = self._event_loop)
+
+        #self.loop.set_alarm_in(0.1, self.scan, user_data=[False])
+        self.loop.set_alarm_in(0.1, self.scan)
+
+    def __manage_hotkeys(self, key):
+        # (Q) QUIT
+        if key in ('Q', 'q'):
+            # Exit urwid
+            raise urwid.ExitMainLoop()
+
+        # (R) Refresh network list
+        if key in ('R','r'):
+            self.scan()
+
+        # (H) Show/hide Hidden networks
+        if key in ('H','h'):
+            self.__hidden_network_toggle()
+
+        # (D) Disconnect from network
+        #if key in ('D','d'):
+        #    self.__disconnect()
+
+    def __hidden_network_toggle(self):
+        # Check if we have hidden networks to show
+        if len(self.network_list_hidden):
+            self.network_list_hidden_show = not self.network_list_hidden_show
+            self.loop.set_alarm_in(0.1,
+                                self.__network_scan_list,
+                                user_data=[self.network_list_hidden_show])
+        else:
+            # Inform that there are no hidden networks
+            _header = urwid.Text('TorBox Wireless Manager', align = 'center')
+            _header = urwid.AttrMap(_header, 'connect_title')
+
+            _divider = urwid.Divider('-')
+            _divider = urwid.AttrMap(_divider, 'connect_title_divider')
+            _header = urwid.Pile([_divider,
+                                _header,
+                                _divider])
+
+            _text = urwid.Text('No hidden networks found.',
+                                align='center')
+            _text = urwid.AttrMap(_text, 'connect_wrong_pass')
+            _text = urwid.Padding(_text,
+                                align='center',
+                                left=15,
+                                right=15,
+                                min_width=20)
+
+            _text = urwid.Pile([urwid.Divider(' '),
+                                _text,
+                                urwid.Divider(' ')])
+
+            # buttons
+            _button_cancel = urwid.Button('OK', self.__network_scan_list)
+            _button_cancel = urwid.AttrMap(
+                    _button_cancel,
+                    "connect_buttons",
+                    "connect_button_connect"
+                )
+            _button_cancel = urwid.Padding(
+                    _button_cancel,
+                    align='center',
+                    left=5,
+                    min_width=15
+                )
+
+            _button = urwid.Columns([_button_cancel])
+            _button = urwid.Padding(
+                    _button, align='center',
+                    left=30,
+                    right=30,
+                    min_width=15
+                )
+            _button = urwid.AttrMap(_button, 'connect_buttons')
+
+            _body = urwid.Pile([
+                _header,
+                _text,
+                _button,
+                _divider
+            ])
+
+            _body = urwid.Filler(_body)
+            _body = urwid.AttrMap(_body, 'connect_ask')
+
+            _connect_box = urwid.Frame(
+                _body,
+                header=urwid.Divider(' '),
+                focus_part='body'
+            )
+
+            # Create a popup
+            overlay = urwid.Overlay(
+                _connect_box,
+                self.loop.widget,
+                align = 'center',
+                valign = 'middle',
+                width = ('relative', 35),
+                height = ('relative', 20),
+                min_width = 35,
+                min_height = 9
+            )
+
+            self.loop.widget = overlay
+
+    def __disconnect(self):
+        """Disconnect from any network"""
+
+        cmd = ["dhclient", "-r", self.interface]
+        n = subprocess.check_call(cmd,
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
+
+        cmd = ["wpa_cli", "-i", self.interface, "disconnect"]
+        r = subprocess.check_call(cmd,
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
 
     def __is_connected(self):
         """ Check if wireless connection is active """
@@ -172,7 +460,7 @@ class wireless_manager:
         if r:
             header = urwid.Pile([
                 urwid.Divider('-'),
-                urwid.Text('Torbox Wireless Manager', 'center'),
+                urwid.Text('TorBox Wireless Manager', 'center'),
                 urwid.Divider('-'),
             ])
 
@@ -220,186 +508,67 @@ class wireless_manager:
                     )
                 self.connected = False
 
-            footer = urwid.Pile([
+            _footer = urwid.Pile([
                     urwid.Text(
-                            '[ENTER]: Connect [R]efresh [Q]uit',
+                            '[ENTER]: Connect | [R]efresh | [H]idden | [Q]uit',
                             align="center"
                         ),
                     _netstatus
                 ])
-            return footer
+            return _footer
 
     def __get_container(self, widget, header=True, footer=True):
         """Default container. It can be with or without header and footer"""
-        frame = urwid.Frame(
+        _frame = urwid.Frame(
             widget,
             header = self.__get_header(header),
             footer = self.__get_footer(footer)
         )
-        return frame
-
-    def start(self):
-        """Start the urwid interface"""
-        self.loop.run()
-
-    def _manage_hotkeys(self, key):
-        # (Q) QUIT
-        if key in ('Q', 'q'):
-            # Exit urwid
-            raise urwid.ExitMainLoop()
-
-        # (R) Refresh network list
-        if key in ('R','r'):
-            self.scan()
-
-        # (D) Refresh network list
-        if key in ('D','d'):
-            self.__disconnect()
-
-    def scan(self, _loop=object, _data=[False]):
-        """Show scanning popup and start scanning for networks"""
-        hidden = _data[0]
-
-        # scanning popup
-        if hidden is False:
-            if self.scan_times_current < self.scan_times:
-                _text = urwid.Text(
-                        '\nScanning. Please wait (%s/%s)' %\
-                            (self.scan_times_current, self.scan_times),
-                        align='center'
-                    )
-            else:
-                _text = urwid.Text('\nScanning. Please wait...', align='center')
-            
-            _text = urwid.AttrMap(_text, 'scanning')
-            _body = urwid.Pile([
-                _text
-            ])
-            _body = urwid.Filler(_body)
-            _body = urwid.AttrMap(_body, 'scanning')
-        else:
-            if self.scan_times_current < self.scan_times:
-                _text = urwid.Text(
-                        '\nScanning HIDDEN networks. Please wait (%s/%s)' %\
-                            (self.scan_times_current, self.scan_times),
-                        align='center'
-                    )
-            else:
-                _text = urwid.Text(
-                        '\nScanning HIDDEN networks. Please wait...',
-                        align='center'
-                    )
-            _text = urwid.AttrMap(_text, 'scanning_hidden')
-
-            _body = urwid.Pile([
-                _text
-            ])
-
-            _body = urwid.Filler(_body)
-            _body = urwid.AttrMap(_body, 'scanning_hidden')
-
-        _connect_box = urwid.Frame(
-            _body,
-            header=urwid.Divider(' '),
-            focus_part='body'
-        )
-
-        # store actual widget
-        self.last_widget = self.loop.widget
-
-        # Create a popup
-        overlay = urwid.Overlay(
-            _connect_box,
-            self.loop.widget,
-            align = 'center',
-            valign = 'middle',
-            width = ('relative', 40),
-            height = ('relative', 12)
-        )
-
-        self.loop.widget = overlay
-        self.loop.set_alarm_in(0.1, self.__network_scan_list, user_data=[hidden])
-
-    def __disconnect(self):
-        """Disconnect from any network"""
-
-        cmd = ["dhclient", "-r", self.interface]
-        n = subprocess.check_call(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-
-        cmd = ["wpa_cli", "-i", self.interface, "disconnect"]
-        r = subprocess.check_call(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+        return _frame
 
     def __network_scan_list(self, _loop=object, _data=[False]):
         """Show network list after scan is done"""
 
-        hidden_scan = _data[0]
+        hidden_show = _data[0]
 
-        if hidden_scan:
-            self.network_list = self.scanner.scan_hidden()
+        terminal_cols, terminal_rows = urwid.raw_display.Screen()\
+                                        .get_cols_rows()
+
+        # Headers columns
+        _headers = ["SSID", "%", "Sec", "MAC", "CH", "dBm"]
+        _network_header = urwid.AttrMap(
+                urwid.Columns(
+                        [urwid.Text(c) for c in _headers]
+                    ),
+                "network_header"
+            )
+
+        # Networks found
+        if hidden_show:
+            network_list = self.network_list_hidden
         else:
-            self.network_list = self.scanner.scan()
+            network_list = self.network_list
 
-        # If we didn't hit the counter of scans, we scan again
-        if self.scan_times_current < self.scan_times:
-            # We add count on current scans
-            self.scan_times_current += 1
+        _netlist = []
+        for network in network_list:
+            row = SelectableRow(network, hidden_show, self.__connect_network)
+            _netlist.append(row)
 
-            # Sleep for a second
-            time.sleep(2)
+        _netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
 
-            # Scan again
-            self.scan()
+        _pile = urwid.Pile([
+            urwid.Text('Networks found:'),
+            urwid.Divider('-'),
+            _network_header,
+            urwid.Divider('-'),
+            # 9 rows used by container
+            urwid.BoxAdapter(_netlist, terminal_rows-9),
+        ])
 
-        else:
-            terminal_cols, terminal_rows = urwid.raw_display.Screen()\
-                                            .get_cols_rows()
+        _widget = urwid.Filler(_pile)
+        _widget = self.__get_container(_widget)
 
-            # Headers columns
-            _headers = ["SSID", "%", "Sec", "MAC", "CH", "dBm"]
-            _network_header = urwid.AttrMap(
-                    urwid.Columns(
-                            [urwid.Text(c) for c in _headers]
-                        ),
-                    "network_header"
-                )
-
-            # clean hidden ssid for UI
-            networks = self.network_list
-            for bssid in networks.keys():
-                __essid = networks[bssid][0]
-                if '\\x00' in __essid or '?' in __essid or __essid == '':
-                    __essid = '-HIDDEN-'
-                networks[bssid][0] = __essid
-
-            # Networks found
-            _netlist = [
-                SelectableRow(
-                        networks[bssid],
-                        self.__connect_network
-                    ) for bssid in networks.keys()
-                ]
-            _netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
-
-            pile = urwid.Pile([
-                urwid.Text('Networks found:'),
-                urwid.Divider('-'),
-                _network_header,
-                urwid.Divider('-'),
-                urwid.BoxAdapter(_netlist, terminal_rows),
-            ])
-
-            widget = urwid.Filler(pile)
-            widget = self.__get_container(widget)
-
-            self.loop.widget = widget
+        self.loop.widget = _widget
 
     def __connect_network(self, network):
         """
@@ -410,15 +579,16 @@ class wireless_manager:
         bssid = network[3]
         security = network[2]
 
+        # Look for saved networks
         cmd = "wpa_cli -i %s list_networks |grep '%s'" % (self.interface, bssid)
-        n = subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL
-            )
+        n = subprocess.Popen(cmd,
+                             shell=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL)
+        
         _str = n.communicate()[0]
 
+        # Check if we have network id from wpa_cli
         try:
             network_id = _str.strip().split(b"\t")[0]
             network_id = int(network_id)
@@ -426,8 +596,12 @@ class wireless_manager:
         except:
             network_id = False
 
+        # If no network id, the network is not saved, we open connect
+        # dialog (ask password) if it's not ESS (free wifi)
         if network_id is False and security != '[ESS]':
             self.__connect_dialog(network)
+        # Otherwise, we try to connect without asking password
+        # (free wifi and saved networks)
         else:
             _text = urwid.Text(
                     'Connecting to [%s]. Please wait...' % (essid),
@@ -458,7 +632,8 @@ class wireless_manager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 9)
+                height = ('relative', 9),
+                min_height = 6
             )
 
             self.loop.widget = overlay
@@ -476,9 +651,11 @@ class wireless_manager:
         bssid = network[3]
 
         # Callbacks for buttons
-        def _button_connect_callback(
-                    essid_input, bssid, pass_input, hidden_flag, widget
-                ):
+        def _button_connect_callback(essid_input,
+                                     bssid,
+                                     pass_input,
+                                     hidden_flag,
+                                     widget):
             essid = essid_input.get_edit_text()
             password = pass_input.get_edit_text()
             self.loop.widget = self.last_widget
@@ -515,7 +692,8 @@ class wireless_manager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 9)
+                height = ('relative', 9),
+                min_height = 6
             )
 
             self.loop.widget = overlay
@@ -563,13 +741,11 @@ class wireless_manager:
         def _pass_edit_change(widget, text):
             if text.endswith('\n'):
                 _input_pass_edit.set_edit_text(text.strip('\n'))
-                _button_connect_callback(
-                        _input_essid_edit,
-                        bssid,
-                        _input_pass_edit,
-                        _hidden_flag,
-                        self.loop.widget
-                    )
+                _button_connect_callback(_input_essid_edit,
+                                         bssid,
+                                         _input_pass_edit,
+                                         _hidden_flag,
+                                         self.loop.widget)
                 return
         urwid.connect_signal(_input_pass_edit, 'change', _pass_edit_change)
 
@@ -671,11 +847,9 @@ class wireless_manager:
                     "bssid",
                     '{}'.format(bssid)
                 ]
-            r = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            r = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             # Set the essid where we are going to connect
             cmd = [
@@ -687,11 +861,9 @@ class wireless_manager:
                     "ssid",
                     '"{}"'.format(essid)
                 ]
-            r = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            r = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             if password is not False:
                 # Set the password
@@ -704,11 +876,9 @@ class wireless_manager:
                         "psk",
                         '"{}"'.format(password)
                     ]
-                r = subprocess.check_call(
-                        cmd,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
+                r = subprocess.check_call(cmd,
+                                          stdout=subprocess.DEVNULL,
+                                          stderr=subprocess.DEVNULL)
             else:
                 # No key management
                 cmd = [
@@ -720,11 +890,9 @@ class wireless_manager:
                         "key_mgmt",
                         'NONE'
                     ]
-                r = subprocess.check_call(
-                        cmd,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
+                r = subprocess.check_call(cmd,
+                                          stdout=subprocess.DEVNULL,
+                                          stderr=subprocess.DEVNULL)
 
             # Scan AP for hidden networks
             if hidden_flag:
@@ -737,11 +905,9 @@ class wireless_manager:
                     "scan_ssid",
                     '1'
                 ]
-                r = subprocess.check_call(
-                        cmd,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
+                r = subprocess.check_call(cmd,
+                                          stdout=subprocess.DEVNULL,
+                                          stderr=subprocess.DEVNULL)
 
             # Enable network
             cmd = [
@@ -751,11 +917,9 @@ class wireless_manager:
                     "enable_network",
                     "{}".format(network_id)
                 ]
-            r = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            r = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
 
         # Select the network
@@ -766,62 +930,70 @@ class wireless_manager:
                 "select_network",
                 "{}".format(network_id)
             ]
-        r = subprocess.check_call(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+        r = subprocess.check_call(cmd,
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
 
         # Clean wpa_supplicant log
         try:
             os.remove(self.wpa_logfile)
+            #open(self.wpa_logfile, 'w+').close()
             cmd = [
                     "wpa_cli",
                     "-i",
                     self.interface,
                     "relog"
                 ]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
         except:
             raise urwid.ExitMainLoop()
 
         # FIXME: Log note
         cmd = ["wpa_cli", "-i", self.interface, "note", "Restarted"]
-        r = subprocess.check_call(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+        r = subprocess.check_call(cmd,
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
 
         # Check wpa_supplicant log for connect/error event
         f = open(self.wpa_logfile, 'r')
         wpa_supplicant_event = False
 
+        connect_count = 0
         while wpa_supplicant_event is False:
+            connect_count += 1
+
             f.seek(0)
             if 'CTRL-EVENT-CONNECTED' in f.read():
                 wpa_supplicant_event = 'CONNECTED'
             f.seek(0)
-            if ('CTRL-EVENT-DISCONNECTED' in f.read()
-                    or 'CTRL-EVENT-ASSOC-REJECT' in f.read()):
+            if 'CTRL-EVENT-DISCONNECTED' in f.read():
                 wpa_supplicant_event = 'DISCONNECTED'
             f.seek(0)
             if 'CTRL-EVENT-ASSOC-REJECT' in f.read():
                 wpa_supplicant_event = 'DISCONNECTED'
+            f.seek(0)
+            if 'CTRL-EVENT-AUTH-REJECT' in f.read():
+                wpa_supplicant_event = 'DISCONNECTED'
+            f.seek(0)
+            if 'CTRL-EVENT-ASSOC-REJECT' in f.read():
+                wpa_supplicant_event = 'DISCONNECTED'
+            
+            # Limit 10 seconds to wait for a connection, otherwise cancel
+            if connect_count == 10 and wpa_supplicant_event is False:
+                wpa_supplicant_event = 'DISCONNECTED'
+                password = False  # Don't ask for new password
+            else:
+                time.sleep(1)
         f.close()
 
         # Password error
         if (wpa_supplicant_event == 'DISCONNECTED'):
             cmd = ["wpa_cli", "-i", self.interface, "disconnect"]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             cmd = [
                     "wpa_cli",
@@ -830,16 +1002,16 @@ class wireless_manager:
                     "remove_network",
                     "{}".format(network_id)
                 ]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
-            """Popup: Password wrong. Enter a new one or cancel"""
-            # Header
+            
+            """Popup can't connect"""
+            # Can't connect (connection without password)
             if password is False:
-                _header = urwid.Text('Network error', align = 'center')
+                _header = urwid.Text('Connection error', align = 'center')
+            # Password wrong. Enter a new one or cancel
             else:
                 _header = urwid.Text('Password error', align = 'center')
             _header = urwid.AttrMap(_header, 'connect_title')
@@ -944,42 +1116,125 @@ class wireless_manager:
                 align = 'center',
                 valign = 'middle',
                 width = ('relative', 35),
-                height = ('relative', 20)
+                height = ('relative', 20),
+                min_height = 10
             )
 
             self.loop.widget = overlay
-
+        # Connection success
         else:
-            # run dhcp for getting ip
+            # ask ip to dhcp
             cmd = ["dhclient", self.interface]
-            n = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            n = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             # Save wpa_supplicant config
             cmd = ["wpa_cli", "-i", self.interface, "save_config"]
-            r = subprocess.check_call(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            r = subprocess.check_call(cmd,
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
 
             self.__network_scan_list(self.loop, [False])
 
+    def __network_scan(self, _loop=object, data=[]):
+        self.network_list = self.scanner.scan()
+
+        # If we didn't hit the counter of scans, we scan again
+        if self.scan_times_current < self.scan_times:
+            # We add count on current scans
+            self.scan_times_current += 1
+
+            # Sleep for a second
+            time.sleep(2)
+
+            # Scan again
+            self.scan()
+        else:
+            from pprint import pprint
+
+            # Separate hidden networks
+            hidden_idx = []
+            self.network_list_hidden = []
+
+            for idx,network in enumerate(self.network_list):
+                essid = network[0]
+                if '\\x00' in essid or '?' in essid or essid == '':
+                    network[0] = '-HIDDEN-'
+                    self.network_list_hidden.append(network)
+            
+            for network in self.network_list_hidden:
+                self.network_list.remove(network)
+            
+            self.loop.set_alarm_in(0.1, self.__network_scan_list, user_data=[False])
+
+    def start(self):
+        """Start the urwid interface"""
+        self.loop.run()
+
+    def scan(self, _loop=object, _data=[]):
+        """Show scanning popup and start scanning for networks"""
+
+        # scanning popup
+        if self.scan_times_current < self.scan_times:
+            _text = urwid.Text(
+                    '\nScanning. Please wait (%s/%s)' %\
+                        (self.scan_times_current, self.scan_times),
+                    align='center'
+                )
+        else:
+            _text = urwid.Text('\nScanning. Please wait...', align='center')
+        
+        _text = urwid.AttrMap(_text, 'scanning')
+        _body = urwid.Pile([
+            _text
+        ])
+        _body = urwid.Filler(_body)
+        _body = urwid.AttrMap(_body, 'scanning')
+
+        _connect_box = urwid.Frame(
+            _body,
+            header=urwid.Divider(' '),
+            focus_part='body'
+        )
+
+        # store actual widget
+        self.last_widget = self.loop.widget
+
+        # Create a popup
+        overlay = urwid.Overlay(
+            _connect_box,
+            self.loop.widget,
+            align = 'center',
+            valign = 'middle',
+            width = ('relative', 40),
+            height = ('relative', 12),
+            min_height = 6,
+        )
+
+        self.loop.widget = overlay
+        self.loop.set_alarm_in(0.1, self.__network_scan)
+
+
 class SelectableRow(urwid.WidgetWrap):
     """Urwid class for custom list"""
-    def __init__(self, contents, on_select=None):
+    def __init__(self, contents, hidden, on_select=None):
         self.contents = contents
         self.on_select = on_select
 
         self._columns = urwid.Columns([urwid.Text(str(c)) for c in contents])
-        self._focusable_columns = urwid.AttrMap(
-                self._columns,
-                '',
-                'reveal_focus'
-            )
+        if hidden:
+            self._focusable_columns = urwid.AttrMap(
+                    self._columns,
+                    '',
+                    'reveal_focus_hidden'
+                )
+        else:
+            self._focusable_columns = urwid.AttrMap(
+                    self._columns,
+                    '',
+                    'reveal_focus'
+                )
 
         super(SelectableRow, self).__init__(self._focusable_columns)
 

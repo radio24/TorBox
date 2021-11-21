@@ -8,20 +8,27 @@ Log notice file /var/log/tor/notices.log
 VirtualAddrNetworkIPv4 10.192.0.0/10
 AutomapHostsSuffixes .onion,.exit
 AutomapHostsOnResolve 1
+TransPort 127.0.0.1:9040
 TransPort 192.168.42.1:9040
 #TransPort 192.168.43.1:9040
+DNSPort 127.0.0.1:9053
 DNSPort 192.168.42.1:9053
 #DNSPort 192.168.43.1:9053
 SocksPort 127.0.0.1:9050
 SocksPort 192.168.42.1:9050
-SocksPort 192.168.42.1:9052 IsolateDestAddr
 #SocksPort 192.168.43.1:9050
+SocksPort 127.0.0.1:9052 IsolateDestAddr
+SocksPort 192.168.42.1:9052 IsolateDestAddr
 #SocksPort 192.168.43.1:9052 IsolateDestAddr
-DisableDebuggerAttachment 0
 ControlPort 127.0.0.1:9051
 #ControlPort 192.168.42.1:9051
 #ControlPort 192.168.43.1:9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
+DisableDebuggerAttachment 0
+
+## THE CONFIGURATION OF THE ONION SERVICES STARTS HERE!
+#######################################################
+## This will configure the Onion Services (do not remove or change that line - this is an anchor)
 
 ## THE CONFIGURATION OF THE BRIDGE RELAY STARTS HERE!
 ######################################################

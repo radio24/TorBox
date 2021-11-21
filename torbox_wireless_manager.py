@@ -55,11 +55,11 @@ else:
 		print('[%s]: not available' % interface)
 		quit()
 
-from lib.wireless_manager import wireless_manager
+from lib.wireless_manager import WirelessManager
 
 def main():
-	wm = wireless_manager(interface, autoconnect)
-	wm.start()
+	twm = WirelessManager(interface, autoconnect)
+	twm.start()
 
 if __name__ == '__main__':
 	main()

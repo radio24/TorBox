@@ -46,7 +46,7 @@ if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
 # Read configuration from run/torbox.run
 RUNFILE="run/torbox.run"
-FARS_ROBOTICS_DRIVERS=$(grep "^FARS_ROBOTICS_DRIVERS=" ${RUNFILE} | cut -c23-) 2> /dev/null
+FARS_ROBOTICS_DRIVERS=$(grep "^FARS_ROBOTICS_DRIVERS=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
