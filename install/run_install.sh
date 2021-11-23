@@ -715,8 +715,7 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
 	sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
 	#This is necessary to work with special characters in sed
-	REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
-	sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
+	sudo sed -i "s|^logfile =.*|logfile = ${VANGUARDS_LOG_FILE}|" /etc/tor/vanguards.conf
 	# Because of TorBox's automatic counteractions, Vanguard cannot interfere with tor's log file
 	sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
@@ -1086,32 +1085,20 @@ echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORURL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^TORURL=.*/TORURL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORPATH_TO_RELEASE_TAGS" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^TORPATH_TO_RELEASE_TAGS=.*/TORPATH_TO_RELEASE_TAGS=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORURL_DL_PARTIAL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$SNOWFLAKE_ORIGINAL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$SNOWFLAKE_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$VANGUARDS_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
+sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
+sudo sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
+sudo sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
+sudo sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
+sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
+sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
+sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
 sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${REPLACEMENT_STR}/g" ${RUNFILE}
+sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
 #We will keep the default settings in run/torbox.run
-#REPLACEMENT_STR="$(<<< "$TORBOX_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-#sudo sed -i "s/^TORBOX_USED=.*/TORBOX_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-#REPLACEMENT_STR="$(<<< "$TORBOXMENU_BRANCHNAME" sed -e 's`[][\\/.*^$]`\\&`g')"
-#sudo sed -i "s/^TORBOXMENU_BRANCHNAME=.*/TORBOXMENU_BRANCHNAME=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=${REPLACEMENT_STR}/g" ${RUNFILE}
+#sudo sed -i "s|^TORBOX_USED=.*|TORBOX_USED=${TORBOX_USED}|g" ${RUNFILE}
+#sudo sed -i "s|^TORBOXMENU_BRANCHNAME=.*|TORBOXMENU_BRANCHNAME=${TORBOXMENU_BRANCHNAME}|g" ${RUNFILE}
+sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
