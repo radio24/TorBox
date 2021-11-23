@@ -35,10 +35,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 # Identify the Operation System
-CHECK_OS="OTHER"
-if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
-if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
-if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+CHECK_OS="$(lsb_release -si)"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
@@ -157,7 +154,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		#This has to be checked
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -179,7 +176,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	chmod a+x install-rtl8821au.sh
 
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -200,7 +197,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 			sudo ./raspi32.sh
@@ -273,7 +270,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cp ~/torbox/install/Network/install-rtl8812au.sh .
 	chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -294,7 +291,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -315,7 +312,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -336,7 +333,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cp ~/torbox/install/Network/install-rtl8821cu.sh .
 	chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -357,7 +354,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			 sudo ./raspi64.sh
 		else
 		  sudo ./raspi32.sh
@@ -430,7 +427,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	cp ~/torbox/install/Network/install-rtl8812au.sh .
 	sudo chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			./raspi64.sh
 		else
 		 ./raspi32.sh
@@ -451,7 +448,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	cp ~/torbox/install/Network/install-rtl8814au.sh .
 	sudo chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			./raspi64.sh
 		else
 		 ./raspi32.sh
@@ -472,7 +469,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	sudo chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			./raspi64.sh
 		else
 		 ./raspi32.sh
@@ -493,7 +490,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	cp ~/torbox/install/Network/install-rtl8821cu.sh .
 	sudo chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			./raspi64.sh
 		else
 		 ./raspi32.sh
@@ -514,7 +511,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	sudo chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -a | grep -q -E "arm64|aarch64"; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
 			./raspi64.sh
 		else
 		 ./raspi32.sh

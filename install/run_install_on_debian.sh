@@ -459,9 +459,7 @@ systemctl mask tor
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
 apt-get -y install wget curl gnupg net-tools unzip sudo resolvconf
 # Additional installations for Debian bullseye systems
-if hostnamectl | grep -q "bullseye" ; then
-  apt-get -y install iptables
-fi
+lsb_release -sc | grep -q "Bullseye" && apt-get -y install iptables
 # Installation of standard packages
 apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -528,7 +526,7 @@ fi
 
 # Additional installation for GO
 clear
-if uname -a | grep -q -E "arm64|aarch64"; then
+if uname -m | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
@@ -970,7 +968,7 @@ cd 8812au
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 chmod a+x install-rtl8812au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -a | grep -q -E "arm64|aarch64"; then
+	if uname -m | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -991,7 +989,7 @@ cd 8814au
 cp ~/torbox/install/Network/install-rtl8814au.sh .
 chmod a+x install-rtl8814au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -a | grep -q -E "arm64|aarch64"; then
+	if uname -m | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1012,7 +1010,7 @@ cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 chmod a+x install-rtl8821au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -a | grep -q -E "arm64|aarch64"; then
+	if uname -m | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1033,7 +1031,7 @@ cd 8821cu
 cp ~/torbox/install/Network/install-rtl8821cu.sh .
 chmod a+x install-rtl8821cu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -a | grep -q -E "arm64|aarch64"; then
+	if uname -m | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
@@ -1054,7 +1052,7 @@ cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 chmod a+x install-rtl88x2bu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -a | grep -q -E "arm64|aarch64"; then
+	if uname -m | grep -q -E "arm64|aarch64"; then
 		./raspi64.sh
 	else
 	 ./raspi32.sh
