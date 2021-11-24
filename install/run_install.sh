@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2021 Patrick Truffer
@@ -26,13 +27,19 @@
 # This script installs the newest version of TorBox on a clean, running
 # Raspberry Pi OS lite.
 #
+# NEW v.0.5.0: --select-branch option
 # SYNTAX
-# ./run_install.sh [--select-tor] [--step_by_step]
+# ./run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
 #
-# The --select-tor options allows to select a specific tor version. Without
+# The -h or --help option shows the help screen.
+#
+# The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
 #
-# The --step_by_step options execute the installation step by step, which
+# The --select-branch option allows to install a specific TorBox branch.
+# Without this option, the installation script installs the master branch.
+#
+# The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
 #
 # IMPORTANT
@@ -64,22 +71,9 @@
 
 ##### SET VARIABLES ######
 #
-# SIZE OF THE MENU
-#
-# How many items do you have in the main menu?
-NO_ITEMS=9
-#
-# How many lines are only for decoration and spaces?
-NO_SPACER=0
-#
 # Set the the variables for the menu
 MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
-MENU_HEIGHT_20=20
-MENU_HEIGHT_15=15
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 # Colors
 RED='\033[1;31m'
@@ -98,15 +92,17 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# NEW v.0.5.0: new versions
 # Used go version
-GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
+GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
+# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-TORURL="https://github.com/torproject/tor/releases"
+TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
@@ -118,11 +114,6 @@ SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
-
-# TorBox Repository
-TORBOXURL="https://github.com/radio24/TorBox/"
-TORBOXMENU_BRANCHNAME="master"
-TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
@@ -139,14 +130,48 @@ CHECK_URL2="https://google.com"
 # Default password
 DEFAULT_PASS="CHANGE-IT"
 
+# NEW v.0.5.0: --select-branch option and options handling
 # Catching command line options
-SELECT_TOR=$1
-if [ "$SELECT_TOR" = "--step_by_step" ]; then
-	STEP_BY_STEP="--step_by_step"
-	SELECT_TOR=""
-else
-	STEP_BY_STEP=$2
-fi
+OPTIONS=$(getopt -o h --long help,select-tor,select-branch:,step_by_step -n 'run-install' -- "$@")
+if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
+eval set -- "$OPTIONS"
+
+SELECT_TOR=
+SELECT_BRANCH=
+TORBOXMENU_BRANCHNAME=
+STEP_BY_STEP=
+while true; do
+  case "$1" in
+    -h | --help )
+			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
+			echo "Options: -h, --help     : Shows this help screen ;-)"
+			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
+			echo "         --select-branch branch_name"
+			echo "                        : Let select a specific TorBox branche (default: master)"
+			echo "         --step_by_step : Executes the installation step by step"
+			echo ""
+			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
+			exit 0
+	  ;;
+    --select-tor ) SELECT_TOR="--select-tor"; shift ;;
+    --select-branch )
+		  # shellcheck disable=SC2034
+			SELECT_BRANCH="--select-branch"
+			[ ! -z $2 ] && TORBOXMENU_BRANCHNAME="$2"
+			shift 2
+		;;
+    --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
+		-- ) shift; break ;;
+		* ) break ;;
+  esac
+done
+
+# NEW v.0.5.0: We have to do that after catching the command line option
+# TorBox Repository
+TORBOXURL="https://github.com/radio24/TorBox/"
+[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
@@ -166,7 +191,7 @@ do
 		RESOLVCONF="\n# Added by TorBox install script\n"
 	fi
 	RESOLVCONF="${RESOLVCONF}nameserver $ONE_NAMESERVER\n"
-	i=$(($i + 1))
+	i=$((i+1))
 	if [ "$ONE_NAMESERVER" = "$NAMESERVERS" ]; then
 		ONE_NAMESERVER=" "
 	else
@@ -182,6 +207,25 @@ if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
 ##############################
 ######## FUNCTIONS ###########
+
+# NEW v.0.5.0: check_install_packages
+# This function installs the packages in a controlled way, so that the correct
+# installation can be checked.
+# Syntax install_network_drivers <packagenames>
+check_install_packages()
+{
+ packagenames=$1
+ for packagename in $packagenames; do
+	 clear
+	 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+	 echo ""
+	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 echo ""
+	 sudo apt-get -y install $packagename
+#   echo ""
+#   read -n 1 -s -r -p "Press any key to continue"
+ done
+}
 
 # install_network_drivers()
 # Syntax install_network_drivers <path> <filename> <text_message>
@@ -246,8 +290,9 @@ select_and_install_tor()
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
 	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
+# NEW v.0.5.0: ATTENTION! We used a wrong variable!! --> check in the other install scripts and in the update script!!
   #How many tor version did we fetch?
-	number_torversion=${#torversion_datesorted[*]}
+	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
@@ -304,15 +349,15 @@ select_and_install_tor()
     	echo ""
     	for (( i=0; i<$number_torversion; i++ ))
     	do
-      	menuitem=$(( $i + 1 ))
+      	menuitem=$((i+1))
       	echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
     	done
     	echo ""
     	read -r -p $'\e[1;37mWhich tor version (number) would you like to use? -> \e[0m'
     	echo
     	if [[ $REPLY =~ ^[1234567890]$ ]]; then
-				if [ $REPLY -gt 0 ] && [ $(( $REPLY - 1 )) -le $number_torversion ]; then
-        	CHOICE_TOR=$(( $REPLY - 1 ))
+				if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
+        	CHOICE_TOR=$((REPLY-1))
         	clear
         	echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
@@ -327,7 +372,7 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd `ls -d */`
+          	cd "$(ls -d */)"
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
           	./autogen.sh
           	./configure
@@ -394,7 +439,7 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd `ls -d */`
+				cd "$(ls -d */)"
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				./autogen.sh
 				./configure
@@ -418,9 +463,10 @@ select_and_install_tor()
 	fi
 }
 
+# NEW v.0.5.0: new options
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-branch branch_name\n  	  	    : select a specific TorBox branche\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -429,7 +475,8 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+# NEW v.0.5.0: needs a sudo
+(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
 wget -q --spider $CHECK_URL1
@@ -505,12 +552,15 @@ fi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl mask tor
+
+# NEW v.0.5.0: New packages: qrencode, nginx, basez, iptables
+# NEW v.0.5.0: Using the check_install_packages routine
 # Installation of standard packages
-sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev
+check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
-sudo apt-get -y install tor-geoipdb
+check_install_packages "tor-geoipdb"
 sudo systemctl mask tor
 sudo systemctl stop tor
 
@@ -536,6 +586,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
+# NEW v.0.5.0: New packages: Django, click, gunicorn
 # Additional installations for Python
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
@@ -548,6 +599,9 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
+sudo pip3 install Django
+sudo pip3 install click
+sudo pip3 install gunicorn
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -649,7 +703,6 @@ fi
 clear
 echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
 cd ~
-FAILING=0
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
@@ -778,10 +831,12 @@ else
   fi
 fi
 
-# 10. Downloading and installing the latest version of TorBox
+# 10. Downloading and installing TorBox
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+# NEW v.0.5.0: Showing the selected branch
+echo -e "${RED}[+]          Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOX_USED
 DLCHECK=$?
@@ -913,6 +968,8 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
+# NEW v.0.5.0: Stop Nginx
+sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
 sudo systemctl unmask ssh
@@ -928,6 +985,20 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
+# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
+# Make Tor and Nginx ready for Onion Services
+echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
+(sudo rm -r /var/www/html) 2> /dev/null
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+sudo mkdir /var/lib/tor/services
+sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+sudo chmod -R go-rwx /var/lib/tor/services
+sudo mkdir /var/lib/tor/onion_auth
+sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+sudo chmod -R go-rwx /var/lib/tor/onion_auth
+
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -936,23 +1007,24 @@ else
 	sleep 10
 fi
 
+# NEW v.0.5.0: $kernelversion has to be unquoted - has to be changed in the install_network_drivers script
 # 14. Installing additional network drivers
 ADDITIONAL_NETWORK_DRIVER="NO"
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 	path_8188eu="8188eu-drivers/"
-	filename_8188eu="8188eu-"$kernelversion".tar.gz"
+	filename_8188eu="8188eu-$kernelversion.tar.gz"
 	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
 	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
 
 	path_8188fu="8188fu-drivers/"
-	filename_8188fu="8188fu-"$kernelversion".tar.gz"
+	filename_8188fu="8188fu-$kernelversion.tar.gz"
 	text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
 	install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
 
 	path_8192eu="8192eu-drivers/"
-	filename_8192eu="8192eu-"$kernelversion".tar.gz"
+	filename_8192eu="8192eu-$kernelversion.tar.gz"
 	text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
 	install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
 
@@ -963,17 +1035,17 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
 	path_8812au="8812au-drivers/"
-	filename_8812au="8812au-"$kernelversion".tar.gz"
+	filename_8812au="8812au-$kernelversion.tar.gz"
 	text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
 	install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
 
 	path_8821cu="8821cu-drivers/"
-	filename_8821cu="8821cu-"$kernelversion".tar.gz"
+	filename_8821cu="8821cu-$kernelversion.tar.gz"
 	text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
 	install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
 
 	path_8822bu="8822bu-drivers/"
-	filename_8822bu="8822bu-"$kernelversion".tar.gz"
+	filename_8822bu="8822bu-$kernelversion.tar.gz"
 	text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
 	install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
 
@@ -1026,7 +1098,8 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821au.git
+# NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
+	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
@@ -1054,7 +1127,8 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/88x2bu.git
+# NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
+	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
@@ -1173,7 +1247,7 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
-for logs in `sudo find /var/log -type f`; do
+for logs in $(sudo find /var/log -type f); do
   echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   sudo rm $logs
   sleep 1
