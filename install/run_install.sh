@@ -671,6 +671,9 @@ fi
 clear
 echo -e "${RED}[+] Step 5: Installing tor...${NOCOLOR}"
 select_and_install_tor
+# NEW v.0.5.0: To start TACA notices.log has to be present
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -774,6 +777,9 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 	sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 	sudo chmod -R go-rwx /var/lib/tor/vanguards
+	# NEW v.0.5.0: To ensure the correct permissions
+	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""

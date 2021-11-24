@@ -266,6 +266,13 @@ erase_logs()
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   (sudo rm ../.bash_history) 2> /dev/null
   history -c
+	(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+	(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
+	echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+	sudo systemctl restart tor
+	echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
 }
 
 # deactivating_bridge_relay()

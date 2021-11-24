@@ -78,6 +78,8 @@ sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards
 sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 sudo chmod -R go-rwx /var/lib/tor/vanguards
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 cd torbox
 sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
 (sudo systemctl unmask vanguards@default.service) 2> /dev/null

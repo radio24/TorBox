@@ -363,7 +363,7 @@ case "$CHOICE" in
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
             sudo systemctl restart tor
-            echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+            echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
             echo ""
             sleep 2
           fi
@@ -393,7 +393,7 @@ case "$CHOICE" in
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         echo ""
         sleep 2
       fi
@@ -464,7 +464,7 @@ case "$CHOICE" in
               sleep 2
               echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
               sudo systemctl restart tor
-              echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+              echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
               echo ""
               sleep 2
               clear
@@ -515,7 +515,7 @@ case "$CHOICE" in
           sudo mkdir "$WEBSITE_DIR/$SERVICE_NAME"
           echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
           sudo systemctl restart tor
-          echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+          echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
           sleep 5
           clear
           echo -e "${RED}[+] This is the information for your newly created Onion Service${NOCOLOR}"
@@ -674,7 +674,7 @@ case "$CHOICE" in
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi
@@ -765,7 +765,7 @@ case "$CHOICE" in
       clear
       echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
       sudo systemctl restart tor
-      echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+      echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
       sleep 2
     fi
   ;;
@@ -821,7 +821,7 @@ case "$CHOICE" in
       clear
       echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
       sudo systemctl restart tor
-      echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+      echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
       sleep 2
     fi
   ;;
@@ -880,7 +880,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi
@@ -1000,7 +1000,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi

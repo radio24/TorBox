@@ -267,8 +267,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      echo -e "${RED}[+] Create necessary files...${NOCOLOR}"
-      sudo -u debian-tor touch /var/log/tor/notices.log
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       FRESHINSTALLED=0
       sleep 5

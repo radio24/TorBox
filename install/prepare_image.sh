@@ -121,11 +121,6 @@ echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node 
 (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
 (sudo rm -r /var/lib/tor/lock) 2> /dev/null
 (sudo rm -r /var/lib/tor/state) 2> /dev/null
-echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
-(sudo rm /var/log/tor/notices.log) 2> /dev/null
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(sudo rm /var/log/tor/vanguards.log) 2> /dev/null
-(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
@@ -144,6 +139,7 @@ sudo systemctl daemon-reload
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
 sudo /usr/sbin/ntpdate pool.ntp.org
 sleep 3
+echo -e "${RED}[+] Deleting all logs and resetting Tor statistics...${NOCOLOR}"
 echo
 erase_logs
 echo
