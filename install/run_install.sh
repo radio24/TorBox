@@ -106,7 +106,7 @@ GO_DL_PATH="https://golang.org/dl/"
 # Release Page of the unofficial Tor repositories on GitHub
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-TORURL="https://github.com/torproject/tor/releases"
+TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
 TOR_HREF_FOR_SED="<a href=\"\/torproject\/tor\/releases\/tag\/tor-"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
