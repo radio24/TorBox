@@ -32,7 +32,7 @@ GO_VERSION=go1.16.6.linux-armv6l.tar.gz
 GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
 GO_DL_PATH=https://golang.org/dl/
 # Release Page of the unofficial Tor repositories on GitHub
-TORURL=https://github.com/torproject/tor/releases
+TORURL=https://github.com/torproject/tor/tags
 # The path to the release tags on GitHub
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages

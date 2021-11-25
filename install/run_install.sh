@@ -27,7 +27,7 @@
 # This script installs the newest version of TorBox on a clean, running
 # Raspberry Pi OS lite.
 #
-# NEW v.0.5.0: --select-branch option
+# NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
 # SYNTAX
 # ./run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
 #
@@ -92,7 +92,7 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.0: new versions
+# NEW v.0.5.0: new go versions
 # Used go version
 GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
@@ -130,7 +130,7 @@ CHECK_URL2="https://google.com"
 # Default password
 DEFAULT_PASS="CHANGE-IT"
 
-# NEW v.0.5.0: --select-branch option and options handling
+# NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
 # Catching command line options
 OPTIONS=$(getopt -o h --long help,select-tor,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
