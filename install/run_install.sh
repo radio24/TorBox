@@ -1040,7 +1040,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 
 	# Deactivated because no driver for new kernels available
 	#path_8192su="8192su-drivers/"
-	#filename_8192su="8192su-"$kernelversion".tar.gz"
+	#filename_8192su="8192su-$kernelversion.tar.gz"
 	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
 	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
@@ -1061,13 +1061,13 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 
 	# Deactivated because no driver for new kernels available
 	#path_mt7610="mt7610-drivers/"
-	#filename_mt7610="mt7610-"$kernelversion".tar.gz"
+	#filename_mt7610="mt7610-$kernelversion.tar.gz"
 	#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
 	#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
 
 	# Deactivated because no driver for new kernels available
 	#path_mt7612="mt7612-drivers/"
-	#filename_mt7612="mt7612-"$kernelversion".tar.gz"
+	#filename_mt7612="mt7612-$kernelversion.tar.gz"
 	#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
 	#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
 
