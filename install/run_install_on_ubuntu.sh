@@ -1103,7 +1103,7 @@ clear
 echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8821au.git
+git clone https://github.com/morrownr/8821au-20210708.git
 cd 8821au
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 sudo chmod a+x install-rtl8821au.sh
@@ -1145,7 +1145,7 @@ clear
 echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/88x2bu.git
+git clone https://github.com/morrownr/88x2bu-20210702.git
 cd 88x2bu
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 sudo chmod a+x install-rtl88x2bu.sh
