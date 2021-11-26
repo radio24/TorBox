@@ -96,8 +96,8 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
-GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
+GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -105,7 +105,7 @@ GO_DL_PATH="https://golang.org/dl/"
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-TOR_HREF_FOR_SED="<a href=\"\/torproject\/tor\/releases\/tag\/tor-"
+TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
@@ -207,10 +207,10 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/${TOR_HREF_FOR_SED}//g" | sed -e "s/\">//g")
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
-	number_torversion=${#torversion_datesorted[*]}
+	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
@@ -224,26 +224,37 @@ select_and_install_tor()
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
   else
-    #The fetched tor versions are sorted by dates, but we need it sorted by version
-    IFS=$'\n' torversion_versionsorted=($(sort -r <<< "${torversion_datesorted[*]}")); unset IFS
-
-    #We will build a new array with only the relevant tor versions
+		#We will build a new array with only the relevant tor versions
     i=0
     while [ $i -lt $number_torversion ]
     do
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
+        covered_version_full=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(( $i + 1 ))
-        n=$(( $n + 1 ))
+        i=$((i+1))
+        n=$((n+1))
       else
+        actual_version_full=${torversion_versionsorted[$i]}
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
-        if [ "$actual_version" == "$covered_version" ]; then i=$(( $i + 1 ))
+        if [ "$actual_version" == "$covered_version" ]; then
+          covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
+          else
+            n=$((n-1))
+            torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+            covered_version_full=$actual_version_full
+            covered_version=$actual_version
+            i=$((i+1))
+            n=$((n+1))
+          fi
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+          covered_version_full=$actual_version_full
           covered_version=$actual_version
-          i=$(( $i + 1 ))
-          n=$(( $n + 1 ))
+          i=$((i+1))
+          n=$((n+1))
         fi
       fi
     done
@@ -1055,49 +1066,36 @@ cd ~
 rm -r 88x2bu
 sleep 2
 
-#14. Updating run/torbox.run
+# 14. Updating run/torbox.run
 clear
-echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
+echo -e "${RED}[+] Step 15: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
-sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
-sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
-sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORURL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TORURL=.*/TORURL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORPATH_TO_RELEASE_TAGS" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TORPATH_TO_RELEASE_TAGS=.*/TORPATH_TO_RELEASE_TAGS=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TOR_HREF_FOR_SED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TOR_HREF_FOR_SED=.*/TOR_HREF_FOR_SED=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$TORURL_DL_PARTIAL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^TORURL_DL_PARTIAL=.*/TORURL_DL_PARTIAL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$SNOWFLAKE_ORIGINAL" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^SNOWFLAKE_ORIGINAL=.*/SNOWFLAKE_ORIGINAL=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$SNOWFLAKE_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^SNOWFLAKE_USED=.*/SNOWFLAKE_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$VANGUARDS_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^VANGUARDS_USED=.*/VANGUARDS_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^VANGUARD_LOG_FILE=.*/VANGUARD_LOG_FILE=${REPLACEMENT_STR}/g" ${RUNFILE}
+sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
+sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
+sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
+sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
+sudo sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
+sudo sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
+sudo sed -i "s|^TOR_HREF_FOR_SED=.*|TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}|g" ${RUNFILE}
+sudo sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
+sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
+sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
+sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
+sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
+sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
 #We will keep the default settings in run/torbox.run
-#REPLACEMENT_STR="$(<<< "$TORBOX_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-#sudo sed -i "s/^TORBOX_USED=.*/TORBOX_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-#REPLACEMENT_STR="$(<<< "$TORBOXMENU_BRANCHNAME" sed -e 's`[][\\/.*^$]`\\&`g')"
-#sudo sed -i "s/^TORBOXMENU_BRANCHNAME=.*/TORBOXMENU_BRANCHNAME=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$WIRINGPI_USED" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^WIRINGPI_USED=.*/WIRINGPI_USED=${REPLACEMENT_STR}/g" ${RUNFILE}
-REPLACEMENT_STR="$(<<< "$FARS_ROBOTICS_DRIVERS" sed -e 's`[][\\/.*^$]`\\&`g')"
-sed -i "s/^FARS_ROBOTICS_DRIVERS=.*/FARS_ROBOTICS_DRIVERS=${REPLACEMENT_STR}/g" ${RUNFILE}
-sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+#sudo sed -i "s|^TORBOX_USED=.*|TORBOX_USED=${TORBOX_USED}|g" ${RUNFILE}
+#sudo sed -i "s|^TORBOXMENU_BRANCHNAME=.*|TORBOXMENU_BRANCHNAME=${TORBOXMENU_BRANCHNAME}|g" ${RUNFILE}
+sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
- echo ""
- read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
- clear
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
 else
- sleep 10
+	sleep 10
 fi
 
 # 15. Adding the user torbox
