@@ -1060,8 +1060,8 @@ clear
 echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8812au.git
-cd 8812au
+git clone https://github.com/morrownr/OPTIONS_FILE8812au-20210629.git
+cd 8812au-20210629
 cp ~/torbox/install/Network/install-rtl8812au.sh .
 sudo chmod a+x install-rtl8812au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1073,7 +1073,7 @@ if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 fi
 sudo ./install-rtl8812au.sh
 cd ~
-sudo rm -r 8812au
+sudo rm -r 8812au-20210629
 sleep 2
 
 # Installing the RTL8814AU
@@ -1103,7 +1103,7 @@ echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/8821au-20210708.git
-cd 8821au
+cd 8821au-20210708
 cp ~/torbox/install/Network/install-rtl8821au.sh .
 sudo chmod a+x install-rtl8821au.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1115,7 +1115,7 @@ if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 fi
 sudo ./install-rtl8821au.sh
 cd ~
-sudo rm -r 8821au
+sudo rm -r 8821au-20210708
 sleep 2
 
 # Installing the RTL8821CU
@@ -1145,7 +1145,7 @@ echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 echo -e " "
 echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 git clone https://github.com/morrownr/88x2bu-20210702.git
-cd 88x2bu
+cd 88x2bu-20210702
 cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 sudo chmod a+x install-rtl88x2bu.sh
 if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1157,7 +1157,7 @@ if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 fi
 sudo ./install-rtl88x2bu.sh
 cd
-sudo rm -r 88x2bu
+sudo rm -r 88x2bu-20210702
 sleep 2
 
 # 14. Updating run/torbox.run

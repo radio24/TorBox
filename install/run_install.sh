@@ -100,12 +100,12 @@ GO_DL_PATH="https://golang.org/dl/"
 
 # NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
 # NEW v.0.5.0: TOR_HREF_FOR_SED is back
 TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
+# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
@@ -134,7 +134,7 @@ DEFAULT_PASS="CHANGE-IT"
 
 # NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,select-tor,select-branch:,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -149,6 +149,8 @@ while true; do
 			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
+			echo "         --select-fork fork_owner_name"
+			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
 			echo "         --select-branch branch_name"
 			echo "                        : Let select a specific TorBox branch (default: master)"
 			echo "         --step_by_step : Executes the installation step by step"
@@ -157,6 +159,12 @@ while true; do
 			exit 0
 	  ;;
     --select-tor ) SELECT_TOR="--select-tor"; shift ;;
+		--select-fork )
+		  # shellcheck disable=SC2034
+			SELECT_FORK="--select-fork"
+			[ ! -z $2 ] && TORBOXMENU_FORKNAME="$2"
+			shift 2
+		;;
     --select-branch )
 		  # shellcheck disable=SC2034
 			SELECT_BRANCH="--select-branch"
@@ -171,9 +179,9 @@ done
 
 # NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
-TORBOXURL="https://github.com/radio24/TorBox/"
+[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
 [ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
-TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
@@ -292,7 +300,6 @@ select_and_install_tor()
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
 	# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-#	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
 # NEW v.0.5.0: ATTENTION! We used a wrong variable!! --> check in the other install scripts and in the update script!!
   #How many tor version did we fetch?
@@ -470,7 +477,7 @@ select_and_install_tor()
 # NEW v.0.5.0: new options
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -848,7 +855,7 @@ echo -e "${RED}[+] Step 10: Downloading and installing the latest version of Tor
 # NEW v.0.5.0: Showing the selected branch
 echo -e "${RED}[+]          Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
-wget $TORBOX_USED
+wget $TORBOXURL
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
 	echo -e "${RED}[+]         TorBox' menu sucessfully downloaded... ${NOCOLOR}"
@@ -1019,7 +1026,6 @@ fi
 
 # NEW v.0.5.0: $kernelversion has to be unquoted - has to be changed in the install_network_drivers script
 # 14. Installing additional network drivers
-ADDITIONAL_NETWORK_DRIVER="NO"
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
@@ -1110,7 +1116,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 # NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
 	git clone https://github.com/morrownr/8821au-20210708.git
-	cd 8821au
+	cd 8812au-20210629
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1122,7 +1128,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	fi
 	sudo ./install-rtl8821au.sh
 	cd ~
-	sudo rm -r 8821au
+	sudo rm -r 8812au-20210629
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -1139,7 +1145,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 # NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
 	git clone https://github.com/morrownr/88x2bu-20210702.git
-	cd 88x2bu
+	cd 88x2bu-20210702
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1151,7 +1157,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	fi
 	sudo ./install-rtl88x2bu.sh
 	cd ~
-	sudo rm -r 88x2bu
+	sudo rm -r 88x2bu-20210702
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -1173,15 +1179,14 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
 sudo sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
 sudo sed -i "s|^TOR_HREF_FOR_SED=.*|TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}|g" ${RUNFILE}
+# We need the \\" so that \" is surviving
+sudo sed -i 's|TOR_HREF_FOR_SED=href="|TOR_HREF_FOR_SED=href=\\"|g' ${RUNFILE}
 sudo sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
 sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
 sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
-#We will keep the default settings in run/torbox.run
-#sudo sed -i "s|^TORBOX_USED=.*|TORBOX_USED=${TORBOX_USED}|g" ${RUNFILE}
-#sudo sed -i "s|^TORBOXMENU_BRANCHNAME=.*|TORBOXMENU_BRANCHNAME=${TORBOXMENU_BRANCHNAME}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
