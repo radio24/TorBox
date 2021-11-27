@@ -21,13 +21,24 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Ubuntu 20.04 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
+# Ubuntu 20.04.3 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
-# ./run_install_on_ubuntu.sh <--select-tor>
+# ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
-# The <--select-tor> options allows the user to select a specific tor version.
-# Without this option, the installation script installs the latest stable version.
+# The -h or --help option shows the help screen.
+#
+# The --select-tor option allows to select a specific tor version. Without
+# this option, the installation script installs the latest stable version.
+#
+# The --select-fork option allows to install a specific fork. The
+# fork_owner_name is the GitHub user name of the for-owner.
+#
+# The --select-branch option allows to install a specific TorBox branch.
+# Without this option, the installation script installs the master branch.
+#
+# The --step_by_step option execute the installation step by step, which
+# is ideal to find bugs.
 #
 # IMPORTANT
 # Start it as normal user (usually as ubuntu)!
@@ -59,24 +70,11 @@
 
 ##### SET VARIABLES ######
 #
-# SIZE OF THE MENU
-#
-# How many items do you have in the main menu?
-NO_ITEMS=9
-#
-# How many lines are only for decoration and spaces?
-NO_SPACER=0
-#
-#Set the the variables for the menu
+# Set the the variables for the menu
 MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
-MENU_HEIGHT_20=20
-MENU_HEIGHT_15=15
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
-#Colors
+# Colors
 RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
@@ -93,16 +91,20 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# NEW v.0.5.0: new go versions
 # Used go version
-GO_VERSION="go1.16.6.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
+GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
+# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
+# NEW v.0.5.0: TOR_HREF_FOR_SED is back
+TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
+# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
@@ -114,20 +116,15 @@ VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
-# TorBox Repository
-TORBOXURL="https://github.com/radio24/TorBox/"
-TORBOXMENU_BRANCHNAME="master"
-TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
-
 # Wiringpi
-WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
+WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
 # above values will be saved into run/torbox.run #######
 
-#Connectivity check
+# Connectivity check
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
@@ -135,13 +132,54 @@ CHECK_URL2="https://google.com"
 DEFAULT_PASS="CHANGE-IT"
 
 # Catching command line options
-SELECT_TOR=$1
-if [ "$SELECT_TOR" = "--step_by_step" ]; then
-	STEP_BY_STEP="--step_by_step"
-	SELECT_TOR=""
-else
-	STEP_BY_STEP=$2
-fi
+OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
+if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
+eval set -- "$OPTIONS"
+
+SELECT_TOR=
+SELECT_BRANCH=
+TORBOXMENU_BRANCHNAME=
+STEP_BY_STEP=
+while true; do
+  case "$1" in
+    -h | --help )
+			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
+			echo "Options: -h, --help     : Shows this help screen ;-)"
+			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
+			echo "         --select-fork fork_owner_name"
+			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
+			echo "         --select-branch branch_name"
+			echo "                        : Let select a specific TorBox branch (default: master)"
+			echo "         --step_by_step : Executes the installation step by step"
+			echo ""
+			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
+			exit 0
+	  ;;
+    --select-tor ) SELECT_TOR="--select-tor"; shift ;;
+		--select-fork )
+		  # shellcheck disable=SC2034
+			SELECT_FORK="--select-fork"
+			[ ! -z $2 ] && TORBOXMENU_FORKNAME="$2"
+			shift 2
+		;;
+    --select-branch )
+		  # shellcheck disable=SC2034
+			SELECT_BRANCH="--select-branch"
+			[ ! -z $2 ] && TORBOXMENU_BRANCHNAME="$2"
+			shift 2
+		;;
+    --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
+		-- ) shift; break ;;
+		* ) break ;;
+  esac
+done
+
+# NEW v.0.5.0: We have to do that after catching the command line option
+# TorBox Repository
+[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
+[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
 RUNFILE="torbox/run/torbox.run"
@@ -174,11 +212,6 @@ done
 if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
 if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
-#Other variables
-RUNFILE="torbox/run/torbox.run"
-SELECT_TOR=$1
-i=0
-n=0
 
 ##############################
 ######## FUNCTIONS ###########
@@ -228,10 +261,10 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_datesorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | s/<a href=\"\/torproject\/tor\/releases\/tag\/tor-//g | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
-	number_torversion=${#torversion_datesorted[*]}
+	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
@@ -296,7 +329,7 @@ select_and_install_tor()
     	echo
     	if [[ $REPLY =~ ^[1234567890]$ ]]; then
 				if [ $REPLY -gt 0 ] && [ $(( $REPLY - 1 )) -le $number_torversion ]; then
-        	CHOICE_TOR=$(( $REPLY - 1 ))
+        	CHOICE_TOR=$((REPLY-1))
         	clear
         	echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
@@ -408,12 +441,10 @@ clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
 
-
-if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "            WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_on_ubuntu\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction, IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION.\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n--select-tor: select a specific tor version. Without this option, the\n              installation script installs the latest stable version.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
-
 
 # 1. Checking for Internet connection
 clear
@@ -504,7 +535,7 @@ fi
 
 if uname -a | grep "[L]inux ubuntu 5.11" ; then
   echo ""
-  echo -e "${RED}[+]         If this is the first time to got here with Ubuntu 21.04, most probably the system${NOCOLOR}"
+  echo -e "${RED}[+]         If this is the first time to got here with Ubuntu 20.04, most probably the system${NOCOLOR}"
   echo -e "${RED}[+]         just updated the the kernel and we recommend to reboot the system and restart this${NOCOLOR}"
   echo -e "${RED}[+]         installation again.${NOCOLOR}"
   echo ""
@@ -524,11 +555,11 @@ sudo systemctl mask tor
 check_install_packages "net-tools ifupdown unzip equivs"
 # For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
 #sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
-sudo apt-get -y install tor-geoipdb
+check_install_packages "tor-geoipdb"
 sudo systemctl mask tor
 sudo systemctl stop tor
 
@@ -580,6 +611,9 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
+sudo pip3 install Django
+sudo pip3 install click
+sudo pip3 install gunicorn
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -654,7 +688,7 @@ fi
 
 # 4. Install Tor
 clear
-echo -e "${RED}[+] Step 4: Installing tor...${NOCOLOR}"
+echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 select_and_install_tor
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -688,7 +722,6 @@ fi
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 cd ~
-FAILING=0
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
@@ -725,7 +758,6 @@ else
 fi
 
 # 7. Install Vanguards
-VANGUARDS_INSTALL="YES"
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	clear
 	cd
@@ -746,8 +778,10 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
 	fi
+	# NEW v.0.5.0: Synchronized with run_install.sh
+	sudo chown -R debian-tor:debian-tor vanguards
 	cd vanguards
-	sudo git reset --hard ${VANGUARDS_COMMIT_HASH}
+	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
 	cd
 	sudo mv vanguards /var/lib/tor/
 	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
@@ -821,6 +855,7 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+]         Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOX_USED
 DLCHECK=$?
@@ -946,6 +981,14 @@ if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
 
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
+fi
+
 # 12. Configure the system services
 sleep 10
 clear
@@ -970,6 +1013,7 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
+sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
 sudo systemctl unmask ssh
@@ -991,6 +1035,19 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
+# Make Tor and Nginx ready for Onion Services
+echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
+(sudo rm -r /var/www/html) 2> /dev/null
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+sudo mkdir /var/lib/tor/services
+sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+sudo chmod -R go-rwx /var/lib/tor/services
+sudo mkdir /var/lib/tor/onion_auth
+sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+sudo chmod -R go-rwx /var/lib/tor/onion_auth
+
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1000,165 +1057,176 @@ else
 fi
 
 # 13. Installing additional network drivers
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
+if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
 
-# Update kernel headers - important: this has to be done every time after upgrading the kernel
-echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
-sudo apt-get install -y linux-headers-$(uname -r)
-# firmware-realtek is missing on ubuntu, but it should work without it
-sudo apt-get install -y dkms libelf-dev build-essential
-cd
-sleep 2
+	# Update kernel headers - important: this has to be done every time after upgrading the kernel
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	sudo apt-get install -y linux-headers-$(uname -r)
+	# firmware-realtek is missing on ubuntu, but it should work without it
+	sudo apt-get install -y dkms libelf-dev build-essential
+	cd
+	sleep 2
 
-# Installing the RTL8188EU
-# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
-# clear
-# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
-# echo -e " "
-# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-# cd ~
-# git clone https://github.com/lwfinger/rtl8188eu.git
-# cd rtl8188eu
-# make all
-# sudo make install
-# cd ~
-# sudo rm -r rtl8188eu
-# sleep 2
+	# Installing the RTL8188EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	# cd ~
+	# git clone https://github.com/lwfinger/rtl8188eu.git
+	# cd rtl8188eu
+	# make all
+	# sudo make install
+	# cd ~
+	# sudo rm -r rtl8188eu
+	# sleep 2
 
-# Installing the RTL8188FU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
-git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
-sudo dkms add ./rtl8188fu-arm
-sudo dkms build rtl8188fu/1.0
-sudo dkms install rtl8188fu/1.0
-sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-sudo rm -r rtl8188fu*
-sleep 2
+	# Installing the RTL8188FU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	sudo dkms add ./rtl8188fu-arm
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu*
+	sleep 2
 
-# Installing the RTL8192EU
-# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
-# clear
-# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
-# echo -e " "
-# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
-# git clone https://github.com/clnhub/rtl8192eu-linux.git
-# cd rtl8192eu-linux
-# sudo dkms add .
-# sudo dkms install rtl8192eu/1.0
-# cd ~
-# sudo rm -r rtl8192eu-linux
-# sleep 2
+	# Installing the RTL8192EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	# git clone https://github.com/clnhub/rtl8192eu-linux.git
+	# cd rtl8192eu-linux
+	# sudo dkms add .
+	# sudo dkms install rtl8192eu/1.0
+	# cd ~
+	# sudo rm -r rtl8192eu-linux
+	# sleep 2
 
-# Installing the RTL8812AU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/OPTIONS_FILE8812au-20210629.git
-cd 8812au-20210629
-cp ~/torbox/install/Network/install-rtl8812au.sh .
-sudo chmod a+x install-rtl8812au.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then
-		./raspi64.sh
+	# Installing the RTL8812AU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au-20210629.git
+	cd 8812au-20210629
+	cp ~/torbox/install/Network/install-rtl8812au.sh .
+	sudo chmod a+x install-rtl8812au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			./raspi64.sh
+		else
+	 	./raspi32.sh
+ 		fi
+	fi
+	sudo ./install-rtl8812au.sh
+	cd ~
+	sudo rm -r 8812au-20210629
+	sleep 2
+
+	# Installing the RTL8814AU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	cp ~/torbox/install/Network/install-rtl8814au.sh .
+	sudo chmod a+x install-rtl8814au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			./raspi64.sh
+		else
+	 	./raspi32.sh
+ 		fi
+	fi
+	sudo ./install-rtl8814au.sh
+	cd ~
+	sudo rm -r 8814au
+	sleep 2
+
+	# Installing the RTL8821AU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au-20210708.git
+	cd 8821au-20210708
+	cp ~/torbox/install/Network/install-rtl8821au.sh .
+	sudo chmod a+x install-rtl8821au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			./raspi64.sh
+		else
+	 	./raspi32.sh
+ 	fi
+	fi
+	sudo ./install-rtl8821au.sh
+	cd ~
+	sudo rm -r 8821au-20210708
+	sleep 2
+
+	# Installing the RTL8821CU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821cu.git
+	cd 8821cu
+	cp ~/torbox/install/Network/install-rtl8821cu.sh .
+	sudo chmod a+x install-rtl8821cu.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			./raspi64.sh
+		else
+	 	./raspi32.sh
+ 	fi
+	fi
+	sudo ./install-rtl8821cu.sh
+	cd ~
+	sudo rm -r 8821cu
+	sleep 2
+
+	# Installing the RTL88x2BU
+	clear
+	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu-20210702.git
+	cd 88x2bu-20210702
+	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+	sudo chmod a+x install-rtl88x2bu.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			./raspi64.sh
+		else
+	 	./raspi32.sh
+ 	fi
+	fi
+	sudo ./install-rtl88x2bu.sh
+	cd
+	sudo rm -r 88x2bu-20210702
+	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-	 ./raspi32.sh
- fi
-fi
-sudo ./install-rtl8812au.sh
-cd ~
-sudo rm -r 8812au-20210629
-sleep 2
+		sleep 10
+	fi
 
-# Installing the RTL8814AU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8814au.git
-cd 8814au
-cp ~/torbox/install/Network/install-rtl8814au.sh .
-sudo chmod a+x install-rtl8814au.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
 fi
-sudo ./install-rtl8814au.sh
-cd ~
-sudo rm -r 8814au
-sleep 2
-
-# Installing the RTL8821AU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8821au-20210708.git
-cd 8821au-20210708
-cp ~/torbox/install/Network/install-rtl8821au.sh .
-sudo chmod a+x install-rtl8821au.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
-fi
-sudo ./install-rtl8821au.sh
-cd ~
-sudo rm -r 8821au-20210708
-sleep 2
-
-# Installing the RTL8821CU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/8821cu.git
-cd 8821cu
-cp ~/torbox/install/Network/install-rtl8821cu.sh .
-sudo chmod a+x install-rtl8821cu.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
-fi
-sudo ./install-rtl8821cu.sh
-cd ~
-sudo rm -r 8821cu
-sleep 2
-
-# Installing the RTL88x2BU
-clear
-echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-echo -e " "
-echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-git clone https://github.com/morrownr/88x2bu-20210702.git
-cd 88x2bu-20210702
-cp ~/torbox/install/Network/install-rtl88x2bu.sh .
-sudo chmod a+x install-rtl88x2bu.sh
-if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then
-		./raspi64.sh
-	else
-	 ./raspi32.sh
- fi
-fi
-sudo ./install-rtl88x2bu.sh
-cd
-sudo rm -r 88x2bu-20210702
-sleep 2
 
 # 14. Updating run/torbox.run
 clear
@@ -1170,15 +1238,15 @@ sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
 sudo sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
+sudo sed -i "s|^TOR_HREF_FOR_SED=.*|TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}|g" ${RUNFILE}
+# We need the \\" so that \" is surviving
+sudo sed -i 's|TOR_HREF_FOR_SED=href="|TOR_HREF_FOR_SED=href=\\"|g' ${RUNFILE}
 sudo sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
 sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
 sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
-#We will keep the default settings in run/torbox.run
-#sudo sed -i "s|^TORBOX_USED=.*|TORBOX_USED=${TORBOX_USED}|g" ${RUNFILE}
-#sudo sed -i "s|^TORBOXMENU_BRANCHNAME=.*|TORBOXMENU_BRANCHNAME=${TORBOXMENU_BRANCHNAME}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
@@ -1271,6 +1339,12 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
+# NEW v.0.5.0: To start TACA notices.log has to be present
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+# NEW v.0.5.0: To ensure the correct permissions
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3

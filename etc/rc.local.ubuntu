@@ -1,6 +1,8 @@
 #!/bin/sh -e
 #
 # Added by TorBox
+sudo dmesg -D
+
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1

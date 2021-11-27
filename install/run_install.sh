@@ -27,14 +27,17 @@
 # This script installs the newest version of TorBox on a clean, running
 # Raspberry Pi OS lite.
 #
-# NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
+# NEW v.0.5.0: New options: [-h|--help] [--select-fork fork_owner_name] [--select-branch branch_name]
 # SYNTAX
-# ./run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
+# ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
 #
 # The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
+#
+# The --select-fork option allows to install a specific fork. The
+# fork_owner_name is the GitHub user name of the for-owner.
 #
 # The --select-branch option allows to install a specific TorBox branch.
 # Without this option, the installation script installs the master branch.
@@ -622,6 +625,10 @@ fi
 
 # Additional installation for GO
 clear
+echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo ""
 if uname -m | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
@@ -680,11 +687,8 @@ fi
 
 # 5. Install Tor
 clear
-echo -e "${RED}[+] Step 5: Installing tor...${NOCOLOR}"
+echo -e "${RED}[+] Step 5: Installing Tor...${NOCOLOR}"
 select_and_install_tor
-# NEW v.0.5.0: To start TACA notices.log has to be present
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -753,7 +757,6 @@ else
 fi
 
 # 8. Install Vanguards
-VANGUARDS_INSTALL="YES"
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	clear
 	cd
@@ -788,9 +791,6 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 	sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 	sudo chmod -R go-rwx /var/lib/tor/vanguards
-	# NEW v.0.5.0: To ensure the correct permissions
-	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
-	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -1271,6 +1271,12 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
+# NEW v.0.5.0: To start TACA notices.log has to be present
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+# NEW v.0.5.0: To ensure the correct permissions
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages

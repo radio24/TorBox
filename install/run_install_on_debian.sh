@@ -48,7 +48,7 @@
 #  1. Checking for Internet connection
 #  2. Updating the system
 #  3. Installing all necessary packages
-#  4. Installing tor
+#  4. Installing Tor
 #  5. Configuring tor with the pluggable transports
 #  6. Installing Snowflake
 #  7. Installing Vanguards
@@ -111,17 +111,17 @@ VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
-# Wiringpi
-WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
+# Wiringpi - DEBIAN-SPECIFIC
+WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
 # above values will be saved into run/torbox.run #######
 
-# Connectivity check
-CHECK_URL1="http://ubuntu.com"
-CHECK_URL2="https://google.com"
+# Connectivity check - DEBIAN-SPECIFIC
+CHECK_URL1="ubuntu.com"
+CHECK_URL2="google.com"
 
 # Default password
 DEFAULT_PASS="CHANGE-IT"
@@ -223,7 +223,7 @@ check_install_packages()
 	 echo ""
 	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
 	 echo ""
-	 sudo apt-get -y install $packagename
+	 apt-get -y install $packagename
 #   echo ""
 #   read -n 1 -s -r -p "Press any key to continue"
  done
@@ -505,13 +505,13 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 systemctl mask tor
 
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
-check_install_packages "install wget curl gnupg net-tools unzip sudo resolvconf"
+check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
 # Installation of standard packages
-check_install_packages "install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-check_install_packages "install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
+check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
-check_install_packages "install tor-geoipdb"
+check_install_packages "tor-geoipdb"
 systemctl mask tor
 systemctl stop tor
 
@@ -563,9 +563,9 @@ pip3 install PySocks
 pip3 install urwid
 pip3 install Pillow
 pip3 install requests
-sudo pip3 install Django
-sudo pip3 install click
-sudo pip3 install gunicorn
+pip3 install Django
+pip3 install click
+pip3 install gunicorn
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -575,16 +575,20 @@ fi
 
 # Additional installation for GO
 clear
+echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo ""
 if uname -m | grep -q -E "arm64|aarch64"; then
   wget https://golang.org/dl/$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
-  	sudo tar -C /usr/local -xzvf $GO_VERSION_64
+  	tar -C /usr/local -xzvf $GO_VERSION_64
   	if ! grep "# Added by TorBox (001)" .profile ; then
-  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
   	fi
   	export PATH=$PATH:/usr/local/go/bin
-  	sudo rm $GO_VERSION_64
+  	rm $GO_VERSION_64
     if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
     	echo ""
     	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -606,12 +610,12 @@ else
   wget https://golang.org/dl/$GO_VERSION
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
-  	sudo tar -C /usr/local -xzvf $GO_VERSION
+  	tar -C /usr/local -xzvf $GO_VERSION
   	if ! grep "# Added by TorBox (001)" .profile ; then
-  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
   	fi
   	export PATH=$PATH:/usr/local/go/bin
-  	sudo rm $GO_VERSION
+  	rm $GO_VERSION
     if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
     	echo ""
     	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -631,12 +635,10 @@ else
   fi
 fi
 
-# 4. Installing tor
+# 4. Installing Tor
 clear
-echo -e "${RED}[+] Step 4: Installing tor...${NOCOLOR}"
+echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 select_and_install_tor
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -710,7 +712,6 @@ else
 fi
 
 # 7. Installing Vanguards
-VANGUARDS_INSTALL="YES"
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	clear
 	cd
@@ -745,8 +746,6 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 	sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 	chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 	chmod -R go-rwx /var/lib/tor/vanguards
-	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
-	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -920,7 +919,14 @@ echo -e "${RED}[+] Step 11: Because of security considerations, we completely di
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
    printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | tee -a /boot/firmware/config.txt
 fi
-sleep 10
+
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
+fi
 
 # 12. Configure the system services
 clear
@@ -1132,6 +1138,15 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	cd ~
 	rm -r 88x2bu-20210702
 	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
+
 fi
 
 #14. Updating run/torbox.run
@@ -1244,6 +1259,12 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
+# NEW v.0.5.0: To start TACA notices.log has to be present
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+(chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+# NEW v.0.5.0: To ensure the correct permissions
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+(chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
@@ -1260,4 +1281,4 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 else
 	sleep 10
 fi
-sudo reboot
+reboot
