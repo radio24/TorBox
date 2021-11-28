@@ -53,7 +53,7 @@
 #  2. Updating the system
 #  3. Installing all necessary packages
 #  4. Install Tor
-#  5. Configuring Tor with the pluggable transports
+#  5. Configuring Tor with its pluggable transports
 #  6. Install Snowflake
 #  7. Install Vanguards
 #  8. Re-checking Internet connectivity
@@ -117,7 +117,7 @@ VANGUARDS_COMMIT_HASH=10942de
 VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
 # Wiringpi
-WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
+WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
@@ -699,9 +699,9 @@ else
 	sleep 10
 fi
 
-# 5. Configuring Tor with the pluggable transports
+# 5. Configuring Tor with its pluggable transports
 clear
-echo -e "${RED}[+] Step 5: Configuring Tor with the pluggable transports....${NOCOLOR}"
+echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
 (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 sudo chmod a+x /usr/share/tor/geoip*
 # Copy not moving!
@@ -857,7 +857,7 @@ clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 echo -e "${RED}[+]         Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
-wget $TORBOX_USED
+wget $TORBOXURL
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
 	echo -e "${RED}[+]         TorBox' menu sucessfully downloaded... ${NOCOLOR}"

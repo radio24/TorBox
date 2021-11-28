@@ -57,7 +57,7 @@
 #  3. Updating the system
 #  4. Installing all necessary packages
 #  5. Install Tor
-#  6. Configuring Tor with the pluggable transports
+#  6. Configuring Tor with its pluggable transports
 #  7. Install Snowflake
 #  8. Install Vanguards
 #  9. Re-checking Internet connectivity
@@ -630,7 +630,7 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 if uname -m | grep -q -E "arm64|aarch64"; then
-  wget https://golang.org/dl/$GO_VERSION_64
+  wget $GO_DL_PATH$GO_VERSION_64
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
   	sudo tar -C /usr/local -xzvf $GO_VERSION_64
@@ -657,7 +657,7 @@ if uname -m | grep -q -E "arm64|aarch64"; then
   	exit 0
   fi
 else
-  wget https://golang.org/dl/$GO_VERSION
+  wget $GO_DL_PATH$GO_VERSION
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
   	sudo tar -C /usr/local -xzvf $GO_VERSION
@@ -698,9 +698,9 @@ else
 	sleep 10
 fi
 
-# 6. Configuring Tor with the pluggable transports
+# 6. Configuring Tor with its pluggable transports
 clear
-echo -e "${RED}[+] Step 6: Configuring Tor with the pluggable transports....${NOCOLOR}"
+echo -e "${RED}[+] Step 6: Configuring Tor with its pluggable transports....${NOCOLOR}"
 (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 sudo chmod a+x /usr/share/tor/geoip*
 # Copy not moving!

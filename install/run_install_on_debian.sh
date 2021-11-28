@@ -49,7 +49,7 @@
 #  2. Updating the system
 #  3. Installing all necessary packages
 #  4. Installing Tor
-#  5. Configuring tor with the pluggable transports
+#  5. Configuring Tor with its pluggable transports
 #  6. Installing Snowflake
 #  7. Installing Vanguards
 #  8. Re-checking Internet connectivity
@@ -648,9 +648,9 @@ else
 	sleep 10
 fi
 
-# 5. Configuring Tor with the pluggable transports
+# 5. Configuring Tor with its pluggable transports
 clear
-echo -e "${RED}[+] Step 5: Configuring Tor with the pluggable transports....${NOCOLOR}"
+echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
 (mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 (chmod a+x /usr/share/tor/geoip*) 2> /dev/null
 # Debian specific
