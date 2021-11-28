@@ -66,8 +66,6 @@ TORURL=$(grep "^TORURL=" ${RUNFILE} | sed "s/TORURL=//g") 2> /dev/null
 TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/TORPATH_TO_RELEASE_TAGS=//g") 2> /dev/null
 TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/TOR_HREF_FOR_SED=//g") 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/TORURL_DL_PARTIAL=//g") 2> /dev/null
-TORBOXURL=$(grep "^TORBOXURL=" ${RUNFILE} | sed "s/TORBOXURL=//g") 2> /dev/null
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/TORBOXMENU_BRANCHNAME=//g") 2> /dev/null
 SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2> /dev/null
 
 #Other variables
@@ -464,17 +462,17 @@ update_torbox_menu()
   if [ $EXPERT = 1 ]; then
     INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     exitstatus=$?
-    if [ $exitstatus -gt 0 ]; then exit 1; fi
-    if [ ! -z "$INPUT" ]; then
-      TORBOXMENU_BRANCHNAME=$INPUT
-      TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
-    else
-      EXPERT=0
+    if [ $exitstatus = 0 ]; then
+    	if [ ! -z "$INPUT" ]; then
+      	TORBOXMENU_BRANCHNAME=$INPUT
+				INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; fi
+			fi
     fi
   fi
-  if [ $EXPERT = 0 ]; then
-    TORBOX_USED="${TORBOXURL}archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
-  fi
+	[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
+	[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""

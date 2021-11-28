@@ -64,9 +64,6 @@ else
   ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
 fi
 
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
-
-
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
@@ -80,7 +77,6 @@ echo -e "${RED}Go version                                   :${WHITE} $(go versi
 echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
 echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK ${NOCOLOR}"
 echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDSSTATUSb ${NOCOLOR}"
-echo -e "${RED}TorBox Menu is locked to the following Branch:${WHITE} $TORBOXMENU_BRANCHNAME ${NOCOLOR}"
 echo -e "$ROOT_DIR"
 echo
 echo
