@@ -41,7 +41,8 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 * It allows easy access to .onion websites without client configuration (Chrome) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
 
 ### Alternative installation method with the TorBox installation script
-Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script (option ```--select-torbox``` let you select the tor version to be installed):
+Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script (option ```--select-torbox``` let you select the tor version to be installed; for more options, use ```--help```):
+
 ```console
 cd
 wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
