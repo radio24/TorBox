@@ -73,7 +73,7 @@ read_config()
     TOGGLE07="IS NOT RUNNING"
   fi
   MODE_OS=$(grep "^HiddenServiceDir" ${TORRC})
-  if [ -n "$MODE_OS" ]; then
+  if [ ! -z "$MODE_OS" ]; then
     TOGGLE16="IS RUNNING"
   else
     TOGGLE16="IS NOT RUNNING"
