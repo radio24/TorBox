@@ -45,7 +45,7 @@ def run_webserver(dev=True):
     from django.core.wsgi import get_wsgi_application
 
     application = get_wsgi_application()
-    call_command('runserver', '0.0.0.0:8010', '--noreload')
+    call_command('runserver', '127.0.0.1:8010', '--noreload')
     quit()
 
 if __name__ == '__main__':

@@ -26,4 +26,4 @@ from apps.socketio_app.views import sio
 application = socketio.WSGIApp(sio, application)
 
 import eventlet
-eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8010)), application)
+eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 8010)), application)
