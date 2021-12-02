@@ -49,14 +49,14 @@
         position: relative;
         padding-top: 50px;
     }
-    #torbox-title .icon {
+    .torbox-title .icon {
         background-color: var(--torbox-color-green);
         color: white;
         font-weight: bold;
         font-size:28px;
     }
 
-    #torbox-title .text {
+    .torbox-title .text {
         font-size: 25px;
         font-weight: bold;
     }
