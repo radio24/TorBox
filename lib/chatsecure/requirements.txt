@@ -1,0 +1,6 @@
+click==8.0.3
+Django==3.2.9
+eventlet==0.33.0
+# gunicorn patched for eventlet
+git+https://github.com/benoitc/gunicorn.git
+python-socketio==5.5.0

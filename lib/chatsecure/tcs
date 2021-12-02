@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+import django
+from django.core.management import call_command
+# from django.core.files import File
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
+
+import click
+import subprocess
+
+@click.command()
+# @click.option('--file-path', '-fp',
+#               default=None,
+#               type=str,
+#               help="Path to save uploaded files")
+# @click.option('--allow-download', '-ad',
+#               default=True,
+#               type=bool,
+#               help="Allow download from file-path (Default: 1)")
+# @click.option('--allow-upload', '-au',
+#               default=True,
+#               type=bool,
+#               help="Allow upload to file-path (Default: 1)")
+@click.option('--msg', '-m',
+              default='',
+              type=str,
+              help="Message to show in header of web")
+@click.option('--dev',
+              default=False,
+              type=bool,
+              help="Run in development mode (Default: 0)")
+def main(msg, dev):
+    # if file_path is None:
+    #     click.echo(f"Error: files-path must be set.")
+    #     click.echo(f"run {sys.argv[0]} --help for more info.")
+    #     quit()
+    
+    # media_root = file_path
+    
+    # Set environment vars for django settings
+    # os.environ['MEDIA_ROOT'] = media_root
+    # os.environ['ALLOW_UPLOAD'] = "1" if allow_upload else "0"
+    # os.environ['ALLOW_DOWNLOAD'] = "1" if allow_download else "0"
+    os.environ['MSG_HEADER'] = msg
+    os.environ['DEBUG'] = "1" if dev else "0"
+
+    # Start django
+    django.setup()
+    
+    # Clean database
+    clean_database()
+
+    # Create root dir on db
+    # from apps.filesharing.models import DownloadFileModel
+    # root = DownloadFileModel(name='root',
+    #                             is_dir=True)
+    # root.save()
+
+    # if allow_download:
+    #     # Scan media_root and add to db
+    #     scan_path(media_root, root)
+
+    run_webserver(dev)
+
+# def scan_path(path, parent="root"):
+#     """Recursive scan for files and directories"""
+#     from apps.filesharing.models import DownloadFileModel
+
+#     for p in os.scandir(path):
+#         if p.is_dir():
+#             # Create directory on db
+#             dir_db = DownloadFileModel(name=p.name,
+#                                            is_dir=True,
+#                                            parent=parent)
+#             dir_db.save()
+#             scan_path(p.path, dir_db)
+#         else:
+#             # Create file on db
+#             filename = p.name
+#             file_path = p.path
+#             file_size = os.path.getsize(file_path)
+#             file_django = file_path.replace(os.environ['MEDIA_ROOT'], '')
+#             file_db = DownloadFileModel(name=filename,
+#                                         size=file_size,
+#                                         parent=parent,
+#                                         file=file_django)
+#             file_db.save()
+
+def clean_database():
+    """Remove old database and create new one"""
+    try:
+        os.remove("db.sqlite3")
+    except:
+        pass
+    
+    call_command("migrate", interactive=False)
+
+def run_webserver(dev=True):
+    if dev:
+        # Dev
+        from django.core.wsgi import get_wsgi_application
+
+        application = get_wsgi_application()
+        call_command('runserver', 'localhost:8010', '--noreload')
+        quit()
+
+    # Production
+    print('-----------------------------------------------------------')
+    print("[X] Production mode is not ready. Run with --dev 1 instead.")
+    print('-----------------------------------------------------------')
+    quit()
+    gunicorn_cmd = [
+        'gunicorn',
+        '-p', 'tcs.pid',
+        '-b', ':8010',
+        '-k', 'eventlet',
+        '-w', '1',
+        'chatsecure.wsgi'
+    ]
+    subprocess.call(gunicorn_cmd)
+
+
+if __name__ == '__main__':
+    main()
