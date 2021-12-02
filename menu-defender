@@ -73,7 +73,7 @@ read_config()
     TOGGLE07="IS NOT RUNNING"
   fi
   MODE_OS=$(grep "^HiddenServiceDir" ${TORRC})
-  if [ -n "$MODE_OS" ]; then
+  if [ ! -z "$MODE_OS" ]; then
     TOGGLE16="IS RUNNING"
   else
     TOGGLE16="IS NOT RUNNING"
@@ -91,7 +91,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - DEFEND THE OP
 " 1" "HOW CAN I SUPPORT THE TOR PROJECT!" \
 " 2" "HOW CAN I HELP WITH TORBOX?" \
 "===" "===============================================[Sub-Menues]===" \
-" 3" "Run a OBFS4 bridge relay - ${TOGGLE07}" \
+" 3" "Run a OBFS4 Bridge Relay - ${TOGGLE07}" \
 " 4" "Run a an Onion Service - ${TOGGLE16}"  \
 " 5" "Manage my access to an Onion Service - COMING SOON!"  \
 3>&1 1>&2 2>&3)

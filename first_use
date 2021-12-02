@@ -151,6 +151,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sudo killall systemd
         sleep 5
         sudo userdel -r pi
+				# NEW v.0.5.0: This will remove the anoying SSH warning during the log in (which is not valid)
+				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
+				sudo sed -i "/^pi:/d" /etc/shadow
       fi
       clear
       echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
@@ -221,9 +224,10 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
           #This activates TACA
           if [ $ARGUMENT = 1 ]; then
-            sudo ./log_check.py &
+						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) &>/dev/null
+# 					sudo ./log_check.py &
             clear
-            echo -e "${RED}[+] TorBox's automatic countermeasure features are activated!${NOCOLOR}"
+            echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
             sleep 2
 
           #This activates Vanguards
@@ -267,8 +271,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      echo -e "${RED}[+] Create necessary files...${NOCOLOR}"
-      sudo -u debian-tor touch /var/log/tor/notices.log
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       FRESHINSTALLED=0
       sleep 5

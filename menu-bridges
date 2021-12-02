@@ -363,6 +363,7 @@ case "$CHOICE" in
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"
+				clear
         for ARGUMENT in "${CHOICE2[@]}"; do
           [ -z "$ARGUMENT" ] && exit 0
           echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"

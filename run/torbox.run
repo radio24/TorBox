@@ -28,13 +28,15 @@ PING_SERVER=http://google.com
 
 # Used URLs (pre-filled with the default values)
 # Used go version
-GO_VERSION=go1.16.6.linux-armv6l.tar.gz
-GO_VERSION_64="go1.16.6.linux-arm64.tar.gz"
+GO_VERSION=go1.17.3.linux-armv6l.tar.gz
+GO_VERSION_64=go1.17.3.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
 # Release Page of the unofficial Tor repositories on GitHub
-TORURL=https://github.com/torproject/tor/releases
+TORURL=https://github.com/torproject/tor/tags
 # The path to the release tags on GitHub
-TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/
+TORPATH_TO_RELEASE_TAGS=/torproject/tor/releases/tag/
+# TOR_HREF_FOR_SED is the HREF statement with the release tag on it stripped from the source code of the release page (sed backspaces are already included)
+TOR_HREF_FOR_SED=href="/torproject/tor/releases/tag/tor-
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL=https://github.com/torproject/tor/archive/refs/tags/tor
@@ -45,10 +47,6 @@ SNOWFLAKE_USED=https://github.com/keroserene/snowflake.git
 VANGUARDS_USED=https://github.com/mikeperry-tor/vanguards
 VANGUARDS_COMMIT_HASH=10942de
 VANGUARD_LOG_FILE="/var/log/tor/vanguards.log
-# TorBox Repository
-TORBOXURL=https://github.com/radio24/TorBox/
-TORBOX_USED=https://github.com/radio24/TorBox/archive/refs/heads/master.zip
-TORBOXMENU_BRANCHNAME=master
 # Wiringpi
 WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # WiFi drivers from Fars Robotics

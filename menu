@@ -156,7 +156,7 @@ else
   "11" "Go to the countermeasure sub-menu..." \
   "12" "Go to the configuration sub-menu..." \
   "13" "Go to defend the open internet..." \
-  "14" "Go to the update and reset sub-menu..." \
+  "14" "Go to the update and maintenance sub-menu..." \
   "===" "========================================[Reboot & Shutdown]===" \
   "15" "Reboot / Shutdown TorBox" \
   3>&1 1>&2 2>&3)

@@ -8,7 +8,7 @@
 # Github:  https://github.com/radio24/TorBox
 #
 # The code in this script is an adaption from the incredible OnionService project.
-# Copyright (C) 2021 OnionService developers (GPLv3)
+# Copyright (C) 2021 OnionService developers
 # Github:  https://github.com/nyxnor/onionservice
 #
 # This program is free software: you can redistribute it and/or modify
@@ -363,7 +363,7 @@ case "$CHOICE" in
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
             sudo systemctl restart tor
-            echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+            echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
             echo ""
             sleep 2
           fi
@@ -393,7 +393,7 @@ case "$CHOICE" in
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         echo ""
         sleep 2
       fi
@@ -407,7 +407,8 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then SELECTION=3; fi
     if [ $SELECTION == 3 ]; then
       SERVICE_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nName your onion service directory in one string and no space (e.g.: torbox.ch):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      if [ ! -z "${SERVICE_NAME}" ]; then
+			exitstatus=$?
+			if [ ! -z "${SERVICE_NAME}" ]; then
         UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
         if (grep "^HiddenServiceDir ${DATA_DIR_OS}/${SERVICE_NAME}" "${TORRC}"); then
           clear
@@ -423,8 +424,7 @@ case "$CHOICE" in
           INPUT=$(cat text/reactivate-onion_service-text)
           if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
             exitstatus=$?
-            # exitstatus == 255 means that the ESC key was pressed
-            if [ $exitstatus -lt 255 ]; then
+            if [ "$exitstatus" == "0" ]; then
               clear
               echo -e "${RED}[+] Reactivating ${SERVICE_NAME}...${NOCOLOR}"
               #This is necessary to work with special characters in sed
@@ -464,7 +464,7 @@ case "$CHOICE" in
               sleep 2
               echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
               sudo systemctl restart tor
-              echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+              echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
               echo ""
               sleep 2
               clear
@@ -484,7 +484,8 @@ case "$CHOICE" in
           fi
         fi
         SERVICE_PORTS=$(whiptail --title "Onion Service -- virtual ports" --inputbox "\n\nYou can configure up to two virtual ports. However, for sharing a folder or files, we only use the first virtual port (for example, 80 for a website). Insert them separated by space (e.g., 80 443): " $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-        if [ ! -z "${SERVICE_PORTS}" ]; then
+				exitstatus=$?
+				if [ ! -z "${SERVICE_PORTS}" ]; then
           clear
           echo -e "${RED}[+] Configuring torrc...${NOCOLOR}"
           VIRTPORT=$(cut -d ' ' -f1 <<< $SERVICE_PORTS)
@@ -515,28 +516,34 @@ case "$CHOICE" in
           sudo mkdir "$WEBSITE_DIR/$SERVICE_NAME"
           echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
           sudo systemctl restart tor
-          echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+          echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
           sleep 5
           clear
           echo -e "${RED}[+] This is the information for your newly created Onion Service${NOCOLOR}"
           show_onion_address $SERVICE_NAME
         else
-          clear
-          echo -e "${WHITE}[!] NO VIRTUAL PORT GIVEN!!${NOCOLOR}"
-          echo -e "${RED}[+] You didn't define a virtual port! You have to define at least one virtual port!${NOCOLOR}"
-          sleep 5
-          clear
-          trap "bash menu-onion; exit 0" EXIT
-          exit 1
+					# exitstatus == 255 means that the ESC key was pressed
+					if [ $exitstatus != 255 ]; then
+          	clear
+          	echo -e "${WHITE}[!] NO VIRTUAL PORT GIVEN!!${NOCOLOR}"
+          	echo -e "${RED}[+] You didn't define a virtual port! You have to define at least one virtual port!${NOCOLOR}"
+          	sleep 5
+          	clear
+          	trap "bash menu-onion; exit 0" EXIT
+          	exit 1
+					fi
         fi
       else
-        clear
-        echo -e "${WHITE}[!] NO SERVICE NAME GIVEN!!${NOCOLOR}"
-        echo -e "${RED}[+] You didn't define a service name! You have to define a service name!${NOCOLOR}"
-        sleep 5
-        clear
-        trap "bash menu-onion; exit 0" EXIT
-        exit 1
+				# exitstatus == 255 means that the ESC key was pressed
+				if [ $exitstatus != 255 ]; then
+        	clear
+        	echo -e "${WHITE}[!] NO SERVICE NAME GIVEN!!${NOCOLOR}"
+        	echo -e "${RED}[+] You didn't define a service name! You have to define a service name!${NOCOLOR}"
+        	sleep 5
+        	clear
+        	trap "bash menu-onion; exit 0" EXIT
+        	exit 1
+				fi
       fi
     fi
   ;;
@@ -575,8 +582,7 @@ case "$CHOICE" in
       exitstatus=$?
       # Adapted from onionservice-tui
       service_menu checklist "$SERVICE_NAME_LIST"
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -591,8 +597,7 @@ case "$CHOICE" in
                 CHOICE_PURGE="";
               fi
               clear
-              # exitstatus == 255 means that the ESC key was pressed
-              if [ $exitstatus -lt 255 ]; then
+              if [ "$exitstatus" == "0" ]; then
                 # Adapted from onionservice-cli
                 #This is necessary to work with special characters in sed
                 DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
@@ -674,7 +679,7 @@ case "$CHOICE" in
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi
@@ -713,8 +718,7 @@ case "$CHOICE" in
       exitstatus=$?
       #Adabted from onionservice-tui and onionservice-cli
       service_menu checklist "$SERVICE_NAME_LIST"
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -761,12 +765,12 @@ case "$CHOICE" in
             fi
           done
         done
+				clear
+				echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+				sudo systemctl restart tor
+				echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+				sleep 2
       fi
-      clear
-      echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-      sudo systemctl restart tor
-      echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
-      sleep 2
     fi
   ;;
 
@@ -787,8 +791,7 @@ case "$CHOICE" in
       exitstatus=$?
       #From onionservice-tui
       service_menu menu "$SERVICE_NAME_LIST"
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -797,7 +800,7 @@ case "$CHOICE" in
               CLIENT_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client name which you want authorize to acces the onion service (e.g.: alice):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
               exitstatus=$?
               # exitstatus == 255 means that the ESC key was pressed
-              if [ $exitstatus -lt 255 ]; then
+              if [ "$exitstatus" == "0" ]; then
                 CLIENT_PUB_KEY=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client's public key in base32 (for example: BAFYBEICZSSCDSBS7FFQZ55ASQDF3SMV6KLCW3GOFSZVWLYARCI47BGF354):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
                 if { [ -n "${SERVICE_NAME}" ] && [ -n "${CLIENT_NAME}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
                   clear
@@ -817,12 +820,12 @@ case "$CHOICE" in
             fi
           done
         done
+				clear
+				echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+				sudo systemctl restart tor
+				echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+				sleep 2
       fi
-      clear
-      echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-      sudo systemctl restart tor
-      echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
-      sleep 2
     fi
   ;;
 
@@ -841,8 +844,7 @@ case "$CHOICE" in
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
       # Adapted from onionservice-tui
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -862,8 +864,7 @@ case "$CHOICE" in
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
-              # exitstatus == 255 means that the ESC key was pressed
-              if [ $exitstatus -lt 255 ]; then
+              if [ "$exitstatus" == "0" ]; then
                 n=0
                 for CLIENT_NAME in $CLIENT_NAME_LIST; do
                   n=$((n+1))
@@ -880,7 +881,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi
@@ -899,7 +900,7 @@ case "$CHOICE" in
     # From onionservice-tui
     service_menu checklist "$SERVICE_NAME_LIST" "\nNot listed services don't have any client authorization."
     exitstatus=$?
-    if [ $exitstatus -lt 255 ]; then
+    if [ "$exitstatus" == "0" ]; then
       i=0
       for SERVICE_NAME in $SERVICE_NAME_LIST; do
         i=$((i+1))
@@ -940,8 +941,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       exitstatus=$?
       service_menu checklist "$SERVICE_NAME_LIST"
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -960,8 +960,7 @@ case "$CHOICE" in
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
-              # exitstatus == 255 means that the ESC key was pressed
-              if [ $exitstatus -lt 255 ]; then
+              if [ "$exitstatus" == "0" ]; then
                 n=0
                 for CLIENT_NAME in $CLIENT_NAME_LIST; do
                   n=$((n+1))
@@ -1000,7 +999,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
-        echo -e "${RED}[+] Restarted tor succesfully!${NOCOLOR}"
+        echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
         sleep 2
       fi
     fi
@@ -1034,55 +1033,54 @@ case "$CHOICE" in
          1)
           clear
           service_menu menu "$SERVICE_NAME_LIST"
-           # exitstatus == 255 means that the ESC key was pressed
-           if [ $exitstatus -lt 255 ]; then
-             i=0
-             for SERVICE_NAME in $SERVICE_NAME_LIST; do
-               i=$((i+1))
-               for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
-                 if [ "$i" = "$SERVICE_NUMBER" ]; then
-                   test_service_exists $SERVICE_NAME
-                   echo -e "${RED}[+] Sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                   (cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-onion.conf") >/dev/null
-                   UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-                   HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                   #Bash specific, but should also work with other shells
-                   HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                   VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-                   TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-                   sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                   sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                   sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                   sed -i'' "s|FOLDER|$WEBSITE_DIR/$SERVICE_NAME|" /tmp/"${SERVICE_NAME}"-onion.conf
-                   (sudo cp "/tmp/${SERVICE_NAME}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-                   (sudo ln -sfv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
-                   # Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
-                   EMPTY_FOLDER=$(ls -A "$WEBSITE_DIR/$SERVICE_NAME")
-                   if [ -z "$EMPTY_FOLDER" ]; then
-                     (sudo cp "etc/nginx/shared-folder/index.html" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                     (sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                   fi
-                   echo -e "${RED}[+] Nginx is configured (see below).${NOCOLOR}"
-                   echo ""
-                   while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE_NAME}-onion.conf"
-                   echo ""
-                   echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
-                   sudo systemctl stop nginx
-                   # shellcheck disable=SC2062
-                   sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-                   sudo nginx -t && sudo systemctl start nginx
-                   (sudo rm -f /tmp/"${SERVICE}"-onion.conf) &>/dev/null
-                   echo ""
-                   if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-                     echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
-                   fi
-                   echo ""
-                   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-                   clear
-                 fi
-               done
-             done
-           fi
+          if [ "$exitstatus" == "0" ]; then
+            i=0
+            for SERVICE_NAME in $SERVICE_NAME_LIST; do
+            	i=$((i+1))
+            	for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+                if [ "$i" = "$SERVICE_NUMBER" ]; then
+                	test_service_exists $SERVICE_NAME
+                  echo -e "${RED}[+] Sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
+                  (cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-onion.conf") >/dev/null
+                  UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+                  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+                  #Bash specific, but should also work with other shells
+                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+                  VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
+                  TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
+                  sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-onion.conf"
+                  sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
+                  sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
+                  sed -i'' "s|FOLDER|$WEBSITE_DIR/$SERVICE_NAME|" /tmp/"${SERVICE_NAME}"-onion.conf
+                  (sudo cp "/tmp/${SERVICE_NAME}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+                  (sudo ln -sfv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+                  # Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
+                  EMPTY_FOLDER=$(ls -A "$WEBSITE_DIR/$SERVICE_NAME")
+                  if [ -z "$EMPTY_FOLDER" ]; then
+                    (sudo cp "etc/nginx/shared-folder/index.html" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
+                    (sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
+                  fi
+                  echo -e "${RED}[+] Nginx is configured (see below).${NOCOLOR}"
+                  echo ""
+                  while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE_NAME}-onion.conf"
+                  echo ""
+                  echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
+                  sudo systemctl stop nginx
+                  # shellcheck disable=SC2062
+                  sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+                  sudo nginx -t && sudo systemctl start nginx
+                  (sudo rm -f /tmp/"${SERVICE}"-onion.conf) &>/dev/null
+                  echo ""
+                  if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+                    echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
+                  fi
+                  echo ""
+                  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+                  clear
+                fi
+              done
+            done
+          fi
          ;;
 
          # Stop sharing folder on onion domain
@@ -1093,8 +1091,7 @@ case "$CHOICE" in
            create_web_service_list
            # I provide service_menu with $WEB_SERVICE_NAME_LIST received from create_web_service_list, but receive back $SERVICE_NAME_LIST from service_menu
            service_menu checklist "$WEB_SERVICE_NAME_LIST"
-           # exitstatus == 255 means that the ESC key was pressed
-           if [ $exitstatus -lt 255 ]; then
+           if [ "$exitstatus" == "0" ]; then
              if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
                i=0
                for SERVICE_NAME in $SERVICE_NAME_LIST; do
@@ -1164,8 +1161,7 @@ case "$CHOICE" in
     INPUT=$(cat text/backup-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         if [ ! -d "$BACKUP_DIR" ]; then
           mkdir $BACKUP_DIR
         fi
@@ -1241,8 +1237,7 @@ case "$CHOICE" in
     INPUT=$(cat text/restore-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      # exitstatus == 255 means that the ESC key was pressed
-      if [ $exitstatus -lt 255 ]; then
+      if [ "$exitstatus" == "0" ]; then
         OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_onion_service-2021-11-20-22h-34m.tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         cd
         if [ -e "$OS_BK_TAR" ]; then
@@ -1279,7 +1274,7 @@ case "$CHOICE" in
                 echo -e "${RED}[+] Moving shared folders...${NOCOLOR}"
                 FOLDER_LIST=$(sudo ls "restore.tbx${WEBSITE_DIR}")
                 for FOLDER in $FOLDER_LIST; do
-                  sudo rm -r "${WEBSITE_DIR}/$FOLDER"
+                  (sudo rm -r "${WEBSITE_DIR}/$FOLDER") >/dev/null
                   sudo mv "restore.tbx${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}"
                 done
                 echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
