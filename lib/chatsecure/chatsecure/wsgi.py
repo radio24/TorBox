@@ -8,22 +8,22 @@ https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/
 """
 
 import os
+import socketio
 
 from django.core.wsgi import get_wsgi_application
 from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chatsecure.settings')
 
-if not settings.DEBUG:
-    application = get_wsgi_application()
-else:
-    import socketio
+application = get_wsgi_application()
+
+if settings.DEBUG:
+    # dev
     from django.contrib.staticfiles.handlers import StaticFilesHandler
-    from apps.socketio_app.views import sio
-    # sio = socketio.Server(async_mode='eventlet')
     application = StaticFilesHandler(get_wsgi_application())
-    application = socketio.WSGIApp(sio, application)
 
-    import eventlet
+from apps.socketio_app.views import sio
+application = socketio.WSGIApp(sio, application)
 
-    eventlet.wsgi.server(eventlet.listen(('', 8010)), application)
+import eventlet
+eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 8010)), application)
