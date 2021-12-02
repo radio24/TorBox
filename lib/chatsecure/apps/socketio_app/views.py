@@ -6,9 +6,7 @@ from django.shortcuts import redirect
 from apps.chat.models import UserChat
 
 # Create your views here.
-# async_mode = 'eventlet'
 sio = socketio.Server(async_mode='eventlet')
-# from chatsecure.wsgi import sio
 
 def index(request):
     return redirect('index')
