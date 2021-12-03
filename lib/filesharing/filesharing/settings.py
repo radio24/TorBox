@@ -102,7 +102,7 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static'
+    BASE_DIR / '../static'
 ]
 
 # NOTE: Try except needed for manage.py shell
