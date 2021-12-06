@@ -26,16 +26,16 @@ def main(msg, dev):
 
     # Start django
     django.setup()
-    
-    # Clean database
-    clean_database()
+
+    from django.conf import settings
+    clean_database(settings.BASE_DIR)
 
     run_webserver(dev)
 
-def clean_database():
+def clean_database(BASE_DIR):
     """Remove old database and create new one"""
     try:
-        os.remove("db.sqlite3")
+        os.remove(BASE_DIR / "db.sqlite3")
     except:
         pass
     
