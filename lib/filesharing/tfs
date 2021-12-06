@@ -51,9 +51,12 @@ def main(file_path, allow_download, allow_upload, msg, dev):
 
     # Start django
     django.setup()
+
+    # Import settings
+    from django.conf import settings
     
     # Clean database
-    clean_database()
+    clean_database(settings.BASE_DIR)
 
     # Create root dir on db
     from apps.filesharing.models import DownloadFileModel
@@ -91,10 +94,10 @@ def scan_path(path, parent="root"):
                                         file=file_django)
             file_db.save()
 
-def clean_database():
+def clean_database(BASE_DIR):
     """Remove old database and create new one"""
     try:
-        os.remove("db.sqlite3")
+        os.remove(BASE_DIR / "db.sqlite3")
     except:
         pass
     
