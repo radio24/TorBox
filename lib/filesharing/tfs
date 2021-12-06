@@ -3,6 +3,8 @@
 
 import sys
 import os
+#os.environ['DJANGODIR'] = '/Users/cmartinez/dev/torbox/torbox-050/lib/filesharing'
+
 import django
 from django.core.management import call_command
 from django.core.files import File
@@ -108,9 +110,11 @@ def run_webserver(dev=True):
         quit()
 
     # Production
+    from django.conf import settings
     gunicorn_cmd = [
         'gunicorn',
         '-p', 'tfs.pid',
+        '--chdir', settings.BASE_DIR,
         'filesharing.wsgi'
     ]
     subprocess.call(gunicorn_cmd)
