@@ -7,9 +7,9 @@
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
-# The code in this script is an adaption from the incredible OnionService project.
-# Copyright (C) 2021 OnionService developers
-# Github:  https://github.com/nyxnor/onionservice
+# The code in this script is an adaption from the incredible OnionJuggler project.
+# Copyright (C) 2021 OnionJuggler developers
+# Github:  https://github.com/nyxnor/onionjuggler
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ read_config()
 # Syntax is_integer <checklist|menu> <list_of_service_names> [<additional_menu_text>]
 # Following variables can be used:
 # $SERVICE_NAME_LIST_NUMBERS
-# From onionservice-tui
+# From onionjuggler-tui
 service_menu()
 {
   DIALOG_TYPE="${1}"
@@ -132,7 +132,7 @@ service_menu()
 # Syntax test_service_exists <service_name>
 # Following variables can be used:
 # $ONION_HOSTNAME
-# From onionservice-cli
+# From onionjuggler-cli
 test_service_exists()
 {
   SERVICE_NAME="${1}"
@@ -152,7 +152,7 @@ test_service_exists()
 # [<only_with_clients>]will provide a list with services that have at least one client
 # Following variables can be used:
 # $SERVICE_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
-# From onionservice-cli
+# From onionjuggler-cli
 create_service_list()
 {
   ONLY_WITH_CLIENTS=$1
@@ -180,7 +180,7 @@ create_service_list()
 # Following variables can be used:
 # $CLIENT_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
 # $CLIENT_COUNT number of items in the $CLIENT_NAME_LIST
-# From onionservice-cli
+# From onionjuggler-cli
 create_client_list(){
   SERVICE_NAME="${1}"
   CLIENT_COUNT=0
@@ -200,7 +200,7 @@ create_web_service_list(){
 
 # This function checks if a variable is an integer
 # Syntax is_integer [<variable_to_check>]
-# From onionservice-cli
+# From onionjuggler-cli
 is_integer()
 {
  printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
@@ -240,7 +240,7 @@ find_virtport()
 
 # This function shows the .onion address and all necessary information to use it.
 # Syntax show_onion_address <sertvice_name>
-# Adabted from onionservice-cli
+# Adabted from onionjuggler-cli
 show_onion_address()
 {
   SERVICE_NAME="${1}"
@@ -580,7 +580,7 @@ case "$CHOICE" in
     INPUT=$(cat text/disable-onion_service-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       exitstatus=$?
-      # Adapted from onionservice-tui
+      # Adapted from onionjuggler-tui
       service_menu checklist "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -598,7 +598,7 @@ case "$CHOICE" in
               fi
               clear
               if [ "$exitstatus" == "0" ]; then
-                # Adapted from onionservice-cli
+                # Adapted from onionjuggler-cli
                 #This is necessary to work with special characters in sed
                 DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
@@ -716,7 +716,7 @@ case "$CHOICE" in
     INPUT=$(cat text/generate-new_key_pair-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      #Adabted from onionservice-tui and onionservice-cli
+      #Adabted from onionjuggler-tui and onionjuggler-cli
       service_menu checklist "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -789,7 +789,7 @@ case "$CHOICE" in
     INPUT=$(cat text/register-client_public_key-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      #From onionservice-tui
+      #From onionjuggler-tui
       service_menu menu "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -805,7 +805,7 @@ case "$CHOICE" in
                 if { [ -n "${SERVICE_NAME}" ] && [ -n "${CLIENT_NAME}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
                   clear
 
-                  #From onionservice-cli
+                  #From onionjuggler-cli
                   test_service_exists "${SERVICE_NAME}"
                   ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
                   CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
@@ -843,7 +843,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
-      # Adapted from onionservice-tui
+      # Adapted from onionjuggler-tui
       if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
@@ -897,7 +897,7 @@ case "$CHOICE" in
       trap "bash menu-onion; exit 0" EXIT
       exit 1
     fi
-    # From onionservice-tui
+    # From onionjuggler-tui
     service_menu checklist "$SERVICE_NAME_LIST" "\nNot listed services don't have any client authorization."
     exitstatus=$?
     if [ "$exitstatus" == "0" ]; then
@@ -906,7 +906,7 @@ case "$CHOICE" in
         i=$((i+1))
         for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
           if [ "$i" = "$SERVICE_NUMBER" ]; then
-            # Adapted from onionservice-cli
+            # Adapted from onionjuggler-cli
             clear
             echo -e "${RED}[+] This are the clients for ${WHITE}$SERVICE_NAME${RED}:${NOCOLOR}"
             echo ""
@@ -1017,7 +1017,7 @@ case "$CHOICE" in
          trap "bash menu-onion; exit 0" EXIT
          exit 1
        fi
-       #From onionservice-tui
+       #From onionjuggler-tui
        clear
        CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Serve a website folder on onion domain" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
        "==" "===============================================================" \
@@ -1086,7 +1086,7 @@ case "$CHOICE" in
          # Stop sharing folder on onion domain
          2)
            clear
-           # Adapted from onionservice-tui and onionservice-cli
+           # Adapted from onionjuggler-tui and onionjuggler-cli
            # List of services, which shares a folder on an Onion domain
            create_web_service_list
            # I provide service_menu with $WEB_SERVICE_NAME_LIST received from create_web_service_list, but receive back $SERVICE_NAME_LIST from service_menu
