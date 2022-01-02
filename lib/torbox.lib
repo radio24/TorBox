@@ -58,7 +58,7 @@ check_tor()
 clear
 echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
 sleep 1
-IS_TOR=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
+IS_TOR=$(curl -x socks5h://127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
 
 if [ $IS_TOR = true ]; then
   TOR_STATUS="TOR is working"
@@ -169,7 +169,7 @@ online_check()
   # Don't change it to "-z" !
   if [ "$CLEARNET_ONLY" == "0" ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    if curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
+    if curl -x socks5h://127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=1
     else
