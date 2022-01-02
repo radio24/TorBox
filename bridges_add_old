@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -69,7 +69,7 @@ i=0
 ###########################
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
 " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
 " 2" "Add OBFS4 bridges manually"  \

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -140,7 +140,7 @@ if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
   CHOICE=$INTERNETSELECTION
 else
   ###### DISPLAY THE MAIN MENU ######
-  CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
   " 2" "Enforce a new exit node with a new IP" \
   " 3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
@@ -773,7 +773,7 @@ case "$CHOICE" in
 
   # Reboot or Shotdown TorBox
   15)
-    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.4.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.0 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \
     3>&1 1>&2 2>&3)

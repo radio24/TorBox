@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -451,7 +451,7 @@ update_torcfg()
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
 
   # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox042
+  sudo hostnamectl set-hostname TorBox050
   (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
   sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
@@ -527,7 +527,7 @@ update_torbox_menu()
 }
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \

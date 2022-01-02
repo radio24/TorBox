@@ -2,13 +2,13 @@
 # shellcheck disable=SC2001,SC2016
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
 # The code in this script is an adaption from the incredible OnionJuggler project.
-# Copyright (C) 2021 OnionJuggler developers (GPLv3)
+# Copyright (C) 2022 OnionJuggler developers (GPLv3)
 # Github:  https://github.com/nyxnor/onionjuggler
 #
 # This program is free software: you can redistribute it and/or modify
@@ -155,7 +155,7 @@ client_auth_on()
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ACCESS CONTROL" --menu "Choose an option (ESC -> go back)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - ACCESS CONTROL" --menu "Choose an option (ESC -> go back)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "CLIENT AUTHORIZATION - READ ME FIRST"  \
 "==" "==========================================[Manage my access]==="  \
@@ -208,7 +208,7 @@ case "$CHOICE" in
     if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
       whiptail --title "TorBox - INFO" --msgbox "You don't have any server access authorizations!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     else
-      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Edit one of your authorizations" --menu "Choose an autorization to edit (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
+      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - Edit one of your authorizations" --menu "Choose an autorization to edit (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
       [ -n "${CHOICE_ONION_AUTH}" ] && sudo nano "${CLIENT_ONION_AUTH_DIR}"/"${CHOICE_ONION_AUTH}".auth_private
     fi
   ;;
@@ -224,7 +224,7 @@ case "$CHOICE" in
     if [ "${#ONION_AUTH_LIST}" -eq 0 ]; then
       whiptail --title "TorBox - INFO" --msgbox "You don't have any server access authorizations!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     else
-      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Edit one of your authorizations" --menu "Choose an autorization to delete (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
+      CHOICE_ONION_AUTH=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - Edit one of your authorizations" --menu "Choose an autorization to delete (ESC -> go back)" "$((i+8))" 50 2 ${ONION_AUTH_LIST} 3>&1 1>&2 2>&3)
       [ -n "${CHOICE_ONION_AUTH}" ] && ONION_AUTH_NAME_LIST="$(printf %s"${ONION_AUTH_NAME_LIST}" | sed "s/ /,/g")"
     fi
     if [ -n "${ONION_AUTH_NAME_LIST}" ]; then

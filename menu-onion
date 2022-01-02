@@ -2,13 +2,13 @@
 # shellcheck disable=SC2001,SC2016,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github: https://github.com/radio24/TorBox
 #
 # The code in this script is an adaption from the incredible OnionJuggler project.
-# Copyright (C) 2021 OnionJuggler developers
+# Copyright (C) 2022 OnionJuggler developers
 # Github: https://github.com/nyxnor/onionjuggler
 #
 # This program is free software: you can redistribute it and/or modify
@@ -502,7 +502,7 @@ CHOICE=()
 if [ ! -z "$SELECTION" ]; then
   CHOICE=$SELECTION
 else
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ONION SERVICES" --menu "Choose an option (ESC -> back to the main menu)         ${TOGGLE16}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - ONION SERVICES" --menu "Choose an option (ESC -> back to the main menu)         ${TOGGLE16}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "==" "=============================================[Informational]===" \
   " 1" "RUN AN ONION SERVICE - READ ME FIRST"  \
   "==" "============================================[Onion Services]==="  \
@@ -1191,7 +1191,7 @@ case "$CHOICE" in
        create_service_list
 			 error_no_onion_service
        clear
-       CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Serve a website folder on onion domain" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
+       CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - Serve a website folder on onion domain" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
        "==" "===============================================================" \
        " 1" "Start sharing a folder on an Onion domain"  \
        " 2" "Stop sharing a folder on an Onion domain"  \
@@ -1237,7 +1237,7 @@ case "$CHOICE" in
 										elif [[ "$x" != "1" && -z "$VIRTPORT2" ]]; then CHOICE_VIRTPORT=$VIRTPORT
 										elif [[ "$x" != "1" && ! -z "$VIRTPORT2" ]]; then
 											# If we have defined two different virtual ports, the user can decide which port he will use
-											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --radiolist "\n\nYou can use choose one of the following ports (ESC -> go back):" 12 $MENU_WIDTH 2 \
+											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --radiolist "\n\nYou can use choose one of the following ports (ESC -> go back):" 12 $MENU_WIDTH 2 \
 											"$VIRTPORT" ""  ON \
 											"$VIRTPORT2" "" OFF \
 											3>&1 1>&2 2>&3)
@@ -1371,7 +1371,7 @@ case "$CHOICE" in
 			create_service_list
 			error_no_onion_service
 			clear
-			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
+			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
 			"==" "===============================================================" \
 			" 1" "Start TFS on an Onion domain" \
 			" 2" "Change the configuration of a certain TFS" \
@@ -1398,7 +1398,7 @@ case "$CHOICE" in
 							exit 1
 						fi
 						if ls "${NGINX_DIR}/sites-enabled/" | grep "\-onion-filesharing.conf"; then
-							if (whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE IT" --yesno "\nThere is already a TFS configuration in the TorBox run-file. Probably, you configured already TFS on an Onion domain but deactivated the corresponding Onion Service. You can try to reactivate the Onion Services by using menu entry 2 or try to restart TFS in the TFS-sub-menu, including the TFS. In this case, choose \"DON'T CHANGE\".\n\nIf you don't know anything about a past TFS configuration and only want that the new configuration works, select \"DELETE IT\".\n\nCurrently, only one TFS instance can be started. TFS will be developed further. Please go to TorBox's GitHub page and tell us what you want to see in the next version: https://github.com/radio24/TorBox" $MENU_HEIGHT_20 $MENU_WIDTH); then
+							if (whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE IT" --yesno "\nThere is already a TFS configuration in the TorBox run-file. Probably, you configured already TFS on an Onion domain but deactivated the corresponding Onion Service. You can try to reactivate the Onion Services by using menu entry 2 or try to restart TFS in the TFS-sub-menu, including the TFS. In this case, choose \"DON'T CHANGE\".\n\nIf you don't know anything about a past TFS configuration and only want that the new configuration works, select \"DELETE IT\".\n\nCurrently, only one TFS instance can be started. TFS will be developed further. Please go to TorBox's GitHub page and tell us what you want to see in the next version: https://github.com/radio24/TorBox" $MENU_HEIGHT_20 $MENU_WIDTH); then
 								sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
 								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 							else
@@ -1435,7 +1435,7 @@ case "$CHOICE" in
 										elif [[ -z "$x" && -z "$VIRTPORT2" ]]; then CHOICE_VIRTPORT=$VIRTPORT
 										elif [[ -z "$x" && ! -z "$VIRTPORT2" ]]; then
 											# If we have defined two different virtual ports, the user can decide which port he will use
-											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --radiolist "\nYou can use one of the following ports for TFS.\nChoose one of the ports (ESC -> go back)" 12 $MENU_WIDTH 2 \
+											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --radiolist "\nYou can use one of the following ports for TFS.\nChoose one of the ports (ESC -> go back)" 12 $MENU_WIDTH 2 \
 								       "$VIRTPORT" ""  ON \
 								       "$VIRTPORT2" "" OFF \
 								       3>&1 1>&2 2>&3)
@@ -1445,7 +1445,7 @@ case "$CHOICE" in
 												exit 1
 											fi
 										fi
-										SUB_FOLDER=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of /var/www/${SERVICE_NAME} do you want store the shared files for TFS? (default is the $WEBSITE_DIR/${SERVICE_NAME} folder itself but you can add another folder, e.g tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of /var/www/${SERVICE_NAME} do you want store the shared files for TFS? (default is the $WEBSITE_DIR/${SERVICE_NAME} folder itself but you can add another folder, e.g tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed '0,|^/var/www/|s|||')
  										SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed '0,|^/|s|||')
 										if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
@@ -1457,9 +1457,9 @@ case "$CHOICE" in
 											sudo chown torbox:torbox $WEBSITE_DIR
 											sudo -utorbox mkdir -p $TFS_PATH
 										fi
-										TFS_MESSAGE=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "\nChoose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "\nChoose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
 						     		" 1" "Allow uploading" ON \
 						     		" 2" "Allow downloading" ON \
 						     		3>&1 1>&2 2>&3)
@@ -1521,7 +1521,7 @@ case "$CHOICE" in
 										TFS_CONFIG_LIST_ARRAY=($(echo "$TFS_CONFIG_LIST" | tr " " "\n"))
 										#	Distribute the wlwmwnts of the config line to variables
 										TFS_PATH="${TFS_CONFIG_LIST_ARRAY[1]}"
-										SUB_FOLDER=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nWhere do you want store the shared files for TFS?\nCurrently: $TFS_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere do you want store the shared files for TFS?\nCurrently: $TFS_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed '0,|^/var/www/|s|||'); fi
  										if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed '0,|^/|s|||'); fi
 										clear
@@ -1537,27 +1537,27 @@ case "$CHOICE" in
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
 										if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
 										fi
-										TFS_MESSAGE=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
 										(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 										clear

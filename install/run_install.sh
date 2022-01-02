@@ -2,12 +2,12 @@
 # shellcheck disable=SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
-# Copyright (C) 2021 nyxnor (Contributor)
+# Copyright (C) 2022 nyxnor (Contributor)
 # Github:  https://github.com/nyxnor
 #
 # This program is free software: you can redistribute it and/or modify
@@ -97,8 +97,8 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # NEW v.0.5.0: new go versions
 # Used go version
-GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
+GO_VERSION="go1.17.5.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.17.5.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
@@ -149,7 +149,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
@@ -1291,7 +1291,7 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox042) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -144,7 +144,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
@@ -1331,7 +1331,7 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo hostnamectl set-hostname TorBox042
+sudo hostnamectl set-hostname TorBox050
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 sudo cp torbox/etc/hosts /etc/
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

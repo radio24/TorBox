@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -125,7 +125,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "RUN A OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
@@ -220,7 +220,7 @@ case "$CHOICE" in
       nORPORT="4235"
       nOBFS4PORT="443"
       nCONTACT="<address@email.com>"
-      nNICK="TorBox042"
+      nNICK="TorBox050"
       nBRIDGEDISTRIBUTION="any"
       change_config
       read_config
