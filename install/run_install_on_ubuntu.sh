@@ -958,8 +958,6 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
 fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
-# NEW v.0.5.0: More secure and working with vitor
-sudo chown -R debian-tor:debian-tor /etc/tor
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
