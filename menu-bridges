@@ -435,7 +435,7 @@ case "$CHOICE" in
             sleep 2
           else
             clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet actiuvated!${NOCOLOR}"
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet activated!${NOCOLOR}"
             sleep 2
           fi
         fi
@@ -452,7 +452,7 @@ case "$CHOICE" in
             sleep 2
           else
             clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactiuvated!${NOCOLOR}"
+            echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactivated!${NOCOLOR}"
             sleep 2
           fi
         fi

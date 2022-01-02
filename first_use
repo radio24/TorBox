@@ -30,7 +30,6 @@
 ##### SET VARIABLES ######
 #Set the the variables for the menu
 MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
@@ -43,7 +42,6 @@ NOCOLOR='\033[0m'
 # Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
-EXITID="EXITID=0"
 
 ##############################
 ######## FUNCTIONS ###########
@@ -79,7 +77,7 @@ finish_default_obfs4_step1()
  		 exit 0
  	 else
      INPUT=$(cat text/first_use-anti-firewall-text)
-     if (whiptail --title "TorBox - START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
        sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
        clear
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
@@ -177,27 +175,36 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
     # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
     3)
+			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
       INPUT=$(cat text/first_use-welcome-text)
-      if (whiptail --title "TorBox - START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
         sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
         exit 0
       fi
-      check_interface_with_internet
 
-    ###### DISPLAY THE MENU ######
-    CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
-    "==" "===============================================================" \
-    " 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
-    " 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-    " 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-    " 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-    " 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-    " 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-    "==" "===============================================================" \
-    3>&1 1>&2 2>&3)
+			# Will the user keep using the default configured firewall circumvention?
+			INPUT=$(cat text/first_use-firewall-text)
+			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				sleep 1
+			else
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+
+			# Configuring the source of the Internet
+    	check_interface_with_internet
+    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    	"==" "===============================================================" \
+    	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+    	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+    	" 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+    	" 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+    	" 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+    	" 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+    	"==" "===============================================================" \
+    	3>&1 1>&2 2>&3)
 
       # This will configure the origin of the Internet.
       CHOICE=$(echo "$CHOICE" | tr -d ' ')
