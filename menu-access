@@ -7,9 +7,9 @@
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
-# The code in this script is an adaption from the incredible OnionService project.
-# Copyright (C) 2021 OnionService developers (GPLv3)
-# Github:  https://github.com/nyxnor/onionservice
+# The code in this script is an adaption from the incredible OnionJuggler project.
+# Copyright (C) 2021 OnionJuggler developers (GPLv3)
+# Github:  https://github.com/nyxnor/onionjuggler
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ WEBSERVER="nginx" ## [nginx|apache2]
 # Syntax is_integer <function_to_loop> <service> [<client>]
 # <service> are usually services, but can be any other parameter (accepts list -> serv1,serv2,...)
 # [<client>] are usually clients, but can be any other (accepts list -> client1,client2...)
-# From onionservice-cli
+# From onionjuggler-cli
 #loop_list(){
 #  for ITEM in $(printf %s"${2}" | tr "," " "); do
 #		[ -z "${3}" ] && "${1}" "${ITEM}"
@@ -86,8 +86,8 @@ WEBSERVER="nginx" ## [nginx|apache2]
 
 
 
-# This function is represents the "onionservice client auth on [ONION_HOSTNAME] <[CLIENT_PRIV_KEY]" command
-# From onionservice-cli
+# This function is represents the "onionjuggler client auth on [ONION_HOSTNAME] <[CLIENT_PRIV_KEY]" command
+# From onionjuggler-cli
 # As the onion service client, add a key given by the onion service operator to authenticate yourself inside ClientOnionAuthDir
 # The suffix '.auth_private' should not be mentioned, it will be automatically inserted when mentioning the name of the file.
 # private key format must be: <onion-addr-without-.onion-part>:descriptor:x25519:<private-key>
@@ -199,7 +199,7 @@ case "$CHOICE" in
 
   # Edit a server access authorization
   4)
-    #From onionservice-tui
+    #From onionjuggler-tui
     i=0
     for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
       i=$((i+1))
@@ -215,7 +215,7 @@ case "$CHOICE" in
 
   #Remove a server access authorization
   5)
-    #From onionservice-tui
+    #From onionjuggler-tui
     i=0
     for ONION_AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1); do
       i=$((i+1))
@@ -230,7 +230,7 @@ case "$CHOICE" in
     if [ -n "${ONION_AUTH_NAME_LIST}" ]; then
       clear
 
-      #From onionservice-cli
+      #From onionjuggler-cli
       [ -z "${ONION_HOSTNAME}" ] && error_msg "ONION_HOSTNAME is missing"
       if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
         for ITEM in $(printf %s"${ONION_HOSTNAME}" | tr "," " "); do
@@ -252,7 +252,7 @@ case "$CHOICE" in
 
   # List all server access authorizations
   6)
-    #From onionservice-cli
+    #From onionjuggler-cli
     if [ "$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}")" != "" ]; then
       printf %s"# ClientOnionAuthDir ${CLIENT_ONION_AUTH_DIR}\n"
       for AUTH in $(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"); do
@@ -279,7 +279,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Backup bridge relay configuration to $OS_BK_TAR ${NOCOLOR}"
       echo ""
       # HAS TO BE CHANGED!! - muss die selbe Grösse sein!
-      # Possible pull request for onionservice?
+      # Possible pull request for onionjuggler?
       NEEDED_SIZE=$(tar -cz "$OS_BK_TAR" "${DATA_DIR_OS}" "${CLIENT_ONION_AUTH_DIR}" "${TORRC}.part" | wc -c)
       AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}')
       AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
@@ -319,7 +319,7 @@ case "$CHOICE" in
     INPUT=$(cat text/restore-onion_service-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      # Possible pull request for onionservice?
+      # Possible pull request for onionjuggler?
       SCP_TARGET_FULL=$(whiptail --title "Onion Services -- scp source address" --inputbox "\n\nIf you want to import the backup file from a remote server with scp then enter the source address (syntax: username@from_host:/remote/directory/; blank = skip):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       if [ -n $SCP_TARGET_FULL ]; then
         echo -e "${RED}[+] Receiving the backup file from $SCP_TARGET_FULL${NOCOLOR}"
