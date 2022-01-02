@@ -74,7 +74,7 @@ Please bear the following coding guidelines in mind:
   sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
   ```
 
-- To suppress undesired terminal outputs, '&>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
+- To suppress undesired terminal outputs, '&>/dev/null' or '2> /dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
 
   ```shell
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null

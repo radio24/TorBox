@@ -1,15 +1,15 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2016
+# shellcheck disable=SC2001,SC2016,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2021 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
-# Github:  https://github.com/radio24/TorBox
+# Github: https://github.com/radio24/TorBox
 #
 # The code in this script is an adaption from the incredible OnionService project.
-# Copyright (C) 2021 OnionService developers
-# Github:  https://github.com/nyxnor/onionservice
+# Copyright (C) 2021 OnionJuggler developers
+# Github: https://github.com/nyxnor/onionjuggler
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
+BAK="/etc/tor/torrc.bak"
 TOR_USER="debian-tor"
 DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
@@ -68,6 +69,7 @@ WEBSERVER="nginx"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 BACKUP_DIR="/home/torbox/backup"
+RUNFILE="run/torbox.run"
 SELECTION=$1
 
 ##############################
@@ -93,18 +95,18 @@ read_config()
 }
 
 # This function creates a ckeclist or a menu with all the available onion services
-# Syntax is_integer <checklist|menu> <list_of_service_names> [<additional_menu_text>]
+# Syntax service_menu <checklist|menu> <list_of_service_names> [<additional_menu_text>]
 # Following variables can be used:
 # $SERVICE_NAME_LIST_NUMBERS
-# From onionservice-tui
 service_menu()
 {
   DIALOG_TYPE="${1}"
-  SERVICE_NAME_LIST="${2}"
+  SERVICE_NAME_LIST_INTERNAL="${2}"
   ADDITIONAL_MENU_TEXT="${3}"
   i=0
-  for SERVICE in $SERVICE_NAME_LIST; do
+  for SERVICE in $SERVICE_NAME_LIST_INTERNAL; do
     i=$((i+1))
+		SERVICE=$(sed "s/%/ /g" <<< "$SERVICE")
     case "${DIALOG_TYPE}" in
       checklist)
           if [ $i == 1 ]; then SERVICE_LIST="\"${i}\" \"${SERVICE}\" OFF"
@@ -122,7 +124,7 @@ service_menu()
   fi
   clear
   if [ $i -gt 11 ]; then i=11; fi
-  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"Choose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${SERVICE_LIST} 3>&1 1>&2 2>&3"
+  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${SERVICE_LIST} 3>&1 1>&2 2>&3"
   CHOICE_SERVICE=$(eval $WHIPTAIL_LINE)
   exitstatus=$?
   [ ! -z "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_SERVICE}")
@@ -132,7 +134,6 @@ service_menu()
 # Syntax test_service_exists <service_name>
 # Following variables can be used:
 # $ONION_HOSTNAME
-# From onionservice-cli
 test_service_exists()
 {
   SERVICE_NAME="${1}"
@@ -152,7 +153,6 @@ test_service_exists()
 # [<only_with_clients>]will provide a list with services that have at least one client
 # Following variables can be used:
 # $SERVICE_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
-# From onionservice-cli
 create_service_list()
 {
   ONLY_WITH_CLIENTS=$1
@@ -170,7 +170,7 @@ create_service_list()
         else SERVICE_LIST="$(printf "%s\n%s\n" "${SERVICE_LIST}" "${SERVICE_NAME}")"; fi
       fi
     done
-    SERVICE_NAME_LIST=$SERVICE_LIST
+    SERVICE_NAME_LIST=${SERVICE_LIST}
   fi
   clear
 }
@@ -180,27 +180,48 @@ create_service_list()
 # Following variables can be used:
 # $CLIENT_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
 # $CLIENT_COUNT number of items in the $CLIENT_NAME_LIST
-# From onionservice-cli
 create_client_list(){
   SERVICE_NAME="${1}"
   CLIENT_COUNT=0
-  CLIENT_NAME_LIST="$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_OS}/${SERVICE_NAME}/authorized_clients/")" | sed "s/\.auth//g" | tr "\n" ",")"
+  CLIENT_NAME_LIST="$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_OS}/${SERVICE_NAME}/authorized_clients/")" | sed "s/\.auth//g" | tr "\n" ", ")"
   CLIENT_COUNT="$(printf %s"${CLIENT_NAME_LIST}" | tr -dc "," | wc -c)"
   CLIENT_COUNT=$((CLIENT_COUNT+1))
 }
 
 # This function lists the services which shares a folder through nginx
-# Syntax create_web_service_list
+# Syntax create_web_service_list <TFS>
+# <TFS> 0 -> only shared folders; 1 -> only TFS; 2 -> shared folders and TFS
 # Following variables can be used:
-# $WEB_SERVICE_NAME_LIST is a list with the services which shares a folder through nginx (SERV1,SERV2,...)
+# WEB_SERVICE_NAME_LIST is a list with the service names which shares a folder through Nginx (SERV1,SERV2,...)
+# VIRTPORT_WEB_SERVICE_LIST is a list with shows on which port the folder is shared through Nginx
+# WEB_SERVICE_NAME_FOR_MENU is a list which combines the service name with the port number, which is used by the menu
 
 create_web_service_list(){
-  WEB_SERVICE_NAME_LIST=$(sudo ls ${NGINX_DIR}/sites-enabled/ | sed "s/-onion.conf//g")
+	TFS="${1}"
+	if [ "$TFS" == "0" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion.conf" | sed "s/-onion.conf//g")
+	elif [ "$TFS" == "1" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
+	else WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | sed "s/-onion.conf//g" | sed "s/-onion-filesharing.conf//g"); fi
+	i=0
+	for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST_WITH_PORT; do
+		i=$((i+1))
+		WEB_SERVICE_NAME=$(rev <<< ${WEB_SERVICE_NAME})
+		VIRTPORT_WEB_SERVICE=$(cut -d '-' -f1 <<< ${WEB_SERVICE_NAME} | rev)
+		WEB_SERVICE_NAME=$(cut -d '-' -f2- <<< ${WEB_SERVICE_NAME} | rev)
+		if [ $i == 1 ]; then
+			# % represent a space
+			WEB_SERVICE_NAME_FOR_MENU="$(printf "%s\n" "${WEB_SERVICE_NAME}%Port:%$VIRTPORT_WEB_SERVICE")"
+			WEB_SERVICE_NAME_LIST="$(printf "%s\n" "${WEB_SERVICE_NAME}")"
+			VIRTPORT_WEB_SERVICE_LIST="$(printf "%s\n" "${VIRTPORT_WEB_SERVICE}")"
+		else
+			WEB_SERVICE_NAME_FOR_MENU="$(printf "%s\n%s\n" "${WEB_SERVICE_NAME_FOR_MENU}" "${WEB_SERVICE_NAME}%Port:%$VIRTPORT_WEB_SERVICE")"
+			WEB_SERVICE_NAME_LIST="$(printf "%s\n%s\n" "${WEB_SERVICE_NAME_LIST}" "${WEB_SERVICE_NAME}")"
+			VIRTPORT_WEB_SERVICE_LIST="$(printf "%s\n%s\n" "${VIRTPORT_WEB_SERVICE_LIST}" "${VIRTPORT_WEB_SERVICE}")"
+		fi
+	done
 }
 
 # This function checks if a variable is an integer
 # Syntax is_integer [<variable_to_check>]
-# From onionservice-cli
 is_integer()
 {
  printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
@@ -216,7 +237,7 @@ is_integer()
 
 # This function finds the virtual ports on a configured Onion Service
 # Syntax find_virtport <service_name>
-# Following variables can be used: $VIRTPORT, $VIRTPORT2
+# Following variables can be used: VIRTPORT, VIRTPORT2, HIDDENSSERVICE, HIDDENSSERVICE2
 find_virtport()
 {
   SERVICE_NAME="${1}"
@@ -230,17 +251,16 @@ find_virtport()
   HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
   VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
   if [ $x -gt  1 ]; then
-    HIDDENSSERVICEPORT=$(grep "$UNIX_PATH" ${TORRC} | tail -n1)
+    HIDDENSSERVICEPORT2=$(grep "$UNIX_PATH" ${TORRC} | tail -n1)
     #Bash specific, but should also work with other shells
-    HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-    VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
+    HIDDENSSERVICEPORT2=${HIDDENSSERVICEPORT2//#}
+    VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT2)
   fi
 }
 
 
 # This function shows the .onion address and all necessary information to use it.
 # Syntax show_onion_address <sertvice_name>
-# Adabted from onionservice-cli
 show_onion_address()
 {
   SERVICE_NAME="${1}"
@@ -278,26 +298,198 @@ show_onion_address()
   echo ""
   echo -e "${WHITE}Shared folder information${NOCOLOR}"
   echo -e "${WHITE}Shared folder   = ${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
+	# This produces WEB_SERVICE_NAME_LIST
   create_web_service_list
   NGINX_STATUS=$(sudo systemctl is-active nginx)
-  if [[ $NGINX_STATUS = active && ! -z $WEB_SERVICE_NAME_LIST && -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-onion.conf" ]]; then
+  if [[ $NGINX_STATUS = active && ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ) ]]; then
     echo ""
     if [ "$VIRTPORT" == "80" ]; then
       echo -e "${RED}The folder is shared by Nginx and, if activated, accessible${NOCOLOR}"
       echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
+			if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${RED}Also, ${WHITE}TFS is configured ${RED}for this service address.${NOCOLOR}"; fi
     else
       echo -e "${RED}The folder is shared by Nginx and, if activated, accessible${NOCOLOR}"
       echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
+			if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${RED}Also, ${WHITE}TFS is configured ${RED}for this service address.${NOCOLOR}"; fi
     fi
-  else
+	elif [[ $NGINX_STATUS = active && ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion-filesharing.conf" ) ]]; then
+    echo ""
+    if [ "$VIRTPORT2" == "80" ]; then
+      echo -e "${RED}The folder is shared by Nginx and, if activated, accessible${NOCOLOR}"
+      echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
+			if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${RED}Also, ${WHITE}TFS is configured ${RED}for this service address.${NOCOLOR}"; fi
+    else
+      echo -e "${RED}The folder is shared by Nginx and, if activated, accessible${NOCOLOR}"
+      echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT2}${NOCOLOR}"
+			if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${RED}Also, ${WHITE}TFS is configured ${RED}for this service address.${NOCOLOR}"; fi
+    fi
+	else
     echo ""
     echo -e "${RED}Currently, the Onion Service above is ${WHITE}not accessible${NOCOLOR}."
-    echo -e "To change that, you have to start sharing a folder (menu entry 12)."
+    echo -e "To change that, you have to start sharing a folder (menu entry 12 or 13)."
   fi
   echo ""
   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
   clear
 }
+
+# This function configures the TFS in the run file and starts TFS.
+# Syntax configure_tfs
+# This function needs the following special varibles:
+# CHOICE (from the selection if downloads and/or uploads are allowed)
+# TFS_PATH, TFS_MESSAGE, SERVICE_NAME
+configure_tfs()
+{
+	allow_ud=0
+	if [ ! -z "$CHOICE" ]; then
+		mapfile -t CHOICE <<< "$CHOICE"
+		for ARGUMENT in "${CHOICE[@]}"; do
+			if [ $ARGUMENT = 1 ]; then allow_ud=$((allow_ud+1))
+			elif [ $ARGUMENT = 2 ]; then allow_ud=$((allow_ud+2))
+			fi
+		done
+	fi
+	if [ "$allow_ud" == "0" ]; then
+		echo -e "${WHITE}[!] NEITHER UP- NOR DOWNLOAD ALLOWED!${NOCOLOR}"
+		echo -e "${RED}[+] We will configure TFS for $SERVICE_NAME, anyway.${NOCOLOR}"
+		echo -e "${RED}[+] You can change the configuration later with menu entry 2.${NOCOLOR}"
+		echo ""
+		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
+		# This is necessary to work with special characters in sed
+		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+		# Using the Anchor in torbox.run
+		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 0"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 0 -au 0"
+		fi
+		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
+		#Start TFS
+		echo -e "${RED}[+] Starting TFS (up- and downloading prohibited)...${NOCOLOR}"
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 0 &
+		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 0 -au 0 &
+		fi
+		# Puting the rescan-cron job into place and restart cron
+		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		sudo systemctl restart cron
+		sleep 5
+	elif [ "$allow_ud" == "1" ]; then
+		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
+		# This is necessary to work with special characters in sed
+		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+		# Using the Anchor in torbox.run
+		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 1"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 0 -au 1"
+		fi
+		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
+		#Start TFS
+		echo -e "${RED}[+] Starting TFS (only for uploading)...${NOCOLOR}"
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 1 &
+		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 0 -au 1 &
+		fi
+		# Puting the rescan-cron job into place and restart cron
+		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		sudo systemctl restart cron
+		sleep 5
+	elif [ "$allow_ud" == "2" ]; then
+		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
+		# This is necessary to work with special characters in sed
+		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+		# Using the Anchor in torbox.run
+		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 0"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 1 -au 0"
+		fi
+		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
+		# Start TFS
+		echo -e "${RED}[+] Starting TFS (only for downloading)...${NOCOLOR}"
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 0 &
+		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 1 -au 0 &
+		fi
+		# Puting the rescan-cron job into place and restart cron
+		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		sudo systemctl restart cron
+		sleep 5
+	elif [ "$allow_ud" == "3" ]; then
+		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
+		# This is necessary to work with special characters in sed
+		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+		# Using the Anchor in torbox.run
+		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 1"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 1 -au 1"
+		fi
+		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
+		#Start TFS
+		echo -e "${RED}[+] Starting TFS (only for up- and downloading)...${NOCOLOR}"
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 1 &
+		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 1 -au 1 &
+		fi
+		# Puting the rescan-cron job into place and restart cron
+		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		sudo systemctl restart cron
+		sleep 5
+	fi
+}
+
+# This function checks if tfs is already configured in the runfile and will start it if this is the case.
+# Syntax restart_stored_tfs
+restart_stored_tfs()
+{
+	ANZAHL=$(grep -c "^TFS-${SERVICE_NAME}" ${RUNFILE})
+	if [ $ANZAHL -gt 0 ] ; then
+		echo ""
+		echo -e "${RED}[+] TFS configuration found... starting tfs to make it available.${NOCOLOR}"
+		#Currently, tfs can only be started once. If it changed to starte multiple times, -m hast to be greater 1
+		TFS_CONFIG_LIST=$(grep -m 1 "^TFS-${SERVICE_NAME}" ${RUNFILE} | cut -d "=" -f2- | sed "s/.\///")
+		TFS_CONFIG_LIST="sudo $TFS_CONFIG_LIST &"
+		eval $TFS_CONFIG_LIST
+		echo ""
+		echo ""
+		sleep 2
+	fi
+}
+
+# This function checks if an Onion Service is configured and exit when this is not the case
+# Syntax error_no_onion_service
+error_no_onion_service()
+{
+	if [ -z "${SERVICE_NAME_LIST}" ]; then
+		echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
+		echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
+		sleep 5
+		trap "bash menu-onion; exit 0" EXIT
+		exit 1
+	fi
+}
+
+# This function checks if there is an Onion Service with client authorization and exit when this is not the case
+# Syntax error_no_authorization
+error_no_authorization()
+{
+	if [ -z "${SERVICE_NAME_LIST}" ]; then
+		echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
+		echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
+		sleep 5
+		trap "bash menu-onion; exit 0" EXIT
+		exit 1
+	fi
+}
+
+# This function displays an error message and exit if the port is already used by an Onion domain
+# Syntax error_same_port_already_used
+error_same_port_already_used()
+{
+	echo -e "${WHITE}[!] THE ONION DOMAIN WITH THE SAME PORT IS ALREADY USED!${NOCOLOR}"
+	echo -e "${RED}[+] You cannot use the same Onion domain with the same port for two different sharing options!${NOCOLOR}"
+	echo -e "${RED}[+] You have to create another Onion domain or two different ports for the same Onion domain.${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 0
+}
+
 
 ######## PREPARATIONS ########
 read_config
@@ -306,7 +498,8 @@ read_config
 clear
 
 #This is used, if the script is started with an defined menu selection
-if [ ! -z $SELECTION ]; then
+CHOICE=()
+if [ ! -z "$SELECTION" ]; then
   CHOICE=$SELECTION
 else
   CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - ONION SERVICES" --menu "Choose an option (ESC -> back to the main menu)         ${TOGGLE16}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -317,7 +510,7 @@ else
   " 3" "Create or reactivate an Onion Service"  \
   " 4" "List all Onion Services"  \
   " 5" "Delete or deactivate an Onion Services"  \
-  " 6" "Enter the advanced configuration editor"  \
+  " 6" "Enter the advanced tor configuration editor"  \
   "==" "===================================[Control client's access]==="  \
   " 7" "Generate a new key pair (public and private key) for a client"  \
   " 8" "Register a client with its public key"  \
@@ -326,9 +519,10 @@ else
   "11" "Remove a client's authorization"  \
   "==" "=================================================[Share it!]==="  \
   "12" "Start/stop sharing a folder on an Onion domain and list them"  \
+	"13" "Start/stop upload or/and download files (TorBox File Sharing)"  \
   "==" "==========================================[Backup & Restore]===" \
-  "13" "Backup Onion Services"  \
-  "14" "Restore Onion Services" 3>&1 1>&2 2>&3)
+  "14" "Backup Onion Services"  \
+  "15" "Restore Onion Services" 3>&1 1>&2 2>&3)
 fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -345,27 +539,33 @@ case "$CHOICE" in
     if [ -z "$MODE_OS" ]; then
       INPUT=$(cat text/activate-onion_service-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        clear
         if grep "#HiddenServiceDir" ${TORRC}; then
+					clear
           echo -e "${RED}[+] Activating Onion Service Mode... ${SERVICE_NAME}...${NOCOLOR}"
-          sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}
-          sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}
-          sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}
-          sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}
+          (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) 2> /dev/null
+          (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) 2> /dev/null
+          (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
+          (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
           if grep "HiddenServiceDir" ${TORRC}; then
-            create_web_service_list
-            if [ ! -z $WEB_SERVICE_NAME_LIST ]; then
+						# This produces WEB_SERVICE_NAME_LIST
+						create_web_service_list
+						restart_stored_tfs
+            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
               echo -e "${RED}[+] Found shared folders... starting Nginx to make them available.${NOCOLOR}"
               sudo systemctl stop nginx
               # shellcheck disable=SC2062
               sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
               sudo nginx -t && sudo systemctl start nginx
+							sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}" 2> /dev/null
+							echo ""
+							sleep 2
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
             sudo systemctl restart tor
             echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
             echo ""
-            sleep 2
+						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+						clear
           fi
         else
           trap "bash menu-onion; exit 0" SIGINT
@@ -380,22 +580,31 @@ case "$CHOICE" in
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Deactivating Onion Service Mode... ${SERVICE_NAME}...${NOCOLOR}"
-        sudo sed -i "s/^#HiddenServiceDir/##HiddenServiceDir/g" ${TORRC}
-        sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}
-        sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}
-        sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}
+        (sudo sed -i "s/^#HiddenServiceDir/##HiddenServiceDir/g" ${TORRC}) 2> /dev/null
+        (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2> /dev/null
+        (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
+        (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
+				if pgrep -f "filesharing.wsgi"; then
+					clear
+					echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+					PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+					(sudo kill $PID) &>/dev/null
+					echo ""
+				fi
         NGINX_STATUS=$(sudo systemctl is-active nginx)
         if [ $NGINX_STATUS = active ]; then
           echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
           sudo systemctl stop nginx
           # shellcheck disable=SC2062
           sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+					sudo sed -E -i "s/NGINX=ON/NGINX=OFF/g" "${RUNFILE}"
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
         echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
-        echo ""
-        sleep 2
+				echo ""
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				clear
       fi
     fi
     read_config
@@ -430,9 +639,9 @@ case "$CHOICE" in
               #This is necessary to work with special characters in sed
               DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
               SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
-              sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}
-              sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}
-              sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
+              sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2> /dev/null
+              sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2> /dev/null
+              sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC} 2> /dev/null
               x=$(grep -c "$UNIX_PATH" ${TORRC})
               HIDDENSSERVICEPORT=""
               VIRTPORT=""
@@ -442,24 +651,35 @@ case "$CHOICE" in
               HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
               VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
               #This is necessary to work with special characters in sed
-              HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-              sudo sed -i "s/^#$HIDDENSERVICEPORT_STRING/$HIDDENSERVICEPORT_STRING/g" ${TORRC}
+              HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+              sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
               if [ $x -gt  1 ]; then
                 HIDDENSSERVICEPORT=$(grep -m 1 "^#HiddenServicePort.*$UNIX_PATH" ${TORRC})
                 #Bash specific, but should also work with other shells
                 HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
                 VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
                 #This is necessary to work with special characters in sed
-                HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                sudo sed -i "s/^#$HIDDENSERVICEPORT_STRING/$HIDDENSERVICEPORT_STRING/g" ${TORRC}
+                HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+                sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
               fi
-              create_web_service_list
-              if [[ ! -z $WEB_SERVICE_NAME_LIST && -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-onion.conf" ]]; then
+							# This produces WEB_SERVICE_NAME_LIST
+							create_web_service_list
+              if [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ) ]]; then
+								restart_stored_tfs
                 echo -e "${RED}[+] Found shared folders... starting Nginx to make them available.${NOCOLOR}"
                 sudo systemctl stop nginx
                 # shellcheck disable=SC2062
                 sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
                 sudo nginx -t && sudo systemctl start nginx
+								sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+							elif [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion-filesharing.conf" ) ]]; then
+								restart_stored_tfs
+								echo -e "${RED}[+] Found shared folders... starting Nginx to make them available.${NOCOLOR}"
+								sudo systemctl stop nginx
+								# shellcheck disable=SC2062
+								sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+								sudo nginx -t && sudo systemctl start nginx
+								sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
               fi
               sleep 2
               echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
@@ -483,7 +703,7 @@ case "$CHOICE" in
             exit 1
           fi
         fi
-        SERVICE_PORTS=$(whiptail --title "Onion Service -- virtual ports" --inputbox "\n\nYou can configure up to two virtual ports. However, for sharing a folder or files, we only use the first virtual port (for example, 80 for a website). Insert them separated by space (e.g., 80 443): " $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        SERVICE_PORTS=$(whiptail --title "Onion Service -- virtual ports" --inputbox "\n\nYou can configure up to two virtual ports. However, for sharing a folder or files, we only use one virtual port. Insert them separated by space (e.g., 80 443; if unsure, use 80): " $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				if [ ! -z "${SERVICE_PORTS}" ]; then
           clear
@@ -495,6 +715,7 @@ case "$CHOICE" in
             VIRTPORT2=$(cut -d ' ' -f2 <<< $SERVICE_PORTS)
           fi
           is_integer "${VIRTPORT}"
+					# Using the Anchor in torrc
           REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
           SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
           SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
@@ -514,6 +735,7 @@ case "$CHOICE" in
           #Create a folder, which can be published through the Onion Services
           echo -e "${RED}[+] Creating $WEBSITE_DIR/$SERVICE_NAME which can be published through the Onion domain.${NOCOLOR}"
           sudo mkdir "$WEBSITE_DIR/$SERVICE_NAME"
+					sudo chown torbox:torbox "$WEBSITE_DIR/$SERVICE_NAME"
           echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
           sudo systemctl restart tor
           echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
@@ -551,18 +773,12 @@ case "$CHOICE" in
   # List all Onion Services
   4)
     create_service_list
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_onion_service
     i=0
     for SERVICE_NAME in $(printf %s"${SERVICE_NAME_LIST}" | tr "," " "); do
       i=$((i+1))
       clear
-      echo -e "${RED}[+] This is the list of all existing Onion Services on your system (page $i)${NOCOLOR}"
+      echo -e "${RED}[+] This is the list of all existing Onion Services on your system; TFS shares included (page $i)${NOCOLOR}"
       show_onion_address $SERVICE_NAME
     done
   ;;
@@ -570,17 +786,10 @@ case "$CHOICE" in
   # Delete or deactivate Onion Services
   5)
     create_service_list
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_onion_service
     INPUT=$(cat text/disable-onion_service-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       exitstatus=$?
-      # Adapted from onionservice-tui
       service_menu checklist "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -588,99 +797,106 @@ case "$CHOICE" in
           i=$((i+1))
           for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
-              INPUT="\nWould you DEACTIVATE or DELETE the Onion Service named ->$SERVICE_NAME<-?\n\nDEACTIVATE means that nothing will be deleted and the Onion Service can be reactivatet later.\n\nDELETE means that the Onion Service, client authorizations, and the HOSTED DATA IN THE SHARED FOLDER be deleted PERMANENTLY! The service CANNOT be reactivated and the same onion address CANNOT be used anymore.\n"
+              INPUT="Would you DEACTIVATE or DELETE the Onion Service named ->$SERVICE_NAME<-?\n\nDEACTIVATE means that nothing will be deleted and the Onion Service can be reactivatet later.\n\nDELETE means that the Onion Service, client authorizations, and the HOSTED DATA IN THE SHARED FOLDER be deleted PERMANENTLY! The service CANNOT be reactivated and the same onion address CANNOT be used anymore.\n"
               if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEACTIVATE" --yes-button "DELETE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
                 exitstatus=$?
-                CHOICE_PURGE="purge";
               else
                 exitstatus=$?
-                CHOICE_PURGE="";
               fi
               clear
+							#This is necessary to work with special characters in sed
+							DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
+							SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
+							UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
               if [ "$exitstatus" == "0" ]; then
-                # Adapted from onionservice-cli
+                echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
+                (sudo rm -rfv "${DATA_DIR_OS}/${SERVICE_NAME}") &>/dev/null
+                sudo sed -i "/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/d" ${TORRC}
+                x=$(grep -c "$UNIX_PATH" ${TORRC})
+                HIDDENSSERVICEPORT=""
+                VIRTPORT=""
+                VIRTPORT2=""
+                HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+                #Bash specific, but should also work with other shells
+                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
                 #This is necessary to work with special characters in sed
-                DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-                if [ "${CHOICE_PURGE}" = "purge" ] || [ "${CHOICE_PURGE}" = "PURGE" ]; then
-                  echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                  (sudo rm -rfv "${DATA_DIR_OS}/${SERVICE_NAME}") &>/dev/null
-                  sudo sed -i "/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/d" ${TORRC}
-                  x=$(grep -c "$UNIX_PATH" ${TORRC})
-                  HIDDENSSERVICEPORT=""
-                  VIRTPORT=""
-                  VIRTPORT2=""
+                HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+                sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
+                if [ $x -gt  1 ]; then
                   HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
                   #Bash specific, but should also work with other shells
                   HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
                   #This is necessary to work with special characters in sed
-                  HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                  sudo sed -i "/$HIDDENSERVICEPORT_STRING/d" ${TORRC}
-                  if [ $x -gt  1 ]; then
-                    HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                    #Bash specific, but should also work with other shells
-                    HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                    #This is necessary to work with special characters in sed
-                    HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                    sudo sed -i "/$HIDDENSERVICEPORT_STRING/d" ${TORRC}
-                  fi
-                  echo ""
-                  echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
-                  echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
-                  trap "bash menu-onion; exit 0" SIGINT
-                  sleep 1
-                  echo -e "1"
-                  sleep 1
-                  echo -e "2"
-                  sleep 1
-                  echo -e "3"
-                  sleep 1
-                  echo -e "4"
-                  sleep 1
-                  echo -e "5"
-                  sleep 1
-                  echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
-                  (sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
-                else
-                  echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                  sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
-                  x=$(grep -c "$UNIX_PATH" ${TORRC})
-                  HIDDENSSERVICEPORT=""
-                  VIRTPORT=""
-                  VIRTPORT2=""
-                  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                  #Bash specific, but should also work with other shells
-                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                  #This is necessary to work with special characters in sed
-                  HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                  sudo sed -i "s/^$HIDDENSERVICEPORT_STRING/#$HIDDENSERVICEPORT_STRING/g" ${TORRC}
-                  if [ $x -gt  1 ]; then
-                    HIDDENSSERVICEPORT=$(grep -m 1 "^HiddenServicePort.*$UNIX_PATH" ${TORRC})
-                    #Bash specific, but should also work with other shells
-                    HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                    #This is necessary to work with special characters in sed
-                    HIDDENSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                    sudo sed -i "s/^$HIDDENSERVICEPORT_STRING/#$HIDDENSERVICEPORT_STRING/g" ${TORRC}
-                  fi
+                  HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+                  sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
                 fi
-                sleep 2
+								sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
+								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+                echo ""
+                echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
+                echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
+                trap "bash menu-onion; exit 0" SIGINT
+                sleep 1
+                echo -e "1"
+                sleep 1
+                echo -e "2"
+                sleep 1
+                echo -e "3"
+                sleep 1
+                echo -e "4"
+                sleep 1
+                echo -e "5"
+                sleep 1
+                echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
+                (sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
+              elif [ "$exitstatus" == "1" ]; then
+                echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
+                sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
+                x=$(grep -c "$UNIX_PATH" ${TORRC})
+                HIDDENSSERVICEPORT=""
+                VIRTPORT=""
+                VIRTPORT2=""
+                HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+                #Bash specific, but should also work with other shells
+                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+                #This is necessary to work with special characters in sed
+                HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+                sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
+                if [ $x -gt  1 ]; then
+                  HIDDENSSERVICEPORT=$(grep -m 1 "^HiddenServicePort.*$UNIX_PATH" ${TORRC})
+                  #Bash specific, but should also work with other shells
+                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+                  #This is necessary to work with special characters in sed
+                  HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+                  sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
+                fi
               fi
+              sleep 2
             fi
           done
         done
         clear
         read_config
         if [ "$TOGGLE16b" == "OFF" ]; then
+					# The configuration line in the run-files is not deleted. start_tfs and the creation of tfs has to take care of it!!
+					if pgrep -f "filesharing.wsgi"; then
+						clear
+						echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+						PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+						(sudo kill $PID) &>/dev/null
+						echo ""
+					fi
           echo -e "${RED}[+] There is no Onion Service configured, stopping Nginx...${NOCOLOR}"
           sudo systemctl stop nginx
           # shellcheck disable=SC2062
           sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+					sudo sed -E -i "s/NGINX=ON/NGINX=OFF/g" "${RUNFILE}"
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
         echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
-        sleep 2
+				sleep 5
+				clear
       fi
     fi
   ;;
@@ -690,7 +906,7 @@ case "$CHOICE" in
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      sudo nano ${TORRC}
+      sudo ./vitor -u debian-tor
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
@@ -706,17 +922,10 @@ case "$CHOICE" in
   # The onion service operator should send the private key to the desired client
   7)
     create_service_list
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_onion_service
     INPUT=$(cat text/generate-new_key_pair-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      #Adabted from onionservice-tui and onionservice-cli
       service_menu checklist "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -779,17 +988,10 @@ case "$CHOICE" in
   # The onion service operator doesn't have to send to the client anything - the client has the private key already
   8)
     create_service_list
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_onion_service
     INPUT=$(cat text/register-client_public_key-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
-      #From onionservice-tui
       service_menu menu "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
         i=0
@@ -804,8 +1006,6 @@ case "$CHOICE" in
                 CLIENT_PUB_KEY=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client's public key in base32 (for example: BAFYBEICZSSCDSBS7FFQZ55ASQDF3SMV6KLCW3GOFSZVWLYARCI47BGF354):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
                 if { [ -n "${SERVICE_NAME}" ] && [ -n "${CLIENT_NAME}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
                   clear
-
-                  #From onionservice-cli
                   test_service_exists "${SERVICE_NAME}"
                   ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
                   CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
@@ -832,18 +1032,11 @@ case "$CHOICE" in
   # Edit a client's authorization
   9)
     create_service_list only_with_clients
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_authorization
     INPUT=$(cat text/edit_clients_authorisation-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
-      # Adapted from onionservice-tui
       if [ "$exitstatus" == "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
@@ -860,7 +1053,7 @@ case "$CHOICE" in
               CLIENT_LIST="$CLIENT_LIST \"==\" \"===============================================================\"";
               clear
               if [ $n -gt 11 ]; then n=11; fi
-              WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --menu --separate-output \"Choose with SPACE and then press ENTER (ESC -> go back)\" $((n+10)) 80 $((n+2)) ${CLIENT_LIST} 3>&1 1>&2 2>&3"
+              WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --menu --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)\" $((n+10)) 80 $((n+2)) ${CLIENT_LIST} 3>&1 1>&2 2>&3"
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
@@ -890,14 +1083,7 @@ case "$CHOICE" in
   # List all clients for a particular Onion Service
   10)
     create_service_list only_with_clients
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
-    # From onionservice-tui
+		error_no_authorization
     service_menu checklist "$SERVICE_NAME_LIST" "\nNot listed services don't have any client authorization."
     exitstatus=$?
     if [ "$exitstatus" == "0" ]; then
@@ -906,7 +1092,6 @@ case "$CHOICE" in
         i=$((i+1))
         for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
           if [ "$i" = "$SERVICE_NUMBER" ]; then
-            # Adapted from onionservice-cli
             clear
             echo -e "${RED}[+] This are the clients for ${WHITE}$SERVICE_NAME${RED}:${NOCOLOR}"
             echo ""
@@ -930,13 +1115,7 @@ case "$CHOICE" in
   # Remove client's authorization
   11)
     create_service_list only_with_clients
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		error_no_authorization
     INPUT=$(cat text/remove_clients_authorization-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       exitstatus=$?
@@ -1010,154 +1189,502 @@ case "$CHOICE" in
      INPUT=$(cat text/web_server-text)
      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
        create_service_list
-       if [ -z "${SERVICE_NAME_LIST}" ]; then
-         echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
-         echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-         sleep 5
-         trap "bash menu-onion; exit 0" EXIT
-         exit 1
-       fi
-       #From onionservice-tui
+			 error_no_onion_service
        clear
        CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - Serve a website folder on onion domain" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
        "==" "===============================================================" \
-       " 1" "Start sharing a folder on onion domain"  \
-       " 2" "Stop sharing a folder on onion domain"  \
-       " 3" "List of all configured shared folders"  \
-       "==" "===============================================================" 3>&1 1>&2 2>&3)
+       " 1" "Start sharing a folder on an Onion domain"  \
+       " 2" "Stop sharing a folder on an Onion domain"  \
+       " 3" "List of all configured shared folders (TFS included)"  \
+       "==" "===============================================================" \
+			 3>&1 1>&2 2>&3)
+			 exitstatus=$?
+			 if [ "$exitstatus" == "0" ]; then
+       	 CHOICE=$(echo "$CHOICE" | tr -d ' ')
+       	 case "$CHOICE" in
 
-       CHOICE=$(echo "$CHOICE" | tr -d ' ')
-       case "$CHOICE" in
+         	 #Start sharing a folder on onion domain
+         	 1)
+          	clear
+          	service_menu menu "$SERVICE_NAME_LIST"
+          	if [ "$exitstatus" == "0" ]; then
+            	i=0
+            	for SERVICE_NAME in $SERVICE_NAME_LIST; do
+            		i=$((i+1))
+            		for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+                	if [ "$i" = "$SERVICE_NUMBER" ]; then
+										# This will give ONION_HOSTNAME
+                		test_service_exists $SERVICE_NAME
+										# This will give VIRTPORT, VIRTPORT2, HIDDENSSERVICEPORT, HIDDENSSERVICEPORT2
+										find_virtport $SERVICE_NAME
 
-         #Start sharing a folder on onion domain
-         1)
-          clear
-          service_menu menu "$SERVICE_NAME_LIST"
-          if [ "$exitstatus" == "0" ]; then
-            i=0
-            for SERVICE_NAME in $SERVICE_NAME_LIST; do
-            	i=$((i+1))
-            	for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
-                if [ "$i" = "$SERVICE_NUMBER" ]; then
-                	test_service_exists $SERVICE_NAME
-                  echo -e "${RED}[+] Sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                  (cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-onion.conf") >/dev/null
-                  UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-                  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                  #Bash specific, but should also work with other shells
-                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                  VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-                  TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-                  sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                  sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                  sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-onion.conf"
-                  sed -i'' "s|FOLDER|$WEBSITE_DIR/$SERVICE_NAME|" /tmp/"${SERVICE_NAME}"-onion.conf
-                  (sudo cp "/tmp/${SERVICE_NAME}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-                  (sudo ln -sfv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
-                  # Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
-                  EMPTY_FOLDER=$(ls -A "$WEBSITE_DIR/$SERVICE_NAME")
-                  if [ -z "$EMPTY_FOLDER" ]; then
-                    (sudo cp "etc/nginx/shared-folder/index.html" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                    (sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                  fi
-                  echo -e "${RED}[+] Nginx is configured (see below).${NOCOLOR}"
-                  echo ""
-                  while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE_NAME}-onion.conf"
-                  echo ""
-                  echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
-                  sudo systemctl stop nginx
-                  # shellcheck disable=SC2062
-                  sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-                  sudo nginx -t && sudo systemctl start nginx
-                  (sudo rm -f /tmp/"${SERVICE}"-onion.conf) &>/dev/null
-                  echo ""
-                  if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-                    echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
-                  fi
-                  echo ""
-                  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-                  clear
-                fi
-              done
-            done
-          fi
-         ;;
+										# Check if the service/port pair is already used
+										CHOICE_VIRTPORT=
+										# This returns an integer or set x to ""
+										x=$(grep -c "${VIRTPORT}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf")
+										if [ "$x" != "1" ]; then x=$(grep -c "${VIRTPORT}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"); fi
+										clear
+										if [[ "$x" = "1" && -z "$VIRTPORT2" ]]; then
+											error_same_port_already_used
+										elif [[ "$x" = "1" && ! -z "$VIRTPORT2" ]]; then
+											n=0
+											n=$(grep -c "${VIRTPORT2}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion.conf")
+											if [ "$n" != "1" ]; then n=$(grep -c "${VIRTPORT}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"); fi
+											if [[ "$n" = "1" ]]; then
+												error_same_port_already_used
+											else CHOICE_VIRTPORT=$VIRTPORT2
+											fi
+										elif [[ "$x" != "1" && -z "$VIRTPORT2" ]]; then CHOICE_VIRTPORT=$VIRTPORT
+										elif [[ "$x" != "1" && ! -z "$VIRTPORT2" ]]; then
+											# If we have defined two different virtual ports, the user can decide which port he will use
+											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --radiolist "\n\nYou can use choose one of the following ports (ESC -> go back):" 12 $MENU_WIDTH 2 \
+											"$VIRTPORT" ""  ON \
+											"$VIRTPORT2" "" OFF \
+											3>&1 1>&2 2>&3)
+											exitstatus=$?
+											if [ "$exitstatus" != "0" ]; then
+												trap "bash menu-onion; exit 0" EXIT
+												exit 1
+											fi
+										fi
 
-         # Stop sharing folder on onion domain
-         2)
-           clear
-           # Adapted from onionservice-tui and onionservice-cli
-           # List of services, which shares a folder on an Onion domain
-           create_web_service_list
-           # I provide service_menu with $WEB_SERVICE_NAME_LIST received from create_web_service_list, but receive back $SERVICE_NAME_LIST from service_menu
-           service_menu checklist "$WEB_SERVICE_NAME_LIST"
-           if [ "$exitstatus" == "0" ]; then
-             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-               i=0
-               for SERVICE_NAME in $SERVICE_NAME_LIST; do
-                 i=$((i+1))
-                 for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
-                   if [ "$i" = "$SERVICE_NUMBER" ]; then
-                     echo -e "${RED}[+] Stopping sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                     (sudo rm -fv "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-onion.conf") >/dev/null
-                     (sudo rm -fv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-onion.conf") >/dev/null
-                   fi
-                 done
-               done
-               create_web_service_list
-               if [ -z "$WEB_SERVICE_NAME_LIST" ]; then
-                 echo ""
-                 echo -e "${RED}There are no shared folder configured. Stopping Nginx...${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
-                 sudo systemctl stop nginx
-                 # shellcheck disable=SC2062
-                 sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-               else
-                 echo ""
-                 echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-                 sudo systemctl stop nginx
-                 # shellcheck disable=SC2062
-                 sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-                 sudo nginx -t && sudo systemctl start nginx
-                 echo ""
-                 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-               fi
-             fi
-           fi
-         ;;
+                  	echo -e "${RED}[+] Sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
+                  	(cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") >/dev/null
+                  	UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+                  	HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+                  	#Bash specific, but should also work with other shells
+                  	HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+                  	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
+                  	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+                  	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+                  	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+                  	sed -i'' "s|FOLDER|$WEBSITE_DIR/$SERVICE_NAME|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+                  	(sudo cp "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+                  	(sudo ln -sfv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+                  	# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
+                  	EMPTY_FOLDER=$(ls -A "$WEBSITE_DIR/$SERVICE_NAME")
+                  	if [ -z "$EMPTY_FOLDER" ]; then
+                    	(sudo cp "etc/nginx/shared-folder/index.html" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
+                    	(sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
+                  	fi
+                  	echo -e "${RED}[+] Nginx is configured (see below).${NOCOLOR}"
+                  	echo ""
+                  	while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+                  	echo ""
+                  	echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
+                  	sudo systemctl stop nginx
+                  	# shellcheck disable=SC2062
+                  	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+                  	sudo nginx -t && sudo systemctl start nginx
+										sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+                  	(sudo rm -f "${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") &>/dev/null
+                  	echo ""
+                  	if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+                    	echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+                  	fi
+                  	echo ""
+                  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+                  	clear
+                	fi
+              	done
+            	done
+          	fi
+         	;;
 
-         #List of actively shared folders
-         3)
-           clear
-           create_web_service_list
-           if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-             i=0;
-             for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
-               i=$((i+1))
-               echo -e "${WHITE}[+] This are the list of configured shared folders (page $i):${NOCOLOR}"
-               show_onion_address $WEB_SERVICE_NAME
-             done
-           else
-             clear
-             echo -e "${WHITE}[!] NO FOLDERS ARE ACTIVELY SHARED!!${NOCOLOR}"
-             sleep 5
-           fi
-         ;;
-       esac
-     fi
+         	# Stop sharing folder on onion domain
+         	2)
+           	clear
+           	# List of services, which shares a folder on an Onion domain, this also produces WEB_SERVICE_NAME_LIST, WEB_SERVICE_NAME_FOR_MENU
+           	create_web_service_list 0
+           	# This gives us SERVICE_NAME_LIST_NUMBERS
+           	service_menu checklist "$WEB_SERVICE_NAME_FOR_MENU"
+           	if [ "$exitstatus" == "0" ]; then
+             	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+               	i=0
+               	for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+                 	i=$((i+1))
+                 	for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+                   	if [ "$i" = "$SERVICE_NUMBER" ]; then
+											x=0
+											for VIRTPORT_WEB_SERVICE in $VIRTPORT_WEB_SERVICE_LIST; do
+												x=$((x+1))
+												if [ "$x" = "$i" ]; then
+                     			echo -e "${RED}[+] Stopping sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_WEB_SERVICE${NOCOLOR}."
+                     			(sudo rm -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf") >/dev/null
+                     			(sudo rm -f "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf") >/dev/null
+												fi
+											done
+                   	fi
+                 	done
+               	done
+								# This produces WEB_SERVICE_NAME_LIST
+								create_web_service_list
+               	if [ -z "$WEB_SERVICE_NAME_LIST" ]; then
+                 	echo ""
+                 	echo -e "${RED}There are no shared folder configured. Stopping Nginx...${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
+                 	sudo systemctl stop nginx
+                 	# shellcheck disable=SC2062
+                 	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+									sudo sed -E -i "s/NGINX=ON/NGINX=OFF/g" "${RUNFILE}"
+               	else
+                 	echo ""
+                 	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+                 	sudo systemctl stop nginx
+                 	# shellcheck disable=SC2062
+                 	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+									sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+                 	sudo nginx -t && sudo systemctl start nginx
+                 	echo ""
+                 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+               	fi
+             	fi
+           	fi
+         	;;
+
+         	#List of actively shared folders
+         	3)
+           	clear
+						# This produces WEB_SERVICE_NAME_LIST
+						create_web_service_list
+           	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+             	i=0;
+             	for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+               	i=$((i+1))
+               	echo -e "${WHITE}[+] This is the list of configured shared folders (page $i):${NOCOLOR}"
+               	show_onion_address $WEB_SERVICE_NAME
+             	done
+           	else
+             	clear
+             	echo -e "${WHITE}[!] NO FOLDERS ARE ACTIVELY SHARED!!${NOCOLOR}"
+             	sleep 5
+           	fi
+         	;;
+       	esac
+			fi
+   	fi
   ;;
+
+	# Start/stop upload or/and download files (TorBox File Sharing)
+	13)
+		INPUT=$(cat text/tfs-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			create_service_list
+			error_no_onion_service
+			clear
+			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
+			"==" "===============================================================" \
+			" 1" "Start TFS on an Onion domain" \
+			" 2" "Change the configuration of a certain TFS" \
+			" 3" "Stop TFS on an Onion domain" \
+			" 4" "List all Onion domains with TFS" \
+			"==" "===============================================================" \
+			3>&1 1>&2 2>&3)
+			exitstatus=$?
+			if [ "$exitstatus" == "0" ]; then
+				CHOICE=$(echo "$CHOICE" | tr -d ' ')
+				case "$CHOICE" in
+
+					#Start TFS on Onion domain
+					1)
+						clear
+						if pgrep -f "filesharing/tfs"; then
+							echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS ALREADY RUNNING!!!${NOCOLOR}"
+							echo -e "${RED}[+] Currently, only one TFS instance can be started.${NOCOLOR}"
+							echo -e "${RED}[+] TFS will be developed further. Please go to ${NOCOLOR}"
+							echo -e "${RED}[+] TorBox's GitHub page and tell us what you want to${NOCOLOR}"
+							echo -e "${RED}[+] see in the next version: https://github.com/radio24/TorBox${NOCOLOR}"
+							sleep 5
+							trap "bash menu-onion; exit 0" EXIT
+							exit 1
+						fi
+						if ls "${NGINX_DIR}/sites-enabled/" | grep "\-onion-filesharing.conf"; then
+							if (whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE IT" --yesno "\nThere is already a TFS configuration in the TorBox run-file. Probably, you configured already TFS on an Onion domain but deactivated the corresponding Onion Service. You can try to reactivate the Onion Services by using menu entry 2 or try to restart TFS in the TFS-sub-menu, including the TFS. In this case, choose \"DON'T CHANGE\".\n\nIf you don't know anything about a past TFS configuration and only want that the new configuration works, select \"DELETE IT\".\n\nCurrently, only one TFS instance can be started. TFS will be developed further. Please go to TorBox's GitHub page and tell us what you want to see in the next version: https://github.com/radio24/TorBox" $MENU_HEIGHT_20 $MENU_WIDTH); then
+								sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
+								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+							else
+								trap "bash menu-onion; exit 0" EXIT
+								exit 1
+							fi
+						fi
+						service_menu menu "$SERVICE_NAME_LIST"
+						if [ "$exitstatus" == "0" ]; then
+							i=0
+							for SERVICE_NAME in $SERVICE_NAME_LIST; do
+								i=$((i+1))
+								for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+									if [ "$i" = "$SERVICE_NUMBER" ]; then
+										# This will give ONION_HOSTNAME
+										test_service_exists $SERVICE_NAME
+										# This will give VIRTPORT, VIRTPORT2, HIDDENSSERVICEPORT, HIDDENSSERVICEPORT2
+										find_virtport $SERVICE_NAME
+										# Check if the service/port pair is already used
+										CHOICE_VIRTPORT=
+										# This returns an integer or set x to ""
+										x=$(grep -c "${VIRTPORT}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf")
+										clear
+										if [[ "$x" = "1" && -z "$VIRTPORT2" ]]; then
+											error_same_port_already_used
+										elif [[ "$x" = "1" && ! -z "$VIRTPORT2" ]]; then
+											n=0
+											# If VIRTPORT2 is empty, a error message is displayed (we have to turn that off)
+											n=$(grep -c "${VIRTPORT2}" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion.conf")
+											if [[ "$n" = "1" ]]; then
+												error_same_port_already_used
+											else CHOICE_VIRTPORT=$VIRTPORT2
+											fi
+										elif [[ -z "$x" && -z "$VIRTPORT2" ]]; then CHOICE_VIRTPORT=$VIRTPORT
+										elif [[ -z "$x" && ! -z "$VIRTPORT2" ]]; then
+											# If we have defined two different virtual ports, the user can decide which port he will use
+											CHOICE_VIRTPORT=$(whiptail --cancel-button "Back" --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --radiolist "\nYou can use one of the following ports for TFS.\nChoose one of the ports (ESC -> go back)" 12 $MENU_WIDTH 2 \
+								       "$VIRTPORT" ""  ON \
+								       "$VIRTPORT2" "" OFF \
+								       3>&1 1>&2 2>&3)
+								 			 exitstatus=$?
+								 			 if [ "$exitstatus" != "0" ]; then
+												trap "bash menu-onion; exit 0" EXIT
+												exit 1
+											fi
+										fi
+										SUB_FOLDER=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of /var/www/${SERVICE_NAME} do you want store the shared files for TFS? (default is the $WEBSITE_DIR/${SERVICE_NAME} folder itself but you can add another folder, e.g tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed '0,|^/var/www/|s|||')
+ 										SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed '0,|^/|s|||')
+										if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
+											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME"
+										else
+											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/$SUB_FOLDER"
+										fi
+										if [ ! -d $TFS_PATH ]; then
+											sudo chown torbox:torbox $WEBSITE_DIR
+											sudo -utorbox mkdir -p $TFS_PATH
+										fi
+										TFS_MESSAGE=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										##### DISPLAY THE AVAILABLE OPTIONS ######
+						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "\nChoose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+						     		" 1" "Allow uploading" ON \
+						     		" 2" "Allow downloading" ON \
+						     		3>&1 1>&2 2>&3)
+										clear
+										CHOICE=$(echo "$CHOICE" | tr -d ' ')
+					      		configure_tfs
+										#Configure Nginx
+										echo ""
+										echo -e "${RED}[+] Sharing the folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
+										(cp "etc/nginx/sites-available/sample-onion-filesharing.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf") >/dev/null
+										UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+										HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+										#Bash specific, but should also work with other shells
+										HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+										TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
+										sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
+										sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
+										sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
+										sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
+										(sudo cp "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+										(sudo ln -sfv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+										echo -e "${RED}[+] Nginx is configured (see below).${NOCOLOR}"
+										echo ""
+										while IFS= read -r line || [ -n "$line" ]; do printf '%s\n' "$line"; done < "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
+										echo ""
+										echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
+										sudo systemctl stop nginx
+										# shellcheck disable=SC2062
+										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+										sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+										sudo nginx -t && sudo systemctl start nginx
+										(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf") &>/dev/null
+										echo ""
+										if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+										fi
+										echo ""
+										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+										clear
+									fi
+								done
+							done
+						fi
+					;;
+
+					#Change the configuration of a certain TFS
+					2)
+						clear
+						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
+						TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|./lib/filesharing/tfs ||")
+						service_menu menu "$SERVICE_NAME_LIST"
+						if [ "$exitstatus" == "0" ]; then
+							i=0
+							for SERVICE_NAME in $SERVICE_NAME_LIST; do
+								i=$((i+1))
+								for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+									if [ "$i" = "$SERVICE_NUMBER" ]; then
+										# Creating an array on an easy way
+										TFS_CONFIG_LIST_ARRAY=($(echo "$TFS_CONFIG_LIST" | tr " " "\n"))
+										#	Distribute the wlwmwnts of the config line to variables
+										TFS_PATH="${TFS_CONFIG_LIST_ARRAY[1]}"
+										SUB_FOLDER=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nWhere do you want store the shared files for TFS?\nCurrently: $TFS_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed '0,|^/var/www/|s|||'); fi
+ 										if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed '0,|^/|s|||'); fi
+										clear
+										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+											sleep 1
+										else
+											TFS_PATH_OLD=$TFS_PATH
+											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/$SUB_FOLDER"
+										fi
+										if [ ! -d $TFS_PATH ]; then
+											sudo chown torbox:torbox $WEBSITE_DIR
+											sudo -utorbox mkdir -p $TFS_PATH
+										fi
+										##### DISPLAY THE AVAILABLE OPTIONS ######
+										if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											" 1" "Allow uploading" OFF \
+											" 2" "Allow downloading" OFF \
+											3>&1 1>&2 2>&3)
+										elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											" 1" "Allow uploading" ON \
+											" 2" "Allow downloading" OFF \
+											3>&1 1>&2 2>&3)
+										elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											" 1" "Allow uploading" OFF \
+											" 2" "Allow downloading" ON \
+											3>&1 1>&2 2>&3)
+										elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
+											CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											" 1" "Allow uploading" ON \
+											" 2" "Allow downloading" ON \
+											3>&1 1>&2 2>&3)
+										fi
+										TFS_MESSAGE=$(whiptail --title "TorBox v.0.4.2 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
+										(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+										clear
+										if pgrep -f "filesharing.wsgi"; then
+											clear
+											echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+											PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+											(sudo kill $PID) &>/dev/null
+											echo ""
+										fi
+										configure_tfs
+										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+											sleep 1
+										else
+										  TFS_SERVICE_NAME_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep $SERVICE_NAME | grep "-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
+											TFS_SERVICE_NAME=$(rev <<< ${TFS_SERVICE_NAME_WITH_PORT})
+											VIRTPORT_TFS_SERVICE=$(cut -d '-' -f1 <<< ${TFS_SERVICE_NAME})
+											#Configure Nginx
+											echo ""
+											echo -e "${RED}[+] Sharing the new folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_TFS_SERVICE${RED}"
+											sed -i'' "s|$TFS_PATH_OLD|$TFS_PATH|" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+										fi
+										echo ""
+										echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
+										sudo systemctl stop nginx
+										# shellcheck disable=SC2062
+										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+										sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+										sudo nginx -t && sudo systemctl start nginx
+										(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf") &>/dev/null
+										echo ""
+										# This will give ONION_HOSTNAME
+										test_service_exists $SERVICE_NAME
+										if [ "$VIRTPORT_TFS_SERVICE" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT_TFS_SERVICE}${NOCOLOR}"
+										fi
+										echo ""
+										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+										clear
+									fi
+								done
+							done
+						fi
+					;;
+
+					#Stop TFS on Onion domain (this has to be change if TFS supports multiple instances)
+					3)
+						if ! pgrep -f "filesharing/tfs"; then
+							echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS NOT RUNNING!!!${NOCOLOR}"
+							sleep 5
+							trap "bash menu-onion; exit 0" EXIT
+							exit 1
+						fi
+						clear
+						if pgrep -f "filesharing.wsgi"; then
+							clear
+							echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+							PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+							(sudo kill $PID) &>/dev/null
+							echo ""
+						fi
+						sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
+						(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+						sleep 5
+						echo ""
+						echo -e "${RED}[+]Removing Nginx configuration...${NOCOLOR}"
+						FILENAME=$(ls "/etc/nginx/sites-enabled/" | grep "onion-filesharing.conf")
+						sudo rm -r "/etc/nginx/sites-enabled/$FILENAME"
+						FILENAME=$(ls "/etc/nginx/sites-available/" | grep "onion-filesharing.conf")
+						(sudo rm -r "/etc/nginx/sites-available/$FILENAME") &>/dev/null
+						echo ""
+						# This produces WEB_SERVICE_NAME_LIST
+						create_web_service_list
+						if [ -z "$WEB_SERVICE_NAME_LIST" ]; then
+							echo ""
+							echo -e "${RED}There are no shared folder configured. Stopping Nginx...${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
+							sudo systemctl stop nginx
+							# shellcheck disable=SC2062
+							sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+							sudo sed -E -i "s/NGINX=ON/NGINX=OFF/g" "${RUNFILE}"
+						else
+							echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+							sudo systemctl stop nginx
+							# shellcheck disable=SC2062
+							sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+							sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+							sudo nginx -t && sudo systemctl start nginx
+							echo ""
+							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+           	fi
+					;;
+
+					#List all Onion domains with TFS
+					4)
+						if ! pgrep -f "filesharing/tfs"; then
+							clear
+							echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS NOT RUNNING!!!${NOCOLOR}"
+							sleep 5
+							trap "bash menu-onion; exit 0" EXIT
+							exit 1
+						fi
+						clear
+						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
+						if [ ! -z "$SERVICE_NAME_LIST" ]; then
+							i=0;
+							for SERVICE_NAME in $SERVICE_NAME_LIST; do
+								i=$((i+1))
+								echo -e "${WHITE}[+] This is the information about the running TFS:${NOCOLOR}"
+								show_onion_address $SERVICE_NAME
+							done
+						else
+							clear
+							echo -e "${WHITE}[!] NO FOLDERS ARE ACTIVELY SHARED!!${NOCOLOR}"
+							sleep 5
+						fi
+					;;
+				esac
+			fi
+		fi
+	;;
 
   # Backup Onion Services (it doesn't backup my access permissions from the menu-defender entry 5!! )
   # Backups the torrc configuration, the Onion Services, the client keys, and optionally the nginx configuration and all shared folders
-  13)
+  14)
     clear
-    create_service_list only_with_clients
-    if [ -z "${SERVICE_NAME_LIST}" ]; then
-      echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
-      echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
-      sleep 5
-      trap "bash menu-onion; exit 0" EXIT
-      exit 1
-    fi
+		create_service_list
+		error_no_onion_service
     INPUT=$(cat text/backup-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
@@ -1166,30 +1693,30 @@ case "$CHOICE" in
           mkdir $BACKUP_DIR
         fi
         OS_BK_TAR="$BACKUP_DIR/torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz"
-        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Do you want to include the shared folders into your backup?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
+        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Do you want to include Nginx's and TFS' configuration and all shared folders into your backup?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+          echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx's and TFS configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
           echo ""
           # Checking if we have anough space
-          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "${TORRC}" "${NGINX_DIR}" "${WEBSITE_DIR}" | wc -c)
+          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "${TORRC}" "${NGINX_DIR}" "${WEBSITE_DIR}" "${RUNFILE}" | wc -c)
           AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
           if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
           AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
           if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "${NGINX_DIR}" "${TORRC}" "${WEBSITE_DIR}") >/dev/null
+            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "${NGINX_DIR}" "${TORRC}" "${WEBSITE_DIR}" "${RUNFILE}") >/dev/null
             LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
             if [ -z "$LINK_EXIST" ]; then
               echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
               (sudo ln -sfv "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
             fi
             clear
-            echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
+            echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx's and TFS configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
             echo -e "${RED}[+] Done!${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
           else
             clear
             echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-            echo -e "${WHITE}[+] I would try it again without the shared folders.${NOCOLOR}"
+            echo -e "${WHITE}[+] Please, try again without shared folders.${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
             clear
@@ -1197,7 +1724,7 @@ case "$CHOICE" in
             exit 1
           fi
         else
-          echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx configuration and shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
+          echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's and TFS configuration and shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
           echo ""
           # Checking if we have anough space
           NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "${TORRC}" | wc -c)
@@ -1212,14 +1739,13 @@ case "$CHOICE" in
               (sudo ln -sfv "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
             fi
             clear
-            echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx configuration and shared folders to  ${WHITE}$OS_BK_TAR${NOCOLOR}"
+            echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's and TFS configuration and shared folders to  ${WHITE}$OS_BK_TAR${NOCOLOR}"
             echo -e "${RED}[+] Done!${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
           else
             clear
             echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-            echo -e "${WHITE}[+] I would try it again without the shared folders.${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
             clear
@@ -1233,7 +1759,7 @@ case "$CHOICE" in
 
   # Restore Onion Services
   # Backup tar file will be extracted and integrated into their respective tor folders
-  14)
+  15)
     INPUT=$(cat text/restore-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
@@ -1270,28 +1796,54 @@ case "$CHOICE" in
               sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING\n$TORRC_LINE_STRING/g" "${TORRC}"
             done
             if [ -e "restore.tbx${WEBSITE_DIR}" ]; then
-              if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Shared folder detected! Do you want to restore the shared folders and the Nginx configuration?\n\nATTENTION: An already existing configuration will be overwritten without confirmation!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+              if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Shared folder detected! Do you want to restore shared folders and Nginx's and/or TFS' configuration?\n\nATTENTION: Already existing shared folders and configurations will be overwritten without confirmation!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+								echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
+								sudo systemctl stop nginx
+								# shellcheck disable=SC2062
+								sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+								sudo sed -E -i "s/NGINX=ON/NGINX=OFF/g" "torbox/${RUNFILE}"
+								echo -e "${RED}[+] Removing old Nginx configuration${NOCOLOR}"
+								(sudo rm -r ${NGINX_DIR}/sites-available) 2> /dev/null
+								(sudo rm -r ${NGINX_DIR}/sites-enabled) 2> /dev/null
+								if pgrep -f "filesharing.wsgi"; then
+									clear
+									echo -e "${RED}[+] Stopping TFS...${NOCOLOR}"
+									PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+									(sudo kill $PID) &>/dev/null
+									echo ""
+								fi
                 echo -e "${RED}[+] Moving shared folders...${NOCOLOR}"
                 FOLDER_LIST=$(sudo ls "restore.tbx${WEBSITE_DIR}")
                 for FOLDER in $FOLDER_LIST; do
-                  (sudo rm -r "${WEBSITE_DIR}/$FOLDER") >/dev/null
-                  sudo mv "restore.tbx${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}"
+                  (sudo rm -r "${WEBSITE_DIR}/$FOLDER") 2> /dev/null
+                  (sudo mv "restore.tbx${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2> /dev/null
+									(sudo chown torbox:torbox "$WEBSITE_DIR/$SERVICE_NAME") 2> /dev/null
                 done
-                echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
-                sudo systemctl stop nginx
-                echo -e "${RED}[+] Removing old Nginx configuration${NOCOLOR}"
-                (sudo rm -r ${NGINX_DIR}/sites-available) 2> /dev/null
-                (sudo rm -r ${NGINX_DIR}/sites-enabled) 2> /dev/null
-                echo -e "${RED}[+] Moving Nginx configuration...${NOCOLOR}"
-                sudo mv "restore.tbx${NGINX_DIR}/sites-available" "${NGINX_DIR}"/
-                sudo mv "restore.tbx${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/
-                if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to start Nginx to give access to your shared folders?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-                  echo -e "${RED}[+] Starting Nginx...${NOCOLOR}"
-                  sudo systemctl stop nginx
-                  # shellcheck disable=SC2062
-                  sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-                  sudo nginx -t && sudo systemctl start nginx
-                  echo ""
+								# Remove the old TFS configuration in the run-file
+								sudo sed -E -i "/^TFS-/d" "torbox/${RUNFILE}"
+								# Catch the TFS configuration from the backup
+								TFS_CONFIG=$(grep -m 1 "^TFS-" "restore.tbx${RUNFILE}")
+								# Using the Anchor in torbox.run
+								if [ ! -z "$TFS_CONFIG" ]; then
+									echo -e "${RED}[+] Moving TFS configuration...${NOCOLOR}"
+									# This is necessary to work with special characters in sed
+									TFS_CONFIG_STRING="$(<<< "$TFS_CONFIG" sed -e 's`[][\\/.*^$]`\\&`g')"
+									REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" "torbox/${RUNFILE}")
+									sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING\n$TFS_CONFIG_STRING/g" "torbox/${RUNFILE}"
+									# Puting the rescan-cron job into place and restart cron
+									sudo cp torbox/etc/cron.d/tfs-rescan /etc/cron.d
+									sudo systemctl restart cron
+								fi
+              	echo -e "${RED}[+] Moving Nginx configuration...${NOCOLOR}"
+                (sudo mv "restore.tbx${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2> /dev/null
+                (sudo mv "restore.tbx${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2> /dev/null
+								sleep 5
+                if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to start Nginx and/or to give access to your shared folders?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+									echo ""
+									echo -e "${RED}[+] Startiong TFS and/or Nginx again...${NOCOLOR}"
+									sudo ./run/start_tfs
+									sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "torbox/${RUNFILE}"
+									echo ""
                 fi
               fi
             fi
@@ -1312,7 +1864,6 @@ case "$CHOICE" in
           clear
           echo -e "${WHITE}[!] File not found or not specified!!"
           echo -e "${RED}[+]Did you enter the right filename with the right extension?${NOCOLOR}"
-          cd torbox
           sleep 2
         fi
         cd torbox

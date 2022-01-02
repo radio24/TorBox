@@ -32,7 +32,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=10
+NO_ITEMS=11
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=2
@@ -434,6 +434,7 @@ update_torcfg()
   fi
   (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
+	sudo chown -R debian-tor:debian-tor /etc/tor
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
   echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -442,6 +443,13 @@ update_torcfg()
     sudo cp ../.profile ../.profile.bak
     sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a ../.profile
   fi
+	(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+	sudo cp etc/nginx/nginx.conf /etc/nginx/
+	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+	echo ""
+	echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
+
   # This has to be at the end to avoid unnecessary error messages
   sudo hostnamectl set-hostname TorBox042
   (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
@@ -530,8 +538,9 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - UPDATE & MAINTENANCE MENU
 " 6" "Reset TorBox's configuration files (dangerous!)" \
 " 7" "Reset TWM and erase all wifi passwords (reboot required!)" \
 " 8" "Reset Tor and force a change of the permanent entry node" \
-" 9" "Erase all log files" \
-"10" "Just fixing and cleaning" OFF \
+" 9" "Restart TFS and/or Nginx to re-share on an Onion domain" \
+"10" "Erase all log files" \
+"11" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -887,8 +896,31 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# This erases all log files
+	# Restart TFS and Nginx to re-shhare on an Onion domain
 	9)
+		clear
+		if pgrep -f "filesharing.wsgi"; then
+			clear
+			echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+			PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+			(sudo kill $PID) &>/dev/null
+			echo ""
+		fi
+		echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
+		sudo systemctl stop nginx
+		# shellcheck disable=SC2062
+		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		echo ""
+		echo -e "${RED}[+] Startiong TFS and/or Nginx again...${NOCOLOR}"
+		sudo ./run/start_tfs
+		sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+		echo ""
+		echo -e "${RED}[+] Done!${NOCOLOR}"
+		sleep 5
+	;;
+
+	# This erases all log files
+	10)
   	clear
     erase_logs
     echo ""
@@ -897,7 +929,7 @@ case "$CHOICE" in
 	;;
 
 	# Fixing and cleaning - just to be sure that all works properly.
-	10)
+	11)
 		clear
   	check_interface_with_internet
   	clear

@@ -897,6 +897,8 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
 fi
 (cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 cp etc/tor/torrc /etc/tor/
+# NEW v.0.5.0: More secure and working with vitor
+chown -R debian-tor:debian-tor /etc/tor
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -905,6 +907,26 @@ cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
+
+# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
+# Make Tor and Nginx ready for Onion Services
+(cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+cp etc/nginx/nginx.conf /etc/nginx/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+echo ""
+echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+(rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(rm /etc/nginx/sites-available/default) 2> /dev/null
+(rm -r /var/www/html) 2> /dev/null
+# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+mkdir /var/lib/tor/services
+chown -R debian-tor:debian-tor /var/lib/tor/services
+chmod -R go-rwx /var/lib/tor/services
+mkdir /var/lib/tor/onion_auth
+chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -960,19 +982,6 @@ systemctl stop rsyslog
 systemctl disable rsyslog
 systemctl daemon-reload
 echo""
-
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
-(rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(rm /etc/nginx/sites-available/default) 2> /dev/null
-(rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-mkdir /var/lib/tor/services
-chown -R debian-tor:debian-tor /var/lib/tor/services
-chmod -R go-rwx /var/lib/tor/services
-mkdir /var/lib/tor/onion_auth
-chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1197,6 +1206,8 @@ adduser --disabled-password --gecos "" torbox
 echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
 adduser torbox
 adduser torbox netdev
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
 mv /root/* /home/torbox/
 (mv /root/.profile /home/torbox/) 2> /dev/null
 mkdir /home/torbox/openvpn

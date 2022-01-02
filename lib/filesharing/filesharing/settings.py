@@ -25,7 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ['DEBUG'] == '1' else False
+try:
+    DEBUG = True if os.environ['DEBUG'] == '1' else False
+except:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -55,7 +58,7 @@ ROOT_URLCONF = 'filesharing.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [ BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -102,7 +105,7 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'static'
+    BASE_DIR / '../static'
 ]
 
 # NOTE: Try except needed for manage.py shell

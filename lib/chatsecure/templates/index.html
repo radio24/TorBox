@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ChatSecure</title>
+        <link rel="icon" href="{% static 'img/torbox-icon-150x150.jpeg' %}" sizes="32x32" />
+        <link rel="stylesheet" href="{% static 'css/bulma.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/all.css' %}">
+        <link rel="stylesheet" href="{% static 'css/torbox.css' %}">
+        <link rel="stylesheet" href="{% static 'css/torbox-chat.css' %}">
+
+        <script type="module">
+            import { main } from "{% static 'js/torbox-chat.js' %}";
+            main();
+        </script>
+    </head>
+    <body>
+        <div class="torbox-screen-border border-top"></div>
+        <div class="torbox-screen-border border-right"></div>
+        <div class="torbox-screen-border border-bottom"></div>
+        <div class="torbox-screen-border border-left"></div>
+
+        <!-- header -->
+        <div id="torbox-header" class="level is-hidden">
+            <div class="level-item">
+                    <span class="torbox-title icon-text">
+                        <span class="icon">
+                            T
+                        </span>
+                        <span class="text">
+                            ChatSecure
+                        </span>
+                    </span>
+            </div>
+        </div>
+        <!-- /header -->
+
+        <!-- admin msg -->
+        <div id="torbox-admin-msg" class="columns is-hidden">
+            {% if MSG_HEADER %}
+            <div class="column is-half is-offset-one-quarter notification has-text-centered">
+                <p>{{ MSG_HEADER }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <!-- /admin msg -->
+
+        <!-- content -->
+        <section id="torbox-content" class="section is-hidden">
+            <div class="container">
+
+                <div class="columns is-centered">
+                    <div class="column is-10">
+                        <div class="panel">
+                            <div class="panel-heading">
+                                <span><i class="fas fa-user-circle"></i></span>
+                                <span id="torbox-title-nick">Nick</span>
+                                <span class="is-pulled-right"><i class="fas fa-lock"></i></span>
+                            </div>
+
+                            <div id="torbox-chat" class="columns">
+                                <!-- user list -->
+                                <div class="column is-one-quarter">
+                                    <aside class="menu">
+                                        <p class="menu-label has-text-centered mt-2">Users</p>
+                                        <ul id="torbox-user-list" class="menu-list">
+                                            <!-- users -->
+                                        </ul>
+                                        <p class="menu-label has-text-centered mt-2">Status 2</p>
+                                    </aside>
+                                </div>
+                                <!-- /user list -->
+
+                                <div class="column is-three-quarter">
+                                    <!-- messages -->
+                                    <div id="torbox-messages" class="messages pr-5 pt-5 pb-5">
+                                        <div class="msg-wrapper">
+                                            <!-- msgs -->
+                                        </div>
+                                    </div>
+                                    <!-- /messages -->
+                                    <div class="controls panel-block">
+                                        <input type="text" name="message" id="message" class="input is-small text" disabled placeholder="Write a message..." autocomplete="off">
+                                        <button id="message_btn" disabled class="button is-link is-small is-rounded ml-2">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        <!-- /content -->
+
+        <!-- init modal-->
+        <div id="torbox-init" class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head is-justify-content-center">
+                    <span class="torbox-title icon-text">
+                        <span class="icon">
+                            T
+                        </span>
+                        <span class="text">
+                            ChatSecure
+                        </span>
+                    </span>
+                </header>
+                <section class="modal-card-body">
+                    <input id="nick_txt" type="text" class="input text" placeholder="Nickname" maxlength="18" autocomplete="off" />
+                    <p id="nick_error" class="help is-danger is-hidden"></p>
+                        
+                    <div class="block mt-3">
+                        <p class="is-size-7 has-text-grey-light">This chat is not keeping logs. If you close/refresh the window you will lose the chat history.</p>
+                    </div>
+
+                </section>
+                <footer class="modal-card-foot">
+                    <button id="start_btn" class="button is-primary is-small is-rounded ml-auto">Start chat</button>
+                </footer>
+            </div>
+        </div>
+        <!-- /init modal-->
+
+    </body>
+</html>

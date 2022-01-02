@@ -63,7 +63,6 @@ DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_OS="${DATA_DIR}/services"
 WEBSERVER="nginx" ## [nginx|apache2]
-WEBSITE_DIR="/var/www"
 
 ##############################
 ######## FUNCTIONS ########

@@ -220,7 +220,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       if [ ! -z "$CHOICE" ]; then
         mapfile -t CHOICE <<< "$CHOICE"
         for ARGUMENT in "${CHOICE[@]}"; do
-          LOOP_NUMBER=$((LOOP_NUMBER+1))
+#          LOOP_NUMBER=$((LOOP_NUMBER+1))
 
           #This activates TACA
           if [ $ARGUMENT = 1 ]; then
@@ -232,9 +232,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
           #This activates Vanguards
           elif [ $ARGUMENT = 2 ]; then
-            sudo systemctl enable vanguards@default.service
-            sudo systemctl restart vanguards@default.service
-            sudo systemctl daemon-reload
+            (sudo systemctl enable vanguards@default.service) &>/dev/null
+            (sudo systemctl restart vanguards@default.service) &>/dev/null
+            (sudo systemctl daemon-reload) &>/dev/null
             echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
             sleep 2
           fi

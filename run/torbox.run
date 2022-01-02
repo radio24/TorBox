@@ -87,5 +87,12 @@ INTERNET_IFACE=eth0
 # Where are the Clients? If you use multiple interfaces, separate them with a space.
 CLIENT_IFACE=wlan0 eth1
 
+# Should Nginx running?
+NGINX=OFF
+
+# TFS starting commands
+# Syntax: TFS-<service_name>=<tfs command>
+# This will configure the TFS program (do not remove or change that line - this is an anchor)
+
 # Exit controll variable
 EXITID=0

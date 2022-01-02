@@ -1,0 +1,10 @@
+This menu entry will start, stop TorBox File Sharing (TFS) capabilities on Onion domains. The difference to serving a website folder on Onion domains (menu entry 12) is that TFS is focused on exchanging files, not serving a website.
+
+IMPORTANT
+- To use TFS, you have first to toggle the Onion Service Mode from OFF to
+  ON and/or create an Onion Service (menu entry 2 or 3).
+- Without client authorization (menu entry 7-11), you will share the
+  website folder with ANYONE. If you don't want that, control the
+  client's access first.
+
+Do you want to start, stop TFS capabilities on Onion domains?

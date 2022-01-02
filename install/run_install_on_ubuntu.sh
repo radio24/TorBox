@@ -958,6 +958,8 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
 fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
 sudo cp etc/tor/torrc /etc/tor/
+# NEW v.0.5.0: More secure and working with vitor
+sudo chown -R debian-tor:debian-tor /etc/tor
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -966,6 +968,26 @@ cd
 if ! grep "# Added by TorBox (002)" .profile ; then
   sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
+
+# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
+# Make Tor and Nginx ready for Onion Services
+(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+sudo cp etc/nginx/nginx.conf /etc/nginx/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+echo ""
+echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
+(sudo rm -r /var/www/html) 2> /dev/null
+# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+sudo mkdir /var/lib/tor/services
+sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+sudo chmod -R go-rwx /var/lib/tor/services
+sudo mkdir /var/lib/tor/onion_auth
+sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1035,19 +1057,6 @@ sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
-
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
-sudo chown -R debian-tor:debian-tor /var/lib/tor/services
-sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
-sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1281,6 +1290,8 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""

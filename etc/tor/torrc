@@ -56,7 +56,7 @@ DisableDebuggerAttachment 0
 ## means that your firewall allows connections to everything inside net 99,
 ## rejects port 80 connections to net 18, and accepts connections to port 80
 ## otherwise.
-#ReachableAddresses accept *:443, accept *:80
+ReachableAddresses accept *:443, accept *:80
 
 ## TO OVERCOME CENSORSHIP, START HERE!
 ######################################################
