@@ -391,8 +391,8 @@ select_and_install_tor()
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
-						git add .
-						git config --global "torbox"
+						git add *
+						git config --global user.name "torbox"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
 						sh autogen.sh
@@ -464,8 +464,8 @@ select_and_install_tor()
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add .
-				git config --global "torbox"
+				git add *
+				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
         sh autogen.sh
@@ -1303,7 +1303,7 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-sudo cp torbox/etc/hosts /etc/
+(sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
