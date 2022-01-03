@@ -82,7 +82,7 @@ finish_default_obfs4_step1()
        clear
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
        echo -e "    Ignore any error messages, this can take minutes just wait..."
-       echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
        echo -e "    You can leave the progress report with CTRL-C."
        echo ""
        sudo systemctl restart tor &
@@ -284,7 +284,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report with CTRL-C."
       echo ""
       trap "finish_default_obfs4_step1 $DEFAULT_OBFS4_SUPPORT" SIGINT
