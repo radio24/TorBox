@@ -169,8 +169,7 @@ online_check()
   # Don't change it to "-z" !
   if [ "$CLEARNET_ONLY" == "0" ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-		OCHECK=$(curl --socks5-hostname 127.0.0.1:9050 -m 6 -s $CHECK_URL)
-    if [ $? == 0 ]; then
+    if curl -x socks5h://127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=1
     else
@@ -182,8 +181,7 @@ online_check()
         INPUT=$(cat text/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
-					OCHECK=$(curl -m 6 -s $CHECK_URL)
-					if [ $? == 0 ]; then
+          if curl -m 6 -s $CHECK_URL >/dev/null; then
             OCHECK=1
             TORCONNECT=0
           else
@@ -206,8 +204,7 @@ online_check()
 # Only executed for not tor related URL (usually, in this case online_check was executed without options; used in menu-config and in update)
   if [ "$CLEARNET_ONLY" == "1" ]; then
     CLEARNET_DECISSION=1
-		OCHECK=$(curl -m 6 -s $CHECK_URL)
-		if [ $? == 0 ]; then
+    if curl -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=0
     else
