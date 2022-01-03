@@ -169,7 +169,8 @@ online_check()
   # Don't change it to "-z" !
   if [ "$CLEARNET_ONLY" == "0" ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    if curl -x socks5h://127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
+		OCHECK=$(curl -x socks5h://127.0.0.1:9050 -m 6 -s $CHECK_URL)
+    if [ $? == 0 ]; then
       OCHECK=1
       TORCONNECT=1
     else
