@@ -1150,7 +1150,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	fi
 	sudo ./install-rtl8821au.sh
 	cd ~
-	sudo rm -r 8821au-20210629
+	sudo rm -r 8821au-20210708
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""

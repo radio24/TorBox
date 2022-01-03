@@ -505,10 +505,10 @@ update_torbox_menu()
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   if [ $TORCONNECT = 0 ]; then
-    wget $TORBOX_USED
+    wget $TORBOXURL
   else
     # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    torsocks wget $TORBOX_USED
+    torsocks wget $TORBOXURL
   fi
   if [ -e $TORBOXMENU_BRANCHNAME.zip ]; then
     echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
