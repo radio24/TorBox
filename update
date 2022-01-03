@@ -67,6 +67,7 @@ TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/T
 TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/TOR_HREF_FOR_SED=//g") 2> /dev/null
 TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/TORURL_DL_PARTIAL=//g") 2> /dev/null
 SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2> /dev/null
+TORBOXURL="https://github.com/radio24/TorBox/archive/refs/heads/master.zip"
 
 #Other variables
 RECOMPILE=0
