@@ -347,7 +347,13 @@ select_and_install_tor()
           	tar xzf $filename
           	cd `ls -d */`
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-          	./autogen.sh
+						# Give it a touch of git (without these lines the compilation will break with a git error)
+						git init
+						git add .
+						git config --global "torbox"
+						git commit -m "Initial commit"
+						# Don't use ./autogen.sh
+		        sh autogen.sh
           	./configure
           	make
             sudo systemctl mask tor
@@ -414,7 +420,13 @@ select_and_install_tor()
 				tar xzf $filename
 				cd `ls -d */`
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-				./autogen.sh
+				# Give it a touch of git (without these lines the compilation will break with a git error)
+				git init
+				git add .
+				git config --global "torbox"
+				git commit -m "Initial commit"
+				# Don't use ./autogen.sh
+        sh autogen.sh
 				./configure
 				make
         sudo systemctl mask tor

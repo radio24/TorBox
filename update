@@ -126,7 +126,7 @@ check_install_packages()
 	 echo ""
 	 sudo apt-get -y install $packagename
 #   echo ""
-#   read -n 1 -s -r -p "Press any key to continue"
+#   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
  done
 }
 
@@ -144,7 +144,7 @@ update_tor_preparations()
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   else
-    readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e $TOR_HREF_FOR_SED | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+    readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   fi
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
@@ -261,7 +261,13 @@ update_tor()
 		  echo ""
 			cd "$(ls -d */)"
       echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
-      ./autogen.sh
+			# Give it a touch of git (without these lines the compilation will break with a git error)
+			git init
+			git add .
+			git config --global "torbox"
+			git commit -m "Initial commit"
+			# Don't use ./autogen.sh
+			sh autogen.sh
       ./configure
       make
       sudo make install
@@ -329,7 +335,13 @@ select_and_install_tor()
         echo ""
         cd "$(ls -d */)"
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
-        ./autogen.sh
+				# Give it a touch of git (without these lines the compilation will break with a git error)
+				git init
+				git add .
+				git config --global "torbox"
+				git commit -m "Initial commit"
+				# Don't use ./autogen.sh
+        sh autogen.sh
         ./configure
         make
         sudo make install
@@ -563,7 +575,7 @@ case "$CHOICE" in
 				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
-				read -n 1 -s -r -p "Press any key to continue"
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
@@ -646,7 +658,7 @@ case "$CHOICE" in
 			echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
-			read -n 1 -s -r -p "Press any key to continue"
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			recommended_reboot update
 		fi
 	;;
@@ -664,7 +676,7 @@ case "$CHOICE" in
 				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
-				read -n 1 -s -r -p "Press any key to continue"
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
@@ -714,7 +726,7 @@ case "$CHOICE" in
         echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
-        read -n 1 -s -r -p "Press any key to continue"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         trap "screen bash update; exit 0" EXIT
         exit 1
       fi
@@ -723,7 +735,7 @@ case "$CHOICE" in
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
-        read -n 1 -s -r -p "Press any key to continue"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         trap "screen bash update; exit 0" EXIT
         exit 1
       fi
@@ -810,7 +822,7 @@ case "$CHOICE" in
         echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
-        read -n 1 -s -r -p "Press any key to continue"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         trap "screen bash update; exit 0" EXIT
         exit 1
       fi
@@ -819,7 +831,7 @@ case "$CHOICE" in
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
-        read -n 1 -s -r -p "Press any key to continue"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         trap "screen bash update; exit 0" EXIT
         exit 1
       fi
