@@ -145,9 +145,9 @@ online_check()
     CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   fi
   NO_CONNECTION_WARNING=$2
-  if [ -z $NO_CONNECTION_WARNING ]; then NO_CONNECTION_WARNING=0; fi
+  if [ -z "$NO_CONNECTION_WARNING" ]; then NO_CONNECTION_WARNING=0; fi
   CLEARNET_WARNING=$3
-  if [ -z $CLEARNET_WARNING ]; then CLEARNET_WARNING=0; fi
+  if [ -z "$CLEARNET_WARNING" ]; then CLEARNET_WARNING=0; fi
   # Don't change it to "-z" !
   if [ "$NO_CONNECTION_WARNING" == "0" ] && [ "$CLEARNET_WARNING" == "0" ]; then
     CLEARNET_ONLY=1

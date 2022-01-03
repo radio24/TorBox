@@ -156,13 +156,13 @@ while true; do
 		--select-fork )
 		  # shellcheck disable=SC2034
 			SELECT_FORK="--select-fork"
-			[ ! -z $2 ] && TORBOXMENU_FORKNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_FORKNAME="$2"
 			shift 2
 		;;
     --select-branch )
 		  # shellcheck disable=SC2034
 			SELECT_BRANCH="--select-branch"
-			[ ! -z $2 ] && TORBOXMENU_BRANCHNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
@@ -173,8 +173,8 @@ done
 
 # NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
-[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
-[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+[ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
+[ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
