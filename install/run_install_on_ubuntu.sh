@@ -974,10 +974,6 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
-cd
-if ! grep "# Added by TorBox (002)" .profile ; then
-  sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
-fi
 
 # NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
 # Make Tor and Nginx ready for Onion Services
@@ -991,6 +987,13 @@ echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
 (sudo rm -r /var/www/html) 2> /dev/null
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
+
+#Back to the home directory
+cd
+if ! grep "# Added by TorBox (002)" .profile ; then
+  sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+fi
+
 echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
 sudo mkdir /var/lib/tor/services
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
