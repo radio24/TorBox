@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -72,13 +72,14 @@ sudo mv vanguards /var/lib/tor/
 sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
 sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
 #This is necessary to work with special characters in sed
-REPLACEMENT_STR="$(<<< "$VANGUARDS_LOG_FILE" sed -e 's`[][\\/.*^$]`\\&`g')"
-sudo sed -i "s/^logfile =.*/logfile = ${REPLACEMENT_STR}/" /etc/tor/vanguards.conf
+sudo sed -i "s|^logfile =.*|logfile = ${VANGUARDS_LOG_FILE}|" /etc/tor/vanguards.conf
 # Because of TorBox's automatic counteractions, Vanguard cannot interfere with tor's log file
 sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
 sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
 sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
 sudo chmod -R go-rwx /var/lib/tor/vanguards
+(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 cd torbox
 sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
 (sudo systemctl unmask vanguards@default.service) 2> /dev/null

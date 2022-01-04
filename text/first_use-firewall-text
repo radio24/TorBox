@@ -1,0 +1,15 @@
+Since 2021, the TorBox team observed more and more providers (especially
+in connection with open hotspots), which extensively block ports, which
+stays in the way of a proper working TorBox (tor commonly uses ports 80,
+443, 9001 and 9030 for network traffic and directory information).
+
+Therefore, TorBox uses by default countermeasures against a tightly
+configured firewall taking care that tor uses only port 80 and 443
+for its data stream. We didn't observe any negative impact (nevertheless,
+probably you should deactivate this feature if you run a bridge relay on
+the TorBox).
+
+Again, it is highly recommended to keep using the firewall countermeasure.
+
+Do you want to keep using the countermeasure against tightly configured
+firewalls?

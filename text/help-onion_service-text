@@ -1,0 +1,15 @@
+Onion Service allows easily and securely sharing of data through Tor, even if TorBox is located behind firewalls, network address translators or placed in a censoring country while preserving the security and anonymity of both parties. How this is accomplished see here: https://community.torproject.org/onion-services/overview/
+
+To use Onion Services, you can follow a 3-STEP PROCEDURE:
+1. Toggle the Onion Service Mode from OFF to ON or create an Onion
+   Service (menu entry 2 or 3). This will give you a public Onion
+   Service - everyone can access it.
+2. If you want to limit access to your Onion Service, you can control
+   the client's access by generating a key pair (menu entry 7),
+   sending the client his private key or registering a client's public
+   key (menu entry 8), if he is providing you with it.
+3. Start (or stop) sharing a folder on an Onion domain.
+
+If you are the client and receive a private key from an Onion Service
+provider, you can register this key under the Defend the open Internet
+sub-menu with entry 5 "Manage my access to an Onion Service".

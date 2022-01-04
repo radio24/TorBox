@@ -1,0 +1,55 @@
+/* TorBox Chat */
+
+#torbox-chat {
+    position: relative;
+    height: 60vh;
+    overflow: hidden;
+}
+
+#torbox-chat .menu {
+    height: 100%;
+}
+
+#torbox-chat .menu-list {
+    position: relative;
+    height: calc(100% - 26px);
+    overflow-y: scroll;
+}
+
+#torbox-chat .messages {
+    height: calc(100% - 38px);
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+}
+#torbox-chat .messages .msg-wrapper {
+    margin-top: auto;
+}
+#torbox-chat .msg {
+    display:table;
+    width: 100%;
+}
+#torbox-chat .msg .box {
+    padding: 0.9rem;
+}
+#torbox-chat .msg .box {
+    width: fit-content;
+    max-width: calc(100% - 10%);
+    margin: 5px;
+    float: right;
+}
+#torbox-chat .msg .box.in {
+    background-color: var(--torbox-color-green-hover);
+    color: white;
+    float: left!important;
+}
+
+#chat-messages .block {
+    margin-bottom: 10px;
+    height: 85%;
+}
+
+#chat-messages .block.messages {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}

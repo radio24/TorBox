@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2022 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This script starts TFS and Nginx, if configured that way in torbox.run.
+# It is executed by rc.local
+#
+# SYNTAX
+# ./start_tfs
+#
+
+#This is not only for TFS, but for all shared folders on Onion domains
+if grep "^NGINX=ON" /home/torbox/torbox/run/torbox.run ; then
+	n=$(grep -c "^TFS-" /home/torbox/torbox/run/torbox.run)
+	if [ $n -gt 0 ] ; then
+		#Currently, tfs can only be started once. If it changed to starte multiple times, -m hast to be greater 1
+		TFS_CONFIG_LIST=$(grep -m 1 "^TFS-" /home/torbox/torbox/run/torbox.run | cut -d "=" -f2- | sed "s/.\///")
+		TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
+		eval $TFS_CONFIG_LIST
+	fi
+	sudo systemctl stop nginx
+	# shellcheck disable=SC2062
+	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+	sudo nginx -t && sudo systemctl start nginx
+fi

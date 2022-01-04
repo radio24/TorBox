@@ -1,0 +1,143 @@
+#!/usr/bin/env sh
+
+## Copy tor config to temp, lock the original file, modify the temp,
+## verify it is ok then save back to original place and remove other files
+
+## Inspired by https://github.com/slicer69/doas/blob/master/vidoas
+
+
+file_mode="644"
+me="${0##*/}"
+
+## colors
+#nocolor="\033[0m"
+#bold="\033[1m"
+#nobold="\033[22m"
+#underline="\033[4m"
+#nounderline="\033[24m"
+#red="\033[31m"
+#green="\033[32m"
+#yellow="\033[33m"
+#blue="\033[34m"
+#magenta="\033[35m"
+#cyan="\033[36m"
+
+## display error message with instructions to use the script correctly.
+notice(){ printf %s"${me}: ${1}\n" 1>&2; }
+error_msg(){ notice "${1}"; exit 1; }
+usage(){ printf '%s\n' "Usage: ${me} [-f tor_conf] [-u tor_user]
+Note:
+  ${me}               run ${me} as the root user with 'sudo' or 'doas'
+  -f tor_conf         if 'tor_conf' is not set, default to /etc/tor/torrc
+                      if the file doesn't exist, will create it after passing all tests.
+  -u tor_user         if 'tor_user' is not set, the tor_conf must contain the \"User\" option
+                      else it tor fails to validate the configuration"
+  exit 1
+}
+
+get_arg(){ case "${2}" in ""|-*) error_msg "Option '${1}' requires an argument.";; esac; }
+
+[ -n "${1}" ] && [ -z "${2}" ] && tor_conf="${1}"
+while :; do
+  case "${1}" in
+    -f) get_arg "${1}" "${2}"; tor_conf="${2}"; shift 2;;
+    -u) get_arg "${1}" "${2}"; tor_user="${2}"; shift 2;;
+    "") break;;
+    *) usage;;
+  esac
+done
+
+# CHANGED BY TORBOX: use nano instead of vi
+## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
+eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
+editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-nano}"}"}"
+## get interrupt signal
+get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
+
+## get first argument, if empty, onionjuggler.conf variable, if empty, fallback to default torrc
+file="${tor_conf:-"/etc/tor/torrc"}"
+## remove last backlash if inserted by mistake
+file="${file%*/}"
+
+[ -n "${SUDO_USER}" ] && su_cmd="sudo"
+[ -n "${DOAS_USER}" ] && su_cmd="doas"
+{ [ -z "${su_cmd}" ] && [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
+
+if [ -f "${file}" ]; then
+  tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"
+  if [ -n "${tor_user_check}" ] && [ -n "${tor_user}" ] && [ "${tor_user_check}" != "${tor_user}" ]; then
+    notice "The tor configuration file contains the user ${tor_user_check}, but you specified the tor user ${tor_user}."
+    error_msg "Are you running tor as the correct user?"
+  fi
+  if [ -z "${tor_user_check}" ] && [ -z "${tor_user}" ]; then
+    notice "\"User\" option is not set on the tor configuration file nor in the command line."
+    notice "Specify the tor user with:"
+    error_msg "$ ${me} -u tor_user"
+  fi
+fi
+
+
+## get just the directory
+file_dir="${file%/*}"
+[ ! -d "${file_dir}" ] && error_msg "${file_dir} is not a directory or doesnt exist."
+[ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
+[ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
+
+## file is the first argument, replace '.' and '-' for '_'.
+file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
+file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
+chmod "${file_mode}" "${file_name_tmp}"
+
+file_locked="${file}.lck"
+## test if file is already in use.
+ln "${file}" "${file_locked}" || error_msg "${file} is busy, try again later."
+
+if [ -f "${file}" ]; then
+  [ ! -r "${file}" ] && error_msg "${file} is not readable."
+  [ ! -w "${file}" ] && error_msg "${file} is not writable."
+  cp -p "${file}" "${file_name_tmp}"
+fi
+
+check_tmp_tor_user(){
+  tor_user_check="$(grep "^User" "${file_name_tmp}" | sed "s/^User //")"
+  if [ -n "${tor_user_check}" ]; then
+    su_tor_cmd="${su_cmd}"
+  else
+    if [ -z "${tor_user}" ]; then
+      notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user."
+      notice "If that is what you want interrupt with ${get_intr} and run:"
+      notice "$ ${me} -u tor_user"
+    else
+      su_tor_cmd="${su_cmd} -u ${tor_user}"
+    fi
+  fi
+}
+
+trap '' INT
+trap 'rm -f ${file_name_tmp} ${file_locked}' EXIT
+
+## open temporary file to be edited
+"${editor}" "${file_name_tmp}" || true
+check_tmp_tor_user
+
+## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
+while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
+  tor_check="$(${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush)"
+  printf '%s\n' "${tor_check}" | grep -q "Permission denied" && notice "Got permission denied to read tor directories, did you specify the tor user? If yes, maybe the directories do not have the right owner."
+  printf '%s\n' "${tor_check}" | grep -q "You are running Tor as root. You don't need to, and you probably shouldn't." && notice "Do not run tor as root if you did not set the \"User\" option."
+  notice "The temporary copy on ${file_name_tmp} is not a valid configuration."
+  notice "Options are:"
+  notice "  (e)enter to edit again."
+  notice "  e(x)it to cancel without saving changes."
+  while :; do
+  printf %s"${me}: Your choice: "
+    # shellcheck disable=SC2034
+    read -r status
+    [ "${status}" = "e" ] && break
+    [ "${status}" = "x" ] && exit
+  done
+  "${editor}" "${file_name_tmp}" || true
+  check_tmp_tor_user
+done
+
+! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated." && exit 0

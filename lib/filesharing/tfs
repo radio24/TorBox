@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+#os.environ['DJANGODIR'] = '/Users/cmartinez/dev/torbox/torbox-050/lib/filesharing'
+
+import django
+from django.core.management import call_command
+from django.core.files import File
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "filesharing.settings")
+
+import click
+import subprocess
+
+@click.command()
+@click.option('--file-path', '-fp',
+              default=None,
+              type=str,
+              help="Path to save uploaded files")
+@click.option('--allow-download', '-ad',
+              default=True,
+              type=bool,
+              help="Allow download from file-path (Default: 1)")
+@click.option('--allow-upload', '-au',
+              default=True,
+              type=bool,
+              help="Allow upload to file-path (Default: 1)")
+@click.option('--msg', '-m',
+              default='',
+              type=str,
+              help="Message to show in header of web")
+@click.option('--scan', '-s',
+              is_flag=True,
+              help="Scan for new files in file-path (Instance must be running without --dev flag).")
+@click.option('--dev',
+              default=False,
+              type=bool,
+              help="Run in development mode (Default: 0)")
+def main(file_path, allow_download, allow_upload, msg, scan, dev):
+    if scan:
+        """Scan will restart database and scan for files"""
+        # Check if we have pid
+        from pathlib import Path
+        base_dir = Path(__file__).resolve().parent
+        if os.path.exists(base_dir / 'tfs.pid'):
+            # Restart database
+            django.setup()
+            restart_database()
+        else:
+            click.echo(f"Error: TFS is not running (pid is not present)")
+        quit()
+    elif file_path is None:
+        click.echo(f"Error: files-path must be set.")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        quit()
+    
+    media_root = file_path
+    
+    # Set environment vars for django settings
+    os.environ['MEDIA_ROOT'] = media_root
+    os.environ['ALLOW_UPLOAD'] = "1" if allow_upload else "0"
+    os.environ['ALLOW_DOWNLOAD'] = "1" if allow_download else "0"
+    os.environ['MSG_HEADER'] = msg
+    os.environ['DEBUG'] = "1" if dev else "0"
+
+    # Start django
+    django.setup()
+
+    # Import settings
+    from django.conf import settings
+    
+    # Start db
+    start_database(settings.BASE_DIR)
+
+    # Create root dir on db
+    from apps.filesharing.models import DownloadFileModel
+    root = DownloadFileModel(name=media_root,
+                                is_dir=True)
+    root.save()
+
+    if allow_download:
+        # Scan media_root and add to db
+        scan_path(media_root, root)
+
+    run_webserver(dev)
+
+def scan_path(path, parent):
+    """Recursive scan for files and directories"""
+    from apps.filesharing.models import DownloadFileModel
+
+    for p in os.scandir(path):
+        if p.is_dir():
+            # Create directory on db
+            dir_db = DownloadFileModel(name=p.name,
+                                           is_dir=True,
+                                           parent=parent)
+            dir_db.save()
+            scan_path(p.path, dir_db)
+        else:
+            # Create file on db
+            filename = p.name
+            file_path = p.path
+            file_size = os.path.getsize(file_path)
+            file_django = file_path.replace(os.environ['MEDIA_ROOT'], '')
+            file_db = DownloadFileModel(name=filename,
+                                        size=file_size,
+                                        parent=parent,
+                                        file=file_django)
+            file_db.save()
+
+def start_database(BASE_DIR):
+    """Remove old database and create new one"""
+    try:
+        os.remove(BASE_DIR / "db.sqlite3")
+    except:
+        pass
+    
+    call_command("migrate", interactive=False)
+
+def restart_database():
+    """Remove all records except root path, then scan for files"""
+    from apps.filesharing.models import DownloadFileModel
+    media_root = DownloadFileModel.objects.first()
+    os.environ['MEDIA_ROOT'] = media_root.name
+    for obj in DownloadFileModel.objects.all().exclude(pk=1):
+        # NOTE: This could take long time with a very big list of files
+        obj.delete()
+    scan_path(media_root.name, media_root)
+
+def run_webserver(dev=True):
+    if dev:
+        # Dev
+        from django.core.wsgi import get_wsgi_application
+
+        application = get_wsgi_application()
+        call_command('runserver', '--noreload')
+        quit()
+
+    # Production
+    from django.conf import settings
+    gunicorn_cmd = [
+        'gunicorn',
+        '-p', 'tfs.pid',
+        '--chdir', settings.BASE_DIR,
+        'filesharing.wsgi'
+    ]
+    subprocess.call(gunicorn_cmd)
+
+
+if __name__ == '__main__':
+    main()

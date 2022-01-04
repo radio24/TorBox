@@ -1,10 +1,10 @@
 #!/bin/bash
 
-SCRIPT_NAME="install-rtl8821au.sh"
-SCRIPT_VERSION="20210401"
+SCRIPT_NAME="install-driver.sh"
+SCRIPT_VERSION="20211002"
 
 DRV_NAME="rtl8821au"
-DRV_VERSION="5.8.2.3"
+DRV_VERSION="5.12.5.2"
 OPTIONS_FILE="8821au.conf"
 
 DRV_DIR="$(pwd)"
@@ -34,7 +34,6 @@ cp -f ${OPTIONS_FILE} /etc/modprobe.d
 echo "All required files have been copied to the proper places."
 
 dkms add -m ${DRV_NAME} -v ${DRV_VERSION}
-# dkms add ${DRV_NAME}/${DRV_VERSION}
 RESULT=$?
 
 if [[ "$RESULT" != "0" ]]; then

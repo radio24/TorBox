@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ from binascii import a2b_hex
 from hashlib import sha1
 
 # Tor socks
-SOCKS_HOST = '192.168.42.1'
+SOCKS_HOST = '127.0.0.1'
 SOCKS_PORT = 9050
 
 # get the options from cmd line

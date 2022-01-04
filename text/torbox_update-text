@@ -1,5 +1,13 @@
 Would you like to update your TorBox menu?
 
+DEFAULT
+The default and recommended way to update the TorBox menu with the latest
+stable version (master branch from TorBox's GitHub repository)
+
+EXPERT
+Update the TorBox menu using a specific branch from TorBox's GitHub
+repository. This is mainly used to test a yet unstable branch.
+
 IMPORTANT
 - This update is only recommended for minor updates within a major version.
   If you like to upgrade from one major version to another, we recommend

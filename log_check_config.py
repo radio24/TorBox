@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ matches = [
     {
         "file": '/var/log/tor/notices.log',
         "match": "*We tried for * seconds to connect to * using exit *",  # use * as wildcard
-        "match_count": 40,  # min matches to execute command
+        "match_count": 25,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
@@ -61,8 +61,15 @@ matches = [
     {
         "file": '/var/log/tor/notices.log',
         "match": "*connections have failed*",  # use * as wildcard
-        "match_count": 30,  # min matches to execute command
+        "match_count": 25,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 2 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*Tor needs an accurate clock to work correctly*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
     },
 ]

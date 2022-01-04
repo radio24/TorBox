@@ -1,0 +1,17 @@
+This menu entry stores a backup of your ONION SERVICE configuration in /home/torbox/backup.
+
+You can access this backup file by downloading it from your TorBox by using a SFTP client (it uses the same login and password as your SSH client). Alternatively, you can retrieve the backup file by connecting an USB stick with your TorBox. You can probably mount the USB stick by “sudo mount /dev/sda /mnt” and then copy the backup file on your stick.
+
+With that backup, upgrading a TorBox with Onion Service support or moving it to another computer to keep all the configuration, key, and data is possible. Keeping backups of your Onion Services is the recommended way to ensure the availability of your data in case of a system crash.
+
+IMPORTANT
+- If you choose to make a backup of your shared folders, you need enough
+  space on your SD card.
+- In any case, we will put a link to all your shared folders into your
+  backup directory so that you can easily copy all your shared data
+  without the necessity to make a backup, which probably will exceed the
+  space on the SD card.
+- An already existing backup in the home directory will be overwritten
+  without confirmation!
+
+Do you like to backup your Onion Service configuration?

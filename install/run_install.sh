@@ -2,12 +2,12 @@
 # shellcheck disable=SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
 #
-# Copyright (C) 2021 nyxnor (Contributor)
+# Copyright (C) 2022 nyxnor (Contributor)
 # Github:  https://github.com/nyxnor
 #
 # This program is free software: you can redistribute it and/or modify
@@ -97,8 +97,8 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # NEW v.0.5.0: new go versions
 # Used go version
-GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
+GO_VERSION="go1.17.5.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.17.5.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
@@ -149,7 +149,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
@@ -166,13 +166,13 @@ while true; do
 		--select-fork )
 		  # shellcheck disable=SC2034
 			SELECT_FORK="--select-fork"
-			[ ! -z $2 ] && TORBOXMENU_FORKNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_FORKNAME="$2"
 			shift 2
 		;;
     --select-branch )
 		  # shellcheck disable=SC2034
 			SELECT_BRANCH="--select-branch"
-			[ ! -z $2 ] && TORBOXMENU_BRANCHNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
@@ -183,8 +183,8 @@ done
 
 # NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
-[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
-[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+[ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
+[ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
@@ -389,7 +389,13 @@ select_and_install_tor()
           	tar xzf $filename
           	cd "$(ls -d */)"
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-          	./autogen.sh
+						# Give it a touch of git (without these lines the compilation will break with a git error)
+						git init
+						git add *
+						git config --global user.name "torbox"
+						git commit -m "Initial commit"
+						# Don't use ./autogen.sh
+						sh autogen.sh
           	./configure
           	make
 						sudo systemctl mask tor
@@ -456,7 +462,13 @@ select_and_install_tor()
 				tar xzf $filename
 				cd "$(ls -d */)"
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-				./autogen.sh
+				# Give it a touch of git (without these lines the compilation will break with a git error)
+				git init
+				git add *
+				git config --global user.name "torbox"
+				git commit -m "Initial commit"
+				# Don't use ./autogen.sh
+        sh autogen.sh
 				./configure
 				make
 				sudo systemctl mask tor
@@ -943,10 +955,35 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
+
+# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
+# Make Tor and Nginx ready for Onion Services
+(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+sudo cp etc/nginx/nginx.conf /etc/nginx/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+echo ""
+echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
+(sudo rm -r /var/www/html) 2> /dev/null
+# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+sleep 5
+(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
+clear
+
+#Back to the home directory
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
+
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+sudo mkdir /var/lib/tor/services
+sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+sudo chmod -R go-rwx /var/lib/tor/services
+sudo mkdir /var/lib/tor/onion_auth
+sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1117,7 +1154,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 # NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
 	git clone https://github.com/morrownr/8821au-20210708.git
-	cd 8812au-20210629
+	cd 8821au-20210708
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
@@ -1129,7 +1166,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	fi
 	sudo ./install-rtl8821au.sh
 	cd ~
-	sudo rm -r 8812au-20210629
+	sudo rm -r 8821au-20210708
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -1216,6 +1253,8 @@ sudo adduser --disabled-password --gecos "" torbox
 echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" | sudo passwd torbox
 sudo adduser torbox sudo
 sudo adduser torbox netdev
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
 sudo mv /home/pi/* /home/torbox/
 (sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
 sudo mkdir /home/torbox/openvpn
@@ -1272,7 +1311,7 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
-# NEW v.0.5.0: To start TACA notices.log has to be present
+# NEW v.0.5.0: To start TACA, notices.log has to be present
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
 # NEW v.0.5.0: To ensure the correct permissions
@@ -1281,9 +1320,9 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox042) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-sudo cp torbox/etc/hosts /etc/
+(sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi

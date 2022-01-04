@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -45,28 +45,61 @@ TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 
 #Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
 
 # check_tor()
 # Used predefined variables: RED, NOCOLOR
-# This function checks the status on https://check.torproject.org/
+# This function checks the status on https://check.torproject.org/api/ip
 check_tor()
 {
 clear
 echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
 sleep 1
-TOR_SERVICE=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 5 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs)
-TOR_SERVICE=$(cut -d "." -f1 <<< $TOR_SERVICE)
+IS_TOR=$(curl -x socks5h://127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
 
-if [ "$TOR_SERVICE" = "Congratulations" ]; then
+if [ $IS_TOR = true ]; then
   TOR_STATUS="TOR is working"
 else
   TOR_STATUS=""
 fi
 clear
+}
+
+# check_interface_with_internet()
+# Used predefined variables: RED, NOCOLOR, RUNFILE
+# This function tests from where the Internet is coming
+# Following variables can be used: FLASH_*, CONNECTED
+check_interface_with_internet()
+{
+CONNECTED=0
+clear
+echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
+sleep 1
+IINTERFACE=""
+IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+if [ ! -z "$IINTERFACE" ] ; then
+  VPN_STATUS="VPN is up"
+  IIPTABLES=""
+  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
+else
+  VPN_STATUS=""
+fi
+if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then
+  FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+  CONNECTED=1
+else
+  IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
+  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
+fi
 }
 
 # finish()
@@ -106,19 +139,25 @@ fi
 # CLEARNET_DECISSION = 1 -> The calling script can use clearnet
 online_check()
 {
+  # Define all variables
   CHECK_URL=$1
+  if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
+    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+  fi
   NO_CONNECTION_WARNING=$2
+  if [ -z "$NO_CONNECTION_WARNING" ]; then NO_CONNECTION_WARNING=0; fi
   CLEARNET_WARNING=$3
+  if [ -z "$CLEARNET_WARNING" ]; then CLEARNET_WARNING=0; fi
+  # Don't change it to "-z" !
+  if [ "$NO_CONNECTION_WARNING" == "0" ] && [ "$CLEARNET_WARNING" == "0" ]; then
+    CLEARNET_ONLY=1
+  fi
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
   CLEARNET_ONLY=0
-  if [ -z $CHECK_URL ] || [ "$CHECK_URL" == "default" ]; then
-    CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
-  fi
-  if [ -z $NO_CONNECTION_WARNING ] && [ -z $CLEARNET_WARNING ]; then
-    CLEARNET_ONLY=1
-  fi
+
+  # Start working!
   add_open_dns
   echo " "
   echo -e "${RED}[+] Please wait...${NOCOLOR}"
@@ -126,23 +165,23 @@ online_check()
   clear
   echo -e "${RED}[+] Checking internet connectivity - please wait...${NOCOLOR}"
 
-  # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update)
-  if [ $CLEARNET_ONLY == 0 ]; then
+  # Always executed until except if a not tor related URL wants to check the online status (used in menu-config and in update).
+  # Don't change it to "-z" !
+  if [ "$CLEARNET_ONLY" == "0" ]; then
     #-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    OCHECK=$(curl --socks5 192.168.42.1:9050 --socks5-hostname 192.168.42.1:9050 -m 6 -s $CHECK_URL)
-    if [ $? == 0 ]; then
+    if curl -x socks5h://127.0.0.1:9050 -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=1
     else
       sleep 10
       OCHECK=0
       TORCONNECT=0
-      if [ $CLEARNET_WARNING == 1 ]; then
+      # Don't change it to "! -z" !
+      if [ "$CLEARNET_WARNING" == "1" ]; then
         INPUT=$(cat text/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
-          OCHECK=$(curl -m 6 -s $CHECK_URL)
-          if [ $? == 0 ]; then
+          if curl -m 6 -s $CHECK_URL >/dev/null; then
             OCHECK=1
             TORCONNECT=0
           else
@@ -163,10 +202,9 @@ online_check()
   fi
 
 # Only executed for not tor related URL (usually, in this case online_check was executed without options; used in menu-config and in update)
-  if [ $CLEARNET_ONLY == 1 ]; then
+  if [ "$CLEARNET_ONLY" == "1" ]; then
     CLEARNET_DECISSION=1
-    OCHECK=$(curl -m 6 -s $CHECK_URL)
-    if [ $? == 0 ]; then
+    if curl -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=0
     else
@@ -175,7 +213,8 @@ online_check()
     fi
   fi
 
-  if [ $OCHECK == 0 ] && [ $NO_CONNECTION_WARNING != 1 ]; then
+  # Don't change it to "-z" !
+  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" != "1" ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=1
@@ -192,7 +231,7 @@ add_open_dns()
   echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanisms...${NOCOLOR}"
   echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}"
   echo -e "${RED}[+] resquest are handled through Tor.${NOCOLOR}"
-  NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | cut -c13-) 2> /dev/null
+  NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   ONE_NAMESERVER=$(cut -d ',' -f1 <<< $NAMESERVERS)
   NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
   i=0
@@ -202,8 +241,8 @@ add_open_dns()
       (sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2> /dev/null
       (printf "# Generated by TorBox instead of resolvconf\n" | sudo tee /etc/resolv.conf) &>/dev/null
     fi
-    (printf "nameserver $ONE_NAMESERVER\n" | sudo tee -a /etc/resolv.conf) &>/dev/null
-    i=$(($i + 1))
+    (printf %s"nameserver $ONE_NAMESERVER\n" | sudo tee -a /etc/resolv.conf) &>/dev/null
+    i=$((i+1))
     if [ "$ONE_NAMESERVER" = "$NAMESERVERS" ]; then
       ONE_NAMESERVER=" "
     else
@@ -219,7 +258,7 @@ add_open_dns()
 erase_logs()
 {
   echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-  for logs in `sudo find /var/log -type f`; do
+  for logs in $(sudo find /var/log -type f); do
   	echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   	sudo rm $logs
   	sleep 1
@@ -227,6 +266,13 @@ erase_logs()
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   (sudo rm ../.bash_history) 2> /dev/null
   history -c
+	(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+	(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
+	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
+	echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+	sudo systemctl restart tor
+	echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
 }
 
 # deactivating_bridge_relay()
@@ -266,14 +312,14 @@ restarting_tor()
 {
   SOURCE_SCRIPT=$1
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-  sudo systemctl restart tor &
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
   echo -e "    Ignore any error messages, this can take minutes just wait..."
-  echo -e "    At the end, you should see \"Bootstrapped 100%: Done\"."
+  echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
   trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
-  sudo tail -f -n 0 /var/log/tor/notices.log
+  sudo systemctl restart tor &
+  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't"
 }
 
 # connecting_to_VPN()
@@ -283,17 +329,17 @@ connecting_to_VPN()
 {
   clear
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
-  if [ "${ovpnlist[0]}" = "" ] ; then
+  if [ -z "${ovpnlist[0]}" ] ; then
     whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
   ovpnlist_anzahl=${#ovpnlist[*]}
-  anzahl_loops=$(( $ovpnlist_anzahl - 1 ))
+  anzahl_loops=$((ovpnlist_anzahl-1))
   menu_content=""
-  for (( i=0; i<=$anzahl_loops; i++ ))
+  for (( i=0; i<=anzahl_loops; i++ ))
   do
-    menu_item=$(( $i + 1 ))
+    menu_item=$((i+1))
     menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
   done
   clear
@@ -304,7 +350,7 @@ connecting_to_VPN()
   read -r -p $'\e[1;37mWhich OpenVPN configuration (number) would you like to use? -> \e[0m'
   echo
   if [[ $REPLY =~ ^[1234567890]$ ]] ; then
-    CHOICE_OVPN=$(( $REPLY - 1 ))
+    CHOICE_OVPN=$((REPLY-1))
     clear
     echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
     echo ""
@@ -333,7 +379,7 @@ recommended_reboot()
     sleep 2
     sudo reboot
   else
-    if [ "$TRAP_DESTINATION" = "" ] ; then
+    if [ -z "$TRAP_DESTINATION" ] ; then
       clear
       exit 0
     else
@@ -365,7 +411,7 @@ number_of_bridges()
   else
     number_configured_bridges_activated=${#configured_bridges_activated[*]}
   fi
-  number_configured_bridges_total=$(( $number_configured_bridges_deactivated + $number_configured_bridges_activated ))
+  number_configured_bridges_total=$((number_configured_bridges_deactivated+number_configured_bridges_activated))
 }
 
 # list_all_obfs4_bridges()
@@ -412,7 +458,7 @@ list_all_obfs4_bridges()
           fi
         else bridge_status=" "
         fi
-        i=$(( $i + 1 ))
+        i=$((i+1))
         bridge_address="$i : $bridge_address $bridge_status"
         echo -e $bridge_address
     done
@@ -442,13 +488,13 @@ list_all_obfs4_bridges()
           elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
         else bridge_status=" "
         fi
-        j=$(( $j + 1 ))
-        n=$(( $i + $j ))
+        j=$((j+1))
+        n=$((i+j))
         bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
         echo -e "$bridge_address"
     done
   fi
-  if [ $number_configured_bridges_total = 0 ]; then
+  if [ "$number_configured_bridges_total" == "0" ]; then
     echo " "
     echo " "
     echo -e "${WHITE}[!] SORRY! - there are no configured OBFS4 bridges!${NOCOLOR}"
@@ -491,4 +537,27 @@ activate_obfs4_bridges()
       deactivate_obfs4_bridges
     fi
   fi
+}
+
+# display_net_reconfiguration_info())
+# Used predefined variables: RED, NOCOLOR, WHITE
+# Displays information before reconfigure the network (only used several times in menu)
+display_net_reconfiguration_info()
+{
+  clear
+  echo ""
+  echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+  echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+  echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
+  echo -e "${RED}    this can take up to two minutes.${NOCOLOR}"
+  echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh program, but${NOCOLOR}"
+  echo -e "${RED}    disconnect and reconnect your client device from the TorBox${NOCOLOR}"
+  echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+  echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+  echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+  echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+  echo -e "${RED}    source again (main menu 4-9),${NOCOLOR}"
+  echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
+  echo -e "${RED}    load the default values.${NOCOLOR}"
+  echo ""
 }

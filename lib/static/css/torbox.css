@@ -1,0 +1,98 @@
+/* TorBox FileSharing */
+
+/* Variables */
+    :root {
+        --torbox-color-green: #6ab038;
+        --torbox-color-green-hover: #76c240;
+    }
+
+    body {
+        position: relative;
+        height: 100vh;
+    }
+
+/* Bulma config */
+    .button.is-primary {
+        background-color: var(--torbox-color-green);
+    }
+    .button.is-primary:hover {
+        background-color: var(--torbox-color-green-hover); 
+    }
+
+/* Screen border */
+    .torbox-screen-border {
+        background-color: #444;
+        position: fixed;
+        z-index: 10;
+    }
+    .torbox-screen-border.border-top {
+        width: 100%;
+        height: 20px;
+    }
+    .torbox-screen-border.border-bottom {
+        width: 100%;
+        height: 20px;
+        bottom: 0;
+    }
+    .torbox-screen-border.border-right {
+        width: 20px;
+        height: 100%;
+        right: 0;
+    }
+    .torbox-screen-border.border-left {
+        width: 20px;
+        height: 100%;
+    }
+
+/* Header */
+    #torbox-header {
+        position: relative;
+        padding-top: 50px;
+    }
+    .torbox-title .icon {
+        background-color: var(--torbox-color-green);
+        color: white;
+        font-weight: bold;
+        font-size:28px;
+    }
+
+    .torbox-title .text {
+        font-size: 25px;
+        font-weight: bold;
+    }
+    #torbox-header a {
+        color: inherit;
+    }
+
+/* Footer */
+    /* footer {
+        position: relative;
+        width: 100vw;
+        bottom: 0;
+    } */
+
+/* Content */
+    #torbox-content {
+        position: relative;
+    }
+    #torbox-content .container {
+        position: relative;
+        height: 100%;
+    }
+    #torbox-upload-panel > .panel-block, #torbox-upload-ok > .panel-block {
+        border: 0 !important;
+    }
+    #torbox-upload-ok i {
+        font-size: 256px;
+        color: var(--torbox-color-green);
+    }
+
+/* Upload fle */
+    .torbox-box i {
+        position: relative;
+        font-size: 128px;
+        transition: color 0.3s;
+    }
+    .torbox-box:hover > i {
+        color: var(--torbox-color-green);
+    }

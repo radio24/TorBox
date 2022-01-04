@@ -1,0 +1,7 @@
+This menu entry deletes or deactivates one or several specific Onion Services. If you want to deactivate all Onion Services at once, then use menu entry 2.
+
+DEACTIVATING means that the Onion Service, client authorizations, hosted data will not be deleted and the actual configuration preserved. If you activate the ONION SERVICE MODE again, the same configuration will be applied.
+
+DELETING means that the Onion Service, client authorizations, and the hosted data in the shared folder will be irrevocably lost.
+
+Would you like to DEACTIVATE or DELETE one or several specific Onion Services?

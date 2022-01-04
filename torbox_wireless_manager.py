@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -55,11 +55,11 @@ else:
 		print('[%s]: not available' % interface)
 		quit()
 
-from lib.wireless_manager import wireless_manager
+from lib.wireless_manager import WirelessManager
 
 def main():
-	wm = wireless_manager(interface, autoconnect)
-	wm.start()
+	twm = WirelessManager(interface, autoconnect)
+	twm.start()
 
 if __name__ == '__main__':
 	main()

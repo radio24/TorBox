@@ -1,6 +1,8 @@
 #!/bin/sh -e
 #
 # Added by TorBox
+sudo dmesg -D
+
 if ip link | grep wlan0 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a
   sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" /home/torbox/torbox/run/torbox.run
@@ -18,6 +20,7 @@ if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   sleep 5
 fi
 
+sudo /home/torbox/torbox/run/start_tfs
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10

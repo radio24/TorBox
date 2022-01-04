@@ -1,6 +1,8 @@
 #!/bin/sh -e
 #
 # Added by TorBox
+sudo dmesg -D
+
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1
@@ -28,6 +30,7 @@ if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   sleep 5
 fi
 
+sudo /home/torbox/torbox/run/start_tfs
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10

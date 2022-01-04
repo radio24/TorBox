@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2022 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file displays the Defender menu in whitch the user finds possibilities
+# to get active (for example with a Bridge Relay, with onion services ...)
+#
+# SYNTAX
+# ./menu-defender
+#
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=5
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=2
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+TORRC="/etc/tor/torrc"
+BAK="/etc/tor/torrc.bak"
+
+##############################
+######## FUNCTIONS ########
+
+# include lib
+.  lib/torbox.lib
+
+# This function imports the configuration and makes some preparations
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
+  MODE_BR=$(grep "^BridgeRelay" ${TORRC})
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+  if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+    TOGGLE07="IS RUNNING"
+  else
+    TOGGLE07="IS NOT RUNNING"
+  fi
+  MODE_OS=$(grep "^HiddenServiceDir" ${TORRC})
+  if [ ! -z "$MODE_OS" ]; then
+    TOGGLE16="IS RUNNING"
+  else
+    TOGGLE16="IS NOT RUNNING"
+  fi
+}
+
+######## PREPARATIONS ########
+read_config
+
+###### DISPLAY THE MENU ######
+clear
+
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - DEFEND THE OPEN INTERNET!" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"==" "=============================================[Informational]===" \
+" 1" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+" 2" "HOW CAN I HELP WITH TORBOX?" \
+"===" "===============================================[Sub-Menues]===" \
+" 3" "Run a OBFS4 Bridge Relay - ${TOGGLE07}" \
+" 4" "Run an Onion Service - ${TOGGLE16}"  \
+" 5" "Manage my access to an Onion Service - COMING SOON!"  \
+3>&1 1>&2 2>&3)
+
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
+case "$CHOICE" in
+
+  # How to support Tor
+  1)
+    INPUT=$(cat text/support-tor-text)
+    whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+  ;;
+
+  # How to support TorBox
+  2)
+    INPUT=$(cat text/support-torbox-text)
+    whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+  ;;
+
+  # Sub-menues
+  3) bash menu-server;;
+  4) bash menu-onion;;
+#  5) bash menu-access;;
+  *)
+    clear
+    exit 0
+esac
+bash menu-defender

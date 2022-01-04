@@ -1,0 +1,7 @@
+An Onion Service could be used to serve a website folder (menu entry 12 or 13). The served data will be publicly available without activated client authorization (menu entry 7-11). This is probably not the intention of the service operator. However, with a key pair (public and private key), access to an Onion Service can be limited to those who have the private key.
+
+This menu entry will generate a key pair (public and private key) where the public key is automatically stored in the specific Onion Service. The private key should be sent to the client, which gives him access to the particular Onion Service.
+
+If the client has already a key pair and gives out a public key, you can register it to a specific Onion Service using menu entry 8.
+
+Would you like to generate a key pair for a specific Onion Service?

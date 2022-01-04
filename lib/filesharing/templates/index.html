@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+                <div class="columns is-centered">
+                    {% if ALLOW_UPLOAD %}
+                    <a class="column is-one-quarter has-text-centered" href="{% url 'upload' %}">
+                        <div class="box content is-small torbox-box">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div class="block"></div>
+                            <p class="subtitle is-6">Upload files to the TorBox</p>
+                        </div>
+                    </a>
+                    {% endif %}
+                    {% if ALLOW_DOWNLOAD %}
+                    <a class="column is-one-quarter has-text-centered" href="{% url 'download' pk=1 %}">
+                        <div class="box content is-small torbox-box">
+                            <i class="fas fa-download"></i>
+                            <div class="block"></div>
+                            <p class="subtitle is-6">Dowload files from the TorBox</p>
+                        </div>
+                    </a>
+                    {% endif %}
+                </div>
+{% endblock %}

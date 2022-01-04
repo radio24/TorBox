@@ -1,5 +1,5 @@
 This menu entry supposes that TorBox is connected with the internet
-through tethering or an USB ethernet adapter. These interfaces have to be
+through tethering or an USB ethernet adapter (eth1). These interfaces have to be
 configured BEFOREHAND. For example, with an iPhone: Unlock your iPhone,
 but let the personal hotspot disabled for the time being and connect it
 with the TorBox. Choose to trust your iPhone (necessary!). Enable personal
@@ -11,12 +11,12 @@ connected with the USB port. This can lead to a unstable system. A better
 solution may be to create a personal hotspot with your smartphone instead
 of using tethering.
 
-The next step is to setup TorBox so that your client devices have access
-through TorBox's wireless network. However, if you also like to access
-through the onboard ethernet interface (cable), then please plug in the
-cable with your client device, NOW.
+The next step is to set up TorBox so that your client devices have access
+through TorBox's wireless network (wlan0) and/or through Ethernet (eth0).
+In the second case, please plug in the ethernet cable with your client
+device NOW.
 
-If we have to restart TorBox's wireless network, then please reconnect your
+If we have to restart TorBox's wireless network, please reconnect your
 client without closing the ssh session. Usually, the configuration
 continuous -- if not, then please repeat the process.
 

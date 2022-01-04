@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -62,11 +62,14 @@ i=0
 ######## PREPARATIONS ########
 ###########################
 
-	if [ $EXITID = "EXITID=1" ]; then
-		sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
-		exit 0
-	fi
-	if [ "$SNOWSTRING" = "OFF" ]; then
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
+
+case $SNOWSTRING in
+
+	"OFF")
 		clear
 		trap "bash snowflake; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
@@ -88,7 +91,7 @@ i=0
 		if [ $OCHECK == 1 ]; then
 			echo " "
 			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-			echo -e "${RED}[+] Checking next the SNOWFLAKE SERVER${NOCOLOR}"
+			echo -e "${RED}[+] Checking next the SNOWFLAKE SERVER - this could take a moment!${NOCOLOR}"
 			echo -e "${RED}[+] You can only use SNOWFLAKE, if the server is ONLINE!${NOCOLOR}"
 			sleep 2
 			echo " "
@@ -105,27 +108,27 @@ i=0
 				fi
 				if [ $bridge_status == 1 ]; then
 					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					SNOW_ON=$(( $SNOW_ON + 1 ))
+					SNOW_ON=$((SNOW_ON+1))
 				elif [ $bridge_status == 0 ]; then
 					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
 				elif [ $bridge_status == 2 ]; then
 					bridge_status_txt="- DOESN'T EXIST"
 				fi
-				i=$(( $i + 1 ))
+				i=$((i+1))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e "$bridge_address"
 			done
 			if [ $SNOW_ON == 0 ] ; then
 				echo " "
 				echo -e "${WHITE}[!] SORRY! - the SNOWFLAKE SERVER seems to be OFFLINE!${NOCOLOR}"
-				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
+				echo -e "${RED}[+] However, we will try to use it anyway!${NOCOLOR}"
 			fi
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		else
 			echo " "
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
-			echo -e "${RED}[+] We cannot check the SNOWFLAKE SERVER - we try to use it anyway!${NOCOLOR}"
+			echo -e "${RED}[+] We cannot check the SNOWFLAKE SERVER. However, we will try to use it anyway!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 		fi
@@ -145,19 +148,20 @@ i=0
 			clear
 			restarting_tor snowflake
 		fi
-	else
-		if [ "$SNOWSTRING" = "ON!" ]; then
-			INPUT=$(cat text/deactivate-snowflake-text)
-			if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-				clear
-				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-				sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-				restarting_tor snowflake
-			fi
-		fi
-	fi
+  ;;
+
+	"ON!")
+    INPUT=$(cat text/deactivate-snowflake-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      clear
+      sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+      sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+      sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+      sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+      sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+      sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+      sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+      restarting_tor snowflake
+    fi
+  ;;
+esac

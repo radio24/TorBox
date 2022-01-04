@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -21,6 +21,7 @@
 #
 # DESCRIPTION
 # This file updates the base system of the TorBox and upgrades it to the latest stable tor release.
+# It also offers some maintenance tools.
 #
 # SYNTAX
 # screen bash update
@@ -34,16 +35,15 @@
 NO_ITEMS=11
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=0
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
-MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
@@ -55,26 +55,25 @@ if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Ras
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
 
 # Identify the Operation System
-CHECK_OS="OTHER"
-if hostnamectl | grep -q "Raspbian" ; then CHECK_OS="Raspbian" ; fi
-if hostnamectl | grep -q "Debian" ; then CHECK_OS="Debian" ; fi
-if hostnamectl | grep -q "Ubuntu" ; then CHECK_OS="Ubuntu" ; fi
+CHECK_OS="$(lsb_release -si)"
 
 # Read configuration from run/torbox.run
 RUNFILE="run/torbox.run"
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | cut -c13-) 2> /dev/null
-TORURL=$(grep "^TORURL=" ${RUNFILE} | cut -c8-) 2> /dev/null
-TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | cut -c25-) 2> /dev/null
-TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | cut -c19-) 2> /dev/null
-TORBOX_USED=$(grep "^TORBOX_USED=" ${RUNFILE} | cut -c13-) 2> /dev/null
-TORBOXMENU_BRANCHNAME=$(grep "^TORBOXMENU_BRANCHNAME=" ${RUNFILE} | cut -c23-) 2> /dev/null
+GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2> /dev/null
+GO_VERSION_64=$(grep "^GO_VERSION_64=" ${RUNFILE} | sed "s/GO_VERSION_64=//g") 2> /dev/null
+GO_DL_PATH=$(grep "^GO_DL_PATH=" ${RUNFILE} | sed "s/GO_DL_PATH=//g") 2> /dev/null
+TORURL=$(grep "^TORURL=" ${RUNFILE} | sed "s/TORURL=//g") 2> /dev/null
+TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/TORPATH_TO_RELEASE_TAGS=//g") 2> /dev/null
+TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/TOR_HREF_FOR_SED=//g") 2> /dev/null
+TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/TORURL_DL_PARTIAL=//g") 2> /dev/null
+SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2> /dev/null
+TORBOXMENU_FORKNAME="radio24"
+TORBOXMENU_BRANCHNAME="master"
+TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
-LOOP_NUMBER=0
 RECOMPILE=0
-TORBOX_UPDATE=0
 TORRC="/etc/tor/torrc"
-BOOTMSG=0
 i=0
 n=0
 
@@ -85,6 +84,7 @@ n=0
 .  lib/torbox.lib
 
 # This function updates the firmware on a RPI4
+# Syntax update_firmware
 update_firmware()
 {
   # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
@@ -115,19 +115,39 @@ update_firmware()
   fi
 }
 
+# This function installs the packages in a controlled way, so that the correct
+# installation can be checked.
+# Syntax install_network_drivers <packagenames>
+check_install_packages()
+{
+ packagenames=$1
+ for packagename in $packagenames; do
+	 clear
+	 echo -e "${RED}[+] Installing all necessary packages....${NOCOLOR}"
+	 echo ""
+	 echo -e "${RED}[+] Installing ${WHITE}$packagename${NOCOLOR}"
+	 echo ""
+	 sudo apt-get -y install $packagename
+#   echo ""
+#   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+ done
+}
+
 # This function prepares the tor update
+# Syntax update_tor_preparations
+# Used predefined variables: $torversion_versionsorted_new RED, WHITE, NOCOLOR, TORCONNECT, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED
+# Provides the following variables: $torversion_versionsorted_new
 update_tor_preparations()
 {
-  echo -e "${RED}[+]         Installing additional packages for the compilation of the tor package... ${NOCOLOR}"
   # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-  sudo apt-get -y install build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev
-  sleep 5
+	sudo apt-get -y update
+	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   clear
-	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
+  echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   else
-    readarray -t torversion_versionsorted < <(curl --socks5 127.0.0.1:9050 --socks5-hostname 127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e $TOR_HREF_FOR_SED | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+    readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   fi
 
   #How many tor version did we fetch?
@@ -151,31 +171,31 @@ update_tor_preparations()
     do
       if [ $n = 0 ]; then
         torversion_versionsorted_new[0]=${torversion_versionsorted[0]}
-				covered_version_full=${torversion_versionsorted[0]}
+        covered_version_full=${torversion_versionsorted[0]}
         covered_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[0]})
-        i=$(($i+1))
-        n=$(($n+1))
+        i=$((i+1))
+        n=$((n+1))
       else
-				actual_version_full=${torversion_versionsorted[$i]}
+        actual_version_full=${torversion_versionsorted[$i]}
         actual_version=$(cut -d '.' -f1-3 <<< ${torversion_versionsorted[$i]})
         if [ "$actual_version" == "$covered_version" ]; then
-					covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
-				  actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
-				  if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
-				  else
-				  	n=$((n-1))
-				    torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
-				    covered_version_full=$actual_version_full
-				    covered_version=$actual_version
-				    i=$((i+1))
-				    n=$((n+1))
-				  fi
+          covered_version_work="$(<<< "$covered_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          actual_version_work="$(<<< "$actual_version_full" sed -e 's/\.//g' | sed -e s/"\^{}\|\-[a-z].*$"//g)"
+          if [ $actual_version_work -le $covered_version_work ]; then i=$((i+1))
+          else
+            n=$((n-1))
+            torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
+            covered_version_full=$actual_version_full
+            covered_version=$actual_version
+            i=$((i+1))
+            n=$((n+1))
+          fi
         else
           torversion_versionsorted_new[$n]=${torversion_versionsorted[$i]}
-					covered_version_full=$actual_version_full
+          covered_version_full=$actual_version_full
           covered_version=$actual_version
-          i=$(($i+1))
-          n=$(($n+1))
+          i=$((i+1))
+          n=$((n+1))
         fi
       fi
     done
@@ -184,13 +204,15 @@ update_tor_preparations()
 }
 
 # This function updates TOR to the latest stable version
+# Syntax update_tor
+# Used predefined variables: $torversion_versionsorted_new, RED, WHITE, NOCOLOR, TORURL, TORURL_DL_PARTIAL, TORCONNECT
 update_tor()
 {
   clear
   update_tor_preparations
-  echo -e "${RED}[+]         Selecting a tor version to install.${NOCOLOR}"
+  echo -e "${RED}[+] Selecting a tor version to install.${NOCOLOR}"
   i=0
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
     if grep -v "-" <<< "${torversion_versionsorted_new[$i]}"; then
       version_string="$(<<< ${torversion_versionsorted_new[$i]} sed -e 's/ //g')"
@@ -216,21 +238,17 @@ update_tor()
     whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     RECOMPILE=0
   else
-    if [ $LOOP_NUMBER = 1 ]; then
-      INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to change/update to Tor version $SOURCE_VERS_NUMBER?"
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        RECOMPILE=1
-      else
-        RECOMPILE=0
-      fi
-    else
+    INPUT="\nThis are the versions of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to change/update to Tor version $SOURCE_VERS_NUMBER?"
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       RECOMPILE=1
+    else
+      RECOMPILE=0
     fi
   fi
   if [ $RECOMPILE = 1 ]; then
     clear
     echo ""
-    echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
+    echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
     if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
     mkdir ~/debian-packages; cd ~/debian-packages
     if [ $TORCONNECT -eq 0 ]; then
@@ -242,15 +260,18 @@ update_tor()
       DLCHECK=$?
     fi
     if [ $DLCHECK -eq 0 ]; then
-      echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+      echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
       tar xzf $filename
-		  echo -e "${RED}[+]         Install necessary packages... ${NOCOLOR}"
-		  sudo apt-get -y update
-		  sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
 		  echo ""
-      cd `ls -d */`
-      echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-      ./autogen.sh
+			cd "$(ls -d */)"
+      echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
+			# Give it a touch of git (without these lines the compilation will break with a git error)
+			git init
+			git add *
+			git config --global user.name "torbox"
+			git commit -m "Initial commit"
+			# Don't use ./autogen.sh
+			sh autogen.sh
       ./configure
       make
       sudo make install
@@ -275,7 +296,8 @@ update_tor()
 }
 
 # With this function change/update of tor from a list of versions is possible
-# Used predefined variables: TORURL, TORURL_DL_PARTIAL
+# Syntax select_and_install_tor
+# Used predefined variables: $torversion_versionsorted_new, RED, WHITE, NOCOLOR, TORURL, TORURL_DL_PARTIAL
 select_and_install_tor()
 {
   clear
@@ -284,17 +306,17 @@ select_and_install_tor()
   clear
   echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
   echo ""
-  for (( i=0; i<$number_torversion; i++ ))
+  for (( i=0; i<number_torversion; i++ ))
   do
-    menuitem=$(( $i + 1 ))
+    menuitem=$((i+1))
     echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
   done
   echo ""
   read -r -p $'\e[1;37mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
   echo
   if [[ $REPLY =~ ^[1234567890]$ ]]; then
-    if [ $REPLY -gt 0 ] && [ $(( $REPLY - 1 )) -le $number_torversion ]; then
-      CHOICE_TOR=$(( $REPLY - 1 ))
+    if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
+      CHOICE_TOR=$((REPLY-1))
       clear
       echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
@@ -314,13 +336,16 @@ select_and_install_tor()
       if [ $DLCHECK -eq 0 ] ; then
         echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
         tar xzf $filename
-        echo -e "${RED}[+]         Install necessary packages... ${NOCOLOR}"
-        sudo apt-get -y update
-        sudo apt-get -y install automake libevent-dev libssl-dev asciidoc-base
         echo ""
-        cd `ls -d */`
+        cd "$(ls -d */)"
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
-        ./autogen.sh
+				# Give it a touch of git (without these lines the compilation will break with a git error)
+				git init
+				git add *
+				git config --global user.name "torbox"
+				git commit -m "Initial commit"
+				# Don't use ./autogen.sh
+        sh autogen.sh
         ./configure
         make
         sudo make install
@@ -425,6 +450,7 @@ update_torcfg()
   fi
   (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
   sudo cp etc/tor/torrc /etc/tor/
+	sudo chown -R debian-tor:debian-tor /etc/tor
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
   echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -433,8 +459,15 @@ update_torcfg()
     sudo cp ../.profile ../.profile.bak
     sudo printf "\n# Added by TorBox\ncd torbox\n./menu\n" | sudo tee -a ../.profile
   fi
+	(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+	sudo cp etc/nginx/nginx.conf /etc/nginx/
+	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+	echo ""
+	echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
+
   # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox042
+  sudo hostnamectl set-hostname TorBox050
   (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
   sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
@@ -444,8 +477,21 @@ update_torcfg()
 }
 
 # This function updates the TorBox menu
+# Syntax update_torbox_menu <expert>
+# <expert> -> 0 = default installation; 1 = expert installation
 update_torbox_menu()
 {
+  clear
+  EXPERT=$1
+  if [ $EXPERT = 1 ]; then
+    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+  	if [ ! -z "$INPUT" ]; then
+    	TORBOXMENU_BRANCHNAME=$INPUT
+			INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+  		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; fi
+		fi
+  fi
+	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
@@ -457,13 +503,12 @@ update_torbox_menu()
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   if [ $TORCONNECT = 0 ]; then
-    wget $TORBOX_USED
+    wget $TORBOXURL
   else
     # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
-    torsocks wget $TORBOX_USED
+    torsocks wget $TORBOXURL
   fi
   if [ -e $TORBOXMENU_BRANCHNAME.zip ]; then
-    TORBOX_UPDATE=1
     echo -e "${RED}[+] Unpacking TorBox menu...${NOCOLOR}"
     unzip $TORBOXMENU_BRANCHNAME.zip
     echo -e "${RED}[+] Removing the old one...${NOCOLOR}"
@@ -492,115 +537,162 @@ update_torbox_menu()
   fi
 }
 
-###### DISPLAY THE AVAILABLE OPTIONS ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.4.2 - UPDATE & RESET OPTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"1" "Update the base system (reboot recommended!)" OFF \
-"2" "Update additional network drivers (reboot required!)" OFF \
-"3" "Update the firmware of the RPI 4 (reboot required!)" OFF \
-"4" "Change/update the version of Tor" OFF \
-"5" "Update to the newest stable version of the TorBox menu" OFF \
-"6" "Erase all log files" OFF \
-"7" "Erase all passwords in the TWM (reboot required!)" OFF \
-"8" "Update & Reset TorBox's configuration files (dangerous!)" OFF \
-"9" "Reset Tor and force a change of the permanent entry node" OFF \
-"10" "Remove permanently OBFS4 Bridge Relay data" OFF \
-"11" "Just fixing and cleaning" OFF 3>&1 1>&2 2>&3)
+###### DISPLAY THE MAIN MENU ######
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"===" "==================================================[Updates]===" \
+" 1" "Update the base system (reboot recommended!)" \
+" 2" "Update additional network drivers (reboot required!)" \
+" 3" "Update the firmware of the RPI 4 (reboot required!)"  \
+" 4" "Update or change the version of Tor" \
+" 5" "Update the TorBox menu (whitout touching the configuration)"  \
+"===" "==============================================[Maintenance]===" \
+" 6" "Reset TorBox's configuration files (dangerous!)" \
+" 7" "Reset TWM and erase all wifi passwords (reboot required!)" \
+" 8" "Reset Tor and force a change of the permanent entry node" \
+" 9" "Restart TFS and/or Nginx to re-share on an Onion domain" \
+"10" "Erase all log files" \
+"11" "Just fixing and cleaning" \
+3>&1 1>&2 2>&3)
 
-exitstatus=$?
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
+case "$CHOICE" in
 
-if [ $exitstatus = 0 ]; then
-  mapfile -t CHOICE <<< "$CHOICE"
-  for ARGUMENT in "${CHOICE[@]}"; do
-    LOOP_NUMBER=$(( $LOOP_NUMBER + 1 ))
-    if [ "$ARGUMENT" = "" ]; then
-      exit 0
-    fi
+	#This updates the base system (done through clearnet because this is not sensitive)
+	1)
+		clear
+		whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
+		clear
+		KERNEL_VERS=$(uname -s -r)
+		TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+		INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
+		if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+			clear
+			# A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+			online_check
+			if [ $OCHECK == 0 ]; then
+				clear
+				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				trap "screen bash update; exit 0" EXIT
+				exit 1
+			fi
+			clear
+			echo -e "${RED}[+] Updating the base system..."
+			sudo apt-get -y update
+			sudo apt-get -y dist-upgrade
+			sleep 10
+			clear
+			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
+			echo ""
+			sudo pip3 install --upgrade pytesseract
+			sudo pip3 install --upgrade mechanize
+			sudo pip3 install --upgrade PySocks
+			sudo pip3 install --upgrade urwid
+			sudo pip3 install --upgrade Pillow
+			sudo pip3 install --upgrade requests
+			sudo pip3 install --upgrade Django
+			sudo pip3 install --upgrade click
+			sudo pip3 install --upgrade gunicorn
+			sleep 10
+			clear
+			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
+			echo ""
+			if uname -m | grep -q -E "arm64|aarch64"; then
+			  wget $GO_DL_PATH$GO_VERSION_64
+			  DLCHECK=$?
+			  if [ $DLCHECK -eq 0 ] ; then
+			  	sudo tar -C /usr/local -xzvf $GO_VERSION_64
+			  	if ! grep "# Added by TorBox (001)" .profile ; then
+			  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+						export PATH=$PATH:/usr/local/go/bin
+			  	fi
+			  	sudo rm $GO_VERSION_64
+			  else
+			  	echo ""
+			  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
+			  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+			  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+			  	echo ""
+			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			  	exit 0
+			  fi
+			else
+			  wget $GO_DL_PATH$GO_VERSION
+			  DLCHECK=$?
+			  if [ $DLCHECK -eq 0 ] ; then
+			  	sudo tar -C /usr/local -xzvf $GO_VERSION
+			  	if ! grep "# Added by TorBox (001)" .profile ; then
+			  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+						export PATH=$PATH:/usr/local/go/bin
+			  	fi
+			  	sudo rm $GO_VERSION
+			  else
+			  	echo ""
+			  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+			  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+			  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+			  	echo ""
+			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			  	exit 0
+			  fi
+			fi
+			sleep 10
+			clear
+			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
+			sudo systemctl unmask hostapd
+			sudo systemctl enable hostapd
+			sudo systemctl enable isc-dhcp-server
+			echo -e "${RED}[+] Configuring Tor with its pluggable transports....${NOCOLOR}"
+			# Copy not moving!
+			sudo cp /usr/share/tor/geoip* /usr/bin
+			sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+			sudo systemctl enable tor
+			sudo systemctl daemon-reload
+			echo ""
+			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			recommended_reboot update
+		fi
+	;;
 
-#This updates the base system (clearnet)
-    if [ $ARGUMENT = 1 ]; then
-      clear
-      whiptail --title "TorBox - INFO" --textbox text/update-text $MENU_HEIGHT_25 $MENU_WIDTH
-      clear
- 			KERNEL_VERS=$(uname -s -r)
-      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
-			INPUT="\nThis is the version of your current base system:\nKernel: $KERNEL_VERS\nTor:    $TOR_VERS\n\nWould you like to update the base system to the newest version?"
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+	# This updates additional network drivers (done through clearnet because this is not sensitive)
+	2)
+    clear
+		INPUT=$(cat text/install_network_drivers-text)
+		if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+			clear
+			# A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
+			online_check
+			if [ $OCHECK == 0 ]; then
+				clear
+				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				trap "screen bash update; exit 0" EXIT
+				exit 1
+			fi
+			bash install_network_drivers
+			recommended_reboot update
+		fi
+	;;
+
+	# This updates the firmware on a RPI4 (done through clearnet because this is not sensitive)
+	3)
+		clear
+    if [ ! -z "$CHECK_HD3" ]; then
+    	INPUT=$(cat text/firmware_update-text)
+      if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
         clear
-        # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
-        online_check
-        if [ $OCHECK == 0 ]; then
-          clear
-          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          trap "screen bash update; exit 0" EXIT
-          exit 1
-        fi
-        clear
-        sudo apt-get -y update
-        sudo apt-get -y dist-upgrade
-        sudo systemctl unmask hostapd
-        sudo systemctl enable hostapd
-        sudo systemctl enable isc-dhcp-server
-        # Copy not moving!
-        sudo cp /usr/share/tor/geoip* /usr/bin
-        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-        sudo systemctl enable tor
-        sudo systemctl daemon-reload
-        echo ""
-        echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
-        echo " "
-        read -n 1 -s -r -p "Press any key to continue"
-        BOOTMSG=1
-      fi
-
-# This updates additional network drivers (clearnet)
-  elif [ $ARGUMENT = 2 ]; then
-      clear
-      kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
-      if [ $LOOP_NUMBER = 1 ]; then
-        INPUT=$(cat text/install_network_drivers-text)
-        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
-          clear
-          # A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
-          online_check
-          if [ $OCHECK == 0 ]; then
-            clear
-            echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-            echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            trap "screen bash update; exit 0" EXIT
-            exit 1
-          fi
-          bash install_network_drivers
-          BOOTMSG=1
-          LOOP_NUMBER=0
-        fi
-      else
-        bash install_network_drivers
-        BOOTMSG=1
-        LOOP_NUMBER=0
-      fi
-
-#This updates the firmware on a RPI4 (clearnet)
-  elif [ $ARGUMENT = 3 ]; then
-    if [ ! -z "$CHECK_HD3" ] || [ ! -z "$CHECK_HD4" ]; then
-      if [ $LOOP_NUMBER = 1 ]; then
-        INPUT=$(cat text/firmware_update-text)
-        if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
-          clear
-          update_firmware
-          BOOTMSG=1
-          LOOP_NUMBER=0
-        fi
-      else
         update_firmware
-        BOOTMSG=1
-        LOOP_NUMBER=0
+				recommended_reboot update
       fi
     else
       clear
@@ -609,223 +701,269 @@ if [ $exitstatus = 0 ]; then
       echo -e "${WHITE}[!] to update the firmware. ${NOCOLOR}"
       sleep 10
     fi
+	;;
 
-#This changes/updates the installed Tor version
-  elif [ $ARGUMENT = 4 ]; then
+	# This changes/updates the installed Tor version
+	4)
     clear
     INPUT=$(cat text/update-tor-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      exitstatus=$?
       EXPERT=1
     else
+      exitstatus=$?
       EXPERT=0
     fi
-    clear
-    # Avoid cheap censorship mechanisms
-    online_check $TORURL 1 1
-    # We can only use Clearnet if allowed!
-    if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+		# exitstatus == 255 means that the ESC key was pressed
+		if [ $exitstatus != 255 ]; then
       clear
-      echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-      echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $OCHECK == 0 ]; then
-      clear
-      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-      echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-      echo " "
-      read -n 1 -s -r -p "Press any key to continue"
-      trap "screen bash update; exit 0" EXIT
-      exit 1
-    fi
-    if [ $EXPERT == 1 ]; then
-      select_and_install_tor
-      FINISHING=$?
-    else
-      update_tor
-      FINISHING=$?
-    fi
-    # Finishing
-    cd ~/torbox
-    if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
-    if [ $FINISHING = 1 ] ; then
-      (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-      # Copy not moving!
-      (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
-      sudo chmod a+x /usr/bin/geoip*
-      sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-      sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-      sudo systemctl stop tor
-      sudo systemctl enable tor
-      sudo systemctl daemon-reload
-      sudo systemctl start tor
-      TOR_VERS=""
-      TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
-      echo ""
-      echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
-      read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    fi
-
-#This updates the newest stable version of TorBox's menu
-  elif [ $ARGUMENT = 5 ]; then
-    clear
-    if [ $LOOP_NUMBER = 1 ]; then
-      INPUT=$(cat text/torbox_update-text)
-      if (whiptail --defaultno --yesno "$INPUT" 18 $MENU_WIDTH); then
-        clear
-        online_check default 1 1
-        # We can only use Clearnet if allowed!
-        if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-          clear
-          echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-          echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
-          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          trap "screen bash update; exit 0" EXIT
-          exit 1
-        fi
-        if [ $OCHECK == 0 ]; then
-          clear
-          echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-          echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          trap "screen bash update; exit 0" EXIT
-          exit 1
-        fi
-        update_torbox_menu
-      fi
-    else
+      # Avoid cheap censorship mechanisms
+      online_check $TORURL 1 1
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
-        sleep 1
-      else
-        update_torbox_menu
+        clear
+        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+        trap "screen bash update; exit 0" EXIT
+        exit 1
       fi
+      if [ $OCHECK == 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $EXPERT == 1 ]; then
+        select_and_install_tor
+        FINISHING=$?
+      else
+        update_tor
+        FINISHING=$?
+      fi
+      # Finishing
+      cd ~/torbox
+      if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
+      if [ $FINISHING = 1 ] ; then
+				echo -e "${RED}[+] Configuring Tor with its pluggable transports....${NOCOLOR}"
+        (sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+        # Copy not moving!
+        (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+        sudo chmod a+x /usr/bin/geoip*
+        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+				echo ""
+				echo -e "${RED}[+] Re-installing Snowflake...${NOCOLOR}"
+				cd ~
+				git clone $SNOWFLAKE_USED
+				DLCHECK=$?
+				if [ $DLCHECK -eq 0 ]; then
+					sleep 1
+				else
+					echo ""
+					echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
+					echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
+					echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+					echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+					echo ""
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					clear
+				fi
+				export GO111MODULE="on"
+				cd ~/snowflake/proxy
+				go get
+				go build
+				sudo cp proxy /usr/bin/snowflake-proxy
+				cd ~/snowflake/client
+				go get
+				go build
+				sudo cp client /usr/bin/snowflake-client
+				cd ~
+				sudo rm -rf snowflake
+				sudo rm -rf go*
+				echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
+        sudo systemctl stop tor
+        sudo systemctl enable tor
+        sudo systemctl daemon-reload
+        sudo systemctl start tor
+        TOR_VERS=""
+        TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
+        echo ""
+        echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      fi
+    fi
+	;;
+
+	# Update the TorBox menu (whitout touching the configuration)
+	5)
+		clear
+    INPUT=$(cat text/torbox_update-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEFAULT" --yes-button "EXPERT" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      exitstatus=$?
+      EXPERT=1
+    else
+      exitstatus=$?
+      EXPERT=0
+    fi
+		# exitstatus == 255 means that the ESC key was pressed
+		if [ $exitstatus != 255 ]; then
+      clear
+      online_check $TORBOXURL 1 1
+      # We can only use Clearnet if allowed!
+      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      if [ $OCHECK == 0 ]; then
+        clear
+        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+        echo " "
+        read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+        trap "screen bash update; exit 0" EXIT
+        exit 1
+      fi
+      update_torbox_menu $EXPERT
     fi
     exit 0
+	;;
 
-#This erases all log files
-  elif [ $ARGUMENT = 6 ]; then
-      clear
-      erase_logs
-      echo ""
-      echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
-      sleep 5
-
-#Erase all passwords in Torbox Wireless Manager
-  elif [ $ARGUMENT = 7 ]; then
-      INPUT=$(cat text/erase_TWM_pwd-text)
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-        echo -e "${RED}[+] Erasing all passwords in the Torbox Wireless Manager...${NOCOLOR}"
-        (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
-        (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
-        sleep 2
-        echo -e "${WHITE}[+] FINISHED!${NOCOLOR}"
-        BOOTMSG=1
-        sleep 2
-      fi
-
-#This updates / resets TorBox's configuration files
-  elif [ $ARGUMENT = 8 ]; then
-      if [ $TORBOX_UPDATE = 0 ]; then
-        INPUT=$(cat text/torboxcfg_update-text)
-        if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-          clear
-          update_torcfg
-          BOOTMSG=1
-        fi
-      else
-        update_torcfg
-        BOOTMSG=1
-      fi
-
-#This resets Tor and forces a change of the permanent entry node
-  elif [ $ARGUMENT = 9 ]; then
-      INPUT=$(cat text/tor-reset-text)
-      if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
-        clear
-        MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
-        echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
-        sudo systemctl stop tor
-        sleep 2
-        echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        deactivating_bridge_relay
-        if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-          sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-          sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-          sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-          #Deaktivate all sort of bridges obfs4 and meek-azure
-          sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
-        fi
-        echo -e "${RED}[+] Deleting all circuits and forcing a change of the permanent entry node${NOCOLOR}"
-        (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
-        (sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
-        (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
-        (sudo rm -r /var/lib/tor/lock) 2> /dev/null
-        (sudo rm -r /var/lib/tor/state) 2> /dev/null
-        sleep 2
-        echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
-        sudo rm /var/log/tor/notices.log
-        sudo -u debian-tor touch /var/log/tor/notices.log
-        echo -e "${RED}[+] Done!${NOCOLOR}"
-        sleep 4
-        restarting_tor update
-      fi
-
-#This permanently removes Bridge Relay data
-  elif [ $ARGUMENT = 10 ]; then
-      INPUT=$(cat text/remove-brdata-text)
-      if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
-        clear
-        echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-        deactivating_bridge_relay
-        echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
-        (sudo rm -r /var/lib/tor/keys) 2> /dev/null
-        (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-        (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-        (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
-        echo -e "${RED}[+] Done!${NOCOLOR}"
-        sleep 4
-        restarting_tor update
-      fi
-
-#Just fixing and cleaning
-  elif [ $ARGUMENT = 11 ]; then
-       clear
+	# Reset TorBox's configuration files (dangerous!)
+	6)
+		clear
+    INPUT=$(cat text/torboxcfg_update-text)
+	  if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+	  	clear
+	    update_torcfg
+			recommended_reboot update
     fi
-  done
+	;;
 
-# Fixing and Cleaning - Regardless of whether something has been changed or not. Just to be sure that all works properly.
-  clear
-  echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
-  sudo /usr/sbin/ntpdate pool.ntp.org
-  sleep 3
-  echo " "
-  echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
-  sudo apt --fix-broken install
-  sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
-  sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-  sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-  sudo systemctl daemon-reload
-  sleep 3
-  if [ $BOOTMSG = 1 ]; then recommended_reboot; fi
-else
-  clear
-  exit 0
-fi
+	# Erase all passwords in Torbox Wireless Manager
+	7)
+		clear
+  	INPUT=$(cat text/erase_TWM_pwd-text)
+	  if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+	  	clear
+	    echo -e "${RED}[+] Erasing all passwords in the Torbox Wireless Manager...${NOCOLOR}"
+	    (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
+	    (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+	    sleep 2
+	    echo -e "${WHITE}[+] FINISHED!${NOCOLOR}"
+			sleep 2
+			recommended_reboot update
+		fi
+	;;
+
+	#This resets Tor and forces a change of the permanent entry node
+	8)
+		clear
+    INPUT=$(cat text/tor-reset-text)
+    if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
+      clear
+      MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+      echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
+      sudo systemctl stop tor
+      sleep 2
+      echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
+      deactivating_bridge_relay
+      if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+      	sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+        sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+		    sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
+		    #Deaktivate all sort of bridges obfs4 and meek-azure
+		    sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
+		  fi
+		  echo -e "${RED}[+] Deleting all circuits and forcing a change of the permanent entry node${NOCOLOR}"
+		  (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/lock) 2> /dev/null
+		  (sudo rm -r /var/lib/tor/state) 2> /dev/null
+		  sleep 2
+		  echo -e "${RED}[+] Resetting Tor statistics...${NOCOLOR}"
+		  (sudo rm /var/log/tor/notices.log) 2> /dev/null
+		  (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
+			(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+		  echo -e "${RED}[+] Done!${NOCOLOR}"
+		  sleep 4
+		  restarting_tor update
+	  fi
+	;;
+
+	# Restart TFS and Nginx to re-shhare on an Onion domain
+	9)
+		clear
+		if pgrep -f "filesharing.wsgi"; then
+			clear
+			echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+			PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+			(sudo kill $PID) &>/dev/null
+			echo ""
+		fi
+		echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
+		sudo systemctl stop nginx
+		# shellcheck disable=SC2062
+		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		echo ""
+		echo -e "${RED}[+] Startiong TFS and/or Nginx again...${NOCOLOR}"
+		sudo ./run/start_tfs
+		sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+		echo ""
+		echo -e "${RED}[+] Done!${NOCOLOR}"
+		sleep 5
+	;;
+
+	# This erases all log files
+	10)
+  	clear
+    erase_logs
+    echo ""
+    echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
+    sleep 5
+	;;
+
+	# Fixing and cleaning - just to be sure that all works properly.
+	11)
+		clear
+  	check_interface_with_internet
+  	clear
+  	if [ $CONNECTED == 1 ]; then
+    	echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
+    	sudo /usr/sbin/ntpdate pool.ntp.org
+    	sleep 3
+    	echo " "
+  	fi
+  	echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
+  	sudo apt --fix-broken install
+  	sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+  	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+  	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+  	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+  	sudo systemctl daemon-reload
+  	sleep 3
+	;;
+
+	*)
+		clear
+		exit 0
+esac
 bash update
-exit 0

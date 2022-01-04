@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2021 Patrick Truffer
+# Copyright (C) 2022 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -144,7 +144,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2021 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
@@ -161,13 +161,13 @@ while true; do
 		--select-fork )
 		  # shellcheck disable=SC2034
 			SELECT_FORK="--select-fork"
-			[ ! -z $2 ] && TORBOXMENU_FORKNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_FORKNAME="$2"
 			shift 2
 		;;
     --select-branch )
 		  # shellcheck disable=SC2034
 			SELECT_BRANCH="--select-branch"
-			[ ! -z $2 ] && TORBOXMENU_BRANCHNAME="$2"
+			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
@@ -178,8 +178,8 @@ done
 
 # NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
-[ -z $TORBOXMENU_FORKNAME ] && TORBOXMENU_FORKNAME="radio24"
-[ -z $TORBOXMENU_BRANCHNAME ] && TORBOXMENU_BRANCHNAME="master"
+[ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
+[ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
@@ -347,7 +347,13 @@ select_and_install_tor()
           	tar xzf $filename
           	cd `ls -d */`
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-          	./autogen.sh
+						# Give it a touch of git (without these lines the compilation will break with a git error)
+						git init
+						git add *
+						git config --global user.name "torbox"
+						git commit -m "Initial commit"
+						# Don't use ./autogen.sh
+		        sh autogen.sh
           	./configure
           	make
             sudo systemctl mask tor
@@ -414,7 +420,13 @@ select_and_install_tor()
 				tar xzf $filename
 				cd `ls -d */`
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-				./autogen.sh
+				# Give it a touch of git (without these lines the compilation will break with a git error)
+				git init
+				git add *
+				git config --global user.name "torbox"
+				git commit -m "Initial commit"
+				# Don't use ./autogen.sh
+        sh autogen.sh
 				./configure
 				make
         sudo systemctl mask tor
@@ -962,10 +974,33 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
+
+# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
+# Make Tor and Nginx ready for Onion Services
+(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+sudo cp etc/nginx/nginx.conf /etc/nginx/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+echo ""
+echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
+(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
+(sudo rm -r /var/www/html) 2> /dev/null
+# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
+
+#Back to the home directory
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
   sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
+
+echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+sudo mkdir /var/lib/tor/services
+sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+sudo chmod -R go-rwx /var/lib/tor/services
+sudo mkdir /var/lib/tor/onion_auth
+sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1281,6 +1316,8 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1320,9 +1357,9 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-sudo hostnamectl set-hostname TorBox042
+(sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-sudo cp torbox/etc/hosts /etc/
+(sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
 sudo mv /home/ubuntu/* /home/torbox/

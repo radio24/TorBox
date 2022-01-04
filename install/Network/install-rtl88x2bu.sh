@@ -1,10 +1,10 @@
 #!/bin/bash
 
-SCRIPT_NAME="install-rtl88x2bu.sh"
-SCRIPT_VERSION="20210325"
+SCRIPT_NAME="install-driver.sh"
+SCRIPT_VERSION="20211026"
 
 DRV_NAME="rtl88x2bu"
-DRV_VERSION="5.8.7.4"
+DRV_VERSION="5.13.1"
 OPTIONS_FILE="88x2bu.conf"
 
 DRV_DIR="$(pwd)"
@@ -34,7 +34,6 @@ cp -f ${OPTIONS_FILE} /etc/modprobe.d
 echo "All required files have been copied to the proper places."
 
 dkms add -m ${DRV_NAME} -v ${DRV_VERSION}
-# dkms add ${DRV_NAME}/${DRV_VERSION}
 RESULT=$?
 
 if [[ "$RESULT" != "0" ]]; then
