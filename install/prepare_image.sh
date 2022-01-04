@@ -79,6 +79,8 @@ if grep "^UseBridges" ${TORRC}; then
 	else
 			MODE_BRIDGES="Are not running."
 	fi
+else
+		MODE_BRIDGES="Are not running."
 fi
 
 # Is the Bridge Relay activated?
@@ -116,7 +118,7 @@ echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
 echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
 echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //")${NOCOLOR}"
+echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
 echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
 echo -e "${RED}Snowflake                                    :${WHITE} $SNOWFLAKE ${NOCOLOR}"
 echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"

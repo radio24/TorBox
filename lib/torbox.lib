@@ -271,7 +271,7 @@ erase_logs()
 	(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 	(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 	TOR_STATUS=$(sudo systemctl is-enabled tor@default.service)
-	if [ "$LOG_STATUS" != "masked" ]; then
+	if [ "$TOR_STATUS" != "masked" ]; then
 		echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
 		(sudo systemctl restart tor) 2> /dev/null
 		echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
