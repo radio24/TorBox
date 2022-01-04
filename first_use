@@ -141,7 +141,7 @@ finish_default_obfs4_step1()
 
 #Check freshinstalled
 FRESHINSTALLED=$1
-if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); else
+if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 
 # This will completely remove pi (only for Raspbian OS). The parameter
 # will be set at the end of the run_install.sh
