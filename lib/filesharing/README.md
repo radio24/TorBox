@@ -6,7 +6,7 @@ A web-client used to share files over in the TorBox Project.
 
 ### Requirements
 **TFS** was coded in Python 3.8 and only depend on 3 libraries:
-- Django v3.2.9
+- Django v3.2.10
 - click v8.0.3
 - gunicorn v20.1.0
 
