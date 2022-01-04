@@ -398,10 +398,15 @@ select_and_install_tor()
 						sh autogen.sh
           	./configure
           	make
+						sudo systemctl stop tor
 						sudo systemctl mask tor
+						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
+						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
 						echo -e ""
@@ -471,10 +476,15 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
+				sudo systemctl stop tor
 				sudo systemctl mask tor
+				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				sudo systemctl mask tor@default.service
 				sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
+				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
 				echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
@@ -578,7 +588,10 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+sudo systemctl stop tor
 sudo systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+sudo systemctl mask tor@default.service
 
 # NEW v.0.5.0: New packages: qrencode, nginx, basez, iptables
 # NEW v.0.5.0: Using the check_install_packages routine
@@ -588,8 +601,10 @@ check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
 check_install_packages "tor-geoipdb"
-sudo systemctl mask tor
 sudo systemctl stop tor
+sudo systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1027,6 +1042,8 @@ sudo systemctl start isc-dhcp-server
 sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh

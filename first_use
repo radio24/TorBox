@@ -271,6 +271,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sleep 2
       fi
       (sudo systemctl unmask tor) 2> /dev/null
+			(sudo systemctl unmask tor@default.service) 2> /dev/null
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
       sleep 2
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"

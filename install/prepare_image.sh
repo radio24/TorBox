@@ -39,18 +39,21 @@ NOCOLOR='\033[0m'
 # include lib
 .  lib/torbox.lib
 
+# Is the Snowflake client installed?
 if command -v snowflake-client &> /dev/null
 then SNOWFLAKE="exists";
 else SNOWFLAKE="is missing"; fi
 
+# Is the automatic counteractions feature activated?
 if ps -ax | grep "[l]og_check.py" ; then
   clear
   LOGCHECK="Activated!"
 else
     clear
-    LOGCHECK="Deactivated!"
+  LOGCHECK="Deactivated!"
 fi
 
+# Is Vanguards activated?
 VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
 if [ ${VANGUARDSSTATUS} == "active" ]; then
   VANGUARDSSTATUSb="Activated!"
@@ -58,11 +61,55 @@ else
   VANGUARDSSTATUSb="Deactivated!"
 fi
 
+# Is the user pi deactivated and the home directory removed?
 if [ -d "/home/pi" ]; then
   ROOT_DIR="${WHITE}WARNING! ${RED}User \"pi\" is still active!${NOCOLOR}"
 else
   ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
 fi
+
+# Are bridges activated?
+if grep "^UseBridges" ${TORRC}; then
+	if grep -o "^Bridge obfs4 " ${TORRC}; then
+			MODE_BRIDGES="OBFS4 is running - will be deactivated."
+	elif grep -o "^Bridge meek_lite " ${TORRC}; then
+			MODE_BRIDGES="Meek-Azure is running - will be deactivated."
+	elif grep -o "^Bridge snowflake " ${TORRC} | head -1; then
+				MODE_BRIDGES="Snowflake is running - will be deactivated."
+	else
+			MODE_BRIDGES="Are not running."
+	fi
+fi
+
+# Is the Bridge Relay activated?
+if grep "^BridgeRelay" ${TORRC}; then
+	BRIDGE_RELAY="Is running - will be deactivated"
+else
+	BRIDGE_RELAY="Is not running"
+fi
+
+# Are Onion Services Running?
+if grep "^HiddenServiceDir" ${TORRC}; then
+	MODE_OS="Are running"
+else
+	MODE_OS="Are not running"
+fi
+
+# Is the Countermeasure against a tightly configured firewall active?
+if [ grep -o "^ReachableAddresses " ${TORRC} | head -1; then
+	FIREWALL="Are running"
+else
+	FIREWALL="Are not running"
+fi
+
+# Is the Countermeasure against a disconnection when idle feature active?
+	if pgrep -f "ping -q $PING_SERVER" ; then
+		clear
+		PING="Is running"
+	else
+		clear
+		PING="Is not running"
+	fi
 
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
@@ -75,8 +122,13 @@ echo -e "${RED}Snowflake                                    :${WHITE} $SNOWFLAKE
 echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
 echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
-echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK ${NOCOLOR}"
-echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDSSTATUSb ${NOCOLOR}"
+echo -e "${RED}Firewall countermeasures                     :${WHITE} $FIREWALL${NOCOLOR}"
+echo -e "${RED}Disconnection when idle countermeasure       :${WHITE} $PING${NOCOLOR}"
+echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK${NOCOLOR}"
+echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDSSTATUSb${NOCOLOR}"
+echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
+echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
+echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
 echo -e "$ROOT_DIR"
 echo
 echo
@@ -93,7 +145,8 @@ echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Stopping and masking tor${NOCOLOR}"
 sudo systemctl stop tor
-(sudo systemctl mask tor) 2> /dev/null
+sudo systemctl mask tor
+sudo systemctl mask tor@default.service
 echo -e "${RED}[+] Deactivating all bridges${NOCOLOR}"
 deactivate_obfs4_bridges
 sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}

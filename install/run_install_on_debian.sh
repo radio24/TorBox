@@ -351,10 +351,15 @@ select_and_install_tor()
 		        sh autogen.sh
           	./configure
           	make
+						systemctl stop tor
 						systemctl mask tor
+						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						systemctl mask tor@default.service
           	make install
 						systemctl stop tor
 						systemctl mask tor
+						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
 						echo -e ""
@@ -424,10 +429,15 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
+				systemctl stop tor
 				systemctl mask tor
+				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				systemctl mask tor@default.service
 				make install
 				systemctl stop tor
 				systemctl mask tor
+				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				systemctl mask tor@default.service
 			else
 				echo -e ""
 				echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
@@ -515,7 +525,10 @@ fi
 # 3. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+systemctl stop tor
 systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+systemctl mask tor@default.service
 
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
 check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
@@ -525,8 +538,10 @@ check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
 check_install_packages "tor-geoipdb"
-systemctl mask tor
 systemctl stop tor
+systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -976,7 +991,10 @@ systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server
 systemctl stop nginx
 systemctl stop tor
+systemctl stop tor
 systemctl mask tor
+# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+systemctl mask tor@default.service
 systemctl unmask ssh
 systemctl enable ssh
 systemctl start ssh
