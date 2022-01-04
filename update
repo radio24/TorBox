@@ -813,7 +813,8 @@ case "$CHOICE" in
       exitstatus=$?
       EXPERT=0
     fi
-    if [ $exitstatus = 0 ]; then
+		# exitstatus == 255 means that the ESC key was pressed
+		if [ $exitstatus != 255 ]; then
       clear
       online_check $TORBOXURL 1 1
       # We can only use Clearnet if allowed!
