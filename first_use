@@ -25,7 +25,12 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use
+# ./first_use <NUMBER>
+#
+# Following NUMBERs are supported:
+# 1 - Will completely remove pi (only for Raspbian OS).
+# 2 - Will generate new unique SSH server keys.
+# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
@@ -135,7 +140,8 @@ finish_default_obfs4_step1()
 ######## MAIN ########
 
 #Check freshinstalled
-FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g")
+FRESHINSTALLED=$1
+if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); else
 
 # This will completely remove pi (only for Raspbian OS). The parameter
 # will be set at the end of the run_install.sh
