@@ -233,12 +233,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       if [ ! -z "$CHOICE" ]; then
         mapfile -t CHOICE <<< "$CHOICE"
         for ARGUMENT in "${CHOICE[@]}"; do
-#          LOOP_NUMBER=$((LOOP_NUMBER+1))
 
           #This activates TACA
           if [ $ARGUMENT = 1 ]; then
 						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) &>/dev/null
-# 					sudo ./log_check.py &
+  					sudo ./log_check.py &
             clear
             echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
             sleep 2
