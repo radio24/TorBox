@@ -1,6 +1,6 @@
 [![GitHub top language](https://img.shields.io/github/languages/top/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/torbox/search?l=Shell)
 [![License](https://img.shields.io/github/license/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/blob/master/LICENSE)
-[![Latest Release](https://img.shields.io/github/release/cryptomator/cryptomator.svg)](https://github.com/cryptomator/cryptomator/releases/latest)
+[![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
