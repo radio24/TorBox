@@ -617,7 +617,6 @@ case "$CHOICE" in
 			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 			  	echo ""
 			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			  	exit 0
 			  fi
 			else
 			  wget $GO_DL_PATH$GO_VERSION
@@ -637,7 +636,6 @@ case "$CHOICE" in
 			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 			  	echo ""
 			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			  	exit 0
 			  fi
 			fi
 			sleep 10
