@@ -20,10 +20,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file helps to overcome a login portal of an Internet provider, usually seen with
-# providers of free wireless access (so called captive portal). To be able to handle
-# such a portal, it is necessary to establish a direct connection to the wireless
-# network provider. This procedure temporarily uses an INSECURE CONNECTION. The user
+# This file helps to overcome a Captive Portal of an Internet provider, usually seen with
+# providers of free wireless access. In contrast to SPOOFING, we use here the TUNNELING
+# methode to pass through a Captive Portal. This method temporarily uses an INSECURE
+# CONNECTION so that a client can fill out the login page of the Captive Portal. The user
 # may CLOSE ALL HIS APPLICATIONS ON HIS CLIENT DEVICES to prevent the leakage of information
 # during the established INSECURE CONNECTION.
 #
@@ -43,7 +43,6 @@
 # eth1	-> 	The device is connected with a cable (USB ethernet adapter).
 # wlan0 -> 	The device is connected via wireless network (onboard WLAN chip).
 # wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
-#
 #
 #
 ######## SET VARIABLES ########
