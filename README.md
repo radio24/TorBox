@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
-TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
+TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
 * **TorBox Image** (about 985Mb): [v.0.5.0 (02.01.2022)](https://www.torbox.ch/data/torbox-20220102-v050.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
@@ -28,7 +28,7 @@ A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2021/08/TorBox-A5-RPI4-042-e1628049935354.png)](https://www.torbox.ch/wp-content/uploads/2021/08/TorBox-A5-RPI4-042.png)
+[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2022/01/TorBox-A5-RPI4-050-e1642257894825.png)](https://www.torbox.ch/wp-content/uploads/2022/01/TorBox-A5-RPI4-050.png)
 
 ### Features
 * TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. If wanted, all HTTP plain traffic [can be blocked](https://www.torbox.ch/?page_id=875) additionally.
@@ -43,7 +43,7 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 * It allows easy access to .onion websites without client configuration (Chrome) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
 
 ### Alternative installation method with the TorBox installation script
-Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script (option ```--select-torbox``` let you select the tor version to be installed; for more options, use ```--help```):
+Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/), ensure stable Internet connectivity, localize your installation with raspi-config (optional), download and execute our installation script (option ```--select-tor``` let you select the tor version to be installed; for more options, use ```--help```):
 ```console
 cd
 wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
