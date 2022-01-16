@@ -113,7 +113,7 @@ captive_spoofing()
 		echo -e "${RED}[+] We will switch to the TUNNELING method!${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		CAPTIVE=2
+		CAPTIVE=1
 	fi
 }
 
@@ -145,12 +145,10 @@ captive_tunneling()
 # This function pass through Captive Portals on the Ethernet interface by using the SPOOFING or TUNNELING method
 captive_eth()
 {
-	#NEW: SPOOFING
-	if [ $CAPTIVE = 1 ]; then
+	if [ $CAPTIVE = 2 ]; then
 		captive_spoofing
 	fi
-	#NEW: TUNNELING - we changed CAPTIVE from 1 to 2
-	if [ $CAPTIVE = 2 ]; then
+	if [ $CAPTIVE = 1 ]; then
 		captive_tunneling
 	else
 		EXITLOOP=1
@@ -174,8 +172,7 @@ while [ $EXITLOOP == 0 ]; do
 		sleep 2
 		sudo ./torbox_wireless_manager.py -i $O_DEVICE
 		clear
-		#NEW: TUNNELING - we changed CAPTIVE from 1 to 2
-		if [ $CAPTIVE = 2 ]; then
+		if [ $CAPTIVE = 1 ]; then
 			captive_tunneling
 		else
 			EXITLOOP=1
