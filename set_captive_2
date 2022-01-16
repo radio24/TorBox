@@ -49,7 +49,6 @@
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 
@@ -63,7 +62,7 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 DNSPROG="dnsmasq"
 RUNFILE="run/torbox.run"
-EXITID="EXITID=1"
+#EXITID="EXITID=1"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
@@ -75,10 +74,9 @@ sleep 2
 clear
 INPUT=$(cat text/is-it-captive-text)
 if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-  CAPTIVE=1
   EXITLOOP=0
 else
-  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+#  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
   EXITLOOP=1
   exit $EXITLOOP
 fi
