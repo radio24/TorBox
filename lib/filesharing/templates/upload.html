@@ -4,11 +4,14 @@
                     <div class="column is-8">
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
+                            {% if subfolder %}
+                            <input type="hidden" name="subfolder" value="{{ subfolder.pk }}">
+                            {% endif %}
                             <!-- upload panel -->
                             <div id="torbox-upload-panel" class="panel">
                                 <div class="panel-heading">
                                     <a href="{% url 'index' %}" class="is-small"><i class="far fa-arrow-alt-circle-left"></i></a> &nbsp;
-                                    Upload files
+                                    Upload files : /{% if subfolder and subfolder.pk > 1 %}{{ path }}/{% endif %}
                                 </div>
 
                                 <div class="panel-block">
