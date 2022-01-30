@@ -12,6 +12,22 @@ if [ "$_IP" ]; then
 fi
 
 # Added by TorBox
+for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
+	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=auto" /home/torbox/torbox/run/torbox.run ; then
+		sleep 1
+	else
+		MAC_ADDRESS=$(grep "MAC_$INTERFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+		if ip link show $INTERFACE | grep "state UP" ; then
+			sudo ip link set dev $INTERFACE down
+			sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+			sudo ip link set dev $INTERFACE up
+		elif ip link show $INTERFACE | grep "state DOWN" ; then
+			sudo ip link set dev $INTERFACE down
+			sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+		fi
+	fi
+done
+
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1
@@ -43,8 +59,9 @@ sudo /home/torbox/torbox/run/start_tfs
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10
-sudo /usr/sbin/ntpdate pool.ntp.org
-sleep 5
+if sudo timeout 5 sudo route | grep -m 1 default ; then
+	sudo /usr/sbin/ntpdate pool.ntp.org
+fi
 sudo systemctl stop dnsmasq
 
 exit 0

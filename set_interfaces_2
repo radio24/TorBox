@@ -67,6 +67,7 @@ MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+MENU_HEIGHT_10=10
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 MY_OWN_IP1="192.168.42.1"
@@ -101,6 +102,9 @@ captive_spoofing()
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
 			exit 0
+		fi
+		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "\nDo you want to store the MAC address so that it will be used on $O_DEVICE everytime TorBox is rebooted?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+			sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 		fi
 		sudo ip link set dev $O_DEVICE down
 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
