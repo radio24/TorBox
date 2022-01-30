@@ -69,7 +69,7 @@
                                     <input type="checkbox" name="file_list" value="{{ file.pk }}" />
                                     <div class="column is-7">
                                         {% if file.is_dir %}
-                                        <a class="panel-block p-0" href="{% url 'download' pk=file.pk %}">
+                                        <a href="{% url 'download' pk=file.pk %}">
                                         {% else %}
                                         <a href="{{ file.file.url }}">
                                         {% endif %}

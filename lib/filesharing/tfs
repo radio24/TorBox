@@ -14,6 +14,10 @@ import click
 import subprocess
 
 @click.command()
+@click.option('--name', '-n',
+              default=None,
+              type=str,
+              help="Onion Service Name")
 @click.option('--file-path', '-fp',
               default=None,
               type=str,
@@ -37,23 +41,41 @@ import subprocess
               default=False,
               type=bool,
               help="Run in development mode (Default: 0)")
-def main(file_path, allow_download, allow_upload, msg, scan, dev):
+def main(name, file_path, allow_download, allow_upload, msg, scan, dev):
+    if not name:
+        click.echo("Error: You must specify a name.")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
+    else:
+        instance_name = name
+        os.environ['INSTANCE_NAME'] = instance_name
+
+        # Check if another instance running have same name
+        from pathlib import Path
+        base_dir = Path(__file__).resolve().parent
+        if not scan:
+            if os.path.exists(base_dir / f'pid/{instance_name}.pid'):
+                click.echo('Error: Another instance is already using name "%s"' %
+                                instance_name)
+                sys.exit(1)
+
     if scan:
         """Scan will restart database and scan for files"""
         # Check if we have pid
         from pathlib import Path
         base_dir = Path(__file__).resolve().parent
-        if os.path.exists(base_dir / 'tfs.pid'):
+        if os.path.exists(base_dir / f'pid/{instance_name}.pid'):
             # Restart database
             django.setup()
             restart_database()
+            sys.exit(0)
         else:
             click.echo(f"Error: TFS is not running (pid is not present)")
-        quit()
+            sys.exit(1)
     elif file_path is None:
         click.echo(f"Error: files-path must be set.")
         click.echo(f"run {sys.argv[0]} --help for more info.")
-        quit()
+        sys.exit(1)
     
     media_root = file_path
     
@@ -71,7 +93,7 @@ def main(file_path, allow_download, allow_upload, msg, scan, dev):
     from django.conf import settings
     
     # Start db
-    start_database(settings.BASE_DIR)
+    start_database(instance_name, settings.BASE_DIR)
 
     # Create root dir on db
     from apps.filesharing.models import DownloadFileModel
@@ -83,7 +105,7 @@ def main(file_path, allow_download, allow_upload, msg, scan, dev):
         # Scan media_root and add to db
         scan_path(media_root, root)
 
-    run_webserver(dev)
+    run_webserver(instance_name, dev)
 
 def scan_path(path, parent):
     """Recursive scan for files and directories"""
@@ -109,10 +131,10 @@ def scan_path(path, parent):
                                         file=file_django)
             file_db.save()
 
-def start_database(BASE_DIR):
+def start_database(instance_name, BASE_DIR):
     """Remove old database and create new one"""
     try:
-        os.remove(BASE_DIR / "db.sqlite3")
+        os.remove(BASE_DIR / f"db/{instance_name}.sqlite3")
     except:
         pass
     
@@ -124,28 +146,38 @@ def restart_database():
     media_root = DownloadFileModel.objects.first()
     os.environ['MEDIA_ROOT'] = media_root.name
     for obj in DownloadFileModel.objects.all().exclude(pk=1):
-        # NOTE: This could take long time with a very big list of files
         obj.delete()
     scan_path(media_root.name, media_root)
 
-def run_webserver(dev=True):
+def run_webserver(instance_name, dev=True):
     if dev:
         # Dev
         from django.core.wsgi import get_wsgi_application
 
         application = get_wsgi_application()
-        call_command('runserver', '--noreload')
+        call_command('runserver') # dev
         quit()
+    else:
+        # Production
+        from django.conf import settings
+        gunicorn_cmd = [
+            'gunicorn',
+            '-p', f'pid/{instance_name}.pid',
+            '--chdir', settings.BASE_DIR,
+            '-b', f'unix:/var/run/tfs_{instance_name}.sock',
+            #'-b', f'unix:/tmp/tfs_{instance_name}.sock',
+            'filesharing.wsgi'
+        ]
+        subprocess.call(gunicorn_cmd)
 
-    # Production
-    from django.conf import settings
-    gunicorn_cmd = [
-        'gunicorn',
-        '-p', 'tfs.pid',
-        '--chdir', settings.BASE_DIR,
-        'filesharing.wsgi'
-    ]
-    subprocess.call(gunicorn_cmd)
+        # Remove database at exit
+        os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
+
+        # Remove pid file
+        try:
+            os.remove(settings.BASE_DIR / f"pid/{instance_name}.pid")
+        except:
+            pass
 
 
 if __name__ == '__main__':
