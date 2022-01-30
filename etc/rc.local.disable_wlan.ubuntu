@@ -3,18 +3,38 @@
 # Added by TorBox
 sudo dmesg -D
 
+# Change the MAC address if needed
+for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
+	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=auto" /home/torbox/torbox/run/torbox.run ; then
+		sleep 1
+	else
+		MAC_ADDRESS=$(grep "MAC_$INTERFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+		if ip link show $INTERFACE | grep "state UP" ; then
+			sudo ip link set dev $INTERFACE down
+			sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+			sudo ip link set dev $INTERFACE up
+		elif ip link show $INTERFACE | grep "state DOWN" ; then
+			sudo ip link set dev $INTERFACE down
+			sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+		fi
+	fi
+done
+
+# Let's check if we can auto-connect to a wireless network
 if ip link | grep wlan0 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a
   sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" /home/torbox/torbox/run/torbox.run
   sleep 5
 fi
 
+# If a wireless USB dongle is available, let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
   sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
   sleep 5
 fi
 
+# If configured, turn TACA on
 if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
   sleep 5
@@ -24,6 +44,7 @@ sudo /home/torbox/torbox/run/start_tfs
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 sudo systemctl start dnsmasq
 sleep 10
-sudo /usr/sbin/ntpdate pool.ntp.org
-sleep 5
+if sudo timeout 5 sudo route | grep -m 1 default ; then
+	sudo /usr/sbin/ntpdate pool.ntp.org
+fi
 sudo systemctl stop dnsmasq

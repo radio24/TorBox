@@ -12,6 +12,7 @@ if [ "$_IP" ]; then
 fi
 
 # Added by TorBox
+# Change the MAC address if needed
 for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=auto" /home/torbox/torbox/run/torbox.run ; then
 		sleep 1
@@ -28,6 +29,7 @@ for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
 	fi
 done
 
+# To set TorBox's AP is dangerous and may look someone out. We change that back to wlan0
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1
@@ -44,12 +46,14 @@ if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wl
   sleep 5
 fi
 
+# If a wireless USB dongle is available, let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 | grep "state DOWN" ; then
   sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a
   sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
   sleep 5
 fi
 
+# If configured, turn TACA on
 if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
   sleep 5
