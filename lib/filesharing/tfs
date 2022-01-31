@@ -139,11 +139,21 @@ def start_database(instance_name, BASE_DIR):
 
 def restart_database():
     """Remove all records except root path, then scan for files"""
+    # FIXME: check each file if exists don't remove
     from apps.filesharing.models import DownloadFileModel
     media_root = DownloadFileModel.objects.first()
     os.environ['MEDIA_ROOT'] = media_root.name
     for obj in DownloadFileModel.objects.all().exclude(pk=1):
         obj.delete()
+    
+    # Restart sequence
+    from django.db import connection
+    with connection.cursor() as cursor:
+        table = DownloadFileModel.objects.model._meta.db_table
+        sql = f"UPDATE SQLITE_SEQUENCE SET SEQ=1 WHERE NAME='{table}'"
+        cursor.execute(sql)
+    
+    # Re-scan directory
     scan_path(media_root.name, media_root)
 
 def run_webserver(instance_name, dev=True):
