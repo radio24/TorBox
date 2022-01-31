@@ -11,11 +11,8 @@ class Scheduler:
 
         # Tasks schedule
         scheduler.add_job(func=self.scan,
-                          trigger="cron",
-                          day_of_week="*",
-                          hour="*",
-                          minute="*",
-                          second="*/5")
+                          trigger="interval",
+                          seconds=5)
 
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())

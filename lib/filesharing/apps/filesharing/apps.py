@@ -1,3 +1,4 @@
+import os
 from django.apps import AppConfig
 
 
@@ -7,6 +8,7 @@ class FilesharingConfig(AppConfig):
 
     def ready(self):
         """Run tasks"""
-        from .tasks import Scheduler
-        tasks = Scheduler()
-        tasks.run_tasks()
+        if os.environ.get('RUN_SCHEDULER'):
+            from .tasks import Scheduler
+            tasks = Scheduler()
+            tasks.run_tasks()

@@ -147,6 +147,8 @@ def restart_database():
     scan_path(media_root.name, media_root)
 
 def run_webserver(instance_name, dev=True):
+    # only run scheduler with webserver, not before
+    os.environ['RUN_SCHEDULER'] = "True"
     if dev:
         # Dev
         from django.core.wsgi import get_wsgi_application
@@ -163,7 +165,8 @@ def run_webserver(instance_name, dev=True):
             '--chdir', settings.BASE_DIR,
             '-b', f'unix:/var/run/tfs_{instance_name}.sock',
             #'-b', f'unix:/tmp/tfs_{instance_name}.sock',
-            'filesharing.wsgi'
+            'filesharing.wsgi',
+            '--preload'
         ]
         subprocess.call(gunicorn_cmd)
 
