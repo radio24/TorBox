@@ -3,12 +3,9 @@
 
 import sys
 import os
-#os.environ['DJANGODIR'] = '/Users/cmartinez/dev/torbox/torbox-050/lib/filesharing'
 
 import django
 from django.core.management import call_command
-from django.core.files import File
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "filesharing.settings")
 
 import click
 import subprocess
@@ -155,7 +152,7 @@ def run_webserver(instance_name, dev=True):
         from django.core.wsgi import get_wsgi_application
 
         application = get_wsgi_application()
-        call_command('runserver') # dev
+        call_command('runserver', '--noreload') # dev
         quit()
     else:
         # Production
@@ -181,4 +178,5 @@ def run_webserver(instance_name, dev=True):
 
 
 if __name__ == '__main__':
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "filesharing.settings")
     main()
