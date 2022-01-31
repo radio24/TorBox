@@ -1,6 +1,8 @@
 import atexit
 import imp
 
+from django.conf import settings
+
 from apscheduler.schedulers.background import BackgroundScheduler
 
 class Scheduler:
@@ -19,5 +21,5 @@ class Scheduler:
         atexit.register(lambda: scheduler.shutdown())
     
     def scan(self):
-        tfs = imp.load_source('tfs', 'tfs')
+        tfs = imp.load_source('tfs', f'{settings.BASE_DIR}/tfs')
         tfs.restart_database()
