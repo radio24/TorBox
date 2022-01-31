@@ -359,18 +359,19 @@ configure_tfs()
 		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 		# Using the Anchor in torbox.run
 		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
-		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 0"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 0 -au 0"
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 0"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -ad 0 -au 0"
 		fi
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		#Start TFS
 		echo -e "${RED}[+] Starting TFS (up- and downloading prohibited)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 0 &
-		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 0 -au 0 &
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 0 &
+		else ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -ad 0 -au 0 &
 		fi
+		# FIXME: Cron not needed anymore
 		# Puting the rescan-cron job into place and restart cron
-		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
-		sudo systemctl restart cron
+		#sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		#sudo systemctl restart cron
 		sleep 5
 	elif [ "$allow_ud" == "1" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
@@ -378,18 +379,19 @@ configure_tfs()
 		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 		# Using the Anchor in torbox.run
 		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
-		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 1"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 0 -au 1"
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 0 -au 1"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -ad 0 -au 1"
 		fi
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		#Start TFS
 		echo -e "${RED}[+] Starting TFS (only for uploading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 1 &
-		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 0 -au 1 &
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 0 -au 1 &
+		else ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -ad 0 -au 1 &
 		fi
+		# FIXME: Cron not needed anymore
 		# Puting the rescan-cron job into place and restart cron
-		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
-		sudo systemctl restart cron
+		#sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		#sudo systemctl restart cron
 		sleep 5
 	elif [ "$allow_ud" == "2" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
@@ -397,18 +399,19 @@ configure_tfs()
 		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 		# Using the Anchor in torbox.run
 		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
-		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 0"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 1 -au 0"
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 0"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -ad 1 -au 0"
 		fi
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		# Start TFS
 		echo -e "${RED}[+] Starting TFS (only for downloading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 0 &
-		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 1 -au 0 &
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 0 &
+		else ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -ad 1 -au 0 &
 		fi
+		# FIXME: Cron not needed anymore
 		# Puting the rescan-cron job into place and restart cron
-		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
-		sudo systemctl restart cron
+		#sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		#sudo systemctl restart cron
 		sleep 5
 	elif [ "$allow_ud" == "3" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
@@ -416,18 +419,19 @@ configure_tfs()
 		TFS_PATH_STRING="$(<<< "$TFS_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
 		# Using the Anchor in torbox.run
 		REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
-		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 1"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -fp $TFS_PATH_STRING -ad 1 -au 1"
+		if [ ! -z "$TFS_MESSAGE" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE\" -ad 1 -au 1"
+		else TFS_STRING="\nTFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -ad 1 -au 1"
 		fi
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		#Start TFS
 		echo -e "${RED}[+] Starting TFS (only for up- and downloading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 1 &
-		else ./lib/filesharing/tfs -fp $TFS_PATH -ad 1 -au 1 &
+		if [ ! -z "$TFS_MESSAGE" ]; then ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -ad 1 -au 1 &
+		else ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -ad 1 -au 1 &
 		fi
+		# FIXME: Cron not needed anymore
 		# Puting the rescan-cron job into place and restart cron
-		sudo cp etc/cron.d/tfs-rescan /etc/cron.d
-		sudo systemctl restart cron
+		#sudo cp etc/cron.d/tfs-rescan /etc/cron.d
+		#sudo systemctl restart cron
 		sleep 5
 	fi
 }
@@ -831,7 +835,8 @@ case "$CHOICE" in
                   sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
                 fi
 								sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
-								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+								# FIXME: Cron not needed anymore
+								#(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
                 echo ""
                 echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
                 echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
@@ -1400,7 +1405,8 @@ case "$CHOICE" in
 						if ls "${NGINX_DIR}/sites-enabled/" | grep "\-onion-filesharing.conf"; then
 							if (whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE IT" --yesno "\nThere is already a TFS configuration in the TorBox run-file. Probably, you configured already TFS on an Onion domain but deactivated the corresponding Onion Service. You can try to reactivate the Onion Services by using menu entry 2 or try to restart TFS in the TFS-sub-menu, including the TFS. In this case, choose \"DON'T CHANGE\".\n\nIf you don't know anything about a past TFS configuration and only want that the new configuration works, select \"DELETE IT\".\n\nCurrently, only one TFS instance can be started. TFS will be developed further. Please go to TorBox's GitHub page and tell us what you want to see in the next version: https://github.com/radio24/TorBox" $MENU_HEIGHT_20 $MENU_WIDTH); then
 								sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
-								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+								# FIXME: Cron not needed anymore
+								#(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 							else
 								trap "bash menu-onion; exit 0" EXIT
 								exit 1
@@ -1559,7 +1565,8 @@ case "$CHOICE" in
 										fi
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
-										(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+										# FIXME: Cron not needed anymore
+										#(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 										clear
 										if pgrep -f "filesharing.wsgi"; then
 											clear
@@ -1620,7 +1627,8 @@ case "$CHOICE" in
 							echo ""
 						fi
 						sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
-						(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+						# FIXME: Cron not needed anymore
+						#(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 						sleep 5
 						echo ""
 						echo -e "${RED}[+]Removing Nginx configuration...${NOCOLOR}"
@@ -1830,9 +1838,10 @@ case "$CHOICE" in
 									TFS_CONFIG_STRING="$(<<< "$TFS_CONFIG" sed -e 's`[][\\/.*^$]`\\&`g')"
 									REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" "torbox/${RUNFILE}")
 									sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING\n$TFS_CONFIG_STRING/g" "torbox/${RUNFILE}"
+									# FIXME: Cron not needed anymore
 									# Puting the rescan-cron job into place and restart cron
-									sudo cp torbox/etc/cron.d/tfs-rescan /etc/cron.d
-									sudo systemctl restart cron
+									#sudo cp torbox/etc/cron.d/tfs-rescan /etc/cron.d
+									#sudo systemctl restart cron
 								fi
               	echo -e "${RED}[+] Moving Nginx configuration...${NOCOLOR}"
                 (sudo mv "restore.tbx${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2> /dev/null
