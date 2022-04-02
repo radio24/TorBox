@@ -32,7 +32,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=12
+NO_ITEMS=13
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=2
@@ -936,6 +936,9 @@ case "$CHOICE" in
 	#HAS TO BE REMOVED WITH TORBOX051
 	10)
   	deactivate_obfs4_bridges
+		echo -e "${RED} ${NOCOLOR}"
+		echo -e "${WHITE}[+] The OBFS4 mode was forcefully deactivated!${NOCOLOR}"
+		sleep 5
 	;;
 
 	# Rerun the "first-use" script
