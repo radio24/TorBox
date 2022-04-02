@@ -22,8 +22,8 @@ For more options see
 Usage: twebssh [OPTIONS]
 
 Options:
-  -s, --unix-socket TEXT  Unix socket path
-  -w, --wifi BOOLEAN      TorBox inet from wifi Default: 1
+  --unix-socket TEXT  Unix socket path
+  --wifi BOOLEAN      TorBox inet from wifi Default: 1
   --help                  Show this message and exit.
 ```
 
