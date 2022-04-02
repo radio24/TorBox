@@ -233,7 +233,7 @@ case "$CHOICE" in
     fi
     if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
       INPUT=$(cat text/activate-bridges-text)
-      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo bash bridges_activate_old
       else
         trap "bash menu-bridges; exit 0" EXIT

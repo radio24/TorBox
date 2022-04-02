@@ -126,7 +126,7 @@ case "$CHOICE" in
         fi
         j=0
         if [ $bridge_status == 1 ]; then
-          j=$((i+1))
+          j=$((j+1))
           echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
           #This is necessary to work with special characters in sed
           ORIGINAL_STR="#Bridge $bridge_address"
