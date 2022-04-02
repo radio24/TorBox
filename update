@@ -936,6 +936,7 @@ case "$CHOICE" in
 	#HAS TO BE REMOVED WITH TORBOX051
 	10)
   	deactivate_obfs4_bridges
+		restarting_tor update
 		echo -e "${RED} ${NOCOLOR}"
 		clear
 		echo -e "${WHITE}[+] The OBFS4 mode was forcefully deactivated!${NOCOLOR}"
