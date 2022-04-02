@@ -17,7 +17,7 @@ TorBox WebSSH will run by default in 192.168.42.1 which is default TorBox wlan's
 For more options see
 
 ```
-./tfs --help
+./webssh --help
 
 Usage: twebssh [OPTIONS]
 
