@@ -46,9 +46,9 @@
 # If <incoming interface 2> is not used, the default should be "eth0".
 #
 # Possible values for <captive portal>:
-# 0	->	The network connection is open -- no login/password/phone number etc. is required.
-# 1	->	For a sucessful connection to the Internet login/password/phone number etc. is required (this is usually the case
-#       with provider of free wireless network access in hotels, airports, Internet cafées etc.).
+# 0	-> The network connection is open -- no login/password/phone number etc. is required.
+# 1	-> To pass through the Captive Portal the TUNNELING method is used.
+# 2 -> To pass through the Captive Portal the SPOOFING method is used.
 #
 # Possible values for <restarting_tor>:
 # 0	->	Don't restart tor.
@@ -89,38 +89,6 @@ EXITLOOP=0
 #include lib
 .  lib/torbox.lib
 
-# This function pass through Captive Portals using the SPOOFING nethod
-captive_spoofing()
-{
-	MAC_ADDRESS=$(whiptail --title "TorBox - INFO" --inputbox "\n\nPlease enter the MAC address of the device which already passed the Captive Portal (e.g.: 8B-C2-CC-28-6A-97; for more information check https://www.torbox.ch/?page_id=2627):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-	if [ ! -z "${MAC_ADDRESS}" ]; then
-		[[ "$MAC_ADDRESS" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_CHECK="valid" || MAC_CHECK="invalid"
-		if [ "$MAC_CHECK" == "invalid" ]; then
-			clear
-			echo -e "${WHITE}[!] THIS IS NOT A VALID MAC ADDRESS!${NOCOLOR}"
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-			exit 0
-		fi
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "\nDo you want to store the MAC address so that it will be used on $O_DEVICE everytime TorBox is rebooted?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-			sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
-		fi
-		sudo ip link set dev $O_DEVICE down
-		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
-		sudo ip link set dev $O_DEVICE up
-		sleep 2
-		EXITLOOP=1
-	else
-		clear
-		echo -e "${WHITE}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"
-		echo -e "${RED}[+] We will switch to the TUNNELING method!${NOCOLOR}"
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		CAPTIVE=1
-	fi
-}
-
 # This function pass through Captive Portals using the TUNNELING nethod
 captive_tunneling()
 {
@@ -150,7 +118,7 @@ captive_tunneling()
 captive_eth()
 {
 	if [ $CAPTIVE = 2 ]; then
-		captive_spoofing
+		sudo bash change_MAC $O_DEVICE 3
 	fi
 	if [ $CAPTIVE = 1 ]; then
 		captive_tunneling
@@ -169,7 +137,7 @@ while [ $EXITLOOP == 0 ]; do
 		captive_eth
 	elif [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
 		if [ $CAPTIVE = 2 ]; then
-			captive_spoofing
+			sudo bash change_MAC $O_DEVICE 3
 		fi
 		clear
 		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"

@@ -114,7 +114,7 @@ ask_captive()
 	clear
 	sudo rm nohup.out
 	INPUT=$(cat text/captive_or_not-text)
-	if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+	if (whiptail --title "TorBox - INFO" --defaultno --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 		INPUT=$(cat text/captive_portal-text)
 		if (whiptail --title "TorBox - INFO" --no-button "TUNNELING" --yes-button "SPOOFING" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			CAPTIVE=2

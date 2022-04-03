@@ -1,0 +1,246 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2022 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file changes the MAC adress of TorBox's interfaces. Possible
+# settings are:
+# - random for randomizing the MAC (this is the default)
+# - permanent for using the permanent, unique MAC address of the interface
+# - xx:xx:xx:xx:xx:xx for using a specifig MAC address (for example for
+#   passing through a captive portal)
+#
+# SYNTAX
+# ./change_MAC [<interface>] [<how_to_change>]
+#
+# The <interface> is the interface on which the MAC address should be changed (wlan0, wlan1, eth0, eth1).
+#
+# With <how_to_change> the way of changing the MAC address can be defined. Possible values for <how_to_change> are:
+# 1 - randomize
+# 2 - reset to the permanent, unique MAC address
+# 3 - use a a specifig MAC address
+#
+#
+###### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_15=15
+MENU_HEIGHT_25=25
+#
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+#
+#Other variables
+RUNFILE="run/torbox.run"
+CHOICE=$1
+CHOICE2=$2
+
+##############################
+######## FUNCTIONS ########
+
+# This function randomize, resets or changes the MAC address of an interface.
+change_mac_address()
+{
+	exitstatus=0
+	if [ -z "$CHOICE2" ]; then
+		INPUT="TorBox v.0.5.0 - Change the MAC address for $O_DEVICE"
+		CHOICE2=$(whiptail --nocancel --title "$INPUT" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" 9 $MENU_WIDTH 3 \
+		"1" "Randomize the MAC addresse(s)" ON \
+		"2" "Use the permanent, unique MAC address of the interface(s)" OFF \
+		"3" "Use a a specifig MAC address for the selected interface(s)" OFF \
+		3>&1 1>&2 2>&3)
+		exitstatus=$?
+	fi
+
+	# macchanger has to be installed
+	if [ $exitstatus = 0 ]; then
+		case $CHOICE2 in
+			1)
+				MAC_ADDRESS="random"
+				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
+				clear
+				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+				sudo ip link set dev $O_DEVICE down
+				echo -e "${RED}[+] Randomizing MAC address...${NOCOLOR}"
+				echo
+				sudo macchanger -r $O_DEVICE
+				echo
+				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+				sudo ip link set dev $O_DEVICE up
+			;;
+			2)
+				MAC_ADDRESS="permanent"
+				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
+				clear
+				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+				sudo ip link set dev $O_DEVICE down
+				echo -e "${RED}[+] Resetting MAC address...${NOCOLOR}"
+				echo
+				sudo macchanger -p $O_DEVICE
+				echo
+				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+				sudo ip link set dev $O_DEVICE up
+			;;
+			3)
+				OLD_MAC_ADDRESS="MAC_${O_DEVICE}"
+				[[ "${!OLD_MAC_ADDRESS}" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_ADDRESS="${!OLD_MAC_ADDRESS}" || MAC_ADDRESS=""
+			 	MAC_ADDRESS=$(whiptail --title "TorBox - INFO" --inputbox "\n\nPlease enter the MAC address of the device which already passed the Captive Portal (e.g.: 8B-C2-CC-28-6A-97; for more information check https://www.torbox.ch/?page_id=2627):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $MAC_ADDRESS 3>&1 1>&2 2>&3)
+			 	if [ ! -z "${MAC_ADDRESS}" ]; then
+				 	[[ "$MAC_ADDRESS" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_CHECK="valid" || MAC_CHECK="invalid"
+				 	if [ "$MAC_CHECK" == "invalid" ]; then
+					 	clear
+					 	echo -e "${WHITE}[!] THIS IS NOT A VALID MAC ADDRESS!${NOCOLOR}"
+					 	echo ""
+					 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					 	clear
+					 	exit 0
+				 	fi
+				 	sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
+					clear
+					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+			 	 	sudo ip link set dev $O_DEVICE down
+					echo -e "${RED}[+] Setting MAC address to $MAC_ADDRESS ${NOCOLOR}"
+			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
+					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+			 		sudo ip link set dev $O_DEVICE up
+				else
+					clear
+					echo -e "${WHITE}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"
+					echo " "
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					exit 1
+				fi
+			;;
+
+			*)
+				clear
+				exit 0
+		esac
+		CHOICE2=$2
+	fi
+}
+
+# This function restarts hostapd or asks for reselecting the Internet source in the main menu.
+change_mac_address_finish()
+{
+	if [[ "$CLIENT_IFACE" == "$O_DEVICE" ]]; then
+		echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
+		sudo systemctl restart hostapd
+	elif [[ "$INTERNET_IFACE" == "$O_DEVICE" ]]; then
+		echo
+		echo -e "${WHITE}[!] YOU MUST RECONNECT TO THE INTERNET IN THE MAIN MENU!${NOCOLOR}"
+	fi
+	echo " "
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+}
+
+if [ -z "$CHOICE" ]; then
+	INPUT=$(cat text/help-change-MAC)
+	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then sleep 1; else exit 0; fi
+fi
+
+# Read interfaces from run/torbox.run
+CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2> /dev/null
+INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2> /dev/null
+MAC_eth0=$(grep "^MAC_eth0=" ${RUNFILE} | sed "s/MAC_eth0=//g") 2> /dev/null
+MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2> /dev/null
+MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2> /dev/null
+MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2> /dev/null
+	###### DISPLAY THE AVAILABLE INTERFACES ######
+if [ -z "$CHOICE" ]; then
+	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+	"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
+	"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
+	"3" "Change the Ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
+	"4" "Change the Ethernet interface 1 (USB adapter; eth1)" OFF \
+	3>&1 1>&2 2>&3)
+	if [ ! -z "$CHOICE" ]; then mapfile -t CHOICE <<< "$CHOICE" else exit 1; fi
+else
+	if [[ "$CHOICE" == "wlan0" ]]; then CHOICE=1
+	elif [[ "$CHOICE" == "wlan1" ]]; then CHOICE=2
+	elif [[ "$CHOICE" == "eth0" ]]; then CHOICE=3
+	elif [[ "$CHOICE" == "eth1" ]]; then CHOICE=4
+	fi
+fi
+AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}')
+clear
+for ARGUMENT in "${CHOICE[@]}"; do
+	[ -z "$ARGUMENT" ] && exit 0
+	case $ARGUMENT in
+		1)
+			O_DEVICE="wlan0"
+			if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+				change_mac_address
+				if [ -z "$2" ]; then
+					change_mac_address_finish
+				fi
+			else
+				clear
+				echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			fi
+		;;
+		2)
+			O_DEVICE="wlan1"
+			if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+				change_mac_address
+				if [ -z "$2" ]; then
+					change_mac_address_finish
+				fi
+			else
+				clear
+				echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			fi
+		;;
+		3)
+			O_DEVICE="eth0"
+			if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+				change_mac_address
+				if [ -z "$2" ]; then
+					change_mac_address_finish
+				fi
+			else
+				clear
+				echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			fi
+		;;
+		4)
+			O_DEVICE="eth1"
+			if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+				change_mac_address
+				if [ -z "$2" ]; then
+					change_mac_address_finish
+				fi
+			else
+				clear
+				echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			fi
+		;;
+	esac
+done
