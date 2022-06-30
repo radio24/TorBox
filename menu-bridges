@@ -131,33 +131,33 @@ read_config()
   fi
 
   # Is the automatic counteractions feature activated?
-    if pgrep -f "log_check.py"; then
-      clear
-      LOGCHECK="Deactivate"
-      LOGCHECKSTATUSb="ON"
-    else
-      clear
-      LOGCHECK="Activate"
-      LOGCHECKSTATUSb="OFF"
-    fi
-
-    # Is the Countermeasure against a tightly configured firewall active?
-    MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
+  if pgrep -f "log_check.py"; then
     clear
-    if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
-      FIREWALL="ON"
-    else
-      FIREWALL="OFF"
-    fi
+    LOGCHECK="Deactivate"
+    LOGCHECKSTATUSb="ON"
+  else
+    clear
+    LOGCHECK="Activate"
+    LOGCHECKSTATUSb="OFF"
+  fi
+
+  # Is the Countermeasure against a tightly configured firewall active?
+  MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
+  clear
+  if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
+    FIREWALL="ON"
+  else
+    FIREWALL="OFF"
+  fi
 
   # Is the Countermeasure against a disconnection when idle feature active?
-    if pgrep -f "ping -q $PING_SERVER" ; then
-      clear
-      PING="ON"
-    else
-      clear
-      PING="OFF"
-    fi
+  if pgrep -f "ping -q $PING_SERVER" ; then
+    clear
+    PING="ON"
+  else
+    clear
+    PING="OFF"
+  fi
 
   # Is the Countermeasure against attacks to deanonymize server location active?
   VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
@@ -168,6 +168,10 @@ read_config()
     VANGUARDS="Activate"
     VANGUARDSSTATUSb="OFF"
   fi
+
+	# Is the OBFS4 Bridge Relay running?
+	MODE_BR=$(grep "^BridgeRelay" ${TORRC})
+	if [ "$MODE_BR" = "BridgeRelay 1" ]; then TOGGLE07b="ON"; else TOGGLE07b="OFF"; fi
 
   # number_of_bridges()
   # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
@@ -423,6 +427,12 @@ case "$CHOICE" in
     # Countermeasure against a tightly configured firewall
     12)
       if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
+				if [ "$TOGGLE07b" = "ON" ]; then
+					INPUT="\n\nTo activate the countermeasure against tightly configured firewalls, you have first to DEACTIVATE OBFS4 Bridge Relay Mode in the OBFS4 Bridge Relay sub-menu. You can not run both settings simultaneously!"
+					whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+					trap "bash menu-bridges; exit 0" EXIT
+					exit 1
+				fi
         INPUT=$(cat text/firewall-text-on)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}

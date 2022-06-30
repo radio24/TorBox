@@ -40,6 +40,7 @@ NO_SPACER=4
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
@@ -53,7 +54,7 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-BACKUP_DIR="~/backup"
+BACKUP_DIR="$HOME/backup"
 
 ##############################
 ######## FUNCTIONS ########
@@ -94,6 +95,15 @@ sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
 sNICK=$(cut -d ' ' -f2 <<< $NICK)
 sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
 }
+
+# Is the Countermeasure against a tightly configured firewall active?
+MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
+clear
+if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
+	FIREWALL="ON"
+else
+	FIREWALL="OFF"
+fi
 
 # This function changes the configuration and, if necessary, restarts tor
 change_config()
@@ -154,7 +164,13 @@ case "$CHOICE" in
   # Toggle Bridge Relay Mode ON or OFF
   2)
     if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-      if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+      if [ "$FIREWALL" = "ON" ]; then
+				INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the countermeasure against tightly configured firewalls in the countermeasure sub-menu. You can not run both settings simultaneously!"
+        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
+			fi
+			if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
         INPUT=$(cat text/activate-bridge_server-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
@@ -173,8 +189,8 @@ case "$CHOICE" in
           fi
         fi
       else
-        INPUT="\n\nTo activate the Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. It makes no sense to use both at the same time!"
-        whiptail --title "TorBox - INFO" --msgbox "$INPUT" 20 $MENU_WIDTH
+        INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. You can not run both settings simultaneously!"
+        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
       fi
     else
       INPUT=$(cat text/deactivate-bridge_server-text)
@@ -191,14 +207,14 @@ case "$CHOICE" in
   # Check and/or change the configuration
   3)
     INPUT="\nThis is the configuration of your Bridge Relay (default values in brackets):\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to change the configuration?"
-    if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
-      nORPORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (ENTER -> $sORPORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      nORPORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (ENTER -> $sORPORT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nORPORT" ] && nORPORT=$sORPORT
       nOBFS4PORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (ENTER -> $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      [ -z "$nOBFS4PORT" ] && nOBFS4PORT=$sOBSF4PORT
-        nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      [ -z "$nOBFS4PORT" ] && nOBFS4PORT=$sOBFS4PORT
+      nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
-      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration of the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
 "ANY" "Let BridgeDB decide about the distribution method (default)" ON \
 "HTTPS" "Distributed through the bridge website" OFF \
@@ -216,7 +232,7 @@ case "$CHOICE" in
   # Reset configuration to default
   4)
     INPUT="\nThis is the configuration of your Bridge Relay:\n\n$ACTIVATED\nORPort is set to (4235): $sORPORT\nOBSF4Port is set to (443): $sOBFS4PORT\nYour contact email is set to: $sCONTACT\nYour nickname is set to: $sNICK\nThe distribution method is set to: $sBRIDGEDISTRIBUTION\n\nWould you like to reset the configuration to the default values?"
-    if (whiptail --defaultno --yesno "$INPUT" 20 $MENU_WIDTH); then
+    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       nORPORT="4235"
       nOBFS4PORT="443"
       nCONTACT="<address@email.com>"
@@ -292,12 +308,21 @@ case "$CHOICE" in
         fi
       fi
       sleep 2
+			echo ""
       restarting_tor menu-server
     fi
   ;;
 
   # Backup the configuration
   8)
+		if sudo [ ! -f "/var/lib/tor/hashed-fingerprint" ]; then
+			clear
+			echo -e "${WHITE}[!] NO OBFS4 Bridge Relay configuration to backup!!${NOCOLOR}"
+			sleep 5
+			clear
+			trap "bash menu-server; exit 0" EXIT
+			exit 1
+		fi
     INPUT=$(cat text/backup-bridge_relay_conf-text)
     if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       clear
@@ -306,7 +331,7 @@ case "$CHOICE" in
       if [ ! -d "$BACKUP_DIR" ]; then
         mkdir $BACKUP_DIR
       fi
-      sudo tar -cpvzf ${BACKUP_DIR}/torbox_bridge_relay_${sNICK}.tgz /var/lib/tor/fingerprint /var/lib/tor/hashed-fingerprint /var/lib/tor/keys /var/lib/tor/pt_state /etc/tor/torrc
+      (sudo tar -cpzf ${BACKUP_DIR}/torbox_bridge_relay_${sNICK}.tgz /var/lib/tor/fingerprint /var/lib/tor/hashed-fingerprint /var/lib/tor/keys /var/lib/tor/pt_state /etc/tor/torrc) 2> /dev/null
       sleep 2
     fi
   ;;
@@ -359,11 +384,15 @@ case "$CHOICE" in
         sleep 1
         change_config
       else
-        clear
-        echo -e "${WHITE}[!] File not found or not specified!!"
-        echo -e "${RED}[+]Did you enter the right filename with the right extension?${NOCOLOR}"
-        cd torbox
-        sleep 2
+				cd torbox
+				clear
+				echo -e "${WHITE}[!] File not found or not specified!!"
+				echo -e "${RED}[+] Did you put the backup-file into the home directory?${NOCOLOR}"
+        echo -e "${RED}[+] Did you enter the right filename with the right extension?${NOCOLOR}"
+				sleep 5
+				clear
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
       fi
     fi
   ;;

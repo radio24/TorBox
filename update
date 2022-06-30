@@ -551,7 +551,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU
 " 8" "Reset Tor and force a change of the permanent entry node" \
 " 9" "Restart TFS and/or Nginx to re-share on an Onion domain" \
 "10" "Force to deactivate the OBFS4 mode" \
-"11" "Rerun the \"first-use\" script" \
+"11" "Rerun the \"First Start-up\" script" \
 "12" "Erase all log files" \
 "13" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
@@ -924,7 +924,7 @@ case "$CHOICE" in
 		# shellcheck disable=SC2062
 		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		echo ""
-		echo -e "${RED}[+] Startiong TFS and/or Nginx again...${NOCOLOR}"
+		echo -e "${RED}[+] Starting TFS and/or Nginx again...${NOCOLOR}"
 		sudo ./run/start_tfs
 		sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
 		echo ""
@@ -941,7 +941,7 @@ case "$CHOICE" in
 		sleep 5
 	;;
 
-	# Rerun the "first-use" script
+	# Rerun the "fFirst Start-up" script
 	11)
   	clear
 		./first_use 3

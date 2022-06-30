@@ -509,7 +509,7 @@ else
   " 2" "Toggle Onion Service Mode from $TOGGLE16b to $TOGGLE17b"  \
   " 3" "Create or reactivate an Onion Service"  \
   " 4" "List all Onion Services"  \
-  " 5" "Delete or deactivate an Onion Services"  \
+  " 5" "Delete or deactivate an Onion Service"  \
   " 6" "Enter the advanced tor configuration editor"  \
   "==" "===================================[Control client's access]==="  \
   " 7" "Generate a new key pair (public and private key) for a client"  \
@@ -783,7 +783,7 @@ case "$CHOICE" in
     done
   ;;
 
-  # Delete or deactivate Onion Services
+  # Delete or deactivate Onion Service
   5)
     create_service_list
 		error_no_onion_service
