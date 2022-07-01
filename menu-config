@@ -197,7 +197,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - CONFIGURATION
 " 5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
 " 6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 " 7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-" 8" "Change/randomize the MAC adresses of TorBox's interfaces" \
+" 8" "Change/randomize/list the MAC adresses of TorBox's interfaces" \
 " 9" "$TOGGLE08 TorBox's WLAN"  \
 "10" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
@@ -604,7 +604,10 @@ case "$CHOICE" in
   ;;
 
 	# Change / randomize the MAC adresses of TorBox's interfaces
-  8) bash change_MAC;;
+  8)
+		INPUT=$(cat text/help-change-MAC)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash change_MAC; fi
+	;;
 
   #This hides / unhides the WLAN
   9)
