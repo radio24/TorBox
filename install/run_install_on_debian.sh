@@ -1099,9 +1099,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			./raspi64.sh
+			./ARM64_RPI.sh
 		else
-	 	./raspi32.sh
+	 	./ARM_RPI.sh
  	fi
 	fi
 	./install-rtl8812au.sh
@@ -1120,9 +1120,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			./raspi64.sh
+			./ARM64_RPI.sh
 		else
-	 	./raspi32.sh
+	 	./ARM_RPI.sh
  	fi
 	fi
 	./install-rtl8814au.sh
@@ -1141,9 +1141,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			./raspi64.sh
+			./ARM64_RPI.sh
 		else
-	 	./raspi32.sh
+	 	./ARM_RPI.sh
  	fi
 	fi
 	./install-rtl8821au.sh
@@ -1156,20 +1156,20 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821cu.git
-	cd 8821cu
+	git clone https://github.com/morrownr/8821cu-20210118.git
+	cd 8821cu-20210118
 	cp ~/torbox/install/Network/install-rtl8821cu.sh .
 	chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			./raspi64.sh
+			./ARM64_RPI.sh
 		else
-	 	./raspi32.sh
+	 	./ARM_RPI.sh
  	fi
 	fi
 	./install-rtl8821cu.sh
 	cd ~
-	rm -r 8821cu
+	rm -r 8821cu-20210118
 	sleep 2
 
 	# Installing the RTL88x2BU
@@ -1183,9 +1183,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			./raspi64.sh
+			./ARM64_RPI.sh
 		else
-	 	./raspi32.sh
+	 	./ARM_RPI.sh
  	fi
 	fi
 	./install-rtl88x2bu.sh
