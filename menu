@@ -95,17 +95,36 @@ check_bridge_relay()
 # This function tests if TorBox's automatic counteractions are activated and still running
 check_log_check()
 {
-clear
-if pgrep -f "log_check.py"; then
-  clear
-else
-  clear
-  if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
-    clear
-    sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
-    sleep 1
-  fi
-fi
+	clear
+	if pgrep -f "log_check.py"; then
+  	clear
+	else
+  	clear
+  	if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
+    	clear
+    	sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
+    	sleep 1
+  	fi
+	fi
+}
+
+# This function asks if a Captive Portal is used and which method should be taken to pass through it
+ask_captive()
+{
+	clear
+	sudo rm nohup.out
+	INPUT=$(cat text/captive_or_not-text)
+	if (whiptail --title "TorBox - INFO" --defaultno --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		INPUT=$(cat text/captive_portal-text)
+		if (whiptail --title "TorBox - INFO" --no-button "TUNNELING" --yes-button "SPOOFING" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			CAPTIVE=2
+		else
+			CAPTIVE=1
+		fi
+	else
+		CAPTIVE=0
+	fi
+	sleep 2
 }
 
 ######## PREPARATIONS ########
@@ -206,15 +225,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
-      clear
-      sudo rm nohup.out
-      INPUT=$(cat text/captive_or_not-text)
-      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        CAPTIVE=1
-      else
-        CAPTIVE=0
-      fi
-      sleep 2
+			ask_captive
       if ip link | grep wlan0 | grep "state UP" ; then
         WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
         clear
@@ -282,15 +293,7 @@ case "$CHOICE" in
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-        clear
-        sudo rm nohup.out
-        INPUT=$(cat text/captive_or_not-text)
-        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          CAPTIVE=1
-        else
-          CAPTIVE=0
-        fi
-        sleep 2
+				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -362,15 +365,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
-      clear
-      sudo rm nohup.out
-      INPUT=$(cat text/captive_or_not-text)
-      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        CAPTIVE=1
-      else
-        CAPTIVE=0
-      fi
-      sleep 2
+			ask_captive
       if ip link | grep wlan1 | grep "state UP" ; then
         WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
         clear
@@ -437,15 +432,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-      clear
-      sudo rm nohup.out
-      INPUT=$(cat text/captive_or_not-text)
-      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        CAPTIVE=1
-      else
-        CAPTIVE=0
-      fi
-      sleep 2
+			ask_captive
       if ip link | grep usb0 ; then
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -584,15 +571,7 @@ case "$CHOICE" in
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
         (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-        clear
-        sudo rm nohup.out
-        INPUT=$(cat text/captive_or_not-text)
-        if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          CAPTIVE=1
-        else
-          CAPTIVE=0
-        fi
-        sleep 2
+				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -662,15 +641,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
       (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-      clear
-      sudo rm nohup.out
-      INPUT=$(cat text/captive_or_not-text)
-      if (whiptail --title "TorBox - INFO" --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        CAPTIVE=1
-      else
-        CAPTIVE=0
-      fi
-      sleep 2
+			ask_captive
       tun0up=$(ip link | grep tun0)
       if [ -z "$tun0up" ] ; then
         connecting_to_VPN

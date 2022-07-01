@@ -1468,7 +1468,7 @@ case "$CHOICE" in
 										fi
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "\nChoose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
 						     		" 1" "Allow uploading" ON \
 						     		" 2" "Allow downloading" ON \
 						     		3>&1 1>&2 2>&3)

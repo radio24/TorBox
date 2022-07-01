@@ -197,21 +197,22 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - CONFIGURATION
 " 5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
 " 6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 " 7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-" 8" "$TOGGLE08 TorBox's WLAN"  \
-" 9" "$TOGGLE09 TorBox's WLAN"  \
+" 8" "Change/randomize/list the MAC adresses of TorBox's interfaces" \
+" 9" "$TOGGLE08 TorBox's WLAN"  \
+"10" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
-"10" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
-"11" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-"12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"11" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"12" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"13" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"13" "Enter the advanced tor configuration editor"  \
+"14" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"14" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"15" "Erase all log files" \
+"15" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"16" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"16" "Support for Adafruit's PiTFT displays (reboot required)" \
-"17" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"18" "Support for Sixfab Shields/HATs for cellular connections" \
+"17" "Support for Adafruit's PiTFT displays (reboot required)" \
+"18" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"19" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 
@@ -602,8 +603,14 @@ case "$CHOICE" in
     read_config
   ;;
 
-  #This hides / unhides the WLAN
+	# Change / randomize the MAC adresses of TorBox's interfaces
   8)
+		INPUT=$(cat text/help-change-MAC)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash change_MAC; fi
+	;;
+
+  #This hides / unhides the WLAN
+  9)
     if [ "$TOGGLE08" = "Hide" ]; then
       INPUT=$(cat text/hide_wlan-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -639,7 +646,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables the WLAN
-  9)
+  10)
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
       if [ -z "$CABLE" ]; then
@@ -702,7 +709,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables SSH access through Internet
-  10)
+  11)
     if [ "$TOGGLE10" = "Enable" ]; then
       INPUT=$(cat text/ssh_i_access-on-txt)
       ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
@@ -741,7 +748,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables the access to the Tor control port from clients
-  11)
+  12)
     if [ "$TOGGLE14" = "Enable" ]; then
       INPUT=$(cat text/tor_control_port_enable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -766,7 +773,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables HTTP plain text traffic block
-  12)
+  13)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -799,7 +806,7 @@ case "$CHOICE" in
   ;;
 
 	# Enter the advanced configuration editor
-  13)
+  14)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -813,7 +820,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-  14)
+  15)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
       if [ $LOG_STATUS = inactive ]; then
@@ -846,14 +853,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-  15)
+  16)
     clear
     erase_logs
     sleep 2
   ;;
 
   #This is the support for Adafruit's PiTFT displays
-  16)
+  17)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
@@ -874,7 +881,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  17)
+  18)
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)
@@ -934,7 +941,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.0 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  18)
+  19)
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
