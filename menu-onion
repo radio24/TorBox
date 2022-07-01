@@ -618,6 +618,15 @@ case "$CHOICE" in
       SERVICE_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nName your onion service directory in one string and no space (e.g.: torbox.ch):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ ! -z "${SERVICE_NAME}" ]; then
+				if [ ! "${SERVICE_NAME%%*[^a-z0-9_.]*}" ]; then
+					clear
+					echo -e "${WHITE}[!] THE SERVICE NAME IS INVALID!!${NOCOLOR}"
+					echo -e "${RED}[+] The name can only contain characters in range of: 'a-z', 'A-Z', '_', '.'.${NOCOLOR}"
+					sleep 5
+					clear
+					trap "bash menu-onion; exit 0" EXIT
+					exit 1
+				fi
         UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
         if (grep "^HiddenServiceDir ${DATA_DIR_OS}/${SERVICE_NAME}" "${TORRC}"); then
           clear
