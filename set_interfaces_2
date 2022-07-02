@@ -47,7 +47,7 @@
 #
 # Possible values for <captive portal>:
 # 0	-> The network connection is open -- no login/password/phone number etc. is required.
-# 1	-> To pass through the Captive Portal the TUNNELING method is used.
+# 1	-> To pass through the Captive Portal the TUNNELLING method is used.
 # 2 -> To pass through the Captive Portal the SPOOFING method is used.
 #
 # Possible values for <restarting_tor>:
@@ -89,7 +89,7 @@ EXITLOOP=0
 #include lib
 .  lib/torbox.lib
 
-# This function pass through Captive Portals using the TUNNELING nethod
+# This function pass through Captive Portals using the TUNNELLING nethod
 captive_tunneling()
 {
 	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
@@ -114,7 +114,7 @@ captive_tunneling()
 	fi
 }
 
-# This function pass through Captive Portals on the Ethernet interface by using the SPOOFING or TUNNELING method
+# This function pass through Captive Portals on the Ethernet interface by using the SPOOFING or TUNNELLING method
 captive_eth()
 {
 	if [ $CAPTIVE = 2 ]; then

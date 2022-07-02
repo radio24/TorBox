@@ -25,7 +25,8 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Raspberry Pi OS lite.
+# Raspberry Pi OS lite. Please before starting the installation ensure that
+# the user account "torbox" is already created and that you are logged in as such.
 #
 # SYNTAX
 # ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
@@ -45,7 +46,7 @@
 # is ideal to find bugs.
 #
 # IMPORTANT
-# Start it as normal user (usually as pi)!
+# Start the insatllation as user "torbox""!
 # Dont run it as root (no sudo)!
 #
 ##########################################################
@@ -66,8 +67,7 @@
 # 13. Configure the system services
 # 14. Installing additional network drivers
 # 15. Updating run/torbox.run
-# 16. Adding and implementing the user torbox
-# 17. Finishing, cleaning and booting
+# 16. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -120,6 +120,7 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
+# NEW v.0.5.0 - Update 001: since Octobre 2021 out of date - will probably be removed in v.0.5.1
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
@@ -128,9 +129,6 @@ FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 # Connectivity check
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
-
-# Default password
-DEFAULT_PASS="CHANGE-IT"
 
 # Catching command line options
 OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
@@ -155,6 +153,8 @@ while true; do
 			echo "                        : Let select a specific TorBox branch (default: master)"
 			echo "         --step_by_step : Executes the installation step by step"
 			echo ""
+			echo "Please before starting the installation ensure that the user account \"torbox\" is already created"
+			echo "and that you are logged in as such."
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
 			exit 0
 	  ;;
@@ -494,7 +494,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\". The installation process runs almost without user interaction. There is only one exception: macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -610,6 +610,11 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
+sudo apt
+# NEW v.0.5.0 - Update 001: not nice, but working
+sudo apt -y --fix-broken install
+sudo dpkg -i wiringpi-latest.deb
+sudo apt
 sudo rm wiringpi-latest.deb
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -618,7 +623,6 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-# NEW v.0.5.0: New packages: Django, click, gunicorn
 # Additional installations for Python
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
@@ -961,19 +965,11 @@ echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 
-# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
 # Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
-echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
-# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-sleep 5
-(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 clear
 
 #Back to the home directory
@@ -1053,6 +1049,11 @@ echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
+# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+sleep 5
+(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
 sudo mkdir /var/lib/tor/services
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
@@ -1361,37 +1362,10 @@ sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 16. Adding the user torbox
-clear
-echo -e "${RED}[+] Step 16: Set up the torbox user...${NOCOLOR}"
-echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
-echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
-echo ""
-echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
-echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-echo ""
-sudo adduser --disabled-password --gecos "" torbox
-echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" | sudo passwd torbox
+echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo adduser torbox sudo
 sudo adduser torbox netdev
-# This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
-sudo mv /home/pi/* /home/torbox/
-(sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
 sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
   (sudo visudo -c) 2> /dev/null
@@ -1406,21 +1380,16 @@ else
 	sleep 10
 fi
 
-# 17. Finishing, cleaning and booting
+# 16. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
-echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
-echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"
-echo -e "${RED}[+]          If you don't need the \"pi\" account anymore, you can remove it with \"sudo userdel -r pi\".${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 15.${NOCOLOR}"
-echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
@@ -1450,13 +1419,18 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
+# NEW v.0.5.0 - Update 001
+# Disable auto-login
+echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
+sudo raspi-config nonint do_boot_behaviour B1
+echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 (sudo cp torbox/etc/hosts /etc/) 2> /dev/null
-echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
-echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
+echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+#echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
 # Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
@@ -1464,7 +1438,4 @@ echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 15.${NOCOLOR}"
-echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
-(sudo chage -E0 pi) 2> /dev/null
