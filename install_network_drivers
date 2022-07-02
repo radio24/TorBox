@@ -209,14 +209,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo ./install-rtl8812au.sh
 	cd ~
 	sudo rm -r 8812au-20210629
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
+	sleep 2
 
 	# Installing the RTL8814AU
 	clear
@@ -238,14 +231,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo ./install-rtl8814au.sh
 	cd ~
 	sudo rm -r 8814au
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
+	sleep 2
 
 # Installing the RTL8821AU
 	clear
@@ -266,14 +252,8 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo ./install-rtl8821au.sh
 	cd ~
 	sudo rm -r 8821au-20210708
+	sleep 2
 
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
 
 	# NEW v.0.5.0 - Update 001
 	# Installing the RTL8821CU
@@ -295,14 +275,8 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 		sudo ./install-rtl8821cu.sh
 		cd ~
 		sudo rm -r 8821cu-20210118
+		sleep 2
 
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 2
-		fi
 
 	# Installing the RTL88x2BU
 	clear
@@ -323,14 +297,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo ./install-rtl88x2bu.sh
 	cd ~
 	sudo rm -r 88x2bu-20210702
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
-	fi
+	sleep 2
 fi
 
 # For a Debian installation

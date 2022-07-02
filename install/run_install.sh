@@ -27,7 +27,6 @@
 # This script installs the newest version of TorBox on a clean, running
 # Raspberry Pi OS lite.
 #
-# NEW v.0.5.0: New options: [-h|--help] [--select-fork fork_owner_name] [--select-branch branch_name]
 # SYNTAX
 # ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
@@ -95,17 +94,15 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.0: new go versions
+# 	# NEW v.0.5.0 - Update 001: new go versions
 # Used go version
-GO_VERSION="go1.17.5.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.5.linux-arm64.tar.gz"
+GO_VERSION="go1.18.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.18.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
-# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
@@ -135,7 +132,6 @@ CHECK_URL2="https://google.com"
 # Default password
 DEFAULT_PASS="CHANGE-IT"
 
-# NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
 # Catching command line options
 OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
@@ -181,7 +177,6 @@ while true; do
   esac
 done
 
-# NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
 [ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
@@ -222,7 +217,6 @@ if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 ##############################
 ######## FUNCTIONS ###########
 
-# NEW v.0.5.0: check_install_packages
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax install_network_drivers <packagenames>
@@ -302,10 +296,8 @@ select_and_install_tor()
 		clear
 	fi
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
-# NEW v.0.5.0: ATTENTION! We used a wrong variable!! --> check in the other install scripts and in the update script!!
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
@@ -400,12 +392,12 @@ select_and_install_tor()
           	make
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
@@ -478,12 +470,12 @@ select_and_install_tor()
 				make
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 				sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
@@ -500,7 +492,6 @@ select_and_install_tor()
 	fi
 }
 
-# NEW v.0.5.0: new options
 ###### DISPLAY THE INTRO ######
 clear
 if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -512,7 +503,7 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-# NEW v.0.5.0: needs a sudo
+# Needs a sudo!
 (sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
@@ -588,13 +579,12 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-sudo systemctl stop tor
-sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
-sudo systemctl mask tor@default.service
+(sudo systemctl stop tor) 2> /dev/null
+(sudo systemctl mask tor) 2> /dev/null
+# Both tor services have to be masked to block outgoing tor connections
+(sudo systemctl mask tor@default.service) 2> /dev/null
 
-# NEW v.0.5.0: New packages: qrencode, nginx, basez, iptables
-# NEW v.0.5.0: Using the check_install_packages routine
+# NEW v.0.5.0 - Update 001: New packages: macchanger
 # Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -1151,6 +1141,14 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	sudo rm -r rtl8188eu
 	sleep 2
 
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
 	# NEW v.0.5.0 - Update 001
 	# Installing the RTL8188FU
 	clear
@@ -1166,6 +1164,14 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	sudo rm -r rtl8188fu*
 	sleep 2
 
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
 	# NEW v.0.5.0 - Update 001
 	# Installing the RTL8192EU
 	clear
@@ -1179,6 +1185,14 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	cd ~
 	sudo rm -r rtl8192eu-linux
 	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
 
 	# NEW v.0.5.0 - Update 001
 	# Installing the RTL8812AU
