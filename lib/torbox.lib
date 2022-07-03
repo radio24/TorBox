@@ -320,7 +320,7 @@ restarting_tor()
   echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
   echo -e "    You can leave the progress report with CTRL-C."
   echo ""
-  trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
+	trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
   sudo systemctl restart tor &
   sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't"
 }
@@ -511,10 +511,17 @@ list_all_obfs4_bridges()
 # Dectivates OBFS4 if the number of activated obfs4 bridge entries in torrc is 0
 deactivate_obfs4_bridges()
 {
+	SOURCE_SCRIPT=$1
   sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
   sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+	INPUT=$(cat text/restart-tor-text)
+	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
+		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			restarting_tor $SOURCE_SCRIPT
+		fi
+	fi
 }
 
 # activate_obfs4_bridges(<source script>)
@@ -534,10 +541,10 @@ activate_obfs4_bridges()
     sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
     sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
     INPUT=$(cat text/restart-tor-bridges-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       restarting_tor $SOURCE_SCRIPT
     else
-      deactivate_obfs4_bridges
+      deactivate_obfs4_bridges NORESTART
     fi
   fi
 }

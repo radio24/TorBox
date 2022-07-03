@@ -68,7 +68,7 @@ i=0
 ######## FUNCTIONS ########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 ######## PREPARATIONS ########
 #
@@ -107,7 +107,7 @@ case "$CHOICE" in
     INPUT=$(cat text/delete-all-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL BRIDGES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
-        deactivate_obfs4_bridges
+        deactivate_obfs4_bridges NORESTART
         sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         clear
@@ -181,7 +181,7 @@ case "$CHOICE" in
         number_of_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges
+            deactivate_obfs4_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
             restarting_tor bridges_remove_old
@@ -254,7 +254,7 @@ case "$CHOICE" in
         number_of_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges
+            deactivate_obfs4_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
             restarting_tor bridges_remove_old

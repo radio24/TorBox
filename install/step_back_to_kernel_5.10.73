@@ -51,13 +51,14 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 # Commit hash from https://github.com/Hexxeh/rpi-firmware/commits/master
-COMMIT="dc6dc9bc6692d808fcce5ace9d6209d33d5afbac"
+# For newer builds see https://github.com/raspberrypi/rpi-firmware
+COMMIT="1597995e94e7ba3cd8866d249e6df1cf9a790e49"
 
 ##############################
 ######## FUNCTIONS ###########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 cd ~/torbox
 INPUT=$(cat text/step_back-text)

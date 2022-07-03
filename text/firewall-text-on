@@ -6,5 +6,8 @@ Activating the countermeasure against a tightly configured firewall takes
 care that tor uses only port 80 and 443 for its data stream, which should
 help with a tightly configured firewall.
 
+IMPORTANT: THIS CAN LEAD TO PROBLEMS IN CONNECTION WITH THE USE OF BRIDGES
+and DOESN'T WORK WITH AN OBFS4 BRIDGE RELAY simultaneously.
+
 Do you want to activate the countermeasure against a tightly configured
 firewall?

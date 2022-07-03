@@ -1,0 +1,7 @@
+There are two methods to pass through a CAPTIVE PORTAL: TUNNELLING or SPOOFING.
+
+TUNNELLING means that after a warning message, we will allow a client to directly access the CAPTIVE PORTAL login page to fill it out. This should whitelist the MAC address of the TorBox. However, depending on the configuration of the CAPTIVE PORTAL, this will not always work.
+
+SPOOFING means that you have to access the login page of the CAPTIVE PORTAL by a device of your choice, which is directly connected to the wireless network of the CAPTIVE PORTAL (not through the TorBox!). Afterwards, you have to provide TorBox with the MAC address of the device which passed through the CAPTIVE PORTAL. TorBox will then use that MAC address to pass through the already opened CAPTIVE PORTAL (for more information, see here: https://www.torbox.ch/?page_id=2627).
+
+Please choose the method to pass through a CAPTIVE PORTAL (generally speaking, SPOOFING works better):

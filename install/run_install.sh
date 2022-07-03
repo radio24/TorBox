@@ -25,9 +25,9 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Raspberry Pi OS lite.
+# Raspberry Pi OS lite. Please before starting the installation ensure that
+# the user account "torbox" is already created and that you are logged in as such.
 #
-# NEW v.0.5.0: New options: [-h|--help] [--select-fork fork_owner_name] [--select-branch branch_name]
 # SYNTAX
 # ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
@@ -46,7 +46,7 @@
 # is ideal to find bugs.
 #
 # IMPORTANT
-# Start it as normal user (usually as pi)!
+# Start the insatllation as user "torbox""!
 # Dont run it as root (no sudo)!
 #
 ##########################################################
@@ -67,8 +67,7 @@
 # 13. Configure the system services
 # 14. Installing additional network drivers
 # 15. Updating run/torbox.run
-# 16. Adding and implementing the user torbox
-# 17. Finishing, cleaning and booting
+# 16. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -95,17 +94,15 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.0: new go versions
+# 	# NEW v.0.5.0 - Update 001: new go versions
 # Used go version
-GO_VERSION="go1.17.5.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.5.linux-arm64.tar.gz"
+GO_VERSION="go1.18.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.18.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
-# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
@@ -123,6 +120,7 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
+# NEW v.0.5.0 - Update 001: since Octobre 2021 out of date - will probably be removed in v.0.5.1
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
@@ -132,10 +130,6 @@ FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
 
-# Default password
-DEFAULT_PASS="CHANGE-IT"
-
-# NEW v.0.5.0: New options: [-h|--help] [--select-branch branch_name]
 # Catching command line options
 OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
@@ -159,6 +153,8 @@ while true; do
 			echo "                        : Let select a specific TorBox branch (default: master)"
 			echo "         --step_by_step : Executes the installation step by step"
 			echo ""
+			echo "Please before starting the installation ensure that the user account \"torbox\" is already created"
+			echo "and that you are logged in as such."
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
 			exit 0
 	  ;;
@@ -181,7 +177,6 @@ while true; do
   esac
 done
 
-# NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
 [ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
@@ -222,7 +217,6 @@ if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 ##############################
 ######## FUNCTIONS ###########
 
-# NEW v.0.5.0: check_install_packages
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax install_network_drivers <packagenames>
@@ -302,10 +296,8 @@ select_and_install_tor()
 		clear
 	fi
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
-# NEW v.0.5.0: ATTENTION! We used a wrong variable!! --> check in the other install scripts and in the update script!!
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
@@ -400,12 +392,12 @@ select_and_install_tor()
           	make
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
@@ -478,12 +470,12 @@ select_and_install_tor()
 				make
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 				sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
@@ -500,10 +492,9 @@ select_and_install_tor()
 	fi
 }
 
-# NEW v.0.5.0: new options
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\". The installation process runs almost without user interaction. There is only one exception: macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -512,7 +503,7 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-# NEW v.0.5.0: needs a sudo
+# Needs a sudo!
 (sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 (sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 sleep 5
@@ -588,15 +579,14 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-sudo systemctl stop tor
-sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
-sudo systemctl mask tor@default.service
+(sudo systemctl stop tor) 2> /dev/null
+(sudo systemctl mask tor) 2> /dev/null
+# Both tor services have to be masked to block outgoing tor connections
+(sudo systemctl mask tor@default.service) 2> /dev/null
 
-# NEW v.0.5.0: New packages: qrencode, nginx, basez, iptables
-# NEW v.0.5.0: Using the check_install_packages routine
+# NEW v.0.5.0 - Update 001: New packages: macchanger
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -620,6 +610,9 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
+# NEW v.0.5.0 - Update 001: not nice, but working
+sudo apt -y --fix-broken install
+sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -628,7 +621,6 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-# NEW v.0.5.0: New packages: Django, click, gunicorn
 # Additional installations for Python
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
@@ -971,19 +963,11 @@ echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 
-# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
 # Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
-sudo cp etc/nginx/nginx.conf /etc/nginx/
+(sudo cp etc/nginx/nginx.conf /etc/nginx/) 2> /dev/null
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
-echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
-# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-sleep 5
-(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 clear
 
 #Back to the home directory
@@ -993,10 +977,10 @@ if ! grep "# Added by TorBox (002)" .profile ; then
 fi
 
 echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
+(sudo mkdir /var/lib/tor/services) 2> /dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
+(sudo mkdir /var/lib/tor/onion_auth) 2> /dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
 sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
@@ -1063,13 +1047,11 @@ echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
-sudo chown -R debian-tor:debian-tor /var/lib/tor/services
-sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
-sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-sudo chmod -R go-rwx /var/lib/tor/onion_auth
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www)
+# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+sleep 5
+(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1079,25 +1061,27 @@ else
 	sleep 10
 fi
 
-# NEW v.0.5.0: $kernelversion has to be unquoted - has to be changed in the install_network_drivers script
 # 14. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
-	path_8188eu="8188eu-drivers/"
-	filename_8188eu="8188eu-$kernelversion.tar.gz"
-	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
-	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
+	# Deactivated because no driver for new kernels available
+	#	path_8188eu="8188eu-drivers/"
+	#	filename_8188eu="8188eu-$kernelversion.tar.gz"
+	#	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
+	#	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
 
-	path_8188fu="8188fu-drivers/"
-	filename_8188fu="8188fu-$kernelversion.tar.gz"
-	text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
-	install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
+	# NEW v.0.5.0 - Update 001
+	# path_8188fu="8188fu-drivers/"
+	# filename_8188fu="8188fu-$kernelversion.tar.gz"
+	# text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
+	# install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
 
-	path_8192eu="8192eu-drivers/"
-	filename_8192eu="8192eu-$kernelversion.tar.gz"
-	text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
-	install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
+	# NEW v.0.5.0 - Update 001
+	# path_8192eu="8192eu-drivers/"
+	# filename_8192eu="8192eu-$kernelversion.tar.gz"
+	# text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
+	# install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
 
 	# Deactivated because no driver for new kernels available
 	#path_8192su="8192su-drivers/"
@@ -1105,20 +1089,19 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
 	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
-	path_8812au="8812au-drivers/"
-	filename_8812au="8812au-$kernelversion.tar.gz"
-	text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
-	install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
+	# NEW v.0.5.0 - Update 001
+	# Deactivated because no driver for new kernels available
+	#path_8812au="8812au-drivers/"
+	#filename_8812au="8812au-$kernelversion.tar.gz"
+	#text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
+	#install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
 
-	path_8821cu="8821cu-drivers/"
-	filename_8821cu="8821cu-$kernelversion.tar.gz"
-	text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
-	install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
-
-	path_8822bu="8822bu-drivers/"
-	filename_8822bu="8822bu-$kernelversion.tar.gz"
-	text_filename_8822bu="Realtek RTL8822BU Wireless Network Driver"
-	install_network_drivers $path_8822bu $filename_8822bu $text_filename_8822bu
+	# NEW v.0.5.0 - Update 001
+	# Deactivated because no driver for new kernels available
+	# path_8821cu="8821cu-drivers/"
+	# filename_8821cu="8821cu-$kernelversion.tar.gz"
+	# text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
+	# install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
 
 	# Deactivated because no driver for new kernels available
 	#path_mt7610="mt7610-drivers/"
@@ -1135,6 +1118,103 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
 	cd ~
 
+	# NEW v.0.5.0 - Update 001
+	# Installing the RTL8188EU
+	clear
+	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	cd ~
+	git clone https://github.com/lwfinger/rtl8188eu.git
+	cd rtl8188eu
+	make all
+	sudo make install
+	cd ~
+	sudo rm -r rtl8188eu
+	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
+	# NEW v.0.5.0 - Update 001
+	# Installing the RTL8188FU
+	clear
+	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	sudo dkms add ./rtl8188fu-arm
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu*
+	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
+	# NEW v.0.5.0 - Update 001
+	# Installing the RTL8192EU
+	clear
+	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/clnhub/rtl8192eu-linux.git
+	cd rtl8192eu-linux
+	sudo dkms add .
+	sudo dkms install rtl8192eu/1.0
+	cd ~
+	sudo rm -r rtl8192eu-linux
+	sleep 2
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
+	# NEW v.0.5.0 - Update 001
+	# Installing the RTL8812AU
+	clear
+	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au-20210629.git
+	cd 8812au-20210629
+	cp ~/torbox/install/Network/install-rtl8812au.sh .
+	chmod a+x install-rtl8812au.sh
+	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+		if uname -m | grep -q -E "arm64|aarch64"; then
+			sudo ./ARM64_RPI.sh
+		else
+	 	sudo ./ARM_RPI.sh
+ 		fi
+	fi
+	sudo ./install-rtl8812au.sh
+	cd ~
+	sudo rm -r 8812au-20210629
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 2
+	fi
+
 	# Installing the RTL8814AU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -1147,9 +1227,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		#This has to be checked
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			sudo ./raspi64.sh
+			sudo ./ARM64_RPI.sh
 		else
-	 	sudo ./raspi32.sh
+	 	sudo ./ARM_RPI.sh
  		fi
 	fi
 	sudo ./install-rtl8814au.sh
@@ -1169,16 +1249,15 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-# NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
 	cp ~/torbox/install/Network/install-rtl8821au.sh .
 	chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-			sudo ./raspi64.sh
+			sudo ./ARM64_RPI.sh
 		else
-	 	sudo ./raspi32.sh
+	 	sudo ./ARM_RPI.sh
  		fi
 	fi
 	sudo ./install-rtl8821au.sh
@@ -1193,21 +1272,49 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 		sleep 2
 	fi
 
+	# NEW v.0.5.0 - Update 001
+	# Installing the RTL8821CU
+		clear
+		echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+		echo -e " "
+		echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+		git clone https://github.com/morrownr/8821cu-20210118.git
+		cd 8821cu-20210118
+		cp ~/torbox/install/Network/install-rtl8821cu.sh .
+		chmod a+x install-rtl8821cu.sh
+		if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+			if uname -m | grep -q -E "arm64|aarch64"; then
+				sudo ./ARM64_RPI.sh
+			else
+		 	sudo ./ARM_RPI.sh
+	 		fi
+		fi
+		sudo ./install-rtl8821cu.sh
+		cd ~
+		sudo rm -r 8821cu-20210118
+
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		else
+			sleep 2
+		fi
+
 	# Installing the RTL88x2BU
 	clear
 	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-# NEW v.0.5.0: New path - has to be changed in the install_network_drivers script
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
 	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
 	chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
-		 	sudo ./raspi64.sh
+		 	sudo ./ARM64_RPI.sh
 		else
-			sudo ./raspi32.sh
+			sudo ./ARM_RPI.sh
  		fi
 	fi
 	sudo ./install-rtl88x2bu.sh
@@ -1246,37 +1353,8 @@ sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 16. Adding the user torbox
-clear
-echo -e "${RED}[+] Step 16: Set up the torbox user...${NOCOLOR}"
-echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
-echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
-echo ""
-echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
-echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-echo ""
-sudo adduser --disabled-password --gecos "" torbox
-echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" | sudo passwd torbox
-sudo adduser torbox sudo
-sudo adduser torbox netdev
-# This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
-sudo mv /home/pi/* /home/torbox/
-(sudo mv /home/pi/.profile /home/torbox/) 2> /dev/null
+echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
   (sudo visudo -c) 2> /dev/null
@@ -1291,21 +1369,16 @@ else
 	sleep 10
 fi
 
-# 17. Finishing, cleaning and booting
+# 16. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
-echo -e "${RED}[+]          For security reason, we will lock the \"pi\" account.${NOCOLOR}"
-echo -e "${RED}[+]          This can be undone with \"sudo chage -E-1 pi\" (with its default password).${NOCOLOR}"
-echo -e "${RED}[+]          If you don't need the \"pi\" account anymore, you can remove it with \"sudo userdel -r pi\".${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 15.${NOCOLOR}"
-echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
@@ -1335,13 +1408,18 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
+# NEW v.0.5.0 - Update 001
+# Disable auto-login
+echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
+sudo raspi-config nonint do_boot_behaviour B1
+echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname TorBox050) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 (sudo cp torbox/etc/hosts /etc/) 2> /dev/null
-echo -e "${RED}[+]Copied /etc/hosts -- backup done${NOCOLOR}"
-echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
+echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+#echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
 # Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
@@ -1349,7 +1427,4 @@ echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 15.${NOCOLOR}"
-echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
-(sudo chage -E0 pi) 2> /dev/null

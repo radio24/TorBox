@@ -52,7 +52,7 @@ RUNFILE="run/torbox.run"
 ######## FUNCTIONS ###########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # This function is used for the main program as a trap for CTRL-C
 # Syntax finish_default_obfs4_step1
@@ -82,7 +82,7 @@ finish_default_obfs4_step1()
  		 exit 0
  	 else
      INPUT=$(cat text/first_use-anti-firewall-text)
-     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
        sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
        clear
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"

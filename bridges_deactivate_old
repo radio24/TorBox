@@ -61,7 +61,7 @@ i=0
 ######## FUNCTIONS ########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 ######## PREPARATIONS ########
 #
@@ -107,10 +107,9 @@ case "$CHOICE" in
 
   # Deactivate ALL configured bridges
   1)
-    deactivate_obfs4_bridges
-    clear
-    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-    restarting_tor bridges_deactivate_old
+		sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+    deactivate_obfs4_bridges bridges_deactivate_old
+		clear
     exit 0
   ;;
 
@@ -160,12 +159,14 @@ case "$CHOICE" in
         clear
         number_of_bridges
         if [ $number_configured_bridges_activated = 0 ]; then
-          deactivate_obfs4_bridges
-          clear
-          sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-          restarting_tor bridges_deactivate_old
+			    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+					deactivate_obfs4_bridges bridges_deactivate_old
+					clear
+					exit 0
         else
+					sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
           activate_obfs4_bridges bridges_deactivate_old
+					clear
           exit 0
         fi
       fi
@@ -218,13 +219,15 @@ case "$CHOICE" in
       clear
       number_of_bridges
       if [ $number_configured_bridges_activated = 0 ]; then
-        deactivate_obfs4_bridges
-        clear
-        sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-        restarting_tor bridges_deactivate_old
+		    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+				deactivate_obfs4_bridges bridges_deactivate_old
+				clear
+				exit 0
       else
         if [ $j -gt 0 ]; then
+		    	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
           activate_obfs4_bridges bridges_deactivate_old
+					clear
           exit 0
         fi
       fi

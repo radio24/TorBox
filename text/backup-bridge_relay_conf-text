@@ -1,4 +1,4 @@
-This menu entry stores a backup of your OBFS4 BRIDGE RELAY configuration in /home/torbox/backup.
+This menu entry stores a backup of your OBFS4 BRIDGE RELAY configuration in a file in a directory called "backup" in your  home directory.
 
 You can access this backup file by downloading it from your TorBox by using an SFTP client (it uses the same login and password as your SSH client). Alternatively, you can retrieve the backup file by connecting an USB stick with your TorBox. You can mount the USB stick most probably by “sudo mount /dev/sda /mnt”, and then copy the backup file on your stick.
 
