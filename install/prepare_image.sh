@@ -37,7 +37,7 @@ NOCOLOR='\033[0m'
 ######## FUNCTIONS ###########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # Is the Snowflake client installed?
 if command -v snowflake-client &> /dev/null
@@ -45,7 +45,7 @@ then SNOWFLAKE="exists";
 else SNOWFLAKE="is missing"; fi
 
 # Is the automatic counteractions feature activated?
-if ps -ax | grep "[l]og_check.py" ; then
+if pgrep -f "log_check.py" ; then
   clear
   LOGCHECK="Activated!"
 else
@@ -91,7 +91,7 @@ else
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
-if [ grep -o "^ReachableAddresses " ${TORRC} | head -1; then
+if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
 	FIREWALL="Are running"
 else
 	FIREWALL="Are not running"
@@ -142,7 +142,7 @@ sudo systemctl stop tor
 sudo systemctl mask tor
 sudo systemctl mask tor@default.service
 echo -e "${RED}[+] Deactivating all bridges${NOCOLOR}"
-deactivate_obfs4_bridges
+deactivate_obfs4_bridges NORESTART
 sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}

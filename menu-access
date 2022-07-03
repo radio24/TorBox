@@ -68,7 +68,7 @@ WEBSERVER="nginx" ## [nginx|apache2]
 ######## FUNCTIONS ########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 
 

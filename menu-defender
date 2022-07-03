@@ -59,7 +59,7 @@ BAK="/etc/tor/torrc.bak"
 ######## FUNCTIONS ########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode

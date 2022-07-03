@@ -81,7 +81,7 @@ n=0
 ######## FUNCTIONS ###########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # This function updates the firmware on a RPI4
 # Syntax update_firmware
@@ -937,8 +937,6 @@ case "$CHOICE" in
 	10)
   	deactivate_obfs4_bridges
 		clear
-		restarting_tor update
-		sleep 5
 	;;
 
 	# Rerun the "fFirst Start-up" script

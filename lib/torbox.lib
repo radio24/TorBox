@@ -517,7 +517,7 @@ deactivate_obfs4_bridges()
   sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
   sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 	INPUT=$(cat text/restart-tor-text)
-	if [ $SOURCE_SCRIPT != "NORESTART" ]; then
+	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			restarting_tor $SOURCE_SCRIPT
 		fi
