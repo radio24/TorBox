@@ -610,11 +610,9 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
-sudo apt
 # NEW v.0.5.0 - Update 001: not nice, but working
 sudo apt -y --fix-broken install
 sudo dpkg -i wiringpi-latest.deb
-sudo apt
 sudo rm wiringpi-latest.deb
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -967,7 +965,7 @@ echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 
 # Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
-sudo cp etc/nginx/nginx.conf /etc/nginx/
+(sudo cp etc/nginx/nginx.conf /etc/nginx/) 2> /dev/null
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
 clear
@@ -979,10 +977,10 @@ if ! grep "# Added by TorBox (002)" .profile ; then
 fi
 
 echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
+(sudo mkdir /var/lib/tor/services) 2> /dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
+(sudo mkdir /var/lib/tor/onion_auth) 2> /dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
 sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
@@ -1054,13 +1052,6 @@ echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
 # NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
-sudo chown -R debian-tor:debian-tor /var/lib/tor/services
-sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
-sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1363,8 +1354,6 @@ sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_D
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
-sudo adduser torbox sudo
-sudo adduser torbox netdev
 sudo mkdir /home/torbox/openvpn
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers

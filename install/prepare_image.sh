@@ -61,13 +61,6 @@ else
   VANGUARDSSTATUSb="Deactivated!"
 fi
 
-# Is the user pi deactivated and the home directory removed?
-if [ -d "/home/pi" ]; then
-  ROOT_DIR="${WHITE}WARNING! ${RED}User \"pi\" is still active!${NOCOLOR}"
-else
-  ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
-fi
-
 # Are bridges activated?
 if grep "^UseBridges" ${TORRC}; then
 	if grep -o "^Bridge obfs4 " ${TORRC}; then
@@ -131,7 +124,6 @@ echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDS
 echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
 echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
 echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
-echo -e "$ROOT_DIR"
 echo
 echo
 echo -e "${WHITE}Following requirements are installed:${NOCOLOR}"
@@ -179,7 +171,7 @@ echo -e "${RED}[+] Copy /etc/iptables.ipv4.nat${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
-sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
+(sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2> /dev/null
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
