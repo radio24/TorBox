@@ -20,10 +20,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file helps to overcome a login portal of an Internet provider, usually seen with
-# providers of free wireless access (so called captive portal). To be able to handle
-# such a portal, it is necessary to establish a direct connection to the wireless
-# network provider. This procedure temporarily uses an INSECURE CONNECTION. The user
+# This file helps to overcome a Captive Portal of an Internet provider, usually seen with
+# providers of free wireless access. In contrast to SPOOFING, we use here the TUNNELLING
+# methode to pass through a Captive Portal. This method temporarily uses an INSECURE
+# CONNECTION so that a client can fill out the login page of the Captive Portal. The user
 # may CLOSE ALL HIS APPLICATIONS ON HIS CLIENT DEVICES to prevent the leakage of information
 # during the established INSECURE CONNECTION.
 #
@@ -45,12 +45,10 @@
 # wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
 #
 #
-#
 ######## SET VARIABLES ########
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 
@@ -64,7 +62,7 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 DNSPROG="dnsmasq"
 RUNFILE="run/torbox.run"
-EXITID="EXITID=1"
+#EXITID="EXITID=1"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
@@ -76,10 +74,9 @@ sleep 2
 clear
 INPUT=$(cat text/is-it-captive-text)
 if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-  CAPTIVE=1
   EXITLOOP=0
 else
-  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+#  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
   EXITLOOP=1
   exit $EXITLOOP
 fi

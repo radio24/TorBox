@@ -46,20 +46,21 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
 BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
+EXITID=$(grep "^EXITID=" ${RUNFILE})
 i=0
 
 ###########################
 ######## FUNCTIONS ########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 ######## PREPARATIONS ########
 #
@@ -74,6 +75,11 @@ i=0
 number_of_bridges
 
 ###########################
+
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
 
 if [ $number_configured_bridges_deactivated = 0 ]; then
   clear
@@ -101,8 +107,9 @@ case "$CHOICE" in
   # Activate ALL configured bridges
   1)
     sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
+		sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
     activate_obfs4_bridges bridges_activate_old
-    exit 0
+		exit 0
   ;;
 
   # Activate only bridges, which are ONLINE
@@ -115,6 +122,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
       trap "bash bridges_activate_old; exit 0" SIGINT
       i=0
+			j=0
       while [ $i -lt $number_configured_bridges_deactivated ]
       do
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
@@ -124,7 +132,6 @@ case "$CHOICE" in
         else
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi
-        j=0
         if [ $bridge_status == 1 ]; then
           j=$((i+1))
           echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
@@ -141,10 +148,11 @@ case "$CHOICE" in
       # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
       sleep 5
       clear
-      if [ $i -gt 0 ]; then
+      if [ $j -gt 0 ]; then
+				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         activate_obfs4_bridges bridges_activate_old
         clear
-        exit 0
+				exit 0
       else
         echo ""
         echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
@@ -163,7 +171,6 @@ case "$CHOICE" in
       clear
       exit 0
     fi
-    exit 0
   ;;
 
   # Activate only selected bridges
@@ -202,8 +209,9 @@ case "$CHOICE" in
       sleep 5
       clear
       if [ $j -gt 0 ]; then
+				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         activate_obfs4_bridges bridges_activate_old
-        exit 0
+				exit 0
       fi
     fi
   ;;

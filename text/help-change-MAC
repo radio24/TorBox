@@ -1,0 +1,5 @@
+A MAC address is a unique identifier assigned to a network interface. According to Edward Snowden, the NSA has a system that tracks the movements of mobile devices in a city by monitoring MAC addresses. Therefore vendors started to randomize the MAC addresses on their devices. Since an update in the middle of 2022, TorBox began to randomize the MAC addresses of the interfaces wlan0, wlan1, eth0 and eth1 by default. However, to overcome Captive Portals, you can also use the MAC address of another device that has successfully passed through a Captive Portal (see here: https://www.torbox.ch/?page_id=2666).
+
+Before changing the value, you must first select the interface(s) you want to change (you can change several interfaces simultaneously using the same value). Secondly, you have to choose if you're going to randomize the MAC address, set it back to the permanent unique MAC address of the interface, or want to set a specific one.
+
+Do you want to continue changing or listing the MAC address setting of TorBox's interfaces?

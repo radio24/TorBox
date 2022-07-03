@@ -57,7 +57,7 @@ i=0
 ######## FUNCTIONS ########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 ######## PREPARATIONS ########
 ###########################
@@ -137,7 +137,7 @@ case $SNOWSTRING in
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
-			deactivate_obfs4_bridges
+			deactivate_obfs4_bridges NORESTART
 			sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 			sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 			sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}

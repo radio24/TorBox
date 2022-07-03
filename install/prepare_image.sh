@@ -37,7 +37,7 @@ NOCOLOR='\033[0m'
 ######## FUNCTIONS ###########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # Is the Snowflake client installed?
 if command -v snowflake-client &> /dev/null
@@ -45,7 +45,7 @@ then SNOWFLAKE="exists";
 else SNOWFLAKE="is missing"; fi
 
 # Is the automatic counteractions feature activated?
-if ps -ax | grep "[l]og_check.py" ; then
+if pgrep -f "log_check.py" ; then
   clear
   LOGCHECK="Activated!"
 else
@@ -59,13 +59,6 @@ if [ ${VANGUARDSSTATUS} == "active" ]; then
   VANGUARDSSTATUSb="Activated!"
 else
   VANGUARDSSTATUSb="Deactivated!"
-fi
-
-# Is the user pi deactivated and the home directory removed?
-if [ -d "/home/pi" ]; then
-  ROOT_DIR="${WHITE}WARNING! ${RED}User \"pi\" is still active!${NOCOLOR}"
-else
-  ROOT_DIR="${RED}User \"pi\" is removed!${NOCOLOR}"
 fi
 
 # Are bridges activated?
@@ -98,7 +91,7 @@ else
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
-if [ grep -o "^ReachableAddresses " ${TORRC} | head -1; then
+if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
 	FIREWALL="Are running"
 else
 	FIREWALL="Are not running"
@@ -131,7 +124,6 @@ echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDS
 echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
 echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
 echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
-echo -e "$ROOT_DIR"
 echo
 echo
 echo -e "${WHITE}Following requirements are installed:${NOCOLOR}"
@@ -150,7 +142,7 @@ sudo systemctl stop tor
 sudo systemctl mask tor
 sudo systemctl mask tor@default.service
 echo -e "${RED}[+] Deactivating all bridges${NOCOLOR}"
-deactivate_obfs4_bridges
+deactivate_obfs4_bridges NORESTART
 sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
@@ -179,7 +171,7 @@ echo -e "${RED}[+] Copy /etc/iptables.ipv4.nat${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
-sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
+(sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2> /dev/null
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove

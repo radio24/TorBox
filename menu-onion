@@ -76,7 +76,7 @@ SELECTION=$1
 ######## FUNCTIONS ########
 
 # include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
@@ -509,7 +509,7 @@ else
   " 2" "Toggle Onion Service Mode from $TOGGLE16b to $TOGGLE17b"  \
   " 3" "Create or reactivate an Onion Service"  \
   " 4" "List all Onion Services"  \
-  " 5" "Delete or deactivate an Onion Services"  \
+  " 5" "Delete or deactivate an Onion Service"  \
   " 6" "Enter the advanced tor configuration editor"  \
   "==" "===================================[Control client's access]==="  \
   " 7" "Generate a new key pair (public and private key) for a client"  \
@@ -618,6 +618,15 @@ case "$CHOICE" in
       SERVICE_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nName your onion service directory in one string and no space (e.g.: torbox.ch):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ ! -z "${SERVICE_NAME}" ]; then
+				if [ ! "${SERVICE_NAME%%*[^a-z0-9_.]*}" ]; then
+					clear
+					echo -e "${WHITE}[!] THE SERVICE NAME IS INVALID!!${NOCOLOR}"
+					echo -e "${RED}[+] The name can only contain characters in range of: 'a-z', 'A-Z', '_', '.'.${NOCOLOR}"
+					sleep 5
+					clear
+					trap "bash menu-onion; exit 0" EXIT
+					exit 1
+				fi
         UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
         if (grep "^HiddenServiceDir ${DATA_DIR_OS}/${SERVICE_NAME}" "${TORRC}"); then
           clear
@@ -783,7 +792,7 @@ case "$CHOICE" in
     done
   ;;
 
-  # Delete or deactivate Onion Services
+  # Delete or deactivate Onion Service
   5)
     create_service_list
 		error_no_onion_service
@@ -1459,7 +1468,7 @@ case "$CHOICE" in
 										fi
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "\nChoose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+						      	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
 						     		" 1" "Allow uploading" ON \
 						     		" 2" "Allow downloading" ON \
 						     		3>&1 1>&2 2>&3)

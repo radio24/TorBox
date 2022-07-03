@@ -46,9 +46,9 @@
 # If <incoming interface 2> is not used, the default should be "eth0".
 #
 # Possible values for <captive portal>:
-# 0	->	The network connection is open -- no login/password/phone number etc. is required.
-# 1	->	For a sucessful connection to the Internet login/password/phone number etc. is required (this is usually the case
-#       with provider of free wireless network access in hotels, airports, Internet cafées etc.).
+# 0	-> The network connection is open -- no login/password/phone number etc. is required.
+# 1	-> To pass through the Captive Portal the TUNNELLING method is used.
+# 2 -> To pass through the Captive Portal the SPOOFING method is used.
 #
 # Possible values for <restarting_tor>:
 # 0	->	Don't restart tor.
@@ -67,6 +67,7 @@ MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+MENU_HEIGHT_10=10
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 MY_OWN_IP1="192.168.42.1"
@@ -86,8 +87,45 @@ EXITLOOP=0
 ######## FUNCTIONS ###########
 
 #include lib
-.  lib/torbox.lib
+.  ~/torbox/lib/torbox.lib
 
+# This function pass through Captive Portals using the TUNNELLING nethod
+captive_tunneling()
+{
+	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+	EXITLOOP=$?
+	if [ $EXITLOOP == 0 ]; then
+		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+		echo ""
+		# TEST: that should improve the connectivity with the captive portal
+		sudo ifdown $O_DEVICE
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $O_DEVICE
+		sudo ifup $O_DEVICE &>/dev/null &
+		echo ""
+		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+		echo ""
+		if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ] ; then
+			echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
+			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
+			echo ""
+		fi
+		(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+	fi
+}
+
+# This function pass through Captive Portals on the Ethernet interface by using the SPOOFING or TUNNELLING method
+captive_eth()
+{
+	if [ $CAPTIVE = 2 ]; then
+		sudo bash change_MAC $O_DEVICE 3
+	fi
+	if [ $CAPTIVE = 1 ]; then
+		captive_tunneling
+	else
+		EXITLOOP=1
+	fi
+}
 
 ###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
 clear
@@ -95,105 +133,24 @@ deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 while [ $EXITLOOP == 0 ]; do
-	if [ "$O_DEVICE" = "eth0" ]; then
-		if [ $CAPTIVE = 1 ]; then
-			sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-			EXITLOOP=$?
-			if [ $EXITLOOP == 0 ]; then
-				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
-				echo ""
-				# TEST: that should improve the connectivity with the captive portal
-				sudo ifdown $O_DEVICE
-				# The next line should help TorBox to forget the old IP
-				ip addr flush dev $O_DEVICE
-				sudo ifup $O_DEVICE &>/dev/null &
-				echo ""
-				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
-				echo ""
-				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
-			fi
-		else
-			EXITLOOP=1
+	if [ "$O_DEVICE" = "eth0" ] || [ "$O_DEVICE" = "eth1" ]; then
+		captive_eth
+	elif [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
+		if [ $CAPTIVE = 2 ]; then
+			sudo bash change_MAC $O_DEVICE 3
 		fi
-	elif [ "$O_DEVICE" = "eth1" ]; then
-		if [ $CAPTIVE = 1 ]; then
-    	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-			EXITLOOP=$?
-			if [ $EXITLOOP == 0 ]; then
-				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
-				echo ""
-				# TEST: that should improve the connectivity with the captive portal
-				sudo ifdown $O_DEVICE
-				# The next line should help TorBox to forget the old IP
-				ip addr flush dev $O_DEVICE
-				sudo ifup $O_DEVICE &>/dev/null &
-				echo ""
-				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
-				echo ""
-				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
-			fi
-		else
-			EXITLOOP=1
-		fi
-	elif [ "$O_DEVICE" = "wlan0" ]; then
 		clear
 		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
 		sleep 2
 		sudo ./torbox_wireless_manager.py -i $O_DEVICE
 		clear
 		if [ $CAPTIVE = 1 ]; then
-	   	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-			EXITLOOP=$?
-			if [ $EXITLOOP == 0 ]; then
-				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
-				echo ""
-				# TEST: that should improve the connectivity with the captive portal
-				sudo ifdown $O_DEVICE
-				# The next line should help TorBox to forget the old IP
-				ip addr flush dev $O_DEVICE
-				sudo ifup $O_DEVICE &>/dev/null &
-				echo ""
-				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
-				echo ""
-				echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
-				echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
-				echo ""
-				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
-			fi
-		else
-			EXITLOOP=1
-		fi
-	elif [ "$O_DEVICE" = "wlan1" ]; then
-		clear
-		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
-		sleep 2
-		sudo ./torbox_wireless_manager.py -i $O_DEVICE
-		clear
-		if [ $CAPTIVE = 1 ]; then
-	   	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
-			EXITLOOP=$?
-			if [ $EXITLOOP == 0 ]; then
-				echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
-				echo ""
-				# TEST: that should improve the connectivity with the captive portal
-				sudo ifdown $O_DEVICE
-				# The next line should help TorBox to forget the old IP
-				ip addr flush dev $O_DEVICE
-				sudo ifup $O_DEVICE &>/dev/null &
-				echo ""
-				echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
-				echo ""
-				echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
-				echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
-				echo ""
-				(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
-			fi
+			captive_tunneling
 		else
 			EXITLOOP=1
 		fi
 	fi
 done
-
 
 ###### PREPARATIONS ######
 clear
