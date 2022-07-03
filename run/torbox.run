@@ -28,8 +28,8 @@ PING_SERVER=http://google.com
 
 # Used URLs (pre-filled with the default values)
 # Used go version
-GO_VERSION=go1.17.3.linux-armv6l.tar.gz
-GO_VERSION_64=go1.17.3.linux-arm64.tar.gz
+GO_VERSION=go1.18.3.linux-armv6l.tar.gz
+GO_VERSION_64=go1.18.3.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL=https://github.com/torproject/tor/tags
