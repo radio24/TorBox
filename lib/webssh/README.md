@@ -7,12 +7,12 @@ A web-client SSH for accessing TorBox Menu from browser
 ### Requirements
 To install dependencies, run
 
-```pip install -r requirements.txt```
+```sudo pip install -r requirements.txt```
 
 ## Usage
 TorBox WebSSH will run by default in 192.168.42.1 which is default TorBox wlan's IP address.
 
-```./webssh```
+```sudo ./webssh```
 
 For more options see
 
@@ -22,9 +22,9 @@ For more options see
 Usage: twebssh [OPTIONS]
 
 Options:
-  --unix-socket TEXT  Unix socket path
+  --unix-socket=TEXT  Unix socket path
   --wifi BOOLEAN      TorBox inet from wifi Default: 1
-  --help                  Show this message and exit.
+  --help              Show this message and exit.
 ```
 
 #### NOTE: Default unix socket path is /run/user/$UID/torbox/webssh.sock where $UID is the system user id.
