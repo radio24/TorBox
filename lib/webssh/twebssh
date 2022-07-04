@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os
+import sys
+import click
+from webssh.main import main
+
+    
+@click.command()
+@click.option('--unix-socket',
+              default=f'/var/run/{os.getuid()}/torbox/webssh.sock',
+              type=str,
+              help="Unix socket path")
+@click.option('--wifi',
+              default=True,
+              type=bool,
+              help="TorBox inet from wifi Default: 1")
+def run(unix_socket, wifi):
+    try:
+        os.makedirs(os.path.dirname(unix_socket), exist_ok=True)
+    except:
+        click.echo(f'Error: Path for unix socket is not available: '
+                   f'{unix_socket}')
+        sys.exit(1)
+    main()
+
+
+if __name__ == '__main__':
+    run()
