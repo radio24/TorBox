@@ -156,7 +156,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sudo killall systemd
         sleep 5
         sudo userdel -r pi
-				# NEW v.0.5.0: This will remove the anoying SSH warning during the log in (which is not valid)
+				# This will remove the anoying SSH warning during the log in (which is not valid)
 				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
 				sudo sed -i "/^pi:/d" /etc/shadow
       fi

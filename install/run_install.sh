@@ -94,7 +94,7 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# 	# NEW v.0.5.0 - Update 001: new go versions
+# 	# NEW v.0.5.1: new go versions
 # Used go version
 GO_VERSION="go1.18.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.18.3.linux-arm64.tar.gz"
@@ -120,7 +120,7 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
-# NEW v.0.5.0 - Update 001: since Octobre 2021 out of date - will probably be removed in v.0.5.1
+# NEW v.0.5.1: since Octobre 2021 out of date - will probably be removed in v.0.5.1
 # WiFi drivers from Fars Robotics
 FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
@@ -584,7 +584,7 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # Both tor services have to be masked to block outgoing tor connections
 (sudo systemctl mask tor@default.service) 2> /dev/null
 
-# NEW v.0.5.0 - Update 001: New packages: macchanger
+# NEW v.0.5.1: New packages: macchanger
 # Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -593,7 +593,7 @@ check_install_packages "build-essential automake libevent-dev libssl-dev asciido
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -610,7 +610,7 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
-# NEW v.0.5.0 - Update 001: not nice, but working
+# NEW v.0.5.1: not nice, but working
 sudo apt -y --fix-broken install
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
@@ -872,7 +872,7 @@ fi
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
-# NEW v.0.5.0: Showing the selected branch
+# Showing the selected branch
 echo -e "${RED}[+]          Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
@@ -1022,11 +1022,10 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
-# NEW v.0.5.0: Stop Nginx
 sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
@@ -1041,7 +1040,6 @@ sudo systemctl disable rsyslog
 sudo systemctl daemon-reload
 echo""
 
-# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
 # Make Tor and Nginx ready for Onion Services
 echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
@@ -1049,7 +1047,7 @@ echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
 (sudo rm -r /var/www/html) 2> /dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www)
-# NEW v.0.5.0: HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+# HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 
@@ -1071,13 +1069,13 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	#	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
 	#	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# path_8188fu="8188fu-drivers/"
 	# filename_8188fu="8188fu-$kernelversion.tar.gz"
 	# text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
 	# install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# path_8192eu="8192eu-drivers/"
 	# filename_8192eu="8192eu-$kernelversion.tar.gz"
 	# text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
@@ -1089,14 +1087,14 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
 	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Deactivated because no driver for new kernels available
 	#path_8812au="8812au-drivers/"
 	#filename_8812au="8812au-$kernelversion.tar.gz"
 	#text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
 	#install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Deactivated because no driver for new kernels available
 	# path_8821cu="8821cu-drivers/"
 	# filename_8821cu="8821cu-$kernelversion.tar.gz"
@@ -1118,7 +1116,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
 	cd ~
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8188EU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -1141,7 +1139,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 		sleep 2
 	fi
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8188FU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -1164,7 +1162,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 		sleep 2
 	fi
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8192EU
 	clear
 	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
@@ -1186,7 +1184,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 		sleep 2
 	fi
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8812AU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -1272,7 +1270,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 		sleep 2
 	fi
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8821CU
 		clear
 		echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -1401,15 +1399,14 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
-# NEW v.0.5.0: To start TACA, notices.log has to be present
+# To start TACA, notices.log has to be present
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
-# NEW v.0.5.0: To ensure the correct permissions
+# To ensure the correct permissions
 (sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
-# NEW v.0.5.0 - Update 001
-# Disable auto-login
+# NEW v.0.5.1: Disable auto-login
 echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""

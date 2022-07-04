@@ -99,13 +99,13 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	#	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
 	#	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# path_8188fu="8188fu-drivers/"
 	# filename_8188fu="8188fu-$kernelversion.tar.gz"
 	# text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
 	# install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# path_8192eu="8192eu-drivers/"
 	# filename_8192eu="8192eu-$kernelversion.tar.gz"
 	# text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
@@ -117,14 +117,14 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
 	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Deactivated because no driver for new kernels available
 	#path_8812au="8812au-drivers/"
 	#filename_8812au="8812au-$kernelversion.tar.gz"
 	#text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
 	#install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Deactivated because no driver for new kernels available
 	# path_8821cu="8821cu-drivers/"
 	# filename_8821cu="8821cu-$kernelversion.tar.gz"
@@ -145,7 +145,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 
 	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8188EU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -160,7 +160,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo rm -r rtl8188eu
 	sleep 2
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8188FU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -175,7 +175,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo rm -r rtl8188fu*
 	sleep 2
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8192EU
 	clear
 	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
@@ -189,7 +189,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo rm -r rtl8192eu-linux
 	sleep 2
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8812AU
 	clear
 	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
@@ -255,7 +255,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sleep 2
 
 
-	# NEW v.0.5.0 - Update 001
+	# NEW v.0.5.1
 	# Installing the RTL8821CU
 		clear
 		echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"

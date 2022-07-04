@@ -91,17 +91,14 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.0: new go versions
 # Used go version
-GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
+GO_VERSION="go1.18.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.18.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
-# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
@@ -176,7 +173,6 @@ while true; do
   esac
 done
 
-# NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
 [ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
@@ -358,12 +354,12 @@ select_and_install_tor()
           	make
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
@@ -436,12 +432,12 @@ select_and_install_tor()
 				make
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
         sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
@@ -574,7 +570,7 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
@@ -588,7 +584,7 @@ check_install_packages "build-essential automake libevent-dev libssl-dev asciido
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -806,7 +802,6 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
 	fi
-	# NEW v.0.5.0: Synchronized with run_install.sh
 	sudo chown -R debian-tor:debian-tor vanguards
 	cd vanguards
 	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
@@ -990,7 +985,6 @@ echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
 
-# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
 # Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
@@ -1067,7 +1061,7 @@ sudo systemctl start isc-dhcp-server
 sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
@@ -1394,10 +1388,10 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
-# NEW v.0.5.0: To start TACA notices.log has to be present
+# To start TACA notices.log has to be present
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
-# NEW v.0.5.0: To ensure the correct permissions
+# To ensure the correct permissions
 (sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
