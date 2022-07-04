@@ -140,6 +140,7 @@ finish_default_obfs4_step1()
 ######## MAIN ########
 
 #Check freshinstalled
+shopt -s checkwinsize
 FRESHINSTALLED=$1
 if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 

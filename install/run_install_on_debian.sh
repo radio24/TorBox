@@ -26,7 +26,7 @@
 # - https://raspi.debian.net/tested-images/).
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
+# ./run_install_debian.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -140,7 +140,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
+			echo "Syntax : run_install_debian.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
 			echo "         --select-fork fork_owner_name"
@@ -252,7 +252,7 @@ select_and_install_tor()
 		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
-		echo -e "${RED}    the Raspberry PI OS repository.${NOCOLOR}"
+		echo -e "${RED}    the repository.${NOCOLOR}"
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
 	fi
@@ -269,7 +269,7 @@ select_and_install_tor()
 		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
-		echo -e "${RED}    the Raspberry PI OS repository.${NOCOLOR}"
+		echo -e "${RED}    the repository.${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -370,7 +370,7 @@ select_and_install_tor()
 						echo ""
 						echo ""
 						echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
-						echo -e "${RED}    the Raspberry PI OS repository.${NOCOLOR}"
+						echo -e "${RED}    the repository.${NOCOLOR}"
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 						clear
 					fi
@@ -455,7 +455,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nPlease make sure that you started this script as \"./run_install\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION AND DELETE THE ACCOUNT \"pi\" WITH ALL ITS DATA!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	    : select a specific fork from a GitHub user (fork_owner_name)\n--select-branch branch_name\n  	  	    : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThis installation runs almost without user interaction. IT WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi

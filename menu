@@ -129,7 +129,7 @@ ask_captive()
 
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
-sleep 1
+shopt -s checkwinsize
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 if [ -z "$INTERNETSELECTION" ]; then
