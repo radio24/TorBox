@@ -21,23 +21,21 @@
 #
 # DESCRIPTION
 # This script starts TFS and Nginx, if configured that way in torbox.run.
-# It is executed by rc.local
+# It is executed by rc.local --> DON'T MOVE IT INTO TORBOX.LIB!
 #
 # SYNTAX
 # ./start_tfs
 #
 
 #This is not only for TFS, but for all shared folders on Onion domains
-if grep "^NGINX=ON" /home/torbox/torbox/run/torbox.run ; then
-	n=$(grep -c "^TFS-" /home/torbox/torbox/run/torbox.run)
-	if [ $n -gt 0 ] ; then
-		#Currently, tfs can only be started once. If it changed to starte multiple times, -m hast to be greater 1
-		TFS_CONFIG_LIST=$(grep -m 1 "^TFS-" /home/torbox/torbox/run/torbox.run | cut -d "=" -f2- | sed "s/.\///")
-		TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
-		eval $TFS_CONFIG_LIST
-	fi
-	sudo systemctl stop nginx
-	# shellcheck disable=SC2062
-	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-	sudo nginx -t && sudo systemctl start nginx
+n=$(grep -c "^TFS-" /home/torbox/torbox/run/torbox.run)
+if [ $n -gt 0 ] ; then
+	#Currently, tfs can only be started once. If it changed to starte multiple times, -m hast to be greater 1
+	TFS_CONFIG_LIST=$(grep -m 1 "^TFS-" /home/torbox/torbox/run/torbox.run | cut -d "=" -f2- | sed "s/.\///")
+	TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
+	eval $TFS_CONFIG_LIST
 fi
+sudo systemctl stop nginx
+# shellcheck disable=SC2062
+sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+sudo nginx -t && sudo systemctl start nginx

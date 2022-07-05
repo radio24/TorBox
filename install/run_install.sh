@@ -584,9 +584,9 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # Both tor services have to be masked to block outgoing tor connections
 (sudo systemctl mask tor@default.service) 2> /dev/null
 
-# NEW v.0.5.1: New packages: macchanger
+# NEW v.0.5.1: New packages: macchanger and shellinabox removed
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -636,6 +636,10 @@ sudo pip3 install requests
 sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
+# NEW v.0.5.1
+sudo pip3 install click
+sudo pip3 install paramiko
+sudo pip3 install tornado
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -913,12 +917,7 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 11: Installing all configuration files....${NOCOLOR}"
 echo ""
-# Configuring Shellinabox
-sudo cp etc/default/shellinabox /etc/default/shellinabox
-sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-sudo systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox"
+# NEW v.0.5.1: shellinabox removed
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
@@ -962,8 +961,6 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
-
-# Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 (sudo cp etc/nginx/nginx.conf /etc/nginx/) 2> /dev/null
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
@@ -1022,7 +1019,6 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
-sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
 Both tor services have to be masked to block outgoing tor connections
@@ -1034,22 +1030,26 @@ sudo systemctl disable dhcpcd
 sudo systemctl stop dnsmasq
 sudo systemctl disable dnsmasq
 echo ""
-echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
-sudo systemctl daemon-reload
 echo""
 
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+# NEW v.0.5.1
+# Make Nginx ready for Webssh and Onion Services
+echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
+(sudo chown torbox:torbox /var/www) 2> /dev/null
+# NEW v.0.5.1: configure webssh
+sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-sleep 5
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
+sudo systemctl restart nginx
+sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1061,7 +1061,8 @@ fi
 
 # 14. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
-	kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
+	# NEW v.0.5.1
+	# kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
 
 	# Deactivated because no driver for new kernels available
 	#	path_8188eu="8188eu-drivers/"

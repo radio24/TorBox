@@ -530,8 +530,9 @@ systemctl mask tor@default.service
 
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
 check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
+# NEW v.0.5.1: New packages: macchanger and shellinabox removed
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -592,6 +593,10 @@ pip3 install requests
 pip3 install Django
 pip3 install click
 pip3 install gunicorn
+# NEW v.0.5.1
+sudo pip3 install click
+sudo pip3 install paramiko
+sudo pip3 install tornado
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -875,12 +880,7 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# Configuring Shellinabox
-cp etc/default/shellinabox /etc/default/shellinabox
-mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox -- backup done"
+# NEW v.0.5.1: shellinabox removed
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
@@ -925,19 +925,9 @@ cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR}          hanging .profile"
-
-# Make Tor and Nginx ready for Onion Services
 (cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
-echo ""
-echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
-(rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(rm /etc/nginx/sites-available/default) 2> /dev/null
-(rm -r /var/www/html) 2> /dev/null
-# HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 
 #Back to the home directory
 cd
@@ -986,7 +976,6 @@ systemctl start hostapd
 systemctl unmask isc-dhcp-server
 systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server
-systemctl stop nginx
 systemctl stop tor
 systemctl stop tor
 systemctl mask tor
@@ -1005,24 +994,23 @@ systemctl start resolvconf
 systemctl unmask rc-local
 systemctl enable rc-local
 echo ""
-echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
 systemctl disable rsyslog
-systemctl daemon-reload
 echo""
 
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+# Make Nginx ready for Webssh and Onion Services
+echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 (rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (rm /etc/nginx/sites-available/default) 2> /dev/null
 (rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-mkdir /var/lib/tor/services
-chown -R debian-tor:debian-tor /var/lib/tor/services
-chmod -R go-rwx /var/lib/tor/services
-mkdir /var/lib/tor/onion_auth
-chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-chmod -R go-rwx /var/lib/tor/onion_auth
+# This is necessary for Nginx / TFS
+(chown torbox:torbox /var/www)
+# HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+sleep 5
+(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
+systemctl restart nginx
+systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1248,7 +1236,7 @@ echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
 adduser torbox
 adduser torbox netdev
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
+(sudo chown torbox:torbox /var/www) 2> /dev/null
 mv /root/* /home/torbox/
 (mv /root/.profile /home/torbox/) 2> /dev/null
 mkdir /home/torbox/openvpn

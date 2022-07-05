@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -575,9 +576,8 @@ sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs"
-# For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
-#sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez macchanger"
+# NEW v.0.5.1: New packages: macchanger and shellinabox removed
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -638,6 +638,10 @@ sudo pip3 install requests
 sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
+# NEW v.0.5.1
+sudo pip3 install click
+sudo pip3 install paramiko
+sudo pip3 install tornado
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -918,12 +922,7 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# Configuring Shellinabox
-sudo cp etc/default/shellinabox /etc/default/shellinabox
-sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-sudo systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox"
+# NEW v.0.5.1: shellinabox removed
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
@@ -983,19 +982,10 @@ sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
-
-# Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
-echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
-# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
 
 #Back to the home directory
 cd
@@ -1058,7 +1048,6 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
-sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
 Both tor services have to be masked to block outgoing tor connections
@@ -1076,24 +1065,22 @@ sudo systemctl disable dnsmasq
 sudo systemctl unmask rc-local
 sudo systemctl enable rc-local
 echo ""
-echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
-sudo systemctl daemon-reload
 echo""
 
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+# Make Nginx ready for Webssh and Onion Services
+echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
-sudo chown -R debian-tor:debian-tor /var/lib/tor/services
-sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
-sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-sudo chmod -R go-rwx /var/lib/tor/onion_auth
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www) 2> /dev/null
+# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
+sudo systemctl restart nginx
+sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1327,8 +1314,6 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
-# This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""

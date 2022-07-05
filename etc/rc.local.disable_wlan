@@ -11,6 +11,11 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
+# NEW v.0.5.1: starting webssh
+sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &
+sudo chmod a+rw /var/run/webssh.sock
+sudo systemctl restart nginx
+
 # Change the MAC address if needed
 for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then

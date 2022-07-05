@@ -394,12 +394,7 @@ update_torcfg()
   clear
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
   echo ""
-  # Configuring Shellinabox
-  sudo cp etc/default/shellinabox /etc/default/shellinabox
-  sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-  sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-  sudo systemctl restart shellinabox.service
-  echo -e "${RED}[+]${NOCOLOR}  Copied /etc/default/shellinabox"
+	# NEW v.0.5.1: shellinabox removed
   # Configuring Vanguards
   sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
   echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
@@ -549,7 +544,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU
 " 6" "Reset TorBox's configuration files (dangerous!)" \
 " 7" "Reset TWM and erase all wifi passwords (reboot required!)" \
 " 8" "Reset Tor and force a change of the permanent entry node" \
-" 9" "Restart TFS and/or Nginx to re-share on an Onion domain" \
+" 9" "Restart Nginx, webssh and TFS" \
 "10" "Force to deactivate the OBFS4 mode" \
 "11" "Rerun the \"First Start-up\" script" \
 "12" "Erase all log files" \
@@ -909,7 +904,8 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# Restart TFS and Nginx to re-shhare on an Onion domain
+	# NEW v.0.5.1
+	# Restart nginx, webssh and TFS
 	9)
 		clear
 		if pgrep -f "filesharing.wsgi"; then
@@ -919,14 +915,20 @@ case "$CHOICE" in
 			(sudo kill $PID) &>/dev/null
 			echo ""
 		fi
-		echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
-		sudo systemctl stop nginx
+		echo -e "${RED}[+] Delete old .sock files...${NOCOLOR}"
 		# shellcheck disable=SC2062
 		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		echo ""
-		echo -e "${RED}[+] Starting TFS and/or Nginx again...${NOCOLOR}"
+		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
+		(sudo chown torbox:torbox /var/www) 2> /dev/null
+		echo -e "${RED}[+] Starting TFS again...${NOCOLOR}"
 		sudo ./run/start_tfs
-		sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+		#sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+		echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
+		sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+		sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+		echo -e "${RED}[+] Restrating Nginx...${NOCOLOR}"
+		sudo systemctl restart nginx
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5
