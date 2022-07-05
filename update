@@ -925,10 +925,10 @@ case "$CHOICE" in
 		sudo ./run/start_tfs
 		#sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
 		echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
-		sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+		sudo ~/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 		sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-		echo -e "${RED}[+] Restrating Nginx...${NOCOLOR}"
-		sudo systemctl reload nginx
+		echo -e "${RED}[+] Restating Nginx...${NOCOLOR}"
+		(sudo systemctl reload nginx) 2> /dev/null
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5

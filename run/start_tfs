@@ -39,4 +39,4 @@ fi
 # shellcheck disable=SC2062
 sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 # sudo nginx -t && sudo systemctl start nginx
-sudo nginx -t && sudo systemctl reload nginx
+sudo systemctl reload nginx

@@ -556,7 +556,7 @@ case "$CHOICE" in
 							# shellcheck disable=SC2062
 							sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 							# sudo nginx -t && sudo systemctl start nginx
-							sudo nginx -t && sudo systemctl reload nginx
+							sudo systemctl reload nginx
 							# sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}" 2> /dev/null
 							echo ""
 							sleep 2
@@ -597,7 +597,7 @@ case "$CHOICE" in
 				# shellcheck disable=SC2062
 				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 				# sudo nginx -t && sudo systemctl start nginx
-				sudo nginx -t && sudo systemctl reload nginx
+				sudo systemctl reload nginx
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
         echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
@@ -679,7 +679,7 @@ case "$CHOICE" in
 								# shellcheck disable=SC2062
 								sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 								# sudo nginx -t && sudo systemctl start nginx
-								sudo nginx -t && sudo systemctl reload nginx
+								sudo systemctl reload nginx
 								# sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
 							elif [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT2}-onion-filesharing.conf" ) ]]; then
 								restart_stored_tfs
@@ -688,7 +688,7 @@ case "$CHOICE" in
 								# shellcheck disable=SC2062
 								sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 								# sudo nginx -t && sudo systemctl start nginx
-								sudo nginx -t && sudo systemctl reload nginx
+								sudo systemctl reload nginx
 								# sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
               fi
               sleep 2
@@ -901,7 +901,7 @@ case "$CHOICE" in
 					# shellcheck disable=SC2062
 					sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 					# sudo nginx -t && sudo systemctl start nginx
-					sudo nginx -t && sudo systemctl reload nginx
+					sudo systemctl reload nginx
         fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
@@ -1287,7 +1287,7 @@ case "$CHOICE" in
 										# shellcheck disable=SC2062
 										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 										# sudo nginx -t && sudo systemctl start nginx
-										sudo nginx -t && sudo systemctl reload nginx
+										sudo systemctl reload nginx
 										# sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
                   	(sudo rm -f "${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") &>/dev/null
                   	echo ""
@@ -1338,7 +1338,7 @@ case "$CHOICE" in
 									# shellcheck disable=SC2062
 									sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									# sudo nginx -t && sudo systemctl start nginx
-									sudo nginx -t && sudo systemctl reload nginx
+									sudo systemctl reload nginx
                	else
                  	echo ""
                  	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
@@ -1346,7 +1346,7 @@ case "$CHOICE" in
 									# shellcheck disable=SC2062
 									sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									# sudo nginx -t && sudo systemctl start nginx
-									sudo nginx -t && sudo systemctl reload nginx
+									sudo systemctl reload nginx
                  	echo ""
                  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
                	fi
@@ -1503,7 +1503,7 @@ case "$CHOICE" in
 										# shellcheck disable=SC2062
 										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 										# sudo nginx -t && sudo systemctl start nginx
-										sudo nginx -t && sudo systemctl reload nginx
+										sudo systemctl reload nginx
 										(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf") &>/dev/null
 										echo ""
 										if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
@@ -1599,7 +1599,7 @@ case "$CHOICE" in
 										# shellcheck disable=SC2062
 										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 										# sudo nginx -t && sudo systemctl start nginx
-										sudo nginx -t && sudo systemctl reload nginx
+										sudo systemctl reload nginx
 										(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf") &>/dev/null
 										echo ""
 										# This will give ONION_HOSTNAME
@@ -1651,14 +1651,14 @@ case "$CHOICE" in
 							# shellcheck disable=SC2062
 							sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 							# sudo nginx -t && sudo systemctl start nginx
-							sudo nginx -t && sudo systemctl reload nginx
+							sudo systemctl reload nginx
 						else
 							echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 							# sudo systemctl stop nginx
 							# shellcheck disable=SC2062
 							sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 							# sudo nginx -t && sudo systemctl start nginx
-							sudo nginx -t && sudo systemctl reload nginx
+							sudo systemctl reload nginx
 							echo ""
 							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
            	fi
