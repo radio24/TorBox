@@ -928,7 +928,7 @@ case "$CHOICE" in
 		sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 		sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 		echo -e "${RED}[+] Restrating Nginx...${NOCOLOR}"
-		sudo systemctl restart nginx
+		sudo systemctl reload nginx
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5

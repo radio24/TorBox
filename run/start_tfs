@@ -35,7 +35,8 @@ if [ $n -gt 0 ] ; then
 	TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
 	eval $TFS_CONFIG_LIST
 fi
-sudo systemctl stop nginx
+# sudo systemctl stop nginx
 # shellcheck disable=SC2062
 sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-sudo nginx -t && sudo systemctl start nginx
+# sudo nginx -t && sudo systemctl start nginx
+sudo nginx -t && sudo systemctl reload nginx
