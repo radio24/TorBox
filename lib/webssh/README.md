@@ -10,21 +10,27 @@ To install dependencies, run
 ```sudo pip install -r requirements.txt```
 
 ## Usage
-TorBox WebSSH will run by default in 192.168.42.1 which is default TorBox wlan's IP address.
+TorBox WebSSH by default will:
+- listen on all interfaces.
+- listen on 80 port
+- listen on 443 port if certfile and keyfile is passed
 
-```sudo ./webssh```
+```sudo ./twebssh```
 
 For more options see
 
 ```
-./webssh --help
-
+./twebssh --help
 Usage: twebssh [OPTIONS]
 
 Options:
-  --unix-socket=TEXT  Unix socket path
-  --wifi BOOLEAN      TorBox inet from wifi Default: 1
+  --unix-socket TEXT  Unix socket path
+  --port INTEGER      HTTP listen port. Default: 80
+  --sslport INTEGER   HTTPS listen port. Default: 443
+  --certfile TEXT     Path to crt file to enable HTTPS
+  --keyfile TEXT      Path to key file to enable HTTPS
   --help              Show this message and exit.
+
 ```
 
 #### NOTE: Default unix socket path is /run/user/$UID/torbox/webssh.sock where $UID is the system user id.
