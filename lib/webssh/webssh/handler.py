@@ -318,11 +318,10 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
 
     executor = ThreadPoolExecutor(max_workers=cpu_count()*5)
 
-    def initialize(self, loop, policy, host_keys_settings, dst):
+    def initialize(self, loop, policy, host_keys_settings):
         super(IndexHandler, self).initialize(loop)
         self.policy = policy
         self.host_keys_settings = host_keys_settings
-        self.dst = dst
         self.ssh_client = self.get_ssh_client()
         self.debug = self.settings.get('debug', False)
         self.font = self.settings.get('font', '')
@@ -492,8 +491,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
     def get(self):
         self.render('index.html',
                     debug=self.debug,
-                    font=self.font,
-                    dst=self.dst)
+                    font=self.font)
 
     @tornado.gen.coroutine
     def post(self):

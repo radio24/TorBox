@@ -8,26 +8,26 @@ from tornado.options import options
 from webssh import handler
 from webssh.handler import IndexHandler, WsockHandler, NotFoundHandler
 from webssh.settings import (
-    get_app_settings,  get_host_keys_settings, get_policy_setting,
-    get_ssl_context, get_server_settings, check_encoding_setting
+    get_app_settings,
+    get_host_keys_settings,
+    get_policy_setting,
+    get_ssl_context,
+    get_server_settings,
+    check_encoding_setting,
 )
 
 
 def make_handlers(loop, options):
-    # FIXME: This addresses should not be here
-    # host dst
-    dst = '192.168.42.1'
-    if not options.wifi:
-        dst = '192.168.43.1'
-
     host_keys_settings = get_host_keys_settings(options)
     policy = get_policy_setting(options, host_keys_settings)
 
     handlers = [
-        (r'/', IndexHandler, dict(loop=loop, policy=policy,
-                                  host_keys_settings=host_keys_settings,
-                                  dst=dst)),
-        (r'/ws', WsockHandler, dict(loop=loop))
+        (
+            r"/",
+            IndexHandler,
+            dict(loop=loop, policy=policy, host_keys_settings=host_keys_settings),
+        ),
+        (r"/ws", WsockHandler, dict(loop=loop)),
     ]
     return handlers
 
@@ -45,14 +45,12 @@ def app_listen(app, port, address, server_settings):
         server.add_socket(socket)
     else:
         app.listen(port, address, **server_settings)
-    if not server_settings.get('ssl_options'):
-        server_type = 'http'
+    if not server_settings.get("ssl_options"):
+        server_type = "http"
     else:
-        server_type = 'https'
+        server_type = "https"
         handler.redirecting = True if options.redirect else False
-    logging.info(
-        'Listening on {}:{} ({})'.format(address, port, server_type)
-    )
+    logging.info("Listening on {}:{} ({})".format(address, port, server_type))
 
 
 def main():
@@ -69,5 +67,5 @@ def main():
     loop.start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
