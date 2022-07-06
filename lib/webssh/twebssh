@@ -29,6 +29,13 @@ def run(unix_socket, port, sslport, certfile, keyfile):  # noqa
     except PermissionError:
         click.echo(f"Error: Path for unix socket is not available: " f"{unix_socket}")
         sys.exit(1)
+
+    # Check certfile and keyfile
+    if certfile or keyfile:
+        if not certfile or not keyfile:
+            click.echo("Error: Both --certfile and --keyfile must be set")
+            sys.exit(1)
+
     main()
 
 
