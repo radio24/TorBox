@@ -639,7 +639,7 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
-sudo pip3 install Django
+sudo pip3 install Django==3.2.14
 sudo pip3 install click
 sudo pip3 install gunicorn
 
