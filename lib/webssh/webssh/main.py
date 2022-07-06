@@ -41,7 +41,7 @@ def app_listen(app, port, address, server_settings):
     logging.info(server_settings)
     if options.unix_socket:
         server = HTTPServer(app, **server_settings)
-        socket = bind_unix_socket(options.unix_socket)
+        socket = bind_unix_socket(file=options.unix_socket, mode=0o666)
         server.add_socket(socket)
     else:
         app.listen(port, address, **server_settings)
