@@ -26,7 +26,7 @@ define('unix_socket', default=f'/run/user/{os.getuid()}/torbox/webssh.sock',
 define('address', default='', help='Listen address')
 define('port', type=int, default=80,  help='Listen port')
 define('ssladdress', default='', help='SSL listen address')
-define('sslport', type=int, default=4433,  help='SSL listen port')
+define('sslport', type=int, default=443,  help='SSL listen port')
 define('certfile', default='', help='SSL certificate file')
 define('keyfile', default='', help='SSL private key file')
 define('debug', type=bool, default=False, help='Debug mode')
