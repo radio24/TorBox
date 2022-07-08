@@ -645,35 +645,25 @@ case "$CHOICE" in
             exit 1
           fi
         fi
-        SERVICE_PORTS=$(whiptail --title "Onion Service -- virtual ports" --inputbox "\n\nYou can configure up to two virtual ports. However, for sharing a folder or files, we only use one virtual port. Insert them separated by space (e.g., 80 443; if unsure, use 80): " $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        SERVICE_PORTS=$(whiptail --title "Onion Service -- virtual ports" --inputbox "\n\nPlease, configure a virtual port. Usually 80 is just good enough: " $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 80 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				if [ ! -z "${SERVICE_PORTS}" ]; then
           clear
           echo -e "${RED}[+] Configuring torrc...${NOCOLOR}"
           VIRTPORT=$(cut -d ' ' -f1 <<< $SERVICE_PORTS)
-          if [ "$VIRTPORT" == "$SERVICE_PORTS" ]; then
-            sleep 1
-          else
-            VIRTPORT2=$(cut -d ' ' -f2 <<< $SERVICE_PORTS)
-          fi
           is_integer "${VIRTPORT}"
 					# Using the Anchor in torrc
           REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
+					UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
           SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
-          SOCK2_FILE="${UNIX_PATH}-${VIRTPORT2}.sock"
-
           #This is necessary to work with special characters in sed
           REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
           DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
           SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
           SOCK_FILE_STRING="$(<<< "${SOCK_FILE}" sed -e 's`[][\\/.*^$]`\\&`g')"
-          SOCK2_FILE_STRING="$(<<< "${SOCK2_FILE}" sed -e 's`[][\\/.*^$]`\\&`g')"
-
+					NEW_STRING="\nHiddenServiceDir $DATA_DIR_OS_STRING\/$SERVICE_NAME_STRING\nHiddenServicePort ${VIRTPORT} $SOCK_FILE_STRING"
           #Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
-          [ ! -z "${VIRTPORT2}" ] && NEW_STRING="\nHiddenServiceDir $DATA_DIR_OS_STRING\/$SERVICE_NAME_STRING\nHiddenServicePort ${VIRTPORT} $SOCK_FILE_STRING\nHiddenServicePort ${VIRTPORT2} $SOCK2_FILE_STRING"
-          [ ! -z "${VIRTPORT2}" ] || NEW_STRING="\nHiddenServiceDir $DATA_DIR_OS_STRING\/$SERVICE_NAME_STRING\nHiddenServicePort ${VIRTPORT} $SOCK_FILE_STRING"
           sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$NEW_STRING/g" "${TORRC}"
-
           #Create a folder, which can be published through the Onion Services
           echo -e "${RED}[+] Creating $WEBSITE_DIR/$SERVICE_NAME which can be published through the Onion domain.${NOCOLOR}"
           sudo mkdir "$WEBSITE_DIR/$SERVICE_NAME"
