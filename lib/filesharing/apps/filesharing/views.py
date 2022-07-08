@@ -25,9 +25,10 @@ def upload(request, subfolder_id=None):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            if form.data['subfolder']:
+            if form.data.get('subfolder', None):
                 subfolder_id = form.data['subfolder']
                 parent = DownloadFileModel.objects.get(pk=subfolder_id)
+
             else:
                 parent = DownloadFileModel.objects.get(pk=1)
             files = request.FILES.getlist('file')
@@ -64,7 +65,7 @@ class DownloadListView(ListView):
     def get_queryset(self):
         return DownloadFileModel.objects.filter(parent=self.kwargs['pk'])\
                                         .order_by('-is_dir', 'name')
-    
+
     def get_context_data(self, **kwargs):
         context = super(DownloadListView, self).get_context_data(**kwargs)
         # Get parent
@@ -94,7 +95,7 @@ def download_zip(request):
             for f in path_list:
                 path = f[0]
                 total_size += os.path.getsize(path)
-            
+
             # Check current disk status
             total, used, free = shutil.disk_usage("/")
 

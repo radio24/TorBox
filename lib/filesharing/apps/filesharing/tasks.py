@@ -16,7 +16,7 @@ class Scheduler:
 
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
-    
+
     def scan(self):
         tfs = imp.load_source('tfs', f'{settings.BASE_DIR}/tfs')
         tfs.restart_database()
