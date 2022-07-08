@@ -2,8 +2,8 @@ from django import forms
 from .models import DownloadFileModel
 
 class UploadFileForm(forms.ModelForm):
-    subfolder = forms.BooleanField(required=False, initial=False)
-    
+    subfolder = forms.IntegerField(required=False, initial=False)
+
     def __init__(self, *args, **kwargs):
         super(UploadFileForm, self).__init__(*args, **kwargs)
         self.fields['file'].required = True
