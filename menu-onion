@@ -115,9 +115,9 @@ test_service_exists()
 
 # This function creates a list of all onione services
 # Syntax create_service_list [<only_with_clients>]
-# [<only_with_clients>]will provide a list with services that have at least one client
+# [<only_with_clients>] will provide a list with services that have at least one client
 # Following variables can be used:
-# $SERVICE_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
+# $SERVICE_NAME_LIST is a list with the onion service names (can be separate by newlines (/n))
 create_service_list()
 {
   ONLY_WITH_CLIENTS=$1
@@ -130,7 +130,6 @@ create_service_list()
         i=$((i+1))
         ONION_HOSTNAME="$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_OS}/${SERVICE_NAME}/hostname")"
         ONION_HOSTNAME_WITHOUT_ONION=${ONION_HOSTNAME%.onion}
-        #SERVICE_LIST="$(printf "%s\n%s\n%s\n%s\n" "${SERVICE_LIST}" "${SERVICE_NAME}" "${ONION_HOSTNAME_WITHOUT_ONION}" 0)"
         if [ $i == 1 ]; then SERVICE_LIST="$(printf "%s\n" "${SERVICE_NAME}")"
         else SERVICE_LIST="$(printf "%s\n%s\n" "${SERVICE_LIST}" "${SERVICE_NAME}")"; fi
       fi
@@ -145,7 +144,8 @@ create_service_list()
 # Following variables can be used:
 # $CLIENT_NAME_LIST is a list with the onion service names (SERV1,SERV2,...)
 # $CLIENT_COUNT number of items in the $CLIENT_NAME_LIST
-create_client_list(){
+create_client_list()
+{
   SERVICE_NAME="${1}"
   CLIENT_COUNT=0
   CLIENT_NAME_LIST="$(printf %s"$(sudo -u "${TOR_USER}" ls "${DATA_DIR_OS}/${SERVICE_NAME}/authorized_clients/")" | sed "s/\.auth//g" | tr "\n" ", ")"
@@ -202,25 +202,17 @@ is_integer()
 
 # This function finds the virtual ports on a configured Onion Service
 # Syntax find_virtport <service_name>
-# Following variables can be used: VIRTPORT, VIRTPORT2, HIDDENSSERVICE, HIDDENSSERVICE2
+# Following variables can be used: VIRTPORT, HIDDENSSERVICEPORT
 find_virtport()
 {
   SERVICE_NAME="${1}"
   HIDDENSSERVICEPORT=""
   VIRTPORT=""
-  VIRTPORT2=""
   UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-  x=$(grep -c "$UNIX_PATH" ${TORRC})
   HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
   #Bash specific, but should also work with other shells
   HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
   VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-  if [ $x -gt  1 ]; then
-    HIDDENSSERVICEPORT2=$(grep "$UNIX_PATH" ${TORRC} | tail -n1)
-    #Bash specific, but should also work with other shells
-    HIDDENSSERVICEPORT2=${HIDDENSSERVICEPORT2//#}
-    VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT2)
-  fi
 }
 
 
@@ -447,8 +439,6 @@ error_already_used()
 }
 
 
-
-
 ######## PREPARATIONS ########
 read_config
 
@@ -584,7 +574,6 @@ case "$CHOICE" in
 					trap "bash menu-onion; exit 0" EXIT
 					exit 1
 				fi
-        UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
         if (grep "^HiddenServiceDir ${DATA_DIR_OS}/${SERVICE_NAME}" "${TORRC}"); then
           clear
           echo -e "${WHITE}[!] THE SERVICE NAME IS ALREADY USED AND ACTIVATED!!${NOCOLOR}"
@@ -608,26 +597,11 @@ case "$CHOICE" in
               sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2> /dev/null
               sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2> /dev/null
               sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC} 2> /dev/null
-              x=$(grep -c "$UNIX_PATH" ${TORRC})
-              HIDDENSSERVICEPORT=""
-              VIRTPORT=""
-              VIRTPORT2=""
-              HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-              #Bash specific, but should also work with other shells
-              HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-              VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
+							# This gives VIRTPORT, HIDDENSSERVICEPORT
+							find_virtport $SERVICE_NAME
               #This is necessary to work with special characters in sed
               HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-              if [ $x -gt  1 ]; then
-                HIDDENSSERVICEPORT=$(grep -m 1 "^#HiddenServicePort.*$UNIX_PATH" ${TORRC})
-                #Bash specific, but should also work with other shells
-                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-                #This is necessary to work with special characters in sed
-                HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-              fi
 							# This produces WEB_SERVICE_NAME_LIST
 							create_web_service_list
               if [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ) ]]; then
@@ -780,24 +754,11 @@ case "$CHOICE" in
                 echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 (sudo rm -rfv "${DATA_DIR_OS}/${SERVICE_NAME}") &>/dev/null
                 sudo sed -i "/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/d" ${TORRC}
-                x=$(grep -c "$UNIX_PATH" ${TORRC})
-                HIDDENSSERVICEPORT=""
-                VIRTPORT=""
-                VIRTPORT2=""
-                HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                #Bash specific, but should also work with other shells
-                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+								# This gives VIRTPORT, HIDDENSSERVICEPORT
+								find_virtport $SERVICE_NAME
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
-                if [ $x -gt  1 ]; then
-                  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                  #Bash specific, but should also work with other shells
-                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                  #This is necessary to work with special characters in sed
-                  HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                  sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
-                fi
 								sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
 								(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
                 echo ""
@@ -820,24 +781,11 @@ case "$CHOICE" in
               elif [ "$exitstatus" == "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
-                x=$(grep -c "$UNIX_PATH" ${TORRC})
-                HIDDENSSERVICEPORT=""
-                VIRTPORT=""
-                VIRTPORT2=""
-                HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                #Bash specific, but should also work with other shells
-                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+								# This gives VIRTPORT, HIDDENSSERVICEPORT
+								find_virtport $SERVICE_NAME
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-                if [ $x -gt  1 ]; then
-                  HIDDENSSERVICEPORT=$(grep -m 1 "^HiddenServicePort.*$UNIX_PATH" ${TORRC})
-                  #Bash specific, but should also work with other shells
-                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                  #This is necessary to work with special characters in sed
-                  HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
-                  sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-                fi
               fi
               sleep 2
             fi
@@ -1122,18 +1070,8 @@ case "$CHOICE" in
                 done
                 # Show the status of the service after removing the selected authorization(s)
                 # This is important to show the user, if the service has to become public
-                UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-                z=$(grep -c "$UNIX_PATH" ${TORRC})
-                HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                #Bash specific, but should also work with other shells
-                HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-                if [ $z -gt  1 ]; then
-                  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                  #Bash specific, but should also work with other shells
-                  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                  VIRTPORT2=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-                fi
+								# This gives VIRTPORT and HIDDENSSERVICEPORT
+								find_virtport
                 create_client_list "${SERVICE_NAME}"
                 clear
                 echo -e "${RED}[+] This is the status of ${WHITE}$SERVICE_NAME${RED} after altering the client aithorization.${NOCOLOR}"
@@ -1184,7 +1122,7 @@ case "$CHOICE" in
               	if [ "$i" = "$SERVICE_NUMBER" ]; then
 									# This will give ONION_HOSTNAME
               		test_service_exists $SERVICE_NAME
-									# This will give VIRTPORT, VIRTPORT2, HIDDENSSERVICEPORT, HIDDENSSERVICEPORT2
+									# This will give VIRTPORT and HIDDENSSERVICEPORT
 									find_virtport $SERVICE_NAME
 									CHOICE_VIRTPORT=$VIRTPORT
 
@@ -1368,7 +1306,7 @@ case "$CHOICE" in
 									if [ "$i" = "$SERVICE_NUMBER" ]; then
 										# This will give ONION_HOSTNAME
 										test_service_exists $SERVICE_NAME
-										# This will give VIRTPORT, VIRTPORT2, HIDDENSSERVICEPORT, HIDDENSSERVICEPORT2
+										# This will give VIRTPORT and HIDDENSSERVICEPORT
 										find_virtport $SERVICE_NAME
 										CHOICE_VIRTPORT=$VIRTPORT
 

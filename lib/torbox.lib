@@ -395,7 +395,7 @@ recommended_reboot()
 # service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>]
 # Used predefined variables: $ENTRY_NUMBERS (empty, global variable)
 # This function creates a ckeclist or a menu out of a <list_of_entries> and returns the global variable $ENTRY_NUMBERS.
-# The entries in the <list_of_entries> are separate through nelines (/n).
+# The entries in the <list_of_entries> can be separate by newlines (/n)
 service_menu()
 {
   DIALOG_TYPE="${1}"
