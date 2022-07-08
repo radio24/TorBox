@@ -591,7 +591,7 @@ pip3 install PySocks
 pip3 install urwid
 pip3 install Pillow
 pip3 install requests
-pip3 install Django
+pip3 install Django==3.2.14
 pip3 install click
 pip3 install gunicorn
 
