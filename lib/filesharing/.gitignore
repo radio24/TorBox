@@ -1,7 +1,8 @@
-.venv/
+venv/
 __pycache__/
 *.pyc
 db.sqlite3
 tfs.pid
+.idea/
 db/*.sqlite3
 pid/*.pid
