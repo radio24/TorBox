@@ -24,6 +24,7 @@ try:
     ALLOW_DOWNLOAD = True if os.environ['ALLOW_DOWNLOAD'] == '1' else False
     MSG_HEADER = os.environ['MSG_HEADER']
 except:
+    INSTANCE_NAME = 'default'
     pass
 
 
