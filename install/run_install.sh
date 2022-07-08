@@ -633,7 +633,7 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
-sudo pip3 install Django
+sudo pip3 install Django==3.2.14
 sudo pip3 install click
 sudo pip3 install gunicorn
 # NEW v.0.5.1
@@ -1045,7 +1045,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 (sudo chown torbox:torbox /var/www) 2> /dev/null
 # NEW v.0.5.1: configure webssh
 sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
 sudo systemctl restart nginx

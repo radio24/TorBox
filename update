@@ -479,12 +479,21 @@ update_torbox_menu()
   clear
   EXPERT=$1
   if [ $EXPERT = 1 ]; then
-    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-  	if [ ! -z "$INPUT" ]; then
-    	TORBOXMENU_BRANCHNAME=$INPUT
-			INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-  		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; fi
+    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "master" 3>&1 1>&2 2>&3)
+		exitstatus=$?
+		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
+			trap "screen bash update; exit 0" EXIT
+			exit 1
 		fi
+    if [ ! -z "$INPUT" ]; then TORBOXMENU_BRANCHNAME=$INPUT; else TORBOXMENU_BRANCHNAME="master"; fi
+		INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "radio24" 3>&1 1>&2 2>&3)
+		exitstatus=$?
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
+			trap "screen bash update; exit 0" EXIT
+			exit 1
+		fi
+		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; else TORBOXMENU_FORKNAME=radio24; fi
   fi
 	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   clear
@@ -918,15 +927,14 @@ case "$CHOICE" in
 		echo -e "${RED}[+] Delete old .sock files...${NOCOLOR}"
 		# shellcheck disable=SC2062
 		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-		echo ""
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null
 		echo -e "${RED}[+] Starting TFS again...${NOCOLOR}"
 		sudo ./run/start_tfs
 		#sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
 		echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
-		sudo ~/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-		sudo ln -sfv /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+		sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+		(sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/) 2> /dev/null
 		echo -e "${RED}[+] Restating Nginx...${NOCOLOR}"
 		(sudo systemctl reload nginx) 2> /dev/null
 		echo ""

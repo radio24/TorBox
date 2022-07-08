@@ -62,8 +62,10 @@ NOCOLOR='\033[0m'
 #
 #Other variables
 RUNFILE="run/torbox.run"
-CHOICE=$1
+O_DEVICE=$1
+CHOICE2=""
 CHOICE2=$2
+if [ ! -z "$O_DEVICE" ] && [ ! -z "$CHOICE2" ]; then SKIP=1; else SKIP=0; fi
 
 ##############################
 ######## FUNCTIONS ########
@@ -83,8 +85,10 @@ read_config()
 }
 
 # This function randomize, resets or changes the MAC address of an interface.
+# Syntax: change_mac_address [OUTPUT_INTERFACE]
 change_mac_address()
 {
+	O_DEVICE=$1
 	exitstatus=0
 	if [ -z "$CHOICE2" ]; then
 		INPUT="TorBox v.0.5.0 - Change the MAC address for $O_DEVICE"
@@ -128,7 +132,7 @@ change_mac_address()
 			3)
 				OLD_MAC_ADDRESS="MAC_${O_DEVICE}"
 				[[ "${!OLD_MAC_ADDRESS}" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_ADDRESS="${!OLD_MAC_ADDRESS}" || MAC_ADDRESS=""
-			 	MAC_ADDRESS=$(whiptail --title "TorBox - INFO" --inputbox "\n\nPlease enter the MAC address of the device which already passed the Captive Portal (e.g.: 8B-C2-CC-28-6A-97; for more information check https://www.torbox.ch/?page_id=2627):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $MAC_ADDRESS 3>&1 1>&2 2>&3)
+			 	MAC_ADDRESS=$(whiptail --title "TorBox - INFO" --inputbox "\n\nPlease enter the MAC address of the device which already passed the Captive Portal (e.g.: 8B:C2:CC:28:6A:97; for more information check https://www.torbox.ch/?page_id=2627):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX $MAC_ADDRESS 3>&1 1>&2 2>&3)
 			 	if [ ! -z "${MAC_ADDRESS}" ]; then
 				 	[[ "$MAC_ADDRESS" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_CHECK="valid" || MAC_CHECK="invalid"
 				 	if [ "$MAC_CHECK" == "invalid" ]; then
@@ -178,99 +182,54 @@ change_mac_address_finish()
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 }
 
+######## MAIN ########
 read_config
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"==" "===============================================================" \
-" 1" "Change/randomize the MAC adresses of TorBox's interfaces"  \
-" 2" "List the MAC adresses of TorBox's interfaces"  \
-"==" "===============================================================" \
-3>&1 1>&2 2>&3)
+if [ -z "$CHOICE2" ]; then
+	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	"==" "===============================================================" \
+	" 1" "Change/randomize the MAC adresses of TorBox's interfaces"  \
+	" 2" "List the MAC adresses of TorBox's interfaces"  \
+	"==" "===============================================================" \
+	3>&1 1>&2 2>&3)
+	CHOICE3=$(echo "$CHOICE3" | tr -d ' ')
+else
+	CHOICE3=1
+fi
 
-CHOICE=$(echo "$CHOICE" | tr -d ' ')
-case "$CHOICE" in
-
+case "$CHOICE3" in
   # Change/randomize the MAC adresses of TorBox's interfaces
   1)
-		###### DISPLAY THE AVAILABLE INTERFACES ######
-		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
-		"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
-		"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
-		"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
-		"4" "Change the ethernet interface 1 (USB adapter; eth1)" OFF \
-		3>&1 1>&2 2>&3)
-
-		if [ ! -z "$CHOICE" ]; then mapfile -t CHOICE <<< "$CHOICE" else exit 1; fi
-		if [[ "$CHOICE" == "wlan0" ]]; then CHOICE=1
-		elif [[ "$CHOICE" == "wlan1" ]]; then CHOICE=2
-		elif [[ "$CHOICE" == "eth0" ]]; then CHOICE=3
-		elif [[ "$CHOICE" == "eth1" ]]; then CHOICE=4
+		if [ -z "$CHOICE2" ]; then
+			###### DISPLAY THE AVAILABLE INTERFACES ######
+			CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+			"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
+			"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
+			"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
+			"4" "Change the ethernet interface 1 (USB adapter; eth1)" OFF \
+			3>&1 1>&2 2>&3)
+			if [ ! -z "$CHOICE" ]; then mapfile -t CHOICE <<< "$CHOICE"; else exit 1; fi
+			if [ "$CHOICE" == "1" ]; then O_DEVICE="wlan0";
+			elif [ "$CHOICE" == "2" ]; then O_DEVICE="wlan1";
+			elif [ "$CHOICE" == "3" ]; then O_DEVICE="eth0";
+			elif [ "$CHOICE" == "4" ]; then O_DEVICE="eth1"; fi
+		else
+			if [ "$O_DEVICE" == "wlan0" ]; then CHOICE=1;
+			elif [ "$O_DEVICE" == "wlan1" ]; then CHOICE=2;
+			elif [ "$O_DEVICE" == "eth0" ]; then CHOICE=3;
+			elif [ "$O_DEVICE" == "eth1" ]; then CHOICE=4; fi
 		fi
-		clear
-		for ARGUMENT in "${CHOICE[@]}"; do
-			[ -z "$ARGUMENT" ] && exit 0
-			case $ARGUMENT in
-
-				1)
-					O_DEVICE="wlan0"
-					if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-						change_mac_address
-						if [ -z "$2" ]; then
-							change_mac_address_finish
-						fi
-					else
-						clear
-						echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
-						echo " "
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					fi
-				;;
-
-				2)
-					O_DEVICE="wlan1"
-					if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-						change_mac_address
-						if [ -z "$2" ]; then
-							change_mac_address_finish
-						fi
-					else
-						clear
-						echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					fi
-				;;
-
-				3)
-					O_DEVICE="eth0"
-					if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-						change_mac_address
-						if [ -z "$2" ]; then
-							change_mac_address_finish
-						fi
-					else
-						clear
-						echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
-						echo " "
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					fi
-				;;
-
-				4)
-					O_DEVICE="eth1"
-					if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-						change_mac_address
-						if [ -z "$2" ]; then
-							change_mac_address_finish
-						fi
-					else
-						clear
-						echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
-						echo " "
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					fi
-				;;
-			esac
-		done
+		[ -z "$CHOICE" ] && exit 0
+		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+			change_mac_address $O_DEVICE
+			if [ ! -z "$O_DEVICE" ] && [ ! -z "$CHOICE2" ]; then change_mac_address_finish; fi
+		else
+			clear
+			echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		fi
+		CHOICE3=""
 	;;
 
 	# "List the MAC adresses of TorBox's interfaces
@@ -301,6 +260,7 @@ case "$CHOICE" in
 		echo ""
 		read -n 1 -s -r -p "Press any key to continue"
 		clear
+		CHOICE3=""
 	;;
 
 	*)
@@ -308,5 +268,5 @@ case "$CHOICE" in
     exit 0
 esac
 
-bash change_MAC
+#bash change_MAC
 exit 0
