@@ -71,6 +71,7 @@ NGINX_DIR="/etc/nginx"
 BACKUP_DIR="/home/torbox/backup"
 RUNFILE="run/torbox.run"
 SELECTION=$1
+ENTRY_NUMBERS=0
 
 ##############################
 ######## FUNCTIONS ########
@@ -92,42 +93,6 @@ read_config()
     TOGGLE16b="OFF"
     TOGGLE17b="ON"
   fi
-}
-
-# This function creates a ckeclist or a menu with all the available onion services
-# Syntax service_menu <checklist|menu> <list_of_service_names> [<additional_menu_text>]
-# Following variables can be used:
-# $SERVICE_NAME_LIST_NUMBERS
-service_menu()
-{
-  DIALOG_TYPE="${1}"
-  SERVICE_NAME_LIST_INTERNAL="${2}"
-  ADDITIONAL_MENU_TEXT="${3}"
-  i=0
-  for SERVICE in $SERVICE_NAME_LIST_INTERNAL; do
-    i=$((i+1))
-		SERVICE=$(sed "s/%/ /g" <<< "$SERVICE")
-    case "${DIALOG_TYPE}" in
-      checklist)
-          if [ $i == 1 ]; then SERVICE_LIST="\"${i}\" \"${SERVICE}\" OFF"
-        else SERVICE_LIST="$SERVICE_LIST \"${i}\" \"${SERVICE}\" OFF"; fi
-      ;;
-      menu)
-          if [ $i == 1 ]; then SERVICE_LIST="\"==\" \"===============================================================\""; fi
-          SERVICE_LIST="$SERVICE_LIST \"${i}\" \"${SERVICE} \""
-      ;;
-    esac
-  done
-  if [ "$DIALOG_TYPE" == "menu" ]; then
-    SERVICE_LIST="$SERVICE_LIST \"==\" \"===============================================================\"";
-    i=$((i+2))
-  fi
-  clear
-  if [ $i -gt 11 ]; then i=11; fi
-  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${SERVICE_LIST} 3>&1 1>&2 2>&3"
-  CHOICE_SERVICE=$(eval $WHIPTAIL_LINE)
-  exitstatus=$?
-  [ ! -z "${CHOICE_SERVICE}" ] && SERVICE_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_SERVICE}")
 }
 
 # This function tests if a onion service exists.
@@ -798,7 +763,7 @@ case "$CHOICE" in
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
-          for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+          for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
               INPUT="Would you DEACTIVATE or DELETE the Onion Service named ->$SERVICE_NAME<-?\n\nDEACTIVATE means that nothing will be deleted and the Onion Service can be reactivatet later.\n\nDELETE means that the Onion Service, client authorizations, and the HOSTED DATA IN THE SHARED FOLDER be deleted PERMANENTLY! The service CANNOT be reactivated and the same onion address CANNOT be used anymore.\n"
               if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEACTIVATE" --yes-button "DELETE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -935,7 +900,7 @@ case "$CHOICE" in
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
-          for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+          for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
               CLIENT_NAME_LIST="$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client(s) name(s) which you want authorize to acces the onion service(s), delimited by space or/and comma (e.g.: alice, bob, carol):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)"
               CLIENT_NAME_LIST="$(printf %s"${CLIENT_NAME_LIST}" | tr -s ' ' ',' | tr -s ',' ',')"
@@ -1001,7 +966,7 @@ case "$CHOICE" in
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
-          for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+          for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
               CLIENT_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client name which you want authorize to acces the onion service (e.g.: alice):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
               exitstatus=$?
@@ -1045,7 +1010,7 @@ case "$CHOICE" in
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
-          for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+          for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
               n=0
               CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_OS}/${SERVICE_NAME}/authorized_clients/" | sed "s/\.auth//g")
@@ -1094,7 +1059,7 @@ case "$CHOICE" in
       i=0
       for SERVICE_NAME in $SERVICE_NAME_LIST; do
         i=$((i+1))
-        for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+        for SERVICE_NUMBER in $ENTRY_NUMBERS; do
           if [ "$i" = "$SERVICE_NUMBER" ]; then
             clear
             echo -e "${RED}[+] This are the clients for ${WHITE}$SERVICE_NAME${RED}:${NOCOLOR}"
@@ -1128,7 +1093,7 @@ case "$CHOICE" in
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
-          for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+          for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
               n=0
               CLIENT_NAME_LIST=$(sudo -u "${TOR_USER}" ls "${DATA_DIR_OS}/${SERVICE_NAME}/authorized_clients/" | sed "s/\.auth//g")
@@ -1215,7 +1180,7 @@ case "$CHOICE" in
           	i=0
           	for SERVICE_NAME in $SERVICE_NAME_LIST; do
             	i=$((i+1))
-            	for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+            	for SERVICE_NUMBER in $ENTRY_NUMBERS; do
               	if [ "$i" = "$SERVICE_NUMBER" ]; then
 									# This will give ONION_HOSTNAME
               		test_service_exists $SERVICE_NAME
@@ -1277,7 +1242,7 @@ case "$CHOICE" in
          	clear
          	# List of services, which shares a folder on an Onion domain, this also produces WEB_SERVICE_NAME_LIST, WEB_SERVICE_NAME_FOR_MENU
          	create_web_service_list 0
-         	# This gives us SERVICE_NAME_LIST_NUMBERS
+         	# This gives us ENTRY_NUMBERS
 					if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
          		service_menu checklist "$WEB_SERVICE_NAME_FOR_MENU"
          		if [ "$exitstatus" == "0" ]; then
@@ -1285,7 +1250,7 @@ case "$CHOICE" in
              		i=0
              		for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
                		i=$((i+1))
-               		for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+               		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
                  		if [ "$i" = "$SERVICE_NUMBER" ]; then
 											x=0
 											for VIRTPORT_WEB_SERVICE in $VIRTPORT_WEB_SERVICE_LIST; do
@@ -1399,7 +1364,7 @@ case "$CHOICE" in
 							i=0
 							for SERVICE_NAME in $SERVICE_NAME_LIST; do
 								i=$((i+1))
-								for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 									if [ "$i" = "$SERVICE_NUMBER" ]; then
 										# This will give ONION_HOSTNAME
 										test_service_exists $SERVICE_NAME
@@ -1482,7 +1447,7 @@ case "$CHOICE" in
 							i=0
 							for SERVICE_NAME in $SERVICE_NAME_LIST; do
 								i=$((i+1))
-								for SERVICE_NUMBER in $SERVICE_NAME_LIST_NUMBERS; do
+								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 									if [ "$i" = "$SERVICE_NUMBER" ]; then
 										# Creating an array on an easy way
 										TFS_CONFIG_LIST_ARRAY=($(echo "$TFS_CONFIG_LIST" | tr " " "\n"))
