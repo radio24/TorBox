@@ -9,3 +9,4 @@ class DownloadFileModel(models.Model):
     size = models.IntegerField(default=0)
     date = models.DateField(auto_now_add=True)
     parent = models.ForeignKey("self", default=None, null=True, on_delete=models.CASCADE)
+    path = models.TextField(blank=False)
