@@ -81,7 +81,7 @@ n=0
 ######## FUNCTIONS ###########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function updates the firmware on a RPI4
 # Syntax update_firmware

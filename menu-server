@@ -60,7 +60,7 @@ BACKUP_DIR="$HOME/backup"
 ######## FUNCTIONS ########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode

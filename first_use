@@ -52,7 +52,7 @@ RUNFILE="run/torbox.run"
 ######## FUNCTIONS ###########
 
 #include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function is used for the main program as a trap for CTRL-C
 # Syntax finish_default_obfs4_step1

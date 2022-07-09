@@ -70,7 +70,7 @@ RUNFILE="run/torbox.run"
 ######## FUNCTIONS ########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function changes the WLAN regulatory domain.
 change_crda()
