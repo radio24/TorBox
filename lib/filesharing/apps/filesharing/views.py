@@ -26,19 +26,30 @@ def upload(request, subfolder_id=None):
     if request.method == "POST":
         form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            if form.data.get("subfolder", None):
+            # Upload to root by default
+            if not form.data.get("subfolder", None):
+                parent = DownloadFileModel.objects.get(pk=1)
+            else:
+                # Get selected parent
                 subfolder_id = form.data["subfolder"]
                 parent = DownloadFileModel.objects.get(pk=subfolder_id)
 
-            else:
-                parent = DownloadFileModel.objects.get(pk=1)
             files = request.FILES.getlist("file")
             for f in files:
-                file_instance = DownloadFileModel(
-                    name=f.name, file=f, size=f.size, parent=parent
-                )
-                file_instance.save()
+                # Move file to the right parent
+                file_instance = DownloadFileModel()
+                file_instance.name = f.name
+                file_instance.size = f.size
+                file_instance.parent = parent
 
+                # Upload file to root / subdir
+                file_name = f.name
+                if parent.pk != 1:
+                    relative_path = parent.path.replace(f"{settings.MEDIA_ROOT}/", "")
+                    file_name = f"{relative_path}/{file_name}"
+                file_instance.file.save(file_name, f)
+
+                file_instance.save()
             return render(request, "upload_ok.html")
         else:
             return render(request, "upload.html", {"error": True})
