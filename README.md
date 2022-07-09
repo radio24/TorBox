@@ -1,5 +1,5 @@
 [![GitHub top language](https://img.shields.io/github/languages/top/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/torbox/search?l=Shell)
-[![shellcheck](https://github.com/nradio24/torbox/actions/workflows/main.yaml/badge.svg)](https://github.com/radio24/torbox/actions/workflows/main.yaml)
+[![shellcheck](https://github.com/radio24/torbox/actions/workflows/main.yaml/badge.svg)](https://github.com/radio24/torbox/actions/workflows/main.yaml)
 [![License](https://img.shields.io/github/license/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/blob/master/LICENSE)
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
