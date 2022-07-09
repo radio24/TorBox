@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
+import click
 import os
 import django
 from django.core.management import call_command
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
 
-import click
 
+# fmt: off
 @click.command()
 @click.option('--msg', '-m',
               default='',
@@ -19,34 +19,39 @@ import click
               default=False,
               type=bool,
               help="Run in development mode (Default: 0)")
+# fmt: on
 def main(msg, dev):
     # Set environment vars for django settings
-    os.environ['MSG_HEADER'] = msg
-    os.environ['DEBUG'] = "1" if dev else "0"
+    os.environ["MSG_HEADER"] = msg
+    os.environ["DEBUG"] = "1" if dev else "0"
 
     # Start django
     django.setup()
 
     from django.conf import settings
+
     clean_database(settings.BASE_DIR)
 
     run_webserver(dev)
 
-def clean_database(BASE_DIR):
+
+def clean_database(base_dir):
     """Remove old database and create new one"""
     try:
-        os.remove(BASE_DIR / "db.sqlite3")
-    except:
+        os.remove(base_dir / "db.sqlite3")
+    except:  # noqa
         pass
-    
+
     call_command("migrate", interactive=False)
+
 
 def run_webserver(dev=True):
     from django.core.wsgi import get_wsgi_application
 
     application = get_wsgi_application()
-    call_command('runserver', '127.0.0.1:8010', '--noreload')
+    call_command("runserver", "127.0.0.1:8010", "--noreload")
     quit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
