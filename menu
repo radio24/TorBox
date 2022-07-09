@@ -69,7 +69,7 @@ FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev
 ######## FUNCTIONS ###########
 
 #include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()

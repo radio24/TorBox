@@ -77,7 +77,7 @@ ENTRY_NUMBERS=0
 ######## FUNCTIONS ########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function imports the configuration and makes some preparations
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
@@ -435,7 +435,7 @@ error_already_used()
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
 	trap "bash menu-onion; exit 0" EXIT
-	exit 0
+	exit 1
 }
 
 
@@ -472,6 +472,9 @@ else
   "14" "Backup Onion Services"  \
   "15" "Restore Onion Services" 3>&1 1>&2 2>&3)
 fi
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+if [ "$exitstatus" == "255" ]; then exit 0; fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -1369,97 +1372,106 @@ case "$CHOICE" in
 					2)
 						clear
 						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
-						TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|./lib/filesharing/tfs ||")
-						service_menu menu "$SERVICE_NAME_LIST"
-						if [ "$exitstatus" == "0" ]; then
-							i=0
-							for SERVICE_NAME in $SERVICE_NAME_LIST; do
-								i=$((i+1))
-								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-									if [ "$i" = "$SERVICE_NUMBER" ]; then
-										# Creating an array on an easy way
-										TFS_CONFIG_LIST_ARRAY=($(echo "$TFS_CONFIG_LIST" | tr " " "\n"))
-										#	Distribute the wlwmwnts of the config line to variables
-										TFS_PATH="${TFS_CONFIG_LIST_ARRAY[1]}"
-										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere do you want store the shared files for TFS?\nCurrently: $TFS_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
-										if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
-										clear
-										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
-											sleep 1
-										else
-											TFS_PATH_OLD=$TFS_PATH
-											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/$SUB_FOLDER"
-										fi
-										if [ ! -d $TFS_PATH ]; then
-											sudo chown torbox:torbox $WEBSITE_DIR
-											sudo -utorbox mkdir -p $TFS_PATH
-										fi
-										##### DISPLAY THE AVAILABLE OPTIONS ######
-										if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-											" 1" "Allow uploading" OFF \
-											" 2" "Allow downloading" OFF \
-											3>&1 1>&2 2>&3)
-										elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-											" 1" "Allow uploading" ON \
-											" 2" "Allow downloading" OFF \
-											3>&1 1>&2 2>&3)
-										elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-											" 1" "Allow uploading" OFF \
-											" 2" "Allow downloading" ON \
-											3>&1 1>&2 2>&3)
-										elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-											" 1" "Allow uploading" ON \
-											" 2" "Allow downloading" ON \
-											3>&1 1>&2 2>&3)
-										fi
-										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-										sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
-										(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
-										clear
-										if pgrep -f "filesharing.wsgi"; then
+						if [ -z $SERVICE_NAME_LIST ]; then
+							echo -e "${WHITE}[!] There is no TFS started on an Onion domain, yet!${NOCOLOR}"
+							echo -e "${RED}[+] Start TFS on an Onion domain, first (entry 1) ${NOCOLOR}"
+							echo ""
+							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+							clear
+						else
+							TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|./lib/filesharing/tfs ||")
+							service_menu menu "$SERVICE_NAME_LIST"
+							exitstatus=$?
+							if [ "$exitstatus" == "0" ]; then
+								i=0
+								for SERVICE_NAME in $SERVICE_NAME_LIST; do
+									i=$((i+1))
+									for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+										if [ "$i" = "$SERVICE_NUMBER" ]; then
+											# Creating an array on an easy way
+											TFS_CONFIG_LIST_ARRAY=($(echo "$TFS_CONFIG_LIST" | tr " " "\n"))
+											#	Distribute the wlwmwnts of the config line to variables
+											TFS_PATH="${TFS_CONFIG_LIST_ARRAY[1]}"
+											SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere do you want store the shared files for TFS?\nCurrently: $TFS_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+											if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
+											if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
 											clear
-											echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
-											PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
-											(sudo kill $PID) &>/dev/null
+											if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+												sleep 1
+											else
+												TFS_PATH_OLD=$TFS_PATH
+												TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/$SUB_FOLDER"
+											fi
+											if [ ! -d $TFS_PATH ]; then
+												sudo chown torbox:torbox $WEBSITE_DIR
+												sudo -utorbox mkdir -p $TFS_PATH
+											fi
+											##### DISPLAY THE AVAILABLE OPTIONS ######
+											if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
+												CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+												" 1" "Allow uploading" OFF \
+												" 2" "Allow downloading" OFF \
+												3>&1 1>&2 2>&3)
+											elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
+												CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+												" 1" "Allow uploading" ON \
+												" 2" "Allow downloading" OFF \
+												3>&1 1>&2 2>&3)
+											elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
+												CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+												" 1" "Allow uploading" OFF \
+												" 2" "Allow downloading" ON \
+												3>&1 1>&2 2>&3)
+											elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
+												CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+												" 1" "Allow uploading" ON \
+												" 2" "Allow downloading" ON \
+												3>&1 1>&2 2>&3)
+											fi
+											TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a one-liner can be displayed below the \"TorBox File Sharing\" logo. What should that one-liner say? (empty means nothing):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+											sudo sed -E -i "/^TFS-$SERVICE_NAME=.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
+											(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
+											clear
+											if pgrep -f "filesharing.wsgi"; then
+												clear
+												echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
+												PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
+												(sudo kill $PID) &>/dev/null
+												echo ""
+											fi
+											configure_tfs
+											if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+												sleep 1
+											else
+										  	TFS_SERVICE_NAME_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep $SERVICE_NAME | grep "-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
+												TFS_SERVICE_NAME=$(rev <<< ${TFS_SERVICE_NAME_WITH_PORT})
+												VIRTPORT_TFS_SERVICE=$(cut -d '-' -f1 <<< ${TFS_SERVICE_NAME})
+												#Configure Nginx
+												echo ""
+												echo -e "${RED}[+] Sharing the new folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_TFS_SERVICE${RED}"
+												sed -i'' "s|$TFS_PATH_OLD|$TFS_PATH|" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+											fi
 											echo ""
-										fi
-										configure_tfs
-										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
-											sleep 1
-										else
-										  TFS_SERVICE_NAME_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep $SERVICE_NAME | grep "-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
-											TFS_SERVICE_NAME=$(rev <<< ${TFS_SERVICE_NAME_WITH_PORT})
-											VIRTPORT_TFS_SERVICE=$(cut -d '-' -f1 <<< ${TFS_SERVICE_NAME})
-											#Configure Nginx
+											echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
+											# sudo systemctl stop nginx
+											# shellcheck disable=SC2062
+											sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+											# sudo nginx -t && sudo systemctl start nginx
+											sudo systemctl reload nginx
+											(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf") &>/dev/null
 											echo ""
-											echo -e "${RED}[+] Sharing the new folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_TFS_SERVICE${RED}"
-											sed -i'' "s|$TFS_PATH_OLD|$TFS_PATH|" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+											# This will give ONION_HOSTNAME
+											test_service_exists $SERVICE_NAME
+											if [ "$VIRTPORT_TFS_SERVICE" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+												echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT_TFS_SERVICE}${NOCOLOR}"
+											fi
+											echo ""
+											read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+											clear
 										fi
-										echo ""
-										echo -e "${RED}[+] Restarting Nginx to apply new configuration...${NOCOLOR}"
-										# sudo systemctl stop nginx
-										# shellcheck disable=SC2062
-										sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-										# sudo nginx -t && sudo systemctl start nginx
-										sudo systemctl reload nginx
-										(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf") &>/dev/null
-										echo ""
-										# This will give ONION_HOSTNAME
-										test_service_exists $SERVICE_NAME
-										if [ "$VIRTPORT_TFS_SERVICE" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT_TFS_SERVICE}${NOCOLOR}"
-										fi
-										echo ""
-										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-										clear
-									fi
+									done
 								done
-							done
+							fi
 						fi
 					;;
 
@@ -1735,8 +1747,5 @@ case "$CHOICE" in
     fi
   ;;
 
-  *)
-    clear
-    exit 0
 esac
 bash menu-onion

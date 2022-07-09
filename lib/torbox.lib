@@ -425,8 +425,7 @@ service_menu()
   if [ $i -gt 14 ]; then i=14; fi
   WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
   CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
-  exitstatus=$?
-  [ ! -z "${CHOICE_SERVICE}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_SERVICE}")
+  [ ! -z "${CHOICE_ENTRY}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_ENTRY}")
 }
 
 # number_of_bridges()
