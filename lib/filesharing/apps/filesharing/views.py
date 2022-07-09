@@ -72,6 +72,10 @@ class DownloadListView(ListView):
         if not settings.ALLOW_DOWNLOAD:
             return redirect("index")
 
+        # List only dirs
+        if not DownloadFileModel.objects.get(pk=self.kwargs["pk"]).is_dir:
+            return redirect("index")
+
         return super(DownloadListView, self).dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
