@@ -293,7 +293,7 @@ case "$CHOICE" in
         clear
         exit 1
       fi
-      if [ -n $SCP_TARGET_FULL ]; then
+      if [ -n "$SCP_TARGET_FULL" ]; then
         echo -e "${RED}[+] Sending the backup file to $SCP_TARGET_FULL${NOCOLOR}"
         sudo scp -r $OS_BK_TAR $SCP_TARGET_FULL
         echo " "
@@ -321,7 +321,7 @@ case "$CHOICE" in
       OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       # Possible pull request for onionjuggler?
       SCP_TARGET_FULL=$(whiptail --title "Onion Services -- scp source address" --inputbox "\n\nIf you want to import the backup file from a remote server with scp then enter the source address (syntax: username@from_host:/remote/directory/; blank = skip):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      if [ -n $SCP_TARGET_FULL ]; then
+      if [ -n "$SCP_TARGET_FULL" ]; then
         echo -e "${RED}[+] Receiving the backup file from $SCP_TARGET_FULL${NOCOLOR}"
         sudo scp -r ${SCP_TARGET_FULL}/$OS_BK_TAR ~
         echo " "
