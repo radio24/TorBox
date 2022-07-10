@@ -217,7 +217,7 @@ find_virtport()
 
 
 # This function shows the .onion address and all necessary information to use it.
-# Syntax show_onion_address <sertvice_name>
+# Syntax show_onion_address <service_name>
 show_onion_address()
 {
   SERVICE_NAME="${1}"
@@ -250,19 +250,20 @@ show_onion_address()
     echo "generating a key pair (menu entry 7), sending the client his private key or"
     echo "registering a client's public key (menu entry 8) if he is providing you with it."
   fi
+	# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
+	create_web_service_list
   echo ""
   echo -e "${WHITE}Shared folder information${NOCOLOR}"
-  echo -e "${WHITE}Shared folder   = ${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
-	# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-  create_web_service_list
-  if [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ) ]]; then
-    echo ""
+	if [[ ! -z "$WEB_SERVICE_NAME_LIST" && ( -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" || -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ) ]]; then
+		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && SHARED_FOLDER=$(grep "root" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
+		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && SHARED_FOLDER=$(grep "# Path to shared dir" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
+		echo -e "${RED}Shared folder   = ${WHITE}$SHARED_FOLDER${NOCOLOR}"
+		echo ""
 		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 13. If activated, it is accessible${NOCOLOR}"
-	else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 12. If activated, it is accessible${NOCOLOR}"; fi
-		if [ "$VIRTPORT" == "80" ]; then echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
-		else echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"; fi
+		else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 12. If activated, it is accessible${NOCOLOR}"; fi
+			if [ "$VIRTPORT" == "80" ]; then echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
+			else echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"; fi
 	else
-    echo ""
     echo -e "${RED}Currently, the Onion Service above is ${WHITE}not accessible${NOCOLOR}."
     echo -e "To change that, you have to start sharing a folder or configuring TFS (menu entry 12 or 13)."
   fi
@@ -275,10 +276,9 @@ show_onion_address()
 # Syntax configure_tfs <choice>
 # <choice>: from the selection if downloads and/or uploads are allowed
 # This function needs the following special variables:
-# TFS_PATH, TFS_MESSAGE, SERVICE_NAME
+# CHOICE, TFS_PATH, TFS_MESSAGE, SERVICE_NAME
 configure_tfs()
 {
-	CHOICE=$1
 	allow_ud=0
 	if [ ! -z "$CHOICE" ]; then
 		mapfile -t CHOICE <<< "$CHOICE"
@@ -513,7 +513,6 @@ case "$CHOICE" in
 					echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
 					PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
 					(sudo kill $PID) &>/dev/null
-					echo ""
 				fi
 				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 				# shellcheck disable=SC2062
@@ -740,7 +739,6 @@ case "$CHOICE" in
 						echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
 						PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
 						(sudo kill $PID) &>/dev/null
-						echo ""
 					fi
           echo -e "${RED}[+] There is no Onion Service configured, cleaning up...${NOCOLOR}"
 					# shellcheck disable=SC2062
@@ -970,7 +968,8 @@ case "$CHOICE" in
 
   # Remove client's authorization
   11)
-    create_service_list only_with_clients
+		# Gives $SERVICE_NAME_LIST
+		create_service_list only_with_clients
 		error_no_authorization
     INPUT=$(cat text/remove_clients_authorization-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -1010,8 +1009,8 @@ case "$CHOICE" in
                 # Show the status of the service after removing the selected authorization(s)
                 # This is important to show the user, if the service has to become public
 								# This gives VIRTPORT and HIDDENSSERVICEPORT
-								find_virtport
-                create_client_list "${SERVICE_NAME}"
+								find_virtport $SERVICE_NAME
+                create_client_list $SERVICE_NAME
                 clear
                 echo -e "${RED}[+] This is the status of ${WHITE}$SERVICE_NAME${RED} after altering the client aithorization.${NOCOLOR}"
                 echo -e "${RED}[+] Be careful - removing all client authorizations makes the service public. Check below!${NOCOLOR}"
@@ -1263,7 +1262,7 @@ case "$CHOICE" in
 						     		3>&1 1>&2 2>&3)
 										clear
 										CHOICE=$(echo "$CHOICE" | tr -d ' ')
-					      		configure_tfs $CHOICE
+					      		configure_tfs
 										#Configure Nginx
 										echo ""
 										echo -e "${RED}[+] Sharing the folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
@@ -1326,11 +1325,12 @@ case "$CHOICE" in
 											if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
 											if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
 											clear
+											# If the user doesn't write something into the dialogue, the old path is still valid
 											if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
 												sleep 1
 											else
 												TFS_PATH_OLD=$TFS_PATH
-												TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/$SUB_FOLDER"
+												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 											fi
 											if [ ! -d $TFS_PATH ]; then
 												sudo chown torbox:torbox $WEBSITE_DIR
@@ -1367,19 +1367,25 @@ case "$CHOICE" in
 												echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
 												PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
 												(sudo kill $PID) &>/dev/null
-												echo ""
 											fi
-											configure_tfs $CHOICE
+											configure_tfs
 											if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
 												sleep 1
 											else
-										  	TFS_SERVICE_NAME_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep $SERVICE_NAME | grep "-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
+										  	TFS_SERVICE_NAME_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "$SERVICE_NAME" | grep "\-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
 												TFS_SERVICE_NAME=$(rev <<< ${TFS_SERVICE_NAME_WITH_PORT})
 												VIRTPORT_TFS_SERVICE=$(cut -d '-' -f1 <<< ${TFS_SERVICE_NAME})
+												# Reverse the result
+												VIRTPORT_TFS_SERVICE=$(rev <<< ${VIRTPORT_TFS_SERVICE})
 												#Configure Nginx
 												echo ""
 												echo -e "${RED}[+] Sharing the new folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_TFS_SERVICE${RED}"
-												sed -i'' "s|$TFS_PATH_OLD|$TFS_PATH|" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+												sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+												#sudo mv "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf" /tmp
+												sudo systemctl reload nginx
+												#sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf" "${NGINX_DIR}/sites-available/"
+												sudo sed -i "s|$TFS_PATH_OLD|$TFS_PATH|g" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf"
+												(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_TFS_SERVICE}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 											fi
 											echo ""
 											echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
@@ -1417,17 +1423,15 @@ case "$CHOICE" in
 							echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
 							PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
 							(sudo kill $PID) &>/dev/null
-							echo ""
 						fi
 						sudo sed -E -i "/.\/lib\/filesharing\/tfs/d" "${RUNFILE}"
 						(sudo rm /etc/cron.d/tfs-rescan) &>/dev/null
 						sleep 5
-						echo ""
-						echo -e "${RED}[+]Removing Nginx configuration...${NOCOLOR}"
+						echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 						FILENAME=$(ls "/etc/nginx/sites-enabled/" | grep "onion-filesharing.conf")
-						sudo rm -r "/etc/nginx/sites-enabled/$FILENAME"
+						[ ! -z $FILENAME ] && sudo rm -r "/etc/nginx/sites-enabled/$FILENAME"
 						FILENAME=$(ls "/etc/nginx/sites-available/" | grep "onion-filesharing.conf")
-						sudo rm -r "/etc/nginx/sites-available/$FILENAME"
+						[ ! -z $FILENAME ] sudo rm -r "/etc/nginx/sites-available/$FILENAME"
 						echo ""
 						# This produces WEB_SERVICE_NAME_LIST
 						create_web_service_list
