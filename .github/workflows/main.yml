@@ -1,8 +1,7 @@
 on:
   push:
     branches:
-      - master
-      - torbox-0.5.1
+      - "**"
 
 name: 'Trigger: Push action'
 
