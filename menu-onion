@@ -1063,42 +1063,55 @@ case "$CHOICE" in
 									# This will give VIRTPORT and HIDDENSSERVICEPORT
 									find_virtport $SERVICE_NAME
 									CHOICE_VIRTPORT=$VIRTPORT
-
 									# Check if the service/port pair is already used
 									[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 									[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
-
-									# If not used, start sharing
-                	echo -e "${RED}[+] Sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
-                	(cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") >/dev/null
-                	UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-                	HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-                	#Bash specific, but should also work with other shells
-                	HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-                	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-                	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-                	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-                	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-                	sed -i'' "s|FOLDER|$WEBSITE_DIR/$SERVICE_NAME|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-                	(sudo mv "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-                	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
-                	# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
-                	EMPTY_FOLDER=$(ls -A "$WEBSITE_DIR/$SERVICE_NAME")
-                	if [ -z "$EMPTY_FOLDER" ]; then
-                  	(sudo cp "etc/nginx/shared-folder/index.html" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                  	(sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$WEBSITE_DIR/$SERVICE_NAME") >/dev/null
-                	fi
-                	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+									# Which folder should be shared?
+									SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhich folder inside of $WEBSITE_DIR should be shared? (default is $WEBSITE_DIR/${SERVICE_NAME}, however you can chose another folder, e.g ${SERVICE_NAME}/shared or $WEBSITE_DIR/${SERVICE_NAME}/shared):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+									if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
+									if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
+									clear
+									# If the user doesn't write something into the dialogue, the default is valid
+									if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
+										SHARE_PATH="$WEBSITE_DIR/$SERVICE_NAME"
+									else
+										SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+									fi
+									if [ ! -d $SHARE_PATH ]; then
+										sudo chown torbox:torbox $WEBSITE_DIR
+										sudo -utorbox mkdir -p $SHARE_PATH
+									fi
+									echo -e "${RED}[+] Sharing the folder ${WHITE}$SHARE_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
+									(cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") >/dev/null
+									UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+									HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+									#Bash specific, but should also work with other shells
+	               	HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+	               	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
+	               	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+	               	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+	               	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+	               	sed -i'' "s|FOLDER|$SHARE_PATH|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
+              		(sudo mv "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+              		(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+									# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
+	               	EMPTY_FOLDER=$(ls -A "$SHARE_PATH")
+	               	if [ -z "$EMPTY_FOLDER" ]; then
+	                 	(sudo cp "etc/nginx/shared-folder/index.html" "$SHARE_PATH") >/dev/null
+	                 	(sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$SHARE_PATH") >/dev/null
+	               	fi
+									echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 									# shellcheck disable=SC2062
 									sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									sudo systemctl reload nginx
-                	echo ""
-                	if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-                  	echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
-                	fi
-                	echo ""
-                	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-                	clear
+									(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") &>/dev/null
+									echo ""
+									if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+										echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+									fi
+									echo ""
+									read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+									clear
               	fi
             	done
           	done
@@ -1240,11 +1253,11 @@ case "$CHOICE" in
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
 										# Where should the files be stored?
-										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of $WEBSITE_DIR do you want store the shared files for TFS? (default is the $WEBSITE_DIR/${SERVICE_NAME} folder itself but you can add another folder, e.g ${SERVICE_NAME}/tfsfolder or $WEBSITE_DIR/${SERVICE_NAME}/tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of $WEBSITE_DIR do you want store the shared files for TFS? (default is $WEBSITE_DIR/${SERVICE_NAME}, however you can chose another folder, e.g ${SERVICE_NAME}/tfsfolder or $WEBSITE_DIR/${SERVICE_NAME}/tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
 										if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
 										clear
-										# If the user doesn't write something into the dialogue, the old path is still valid
+										# If the user doesn't write something into the dialogue, the default is valid
 										if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
 											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME"
 										else
