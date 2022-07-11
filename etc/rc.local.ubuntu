@@ -4,8 +4,9 @@
 sudo dmesg -D
 
 # NEW v.0.5.1: starting webssh
-sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &
-sudo chmod a+rw /var/run/webssh.sock
+nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &
+sleep 2
+sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 sudo systemctl restart nginx
 
 # Change the MAC address if needed
