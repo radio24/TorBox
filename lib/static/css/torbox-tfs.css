@@ -1,0 +1,42 @@
+/* Content */
+    #torbox-upload-panel > .panel-block, #torbox-upload-ok > .panel-block {
+        border: 0 !important;
+    }
+    #torbox-upload-ok i {
+        font-size: 256px;
+        color: var(--torbox-color-green);
+    }
+
+/* Download file */
+    .torbox-tfs-tools {
+        position: fixed;
+        left: 35px;
+        bottom: 47px;
+        z-index: 11;
+    }
+    .torbox-tfs-tools .box {
+        border: 1px solid #ededed;
+    }
+    .torbox-tfs-tools .box .field span {
+        font-size: 10px;float: left;
+        margin-top: 0px;
+        margin-bottom: 5px;
+        width: 100%;
+    }
+    .panel-block a {
+        width: 100%;
+        color: #363636;
+    }
+    .panel-block a:hover {
+        color: #485fc7;
+    }
+
+/* Upload file */
+    .torbox-box i {
+        position: relative;
+        font-size: 128px;
+        transition: color 0.3s;
+    }
+    .torbox-box:hover > i {
+        color: var(--torbox-color-green);
+    }

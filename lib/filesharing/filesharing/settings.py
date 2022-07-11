@@ -14,6 +14,20 @@ import os
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
 
+# NOTE: Try except needed for manage.py shell
+try:
+    INSTANCE_NAME = os.environ['INSTANCE_NAME']
+    MEDIA_URL = '/files/'
+    MEDIA_ROOT = os.environ['MEDIA_ROOT']
+
+    ALLOW_UPLOAD = True if os.environ['ALLOW_UPLOAD'] == '1' else False
+    ALLOW_DOWNLOAD = True if os.environ['ALLOW_DOWNLOAD'] == '1' else False
+    MSG_HEADER = os.environ['MSG_HEADER']
+except:
+    INSTANCE_NAME = 'default'
+    pass
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -82,7 +96,7 @@ WSGI_APPLICATION = 'filesharing.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / f'db/{INSTANCE_NAME}.sqlite3',
     }
 }
 
@@ -107,14 +121,3 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / '../static'
 ]
-
-# NOTE: Try except needed for manage.py shell
-try:
-    MEDIA_URL = '/files/'
-    MEDIA_ROOT = os.environ['MEDIA_ROOT']
-
-    ALLOW_UPLOAD = True if os.environ['ALLOW_UPLOAD'] == '1' else False
-    ALLOW_DOWNLOAD = True if os.environ['ALLOW_DOWNLOAD'] == '1' else False
-    MSG_HEADER = os.environ['MSG_HEADER']
-except:
-    pass
