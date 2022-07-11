@@ -87,7 +87,7 @@ EXITLOOP=0
 ######## FUNCTIONS ###########
 
 #include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # This function pass through Captive Portals using the TUNNELLING nethod
 captive_tunneling()

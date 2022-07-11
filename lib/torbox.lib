@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -389,6 +390,42 @@ recommended_reboot()
       trap "cd ~/torbox; bash $TRAP_DESTINATION; exit 0" SIGINT
     fi
   fi
+}
+
+# service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>]
+# Used predefined variables: $ENTRY_NUMBERS (empty, global variable)
+# This function creates a ckeclist or a menu out of a <list_of_entries> and returns the global variable $ENTRY_NUMBERS.
+# The entries in the <list_of_entries> can be separate by newlines (/n)
+service_menu()
+{
+  DIALOG_TYPE="${1}"
+  LIST_OF_ENTRIES="${2}"
+  ADDITIONAL_MENU_TEXT="${3}"
+  i=0
+	[ -z $LIST_OF_ENTRIES ] && exit 1;
+  for ENTRY in $LIST_OF_ENTRIES; do
+    i=$((i+1))
+		ENTRY=$(sed "s/%/ /g" <<< "$ENTRY")
+    case "${DIALOG_TYPE}" in
+      checklist)
+          if [ $i == 1 ]; then ENTRY_LIST="\"${i}\" \"${ENTRY}\" OFF"
+        else ENTRY_LIST="$ENTRY_LIST \"${i}\" \"${ENTRY}\" OFF"; fi
+      ;;
+      menu)
+          if [ $i == 1 ]; then ENTRY_LIST="\"==\" \"===============================================================\""; fi
+          ENTRY_LIST="$ENTRY_LIST \"${i}\" \"${ENTRY} \""
+      ;;
+    esac
+  done
+  if [ "$DIALOG_TYPE" == "menu" ]; then
+    ENTRY_LIST="$ENTRY_LIST \"==\" \"===============================================================\"";
+    i=$((i+2))
+  fi
+  clear
+  if [ $i -gt 14 ]; then i=14; fi
+  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
+  CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
+  [ ! -z "${CHOICE_ENTRY}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_ENTRY}")
 }
 
 # number_of_bridges()

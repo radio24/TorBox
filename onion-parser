@@ -1,0 +1,282 @@
+#!/usr/bin/env sh
+
+## Copyright (C) 2022 nyxnor <nyxnor@protonmail.com>
+## Copyright (C) 2018 - 2021 ENCRYPTED SUPPORT LP <adrelanos@whonix.org>
+## Copyright (C) 2018 Iry Koon <iry@riseup.net>
+## See the file COPYING for copying conditions.
+
+#### meta start
+#### project Whonix
+#### category tor and usability
+#### gateway_only yes
+#### description
+## Tor configuration check command line utility.
+#### meta end
+
+script_name="${0##*/}"
+
+## colors
+nocolor="\033[0m"
+bold="\033[1m"
+#nobold="\033[22m"
+#underline="\033[4m"
+#nounderline="\033[24m"
+red="\033[31m"
+
+
+notice(){ printf %s"${1}\n" 1>&2; }
+error_msg(){ notice "${red}error: ${1}${nocolor}"; exit 1; }
+
+temp_verbose_torrc=$(mktemp)
+temp_folder_cache=$(mktemp)
+
+parser() {
+  for abs_path in ${1}; do
+    abs_path_folder=""
+    printf '%s\n' "${abs_path}" | grep -q -F "*" && abs_path_folder="${abs_path%/*}"
+    if [ -n "${abs_path_folder}" ]; then
+      printf '%s\n' "${parsed_files}" | grep -q "^${abs_path_folder}$" && break
+    else
+      printf '%s\n' "${parsed_files}" | grep -q "^${abs_path}$" && break
+    fi
+    parsed_files="$(printf '%s\n%s\n' "${parsed_files}" "${abs_path}")"
+    if test -f "${abs_path}"; then
+      base_name="${abs_path##*/}"
+      first_character="$(echo "${base_name}" | cut -c 1)"
+      # shellcheck disable=SC2034
+      file_extension="${base_name##*.}"
+
+      if [ "${first_character}" = "." ]; then
+        printf %s"${bold}===> Ignoring file name starting with '.': ${abs_path} (Quote Tor manual: 'Files starting with a dot are ignored.')${nocolor}\n" >> "${temp_verbose_torrc}"
+        continue
+      fi
+
+      printf %s"${bold}===> Start parsing file ${abs_path}${nocolor}\n" >> "${temp_verbose_torrc}"
+      torrc_files="$(printf '%s\n%s\n' "${torrc_files}" "${abs_path}")"
+
+      while IFS="$(printf '\n')" read -r  line; do
+        if [ -n "${line}" ]; then
+          if [ "${very_verbose}" != "1" ] && printf '%s\n' "${line}" | grep -q "^[[:space:]]*\#"; then
+            continue
+          else
+            echo "${line}" >> "${temp_verbose_torrc}"
+          fi
+
+          if printf '%s\n' "${line}" | grep -q "^[[:space:]]*%include"; then
+            abs_path_origin="${abs_path}"
+            line="$(echo "${line}" | awk '{print $2}')"
+
+            case "${line}" in
+              */|*/*\**) line_folder="${line%/*}";; ## example: /etc/tor/torrc.d/ /etc/tor/torrc.d/* /etc/tor/torrc.d/*.conf
+              *) line_folder="${line}";; ## example: /etc/tor/torrc.d
+            esac
+            test -d "${line_folder}" &&
+              printf '%s\n' "${line_folder}" | tee -a "${temp_folder_cache}" >/dev/null
+
+            parser "${line}"
+            printf %s"${bold}===> Resume parsing file ${abs_path_origin}${nocolor}\n" >> "${temp_verbose_torrc}"
+            abs_path="${abs_path_origin}"
+          fi
+        fi
+      done < "${abs_path}"
+
+      printf %s"${bold}===> Done parsing file ${abs_path}${nocolor}\n" >> "${temp_verbose_torrc}"
+    elif test -d "${abs_path%/*}"; then
+      folder_name="${abs_path}"
+      printf %s"${bold}======> Start parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
+      if [ -n "${abs_path_folder}" ]; then
+        abs_path_expansion="${abs_path}"
+      else
+        abs_path_expansion="$(find "${abs_path}" -mindepth 1 -maxdepth 1 | sort -g)"
+      fi
+      for fso in ${abs_path_expansion}; do
+        if [ -d "${fso}" ]; then
+          printf %s"${bold}===> Ignoring subfolder ${abs_path} (Quote Tor manual: 'Files on subfolders are ignored.')${nocolor}\n" >> "${temp_verbose_torrc}"
+          continue
+        fi
+        parser "${fso}"
+      done
+      printf %s"${bold}======> Done parsing folder ${folder_name}${nocolor}\n" >> "${temp_verbose_torrc}"
+    else
+     error_msg "invalid file '${abs_path}'"
+    fi
+  done
+}
+
+parsing_order_verbose(){
+  echo "The Tor configuration files are parsed in such order: "
+  echo "---------------------------------------------------------------------"
+  cat "${temp_verbose_torrc}"
+}
+
+used_torrc_files(){
+  torrc_count=0
+  for line in ${torrc_files}; do
+    torrc_count=$((torrc_count+1))
+  done
+
+  echo "${torrc_count} files are used as tor configuration files: "
+  echo "---------------------------------------------------------------------"
+  printf '%s\n' "${torrc_files}" | grep -v "^$"
+}
+
+extraneous_torrc_files(){
+  while IFS="$(printf '\n')" read -r directory; do
+    for file in "${directory}"/*; do
+      printf '%s\n' "${torrc_files}" | grep -q "^${file}$" || extraneous_torrc="$(printf '%s\n%s\n' "${extraneous_torrc}" "${file}")"
+    done
+  done < "${temp_folder_cache}"
+
+  [ -z "${extraneous_torrc}" ] && return 0
+  torrc_extraneous_count=0
+  for line in ${extraneous_torrc}; do
+    torrc_extraneous_count=$((torrc_extraneous_count+1))
+  done
+
+  echo "/===================================================================\\"
+  echo "|                 Extraneous Tor Configuration Files                |"
+  echo "\\===================================================================/"
+  echo "${torrc_extraneous_count} files were not included by tor: "
+  echo "---------------------------------------------------------------------"
+  printf '%s\n' "${extraneous_torrc}" | grep -v "^$"
+  echo "---------------------------------------------------------------------"
+  echo "These files should probably be removed."
+  test -f /usr/share/whonix/marker && echo "To do so, run: sudo systemctl restart anon-gw-anonymizer-config.service"
+}
+
+unknown_option_specifier(){
+  for unknown_option in "${@}"; do
+    echo "The following files contain unkown option '${unknown_option}': "
+    echo "---------------------------------------------------------------------"
+    # shellcheck disable=SC2086
+    grep -nE --color "^[[:space:]]*${unknown_option}" ${torrc_files}
+    echo "---------------------------------------------------------------------"
+    echo "Please correct the errors above"
+  done
+}
+
+
+## verify tor configuration
+verify_tor(){
+  ##  if using tor systemd to start
+  ## If you don't run tor with systemd
+  ## and has a custom tor start command, add it below or open an issue
+  test -f /lib/systemd/system/tor@default.service &&
+    tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor@default.service | sed "s/ExecStart=//g")"
+
+  ## since we should use exactly the same arguments to examine if Tor
+  ## can start, we simply append the --verify-config arguments behind it
+  ## (and run as root)
+  tor_verify="${tor_start_command:="tor"} --verify-config"
+
+  ## execute the verification
+  ## This should have a /etc/sudoers.d exception.
+  tor_verify_config_exit_code="0"
+  tor_verify_config_output="$(${tor_verify})" || { tor_verify_config_exit_code="${?}"; true; }
+
+  tor_config_files="$(printf '%s\n' "${tor_verify_config_output}" |  grep -E " Read configuration file [^ ]*| Including configuration file [^ ]*" | awk '{print $NF}' | sed "s/\"//;s/\".//;s/\/\//\//" | tr "\n" " ")"
+}
+
+
+## generate_report will generate a user-friendly report based on
+## $tor_verify_config_output and $tor_verify_config_exit_code
+generate_report() {
+  ## generate concise report
+  echo "/===================================================================\\"
+  echo "|                      Report Summary                               |"
+  echo "\\===================================================================/"
+  if [ "${tor_verify_config_exit_code}" = "0" ]; then
+    echo "No error detected in your Tor configuration."
+    echo "Tor verify command: ${tor_verify}"
+    echo "Tor verify exit code: ${tor_verify_config_exit_code}"
+  else
+    echo "Your Tor config files contain at least one error."
+    echo "Tor verify command: ${tor_verify}"
+    echo "Tor verify exit code: ${tor_verify_config_exit_code}"
+    ## concise report which only contains complains with [warn] or [err] tags
+    echo "/===================================================================\\"
+    echo "|                    Tor Concise Report                             |"
+    echo "\\===================================================================/"
+    echo "Below warns and errors must be fixed before you can use Tor:"
+    echo "${tor_verify_config_output}" | grep -E -w -h -i --color '\[warn\]|\[err\]'
+  fi
+
+  echo "/===================================================================\\"
+  echo "|                      Tor Full Report                              |"
+  echo "\\===================================================================/"
+  echo "${tor_verify_config_output}"
+
+  ## parser will grep the invalid option for user and specify
+  ## which file is corrupted for better fixing suggestion
+  ## call parser() to parse torrc files, arguments order does not matter as it
+  parser "${tor_config_files}"
+
+  echo "/===================================================================\\"
+  echo "|                 Used Tor Configuration Files                      |"
+  echo "\\===================================================================/"
+  used_torrc_files
+  extraneous_torrc_files
+
+  ## TODO: More suggestions to different errors can be added in the
+  ## future
+
+  ## extract the unknown option complained by Tor
+  if printf '%s\n' "${tor_verify_config_output}" | grep -q "Unknown option"; then
+    echo "/===================================================================\\"
+    echo "|                 Detailed Suggested Solution                       |"
+    echo "\\===================================================================/"
+    unkownn_option="$(printf '%s\n' "${tor_verify_config_output}" | grep "Unknown option" | sed "s/.*Unknown option '//;s/'.*//")"
+    unknown_option_specifier "${unkownn_option}"
+  fi
+
+  ## parsing_order_verbose creates a very long output which is not
+  ## user-friendly. Therefore, we do not enable it by default and
+  ## only use it with anon-verify -v and anon-verify -vv
+  if [ "${verbose}" = 1 ]; then
+    echo "/===================================================================\\"
+    echo "|                verbose Tor Configuration Parsing                  |"
+    echo "\\===================================================================/"
+    parsing_order_verbose
+  fi
+
+  echo "====================================================================="
+}
+
+
+
+## Initialize all the option variables.
+## This ensures we are not contaminated by variables from the environment.
+verbose=
+very_verbose=
+
+torrc_verify_version="1.0.0"
+
+usage(){
+  printf %s"Usage: ${script_name} [-h] [-v] [-vv]
+Options:
+  -v, --verbose           show how tor configuration is parsed, exluding comments
+  -vv, --very-verbose     show how tor configuration is parsed, including comments
+  -V, --version           show version number and exit
+  -h, --help              show this help message and exit
+"
+  exit 1
+}
+
+while :; do
+  case "${1}" in
+    -h|--help|-\?) usage;;
+    -v|--verbose) echo "${script_name} verbose output..."; verbose=1; shift;;
+    -vv|--very-verbose) echo "${script_name} very verbose output..."; verbose=1; very_verbose=1; shift;;
+    -V|--version) echo "${script_name} ${torrc_verify_version}"; exit 0;;
+    --) shift; break;;
+    -*) echo "${script_name} unknown option: ${1}" >&2; exit 1;;
+    *) break;;
+  esac
+done
+
+## If there are input files (for example) that follow the options, they
+## will remain in the "$@" positional parameters.
+
+[ "$(id -u)" -ne 0 ] && error_msg "run as root"
+verify_tor
+generate_report

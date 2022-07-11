@@ -58,7 +58,7 @@ COMMIT="1597995e94e7ba3cd8866d249e6df1cf9a790e49"
 ######## FUNCTIONS ###########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 cd ~/torbox
 INPUT=$(cat text/step_back-text)

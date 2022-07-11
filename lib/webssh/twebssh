@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os
+import sys
+import click
+from webssh.main import main
+
+
+@click.command()
+@click.option(
+    "--unix-socket",
+    default=f"/var/run/{os.getuid()}/torbox/webssh.sock",
+    type=str,
+    help="Unix socket path",
+)
+@click.option("--port", default=443, type=int, help="HTTP listen port. Default: 80")
+@click.option(
+    "--sslport", default=443, type=int, help="HTTPS listen port. Default: 443"
+)
+@click.option(
+    "--certfile", default="", type=str, help="Path to crt file to enable HTTPS"
+)
+@click.option(
+    "--keyfile", default="", type=str, help="Path to key file to enable HTTPS"
+)
+def run(unix_socket, port, sslport, certfile, keyfile):  # noqa
+    try:
+        os.makedirs(os.path.dirname(unix_socket), exist_ok=True)
+    except PermissionError:
+        click.echo(f"Error: Path for unix socket is not available: " f"{unix_socket}")
+        sys.exit(1)
+
+    # Check certfile and keyfile
+    if certfile or keyfile:
+        if not certfile or not keyfile:
+            click.echo("Error: Both --certfile and --keyfile must be set")
+            sys.exit(1)
+
+    main()
+
+
+if __name__ == "__main__":
+    run()

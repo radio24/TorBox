@@ -37,7 +37,7 @@ NOCOLOR='\033[0m'
 ######## FUNCTIONS ###########
 
 # include lib
-.  ~/torbox/lib/torbox.lib
+.  /home/torbox/torbox/lib/torbox.lib
 
 # Is the Snowflake client installed?
 if command -v snowflake-client &> /dev/null
