@@ -23,6 +23,7 @@ try:
     ALLOW_UPLOAD = True if os.environ["ALLOW_UPLOAD"] == "1" else False
     ALLOW_DOWNLOAD = True if os.environ["ALLOW_DOWNLOAD"] == "1" else False
     MSG_HEADER = os.environ["MSG_HEADER"]
+    CSRF_TRUSTED_ORIGINS = ["http://%s" % os.environ["ONION_DOMAIN"]]
 except:
     INSTANCE_NAME = "default"
     pass
@@ -45,7 +46,6 @@ except:
     DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = ["*"]
 
 
 # Application definition

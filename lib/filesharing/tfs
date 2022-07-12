@@ -15,6 +15,10 @@ from django.core.management import call_command
 							default=None,
 							type=str,
 							help="Onion Service Name")
+@click.option('--onion-domain', '-od',
+							default=None,
+							type=str,
+							help="Onion domain where TFS will be published")
 @click.option('--file-path', '-fp',
 							default=None,
 							type=str,
@@ -39,25 +43,31 @@ from django.core.management import call_command
 							type=bool,
 							help="Run in development mode (Default: 0)")
 # fmt: on
-def main(name, file_path, allow_download, allow_upload, msg, scan, dev):
+def main(name, onion_domain, file_path, allow_download, allow_upload, msg, scan, dev):
     if not name:
         click.echo("Error: You must specify a name.")
         click.echo(f"run {sys.argv[0]} --help for more info.")
         sys.exit(1)
-    else:
-        instance_name = name
-        os.environ["INSTANCE_NAME"] = instance_name
 
-        # Check if another instance running have same name
-        from pathlib import Path
+    if not onion_domain:
+        click.echo("Error: Onion domain is required")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
 
-        base_dir = Path(__file__).resolve().parent
-        if not scan:
-            if os.path.exists(base_dir / f"pid/{instance_name}.pid"):
-                click.echo(
-                    'Error: Another instance is already using name "%s"' % instance_name
-                )
-                sys.exit(1)
+    instance_name = name
+    os.environ["INSTANCE_NAME"] = instance_name
+    os.environ["ONION_DOMAIN"] = onion_domain
+
+    # Check if another instance running have same name
+    from pathlib import Path
+
+    base_dir = Path(__file__).resolve().parent
+    if not scan:
+        if os.path.exists(base_dir / f"pid/{instance_name}.pid"):
+            click.echo(
+                'Error: Another instance is already using name "%s"' % instance_name
+            )
+            sys.exit(1)
 
     if scan:
         """Scan will restart database and scan for files"""
