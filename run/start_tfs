@@ -24,19 +24,44 @@
 # It is executed by rc.local --> DON'T MOVE IT INTO TORBOX.LIB!
 #
 # SYNTAX
-# ./start_tfs
+# ./start_tfs [<initial>]
+# [<initial>] is optional and used, if it was started from rc.local
 #
 
-#This is not only for TFS, but for all shared folders on Onion domains
-n=$(grep -c "^TFS-" /home/torbox/torbox/run/torbox.run)
+INITIAL=$1
+RUNFILE=/home/torbox/torbox/run/torbox.run
+n=$(grep -c "^TFS-" "${RUNFILE}")
 if [ $n -gt 0 ] ; then
-	#Currently, tfs can only be started once. If it changed to starte multiple times, -m hast to be greater 1
-	TFS_CONFIG_LIST=$(grep -m 1 "^TFS-" /home/torbox/torbox/run/torbox.run | cut -d "=" -f2- | sed "s/.\///")
-	TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
-	eval $TFS_CONFIG_LIST
+	i=0
+	until [ $i -eq $n ]; do
+		((i++))
+		TFS_CONFIG_LIST=$(grep -m $i "^TFS-" "${RUNFILE}" | cut -d "=" -f2-)
+		SERVICE_NAME=$(cut -d " " -f3 <<< ${TFS_CONFIG_LIST})
+		if [[ ! -f /home/torbox/torbox/lib/filesharing/pid/$SERVICE_NAME.pid ] && [ -z "$INITIAL" ]]; then
+			if (whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TFS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TFS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
+				eval $TFS_CONFIG_LIST
+			else
+				echo -e "${RED}[+] Removing TFS configuration...${NOCOLOR}"
+				sudo sed -i "/^TFS-${SERVICE_NAME}/d" "${RUNFILE}"
+				echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+				find_virtport "${SERVICE_NAME}"
+				(sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf") &>/dev/null
+				(sudo rm "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf") &>/dev/null
+				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+			fi
+		elif [[ ! -f /home/torbox/torbox/lib/filesharing/pid/$SERVICE_NAME.pid ] && [ "$INITIAL" == "initial" ]]; then
+			TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
+			eval $TFS_CONFIG_LIST
+		elif [[ -f /home/torbox/torbox/lib/filesharing/pid/$SERVICE_NAME.pid ] && [ "$INITIAL" == "initial" ]]; then
+			sudo rm /home/torbox/torbox/lib/filesharing/pid/$SERVICE_NAME.pid
+			TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
+			eval $TFS_CONFIG_LIST
+		fi
+	done
 fi
-# sudo systemctl stop nginx
+
 # shellcheck disable=SC2062
-sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-# sudo nginx -t && sudo systemctl start nginx
+# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+sleep 5
 sudo systemctl reload nginx

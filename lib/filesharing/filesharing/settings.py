@@ -16,15 +16,16 @@ from django.core.management.utils import get_random_secret_key
 
 # NOTE: Try except needed for manage.py shell
 try:
-    INSTANCE_NAME = os.environ['INSTANCE_NAME']
-    MEDIA_URL = '/files/'
-    MEDIA_ROOT = os.environ['MEDIA_ROOT']
+    INSTANCE_NAME = os.environ["INSTANCE_NAME"]
+    MEDIA_URL = "/files/"
+    MEDIA_ROOT = os.environ["MEDIA_ROOT"]
 
-    ALLOW_UPLOAD = True if os.environ['ALLOW_UPLOAD'] == '1' else False
-    ALLOW_DOWNLOAD = True if os.environ['ALLOW_DOWNLOAD'] == '1' else False
-    MSG_HEADER = os.environ['MSG_HEADER']
+    ALLOW_UPLOAD = True if os.environ["ALLOW_UPLOAD"] == "1" else False
+    ALLOW_DOWNLOAD = True if os.environ["ALLOW_DOWNLOAD"] == "1" else False
+    MSG_HEADER = os.environ["MSG_HEADER"]
+    CSRF_TRUSTED_ORIGINS = ["http://%s" % os.environ["ONION_DOMAIN"]]
 except:
-    INSTANCE_NAME = 'default'
+    INSTANCE_NAME = "default"
     pass
 
 
@@ -40,72 +41,70 @@ SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 try:
-    DEBUG = True if os.environ['DEBUG'] == '1' else False
+    DEBUG = True if os.environ["DEBUG"] == "1" else False
 except:
     DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-
-    'apps.filesharing',
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "apps.filesharing",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'filesharing.urls'
+ROOT_URLCONF = "filesharing.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.template.context_processors.media',
-                'django.contrib.messages.context_processors.messages',
-
-                'apps.filesharing.context_processor.filesharing_context'
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.template.context_processors.media",
+                "django.contrib.messages.context_processors.messages",
+                "apps.filesharing.context_processor.filesharing_context",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'filesharing.wsgi.application'
+WSGI_APPLICATION = "filesharing.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / f'db/{INSTANCE_NAME}.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / f"db/{INSTANCE_NAME}.sqlite3",
     }
 }
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -117,7 +116,5 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / '../static'
-]
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "../static"]

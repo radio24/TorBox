@@ -918,14 +918,16 @@ case "$CHOICE" in
 	9)
 		clear
 		if pgrep -f "filesharing.wsgi"; then
+			clear
 			echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
 			PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
 			(sudo kill $PID) &>/dev/null
 			echo ""
 		fi
-		echo -e "${RED}[+] Delete old .sock files...${NOCOLOR}"
+		# echo -e "${RED}[+] Delete old .sock files...${NOCOLOR}"
 		# shellcheck disable=SC2062
-		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+    sleep 5
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null
 		echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
