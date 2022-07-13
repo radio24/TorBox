@@ -1,13 +1,16 @@
 #!/usr/bin/env sh
 
 ## Copy tor config to temp, lock the original file, modify the temp,
-## verify it is ok then save back to original place and remove other files
+## verify it is ok then save back to original place and remove temporary and lock file.
 
 ## Inspired by https://github.com/slicer69/doas/blob/master/vidoas
 
+## Intrinsic dependency is some kind of text editor: vi, vim, nvim, nano, pico, emacs
+## Dependencides that can be minimized if your mktemp is extended over POSIX: m4
 
-file_mode="644"
+#file_mode="644"
 me="${0##*/}"
+vitor_version="0.0.1"
 
 ## colors
 #nocolor="\033[0m"
@@ -25,119 +28,289 @@ me="${0##*/}"
 ## display error message with instructions to use the script correctly.
 notice(){ printf %s"${me}: ${1}\n" 1>&2; }
 error_msg(){ notice "${1}"; exit 1; }
-usage(){ printf '%s\n' "Usage: ${me} [-f tor_conf] [-u tor_user]
-Note:
-  ${me}               run ${me} as the root user with 'sudo' or 'doas'
-  -f tor_conf         if 'tor_conf' is not set, default to /etc/tor/torrc
+usage(){ printf '%s\n' "Usage: ${me} [-V] [--getopt] [-u USER] [[-f] FILE]
+
+Options:
+  -f, --file FILE     tor configuration file file, if 'FILE' is not set, default to /etc/tor/torrc
                       if the file doesn't exist, will create it after passing all tests.
-  -u tor_user         if 'tor_user' is not set, the tor_conf must contain the \"User\" option
-                      else it tor fails to validate the configuration"
+
+  -d, --defaults-torrc
+                      default tor configuration file
+
+  -u, --user USER     tor user, if 'USER' is not set, the tor_conf must contain the \"User\" option
+                      else it tor fails to validate the configuration
+
+  -g, --getopt        get command line options and exit
+
+  -V, --version       print version number and exit"
   exit 1
 }
 
 get_arg(){ case "${2}" in ""|-*) error_msg "Option '${1}' requires an argument.";; esac; }
 
-[ -n "${1}" ] && [ -z "${2}" ] && tor_conf="${1}"
+has() {
+  _cmd=$(command -v "${1}") 2>/dev/null || return 1
+  [ -x "${_cmd}" ] || return 1
+}
+
+get_arg(){
+  case "${arg}" in ""|-*) error_msg "Option '${opt_orig}' requires an argument.";; esac
+  value="${arg}"
+  eval "${1}"="\"${value}\""
+  [ -z "${shift_n}" ] && shift_n=2
+}
+
+## empty variable
+file=""
+
 while :; do
-  case "${1}" in
-    -f) get_arg "${1}" "${2}"; tor_conf="${2}"; shift 2;;
-    -u) get_arg "${1}" "${2}"; tor_user="${2}"; shift 2;;
-    "") break;;
+  shift_n=""
+  opt_orig="${1}" ## save opt orig for error message to understand which opt failed
+  case "${opt_orig}" in
+    --) shift 1; break;; ## stop option parsing
+    --*=*) opt="${1%=*}"; opt="${opt#*--}"; arg="${1#*=}"; shift_n=1;; ## long option '--sleep=1'
+    -*=*) opt="${1%=*}"; opt="${opt#*-}"; arg="${1#*=}"; shift_n=1;; ## short option '-s=1'
+    --*) opt="${1#*--}"; arg="${2}";; ## long option '--sleep 1'
+    -*) opt="${1#*-}"; arg="${2}";; ## short option '-s 1'
+    "") break;; ## options ended
+    *) opt="${1}"; file="${opt}"; shift 1; break;; ## not an option, but editor options are the file directly
+  esac
+  case "${opt}" in
+    u|u=*|user|user=*) get_arg tor_user;;
+    f|f=*|file|file=*) get_arg file;;
+    d|d=*|defaults-torrc|defaults-torrc=*) get_arg defaults_torrc;;
+    V|version) printf '%s\n' "vitor ${vitor_version}"; exit 0;;
+    g|getopt|getopts) getopt=1;;
+    h|help) usage;;
     *) usage;;
   esac
+  shift "${shift_n:-1}"
 done
 
-# CHANGED BY TORBOX: use nano instead of vi
-## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR, if empty use Vi
-eval PRIVILEGED_EDITOR='$'"$(printf %s"${su_cmd##*/}" | tr '[:lower:]' '[:upper:]')_EDITOR"
-editor="${PRIVILEGED_EDITOR:-"${VISUAL:-"${EDITOR:-nano}"}"}"
-## get interrupt signal
-get_intr="$(stty -a | sed -n '/.*intr = / {s///;s/;.*$//;p;}')"
+## can't call GUI editors as root
+[ "$(id -u)" -eq 0 ] && error_msg "Don't run ${me} as root."
 
-## get first argument, if empty, onionjuggler.conf variable, if empty, fallback to default torrc
-file="${tor_conf:-"/etc/tor/torrc"}"
+## whonix has a specific file for user modifications
+[ -f /usr/share/anon-gw-base-files/gateway ] && whonix_conf="/usr/local/etc/torrc.d/50_user.conf"
+
+## this is the default file reads. Getting the last option because the first can be the default torrc.
+#tor_conf_fallback="$(tor --verify-config | grep "Read configuration file" | tail -n -1 | sed "s|.*Read configuration file \"||;s|\"\.||")"
+
+## get file provided on the command line (file), if empty, onionjuggler.conf variable (tor_conf), if empty,
+## try whonix user configuration file (whonix_conf), if empty, fallback to default torrc
+: "${file:="${tor_conf:-"${whonix_conf:-"/etc/tor/torrc"}"}"}"
 ## remove last backlash if inserted by mistake
 file="${file%*/}"
-
-[ -n "${SUDO_USER}" ] && su_cmd="sudo"
-[ -n "${DOAS_USER}" ] && su_cmd="doas"
-{ [ -z "${su_cmd}" ] && [ "$(id -u)" -ne 0 ]; } && error_msg "Run ${me} as the root user with 'sudo' or 'doas'."
-
-if [ -f "${file}" ]; then
-  tor_user_check="$(grep "^User" "${file}" | sed "s/^User //")"
-  if [ -n "${tor_user_check}" ] && [ -n "${tor_user}" ] && [ "${tor_user_check}" != "${tor_user}" ]; then
-    notice "The tor configuration file contains the user ${tor_user_check}, but you specified the tor user ${tor_user}."
-    error_msg "Are you running tor as the correct user?"
+if test -e "${file}" && ! test -f "${file}"; then
+  notice "${file} is not a regular file"
+  if test -b "${file}"; then
+    error_msg "File to be edited can't be a block special file"
+  elif test -c "${file}"; then
+    error_msg "File to be edited can't be a character special file"
+  elif test -d "${file}"; then
+    error_msg "File to be edited can't be a directory"
+  elif test -h "${file}"; then
+    error_msg "File to be edited can't be a symbolic link"
+  elif test -p "${file}"; then
+    error_msg "File to be edited can't be a named pipe"
+  elif test -t "${file}"; then
+    error_msg "File to be edited can't be an open file descriptor"
+  elif test -S "${file}"; then
+    error_msg "File to be edited can't be a socket"
   fi
-  if [ -z "${tor_user_check}" ] && [ -z "${tor_user}" ]; then
-    notice "\"User\" option is not set on the tor configuration file nor in the command line."
-    notice "Specify the tor user with:"
-    error_msg "$ ${me} -u tor_user"
-  fi
+  ## just to make sure to catch a non-regular file
+  exit 1
 fi
-
 
 ## get just the directory
 file_dir="${file%/*}"
-[ ! -d "${file_dir}" ] && error_msg "${file_dir} is not a directory or doesnt exist."
-[ ! -w "${file_dir}" ] && error_msg "${file_dir} is not writable by ${USER}."
-[ ! -r "${file_dir}" ] && error_msg "${file_dir} is not readble by ${USER}."
+test -d "${file_dir}" || error_msg "${file_dir} directory does not exist"
 
-## file is the first argument, replace '.' and '-' for '_'.
-file_name="$(printf %s"${file##*/}" | tr "." "_" | tr "-" "_")"
-file_name_tmp="$(printf %s"mkstemp(${file_dir}/${file_name}.XXXXXX)" | m4)"
-chmod "${file_mode}" "${file_name_tmp}"
+## get editor. First try environment variables [SUDO|DOAS]_EDITOR, if empty try VISUAL, if empty try EDITOR,
+## if still empty, try the default editor specified by the command editor, them Vi for unix
+## later try common terminal commands
+# shellcheck disable=SC2154
+editor_programs="editor vi vim nvim nano pico emacs mg"
+for e in ${editor_programs}; do
+  has "${e}" >/dev/null && editor_fallback="${e}" && break
+done
+vitor_editor="${SUDO_EDITOR:-"${DOAS_EDITOR:-"${VISUAL:-"${EDITOR:-"${editor_fallback}"}"}"}"}"
+[ -z "${vitor_editor}" ] && error_msg "No editor provided, read the manual pages."
+case "${vitor_editor##*/}" in
+  *sudoedit|*doasedit) error_msg "${vitor_editor##*/} is not allowed to be used with Vitor because of its properties";;
+esac
 
-file_locked="${file}.lck"
-## test if file is already in use.
-ln "${file}" "${file_locked}" || error_msg "${file} is busy, try again later."
 
-if [ -f "${file}" ]; then
-  [ ! -r "${file}" ] && error_msg "${file} is not readable."
-  [ ! -w "${file}" ] && error_msg "${file} is not writable."
-  cp -p "${file}" "${file_name_tmp}"
+while :; do
+  has sudo && su_cmd="sudo" && break
+  has doas && su_cmd="doas" && break
+  break
+done
+su_user="${USER}"
+
+[ -z "${su_cmd}" ] && error_msg "Install 'sudo' or 'doas'"
+
+## debian
+test -f /usr/share/tor/tor-service-defaults-torrc && defaults_torrc_fallback="/usr/share/tor/tor-service-defaults-torrc"
+## use defaults-torrc provided on the command line, else, faLlback to debian defaults if it exists, else no file will be used as default
+: "${defaults_torrc:="${defaults_torrc_fallback}"}"
+
+# shellcheck disable=SC2086
+tor_user_check="$("${su_cmd}" grep "^[[:space:]]*User" "${file}" ${defaults_torrc} 2>/dev/null | sed "s|.*User ||" | tail -n -1)"
+if [ -n "${tor_user_check}" ] && [ -n "${tor_user}" ] && [ "${tor_user_check}" != "${tor_user}" ]; then
+  notice "The tor configuration file contains the user ${tor_user_check}, but you specified the tor user ${tor_user}."
+  error_msg "Are you running tor as the correct user?"
+elif [ -z "${tor_user_check}" ] && [ -z "${tor_user}" ]; then
+  notice "\"User\" option is not set on the tor configuration file nor in the command line."
+  notice "Specify the tor user with:"
+  error_msg "$ ${me} -u tor_user"
+fi
+: "${tor_user:="${tor_user_check}"}"
+
+## temporary directory to save the tmp file
+## default to /var/tmp/ and if it doesn't exist, default to /tmp, and if it doesn't exist (impossible?), use env var TMPDIR
+tmp_dir="/var/tmp"
+if test -d "${tmp_dir}" && test -w "${tmp_dir}" && test -r "${tmp_dir}"; then
+  :
+else
+  tmp_dir="/tmp"
+  if test -d "${tmp_dir:="${TMPDIR}"}" && test -w "${tmp_dir}" && test -r "${tmp_dir}"; then
+    :
+  else
+    error_msg "Failed to find a writable and readable temporary directory, tried: '/var/tmp', '/tmp' and '${TMPDIR}'"
+  fi
 fi
 
-check_tmp_tor_user(){
-  tor_user_check="$(grep "^User" "${file_name_tmp}" | sed "s/^User //")"
-  if [ -n "${tor_user_check}" ]; then
-    su_tor_cmd="${su_cmd}"
-  else
-    if [ -z "${tor_user}" ]; then
-      notice "You probably commented or deleted the \"User\" option, but you can only do that if you specify the tor user."
-      notice "If that is what you want interrupt with ${get_intr} and run:"
-      notice "$ ${me} -u tor_user"
+
+## get options and exit
+if [ "${getopt}" = "1" ]; then
+  for key in file defaults_torrc tor_user vitor_editor su_cmd su_user tmp_dir; do
+    eval val='$'"${key}"
+    [ -n "${val}" ] && printf '%s\n' "${key}=\"${val}\""
+  done
+  exit 0
+fi
+
+## get only file name, not path
+file_name="${file##*/}"
+
+file_name_tmp="$(mktemp "${tmp_dir}/${file_name}.XXXXXX")"
+
+## copy preserving permissions
+[ -f "${file}" ] && "${su_cmd}" cp -p "${file}" "${file_name_tmp}"
+#chmod "${file_mode}" "${file_name_tmp}"
+"${su_cmd}" chown "${su_user}:${su_user}" "${file_name_tmp}"
+
+
+file_locked="${tmp_dir}/${file_name}.lck"
+## test if file is already in use.
+trap 'rm -f -- ${file_name_tmp}; exit' EXIT INT TERM
+if ln "${file_name_tmp}" "${file_locked}"; then
+  trap 'rm -f -- ${file_name_tmp} ${file_locked}; exit' EXIT INT TERM
+else
+  error_msg "${file} is busy, try again later."
+fi
+
+
+test -f /lib/systemd/system/tor@default.service &&
+  tor_start_command="$(grep "ExecStart=" /lib/systemd/system/tor@default.service | sed "s/ExecStart=//g")"
+
+# shellcheck disable=SC2154
+[ -n "${defaults_torrc}" ] && defaults_torrc_option="--defaults-torrc ${defaults_torrc}"
+[ -n "${tor_user}" ] && tor_user_option="--User ${tor_user}"
+
+
+verify_tor(){
+  ## the last '-f' is the one that will be considered.
+  tor_command="${su_cmd} ${tor_start_command:-"$(command -v tor)"} --verify-config -f ${file_name_tmp} ${defaults_torrc_option} ${tor_user_option}"
+  tor_config_parsed="$(${tor_command})"
+}
+
+tor_verify_config(){
+  ## tor configuration can still be valid if only warnings are received. example:
+  ##  [warn] Tor was compiled with zstd 1.3.8, but is running with zstd 1.4.8. For safety, we'll avoid using advanced zstd functionality.
+  ##  [warn] ControlPort is open, but no authentication method has been configured.  This means that any program on your computer can reconfigure your Tor.  That's bad!  You should upgrade your Tor controller as soon as possible.
+  ##  Configuration was valid
+  ## this is why we are not using hush, because it wouldn't grep the last line that
+  tor_config_valid=0
+  printf '%s\n' "${tor_config_parsed}" | tail -n 1 | grep -q "^Configuration was valid" && tor_config_valid=1
+  tor_config_parsed="$(printf '%s\n' "${tor_config_parsed}" | grep -e "\[warn\]" -e "\[err\]" -e "Configuration was valid" | grep -v -e "\[warn\] Tor was compiled with" -e "Duplicate .* options on command line.")"
+}
+
+
+save_file(){
+  if ! cmp -s "${file_name_tmp}" "${file}"; then
+    if "${su_cmd}" cp "${file_name_tmp}" "${file}"; then
+      notice "${file} updated"
+      exit 0
     else
-      su_tor_cmd="${su_cmd} -u ${tor_user}"
+      ## simulate sudoedit precautions:
+      ## If, for some reason, vitor is unable to update a file with its edited version,
+      ## the user will receive a warning and the edited copy will remain in a temporary file.
+      notice "Unable to update '${file}' with '${file_name_tmp}', the temporary copy will persist."
+      trap 'rm -f -- ${file_locked}; exit' EXIT INT TERM
+      exit 1
     fi
+  else
+    notice "${file} unchanged"
+    exit 0
   fi
 }
 
-trap '' INT
-trap 'rm -f ${file_name_tmp} ${file_locked}' EXIT
+edit_check_verify(){
+  ## open temporary file to be edited
+  #su -l "${SUDO_USER}" -c "${vitor_editor} ${file_name_tmp}" || true
+  #sudo -u "${SUDO_USER}" -E "${vitor_editor}" "${file_name_tmp}" || true
+  #sudo -u "${DOAS_USER}" "${vitor_editor}" "${file_name_tmp}" || true
+  "${vitor_editor}" "${file_name_tmp}" 2>/dev/null || true
+  verify_tor
+  ## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
+  tor_verify_config
+}
 
-## open temporary file to be edited
-"${editor}" "${file_name_tmp}" || true
-check_tmp_tor_user
 
-## while the config is not ok, loop to enter and continue to edit or signal to interrupt.
-while ! ${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush; do
-  tor_check="$(${su_tor_cmd} tor -f "${file_name_tmp}" --verify-config --hush)"
-  printf '%s\n' "${tor_check}" | grep -q "Permission denied" && notice "Got permission denied to read tor directories, did you specify the tor user? If yes, maybe the directories do not have the right owner."
-  printf '%s\n' "${tor_check}" | grep -q "You are running Tor as root. You don't need to, and you probably shouldn't." && notice "Do not run tor as root if you did not set the \"User\" option."
-  notice "The temporary copy on ${file_name_tmp} is not a valid configuration."
+## https://unix.stackexchange.com/questions/532585/getting-dbind-warnings-about-registering-with-the-accessibility-bus
+export NO_AT_BRIDGE=1 
+
+## first check
+notice "${file} selected"
+edit_check_verify
+## we analyzing the tor response instead of the exit code to loop
+## this is because tor can warn about some configuration but still be valid
+## example is setting a controller (ControlPort, ControlSocket) without any
+## authentication method (CookieAuthentication, HashedControlPassword) configured
+## also happens when there is a non blocking configuration:
+## Manually set: SocksPort 9050 aaa
+## it will be a valid config but the warn will be printed, I don't understand why tor considers it valid.
+## tor: [warn] Unrecognized SocksPort option '"aaa"'
+## tor: Configuration was valid
+while printf '%s\n' "${tor_config_parsed}" | grep -q "\[warn\]"; do
+  printf '%s\n' "${tor_config_parsed}" | while IFS="$(printf '\n')" read -r line || [ -n "${line}" ]; do
+    printf '%s\n' "${line}" | grep -q -e "\[warn\]" -e "\[err\]" && line="$(printf '%s\n' "${line}" | cut -d " " -f4-)"
+    printf '%s\n' "tor: ${line}"
+  done
+  if [ ${tor_config_valid} -eq 1 ]; then
+    notice "${file_name_tmp} is a valid configuration but warnings were received."
+  else
+    notice "${file_name_tmp} is not a valid configuration."
+  fi
   notice "Options are:"
   notice "  (e)enter to edit again."
-  notice "  e(x)it to cancel without saving changes."
+  notice "  e(x)it without saving changes."
+  notice "  (Q)uit and save changes [DANGER]"
   while :; do
-  printf %s"${me}: Your choice: "
+    printf %s"${me}: Your choice: "
     # shellcheck disable=SC2034
     read -r status
-    [ "${status}" = "e" ] && break
-    [ "${status}" = "x" ] && exit
+    case "${status}" in
+      e|E) notice "${file_name_tmp} will be edited again"; break;;
+      x|X) notice "${file} unchanged"; exit 0;;
+      Q) save_file;;
+    esac
   done
-  "${editor}" "${file_name_tmp}" || true
-  check_tmp_tor_user
+  edit_check_verify
+  printf '\n'
 done
 
-! cmp -s "${file_name_tmp}" "${file}" && cp -p "${file_name_tmp}" "${file}" && notice "${file} updated." && exit 0
+## above loop is not run if file does not have issues, so we save it now
+save_file
