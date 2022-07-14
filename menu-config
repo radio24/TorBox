@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2034
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -40,6 +41,7 @@ NO_SPACER=2
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
@@ -179,6 +181,13 @@ read_config()
     TOGGLE14="Disable"
     TOGGLE15="(recommended!)"
   fi
+
+	# TOGGLE17 shows if TWEBSSH is enabled or disabled
+	if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
+		TOGGLE17="Disable"
+	else
+		TOGGLE17="Enable"
+	fi
 }
 
 ######## PREPARATIONS ########
@@ -201,18 +210,19 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - CONFIGURATION
 " 9" "$TOGGLE08 TorBox's WLAN"  \
 "10" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
-"11" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
-"12" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-"13" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"11" "$TOGGLE17 Torbox's WebSSH access" \
+"12" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"13" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"14" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"14" "Enter the advanced tor configuration editor"  \
+"15" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"15" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"16" "Erase all log files" \
+"16" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"17" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"17" "Support for Adafruit's PiTFT displays (reboot required)" \
-"18" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"19" "Support for Sixfab Shields/HATs for cellular connections" \
+"18" "Support for Adafruit's PiTFT displays (reboot required)" \
+"19" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"20" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 
@@ -708,8 +718,34 @@ case "$CHOICE" in
     read_config
   ;;
 
-  #This disables / enables SSH access through Internet
+	#This disables / enables Torbox's WebSSH access
   11)
+		if [ "$TOGGLE17" = "Disable" ]; then
+			INPUT=$(cat text/disable_twebssh-text)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				pkill -t twebssh
+				sudo rm /etc/nginx/sites-enabled/webssh.conf
+				sudo systemctl reload nginx
+				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
+			fi
+		else
+			INPUT=$(cat text/enable_twebssh-text)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+				nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &
+				clear
+				sleep 2
+				sudo systemctl reload nginx
+				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
+				rm nohup.out
+			fi
+		fi
+		read_config
+  ;;
+
+  #This disables / enables SSH access through Internet
+  12)
     if [ "$TOGGLE10" = "Enable" ]; then
       INPUT=$(cat text/ssh_i_access-on-txt)
       ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
@@ -748,7 +784,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables the access to the Tor control port from clients
-  12)
+  13)
     if [ "$TOGGLE14" = "Enable" ]; then
       INPUT=$(cat text/tor_control_port_enable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -773,7 +809,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables HTTP plain text traffic block
-  13)
+  14)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -806,7 +842,7 @@ case "$CHOICE" in
   ;;
 
 	# Enter the advanced configuration editor
-  14)
+  15)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -820,7 +856,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-  15)
+  16)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
       if [ $LOG_STATUS = inactive ]; then
@@ -853,14 +889,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-  16)
+  17)
     clear
     erase_logs
     sleep 2
   ;;
 
   #This is the support for Adafruit's PiTFT displays
-  17)
+  18)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
@@ -881,7 +917,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  18)
+  19)
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)
@@ -941,7 +977,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.0 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  19)
+  20)
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh

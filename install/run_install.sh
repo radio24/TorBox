@@ -379,11 +379,11 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd "$(ls -d */)"
+          	cd "$(ls -d -- */)"
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
-						git add *
+						git add -- *
 						git config --global user.name "torbox"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
@@ -457,11 +457,11 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd "$(ls -d */)"
+				cd "$(ls -d -- */)"
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add *
+				git add -- *
 				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
@@ -1044,7 +1044,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2> /dev/null
 # NEW v.0.5.1: configure webssh
-sudo etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null

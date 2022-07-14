@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -263,11 +264,11 @@ update_tor()
       echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
       tar xzf $filename
 		  echo ""
-			cd "$(ls -d */)"
+			cd "$(ls -d -- */)"
       echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 			# Give it a touch of git (without these lines the compilation will break with a git error)
 			git init
-			git add *
+			git add -- *
 			git config --global user.name "torbox"
 			git commit -m "Initial commit"
 			# Don't use ./autogen.sh
@@ -337,11 +338,11 @@ select_and_install_tor()
         echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
         tar xzf $filename
         echo ""
-        cd "$(ls -d */)"
+        cd "$(ls -d -- */)"
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add *
+				git add -- *
 				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
@@ -917,16 +918,16 @@ case "$CHOICE" in
 	# Restart nginx, webssh and TFS
 	9)
 		clear
-		if pgrep -f "filesharing.wsgi"; then
-			clear
-			echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
-			PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
-			(sudo kill $PID) &>/dev/null
+		# shellcheck disable=SC2012
+		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+		if [ ! -z "$TFS_NAME_LIST" ]; then
+			for TFS_NAME in $TFS_NAME_LIST; do
+				echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+				PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
+				(sudo kill $PID) &>/dev/null
+			done
 			echo ""
 		fi
-		# echo -e "${RED}[+] Delete old .sock files...${NOCOLOR}"
-		# shellcheck disable=SC2062
-		# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
     sleep 5
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null

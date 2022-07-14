@@ -342,11 +342,11 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd `ls -d */`
+          	cd `ls -d -- */`
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
-						git add *
+						git add -- *
 						git config --global user.name "torbox"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
@@ -420,11 +420,11 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd `ls -d */`
+				cd `ls -d -- */`
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add *
+				git add -- *
 				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh

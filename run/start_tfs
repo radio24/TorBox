@@ -61,7 +61,5 @@ if [ $n -gt 0 ] ; then
 	done
 fi
 
-# shellcheck disable=SC2062
-# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 sleep 5
 sudo systemctl reload nginx
