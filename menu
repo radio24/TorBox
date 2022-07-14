@@ -495,6 +495,10 @@ case "$CHOICE" in
         echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
         echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
         echo ""
+				if pgrep -f "pppd"; then
+					poff
+					sleep 5
+				fi
         sudo pon
         echo ""
         sleep 2
