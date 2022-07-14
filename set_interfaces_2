@@ -105,7 +105,12 @@ captive_tunneling()
 			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
 			echo ""
 		fi
-		(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
+		(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+		echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+		(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+		sleep 2
 	fi
 }
 

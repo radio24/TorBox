@@ -224,7 +224,12 @@ case "$CHOICE" in
     INPUT=$(cat text/cable-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep wlan0 | grep "state UP" ; then
         WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -292,8 +297,14 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
-        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-				ask_captive
+        # (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+        (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				sleep 2
+        ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -364,7 +375,12 @@ case "$CHOICE" in
     INPUT=$(cat text/wlan0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep wlan1 | grep "state UP" ; then
         WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
@@ -431,7 +447,12 @@ case "$CHOICE" in
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep usb0 ; then
         if ip link | grep wlan0 | grep "state UP" ; then
@@ -574,7 +595,12 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
-        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+				(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				sleep 2
 				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -644,7 +670,12 @@ case "$CHOICE" in
     INPUT=$(cat text/tun0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       tun0up=$(ip link | grep tun0)
       if [ -z "$tun0up" ] ; then

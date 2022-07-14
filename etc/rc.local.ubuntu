@@ -7,12 +7,12 @@ sudo dmesg -D
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-	nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &
+	(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 	sleep 2
 	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sleep 5
 	sudo systemctl restart nginx
-	rm nohup.out
+	sudo rm nohup.out
 fi
 
 # Change the MAC address if needed

@@ -94,7 +94,7 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# 	# NEW v.0.5.1: new go versions
+# NEW v.0.5.1: new go versions
 # Used go version
 GO_VERSION="go1.18.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.18.3.linux-arm64.tar.gz"
