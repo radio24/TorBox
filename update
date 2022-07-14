@@ -931,11 +931,16 @@ case "$CHOICE" in
     sleep 5
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null
-		echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
-		sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-		(sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/) 2> /dev/null
+		if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
+			echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
+			[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+			[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+			PID=$(pgrep -f "twebssh")
+			[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+		fi
 		echo -e "${RED}[+] Starting TFS again and reload Nginx...${NOCOLOR}"
 		sudo ./run/start_tfs
+		sudo rm nohup.out
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5
