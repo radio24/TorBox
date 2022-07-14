@@ -1,11 +1,12 @@
-This resets Tor, meaning:
-- deactivate the use of bridges and the bridge relay,
-- delete all circuits and force a change of the permanent entry node,
-- delete the Tor statistics.
+We will...
+...delete all circuits and force a change of the permanent entry node;
+...delete the Tor statistics.
 
 We will NOT...
-...delete or reset the configuration files,
-...delete your bridges,
+...deactivate the use of bridges (go to the countermeasure sub-menu);
+...deactivate the use of bridge relay (go to defend the open internet);
+...delete or reset the configuration files;
+...delete your bridges;
 ...delete your bridge relay, (hashed) fingerprints etc.
 
 Are you sure to reset Tor?
