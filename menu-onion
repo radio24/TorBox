@@ -293,6 +293,8 @@ configure_tfs()
 	TFS_MESSAGE_TXT="$(<<< "$TFS_MESSAGE" sed -e 's`[][\\/.*^$]`\\&`g')"
 	# Using the Anchor in torbox.run
 	REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+	#This is necessary to work with special characters in sed
+	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
 	# This will give $ONION_HOSTNAME
 	test_service_exists $SERVICE_NAME
 	# allow_ud = 0 --> neither up- nor download
@@ -601,10 +603,11 @@ case "$CHOICE" in
           is_integer "${VIRTPORT}"
 					# Using the Anchor in torrc
           REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
+					#This is necessary to work with special characters in sed
+					REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
 					UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
           SOCK_FILE="${UNIX_PATH}-${VIRTPORT}.sock"
           #This is necessary to work with special characters in sed
-          REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
           DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
           SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
           SOCK_FILE_STRING="$(<<< "${SOCK_FILE}" sed -e 's`[][\\/.*^$]`\\&`g')"
@@ -759,8 +762,8 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Generate a new key pair (public and private key)
-  # As the onion service operator, make your onion authenticated by generating a pair or public and private keys
+  # Generate a new key pair (public and private key) for a client
+  # As the onion service operator, make your Onion Service authenticated by generating a pair or public and private keys
   # The client's pub key is automatically saved inside <HiddenServiceDir>/authorized_clients/alice.auth
   # The client's private key is shown in the screen and the key file deleted
   # The onion service operator should send the private key to the desired client
@@ -956,7 +959,7 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Remove client's authorization
+  # Remove a client's authorization
   11)
 		# Gives $SERVICE_NAME_LIST
 		create_service_list only_with_clients
@@ -1640,10 +1643,11 @@ case "$CHOICE" in
             sudo mv restore.tbx${DATA_DIR_OS} /var/lib/tor/
             echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
             REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
+						#This is necessary to work with special characters in sed
+						REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
             mapfile -t TORRC_ALL_LINES < <( sudo grep "HiddenService" "restore.tbx/${TORRC}" | tac )
             for TORRC_LINE in "${TORRC_ALL_LINES[@]}"; do
-              #This is necessary to work with special characters in sed
-              REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+							#This is necessary to work with special characters in sed
               TORRC_LINE_STRING="$(<<< "${TORRC_LINE}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING\n$TORRC_LINE_STRING/g" "${TORRC}"
             done
@@ -1676,6 +1680,8 @@ case "$CHOICE" in
 									# This is necessary to work with special characters in sed
 									TFS_CONFIG_STRING="$(<<< "$TFS_CONFIG" sed -e 's`[][\\/.*^$]`\\&`g')"
 									REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" "torbox/${RUNFILE}")
+									#This is necessary to work with special characters in sed
+									REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
 									sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING\n$TFS_CONFIG_STRING/g" "torbox/${RUNFILE}"
 									echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
 									sudo ./run/start_tfs
