@@ -27,13 +27,13 @@ fi
 for INTERFACE in eth0 eth1 wlan0 wlan1 ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
 		if ip link show $INTERFACE | grep "state UP" ; then
-			sudo ip link set dev $O_DEVICE down
-			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $O_DEVICE; fi
-			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $O_DEVICE; fi
-			sudo ip link set dev $O_DEVICE up
+			sudo ip link set dev $INTERFACE down
+			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
+			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
+			sudo ip link set dev $INTERFACE up
 		elif ip link show $INTERFACE | grep "state DOWN" ; then
-			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $O_DEVICE; fi
-			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $O_DEVICE; fi
+			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
+			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
 		fi
 	else
 		MAC_ADDRESS=$(grep "MAC_$INTERFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
