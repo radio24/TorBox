@@ -37,10 +37,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=11
+NO_ITEMS=6
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -129,6 +129,7 @@ client_auth_on()
 		sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
 		# Client side configuration
 		printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private" >/dev/null
+		sudo chown debian-tor:debian-tor "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private"
 		# Output
 		echo -e "${WHITE}[!] Client side authorization is now configured!${NOCOLOR}"
 		echo -e "${RED}[+] Below are the generated keys:${NOCOLOR}"
@@ -155,6 +156,7 @@ client_auth_on()
 		# Client side configuration
 		CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
 		printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private" >/dev/null
+		sudo chown debian-tor:debian-tor "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private"
 		# Output
 		echo -e "${WHITE}[!] Client side authorization is now configured!${NOCOLOR}"
 		echo ""
@@ -193,7 +195,7 @@ case "$CHOICE" in
   # Displays the read.me
 	1)
     INPUT=$(cat text/help-onion_access_control-text)
-    whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+    whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH
   ;;
 
 	# Generate a new key pair (public and private key) for an operator
@@ -201,7 +203,7 @@ case "$CHOICE" in
 	2)
 		INPUT=$(cat text/generate-new_key_pair_client_auth-text)
 		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			ONION_HOSTNAME=$(whiptail --title \"TorBox - INFO\" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client (e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			ONION_HOSTNAME=$(whiptail --title \"TorBox - INFO\" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client\n(e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [ -n "${ONION_HOSTNAME}" ]; then
 				clear
 				client_auth_on "${ONION_HOSTNAME}"
@@ -213,7 +215,7 @@ case "$CHOICE" in
 	3)
 		INPUT=$(cat text/register-client_private_key-text)
 		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			ONION_HOSTNAME=$(whiptail --title "\"TorBox - INFO\"" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client (e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			ONION_HOSTNAME=$(whiptail --title "\"TorBox - INFO\"" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client\n(e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			CLIENT_PRIV_KEY=$(whiptail --title "\"TorBox - INFO\"" --inputbox "\n\nType in the client's private key (e.g: GBJWTYNY5OIQT4BSBP7OY4I7NSTLRDOZNMKSVXEXKGMWPUDPLJRA):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
 				clear

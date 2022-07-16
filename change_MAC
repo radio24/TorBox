@@ -115,6 +115,8 @@ change_mac_address()
 				echo
 				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE up
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			;;
 			2)
 				MAC_ADDRESS="permanent"
@@ -128,6 +130,8 @@ change_mac_address()
 				echo
 				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE up
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			;;
 			3)
 				OLD_MAC_ADDRESS="MAC_${O_DEVICE}"
@@ -151,6 +155,8 @@ change_mac_address()
 			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE up
+					echo " "
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				else
 					clear
 					echo -e "${WHITE}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"

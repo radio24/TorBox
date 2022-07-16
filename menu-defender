@@ -89,7 +89,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - DEFEND THE OP
 "==" "=============================================[Informational]===" \
 " 1" "HOW CAN I SUPPORT THE TOR PROJECT!" \
 " 2" "HOW CAN I HELP WITH TORBOX?" \
-"===" "===============================================[Sub-Menues]===" \
+"===" "================================================[Sub-Menues]===" \
 " 3" "Run a OBFS4 Bridge Relay - ${TOGGLE07}" \
 " 4" "Run an Onion Service - ${TOGGLE16}"  \
 " 5" "Manage my access to an Onion Service - BETA TESTING"  \
