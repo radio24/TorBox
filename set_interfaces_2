@@ -185,10 +185,14 @@ $IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 #$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
-## I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
+# NEW v.0.5.1: new go versions
+# TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
+$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
+$IPTABLES -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+# I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
 $IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
 $IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
-## No other restrictions for OUTPUT
+# No other restrictions for OUTPUT
 
 ###### FORWARD chain ######
 echo -e "${RED}[+] Setting up FORWARD chain...${NOCOLOR}"
