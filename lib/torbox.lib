@@ -279,6 +279,60 @@ erase_logs()
 	fi
 }
 
+# This function imports the configuration and makes some preparations
+do_we_use_bridges()
+{
+  # Do we use bridges? If yes, witch kind of?
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
+
+  clear
+  if [ "$DO_WE_USE_BRIDGES" = "Bridge obfs4 " ]; then
+      OBFS4STRING="ON!"
+      OBFS4STRINGb="Deactivate"
+      BRIDGESTRING="       OBFS4 ON!"
+			MMENUSTRING="(OBFS is activated)"
+			#Needed for menu-bridges
+			MODE_OBFS4=$DO_WE_USE_BRIDGES
+  else
+      OBFS4STRING="OFF"
+      OBFS4STRINGb="Activate"
+  fi
+
+  # MEEKSTRING represents the status of the Meek-Azure bridging mode
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
+  clear
+  if [ "$DO_WE_USE_BRIDGES" = "Bridge meek_lite " ]; then
+      MEEKSTRING="ON!"
+      MEEKSTRINGb="Deactivate"
+      BRIDGESTRING="  MEEK-AZURE ON!"
+			MMENUSTRING="(MEEK-AZURE is activated)"
+			#Needed for menu-bridges
+			MODE_MEEK=$DO_WE_USE_BRIDGES
+  else
+      MEEKSTRING="OFF"
+      MEEKSTRINGb="Activate"
+  fi
+
+  # SNOWSTRING represents the status of the Snowflake bridging mode
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)          # WAS: MODE_OBFS4
+  clear
+  if [ "$DO_WE_USE_BRIDGES" = "Bridge snowflake " ]; then
+      SNOWSTRING="ON!"
+      SNOWSTRINGb="Deactivate"
+      BRIDGESTRING="   SNOWFLAKE ON!"
+			MMENUSTRING="(SNOWFLAKE is activated)"
+			#Needed for menu-bridges
+			MODE_SNOW=$DO_WE_USE_BRIDGES
+  else
+      SNOWSTRING="OFF"
+      SNOWSTRINGb="Activate"
+  fi
+
+  if [ -z "${BRIDGESTRING}" ]; then
+    BRIDGESTRING="Bridge mode OFF!"
+  fi
+}
+
 # deactivating_bridge_relay()
 # Used predefined variables: RED, NOCOLOR, TORRC
 # This function deactivates the bridge relay.

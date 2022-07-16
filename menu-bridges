@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -42,7 +43,6 @@ NO_SPACER=4
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
-MENU_HEIGHT_10=10
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
@@ -52,7 +52,6 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -76,49 +75,6 @@ PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2> /dev/
 # This function imports the configuration and makes some preparations
 read_config()
 {
-  # Is the bridge mode already turned on?
-  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
-
-  # OBFS4STRING represents the status of the Meek-Azure bridging mode
-  MODE_OBFS4=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
-  clear
-  if [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
-      OBFS4STRING="ON!"
-      OBFS4STRINGb="Deactivate"
-      BRIDGESTRING="       OBFS4 ON!"
-  else
-      OBFS4STRING="OFF"
-      OBFS4STRINGb="Activate"
-  fi
-
-  # MEEKSTRING represents the status of the Meek-Azure bridging mode
-  MODE_MEEK=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
-  clear
-  if [ "$MODE_MEEK" = "Bridge meek_lite " ]; then
-      MEEKSTRING="ON!"
-      MEEKSTRINGb="Deactivate"
-      BRIDGESTRING="  MEEK-AZURE ON!"
-  else
-      MEEKSTRING="OFF"
-      MEEKSTRINGb="Activate"
-  fi
-
-  # SNOWSTRING represents the status of the Snowflake bridging mode
-  MODE_SNOW=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)
-  clear
-  if [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      SNOWSTRING="ON!"
-      SNOWSTRINGb="Deactivate"
-      BRIDGESTRING="   SNOWFLAKE ON!"
-  else
-      SNOWSTRING="OFF"
-      SNOWSTRINGb="Activate"
-  fi
-
-  if [ -z "${BRIDGESTRING}" ]; then
-    BRIDGESTRING="Bridge mode OFF!"
-  fi
-
   # Is TorBox connected to a VPN?
   tun0up=$(ip link | grep tun0)
   clear
@@ -185,6 +141,7 @@ read_config()
 }
 
 ######## PREPARATIONS ########
+do_we_use_bridges
 read_config
 
 ###### DISPLAY THE MENU ######
