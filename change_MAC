@@ -109,6 +109,7 @@ change_mac_address()
 				clear
 				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE down
+				sleep 2
 				echo -e "${RED}[+] Randomizing MAC address...${NOCOLOR}"
 				echo
 				sudo macchanger -r $O_DEVICE
@@ -124,6 +125,7 @@ change_mac_address()
 				clear
 				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE down
+				sleep 2
 				echo -e "${RED}[+] Resetting MAC address...${NOCOLOR}"
 				echo
 				sudo macchanger -p $O_DEVICE
@@ -151,6 +153,7 @@ change_mac_address()
 					clear
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 			 	 	sudo ip link set dev $O_DEVICE down
+					sleep 2
 					echo -e "${RED}[+] Setting MAC address to $MAC_ADDRESS ${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"

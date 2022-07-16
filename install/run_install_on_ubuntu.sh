@@ -635,7 +635,7 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
-sudo pip3 install Django==3.2.14
+sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
 # NEW v.0.5.1
@@ -1154,7 +1154,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
-	cp ~/torbox/install/Network/install-rtl8812au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8812au.sh .
 	sudo chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1175,7 +1175,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
-	cp ~/torbox/install/Network/install-rtl8814au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8814au.sh .
 	sudo chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1196,7 +1196,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
-	cp ~/torbox/install/Network/install-rtl8821au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8821au.sh .
 	sudo chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1217,7 +1217,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821cu-20210118.git
 	cd 8821cu-20210118
-	cp ~/torbox/install/Network/install-rtl8821cu.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8821cu.sh .
 	sudo chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1238,7 +1238,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
-	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl88x2bu.sh .
 	sudo chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then

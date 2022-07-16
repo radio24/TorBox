@@ -237,7 +237,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
           #This activates TACA
           if [ $ARGUMENT = 1 ]; then
-						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) &>/dev/null
+						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
   					sudo ./log_check.py &
             clear
             echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"

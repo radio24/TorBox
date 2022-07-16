@@ -102,7 +102,7 @@ read_config()
 test_service_exists()
 {
   SERVICE_NAME="${1}"
-  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_OS}"/"${SERVICE_NAME}"/hostname)
+  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_OS}/${SERVICE_NAME}/hostname")
   if [ "${ONION_HOSTNAME}" = "" ]; then
     clear
     echo -e "${WHITE}[!] ERROR: Service does not exist: ${SERVICE_NAME}${NOCOLOR}"
@@ -1308,7 +1308,7 @@ case "$CHOICE" in
 										CHOICE_VIRTPORT=$VIRTPORT
 										# Check if the service/port pair is already used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
-										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
+										if grep -c "^TFS-${SERVICE_NAME}" "${RUNFILE}" && test -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"; then error_already_used; fi
 										# Where should the files be stored?
 										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nWhere inside of $WEBSITE_DIR do you want store the shared files for TFS? (default is $WEBSITE_DIR/${SERVICE_NAME}, however you can chose another folder, e.g ${SERVICE_NAME}/tfsfolder or $WEBSITE_DIR/${SERVICE_NAME}/tfsfolder):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
@@ -1331,7 +1331,7 @@ case "$CHOICE" in
 						     		3>&1 1>&2 2>&3)
 										clear
 										CHOICE=$(echo "$CHOICE" | tr -d ' ')
-										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \\n is a new line):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 					      		configure_tfs
 										#Configure Nginx
 										echo ""
@@ -1427,7 +1427,7 @@ case "$CHOICE" in
 												" 2" "Allow downloading" ON \
 												3>&1 1>&2 2>&3)
 											fi
-											TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \\n is a new line):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+											TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 											sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
 											clear
 											if [ -f "lib/filesharing/pid/$SERVICE_NAME.pid" ]; then
