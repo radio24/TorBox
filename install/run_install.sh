@@ -599,7 +599,7 @@ check_install_packages "build-essential automake libevent-dev libssl-dev asciido
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
-Both tor services have to be masked to block outgoing tor connections
+# Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1026,7 +1026,7 @@ sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
 sudo systemctl stop tor
 sudo systemctl mask tor
-Both tor services have to be masked to block outgoing tor connections
+# Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh

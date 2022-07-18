@@ -360,12 +360,12 @@ select_and_install_tor()
           	make
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						Both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						Both tor services have to be masked to block outgoing tor connections
+						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
@@ -438,12 +438,12 @@ select_and_install_tor()
 				make
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				Both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
         sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				Both tor services have to be masked to block outgoing tor connections
+				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
@@ -576,7 +576,7 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
-Both tor services have to be masked to block outgoing tor connections
+# Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
@@ -589,7 +589,7 @@ check_install_packages "build-essential automake libevent-dev libssl-dev asciido
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
-Both tor services have to be masked to block outgoing tor connections
+# Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1055,7 +1055,7 @@ sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
 sudo systemctl stop tor
 sudo systemctl mask tor
-Both tor services have to be masked to block outgoing tor connections
+# Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
