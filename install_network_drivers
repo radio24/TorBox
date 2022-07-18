@@ -148,7 +148,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	# NEW v.0.5.1
 	# Installing the RTL8188EU
 	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
 	cd ~
@@ -163,7 +163,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	# NEW v.0.5.1
 	# Installing the RTL8188FU
 	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
 	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
@@ -178,7 +178,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	# NEW v.0.5.1
 	# Installing the RTL8192EU
 	clear
-	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/clnhub/rtl8192eu-linux.git
@@ -192,7 +192,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	# NEW v.0.5.1
 	# Installing the RTL8812AU
 	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8812au-20210629.git
@@ -213,7 +213,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 
 	# Installing the RTL8814AU
 	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
@@ -235,7 +235,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 
 # Installing the RTL8821AU
 	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au-20210708.git
@@ -254,11 +254,10 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo rm -r 8821au-20210708
 	sleep 2
 
-
-	# NEW v.0.5.1
+  # NEW v.0.5.0 - Update 001
 	# Installing the RTL8821CU
 		clear
-		echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
+		echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
 		echo -e " "
 		echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 		git clone https://github.com/morrownr/8821cu-20210118.git
@@ -276,7 +275,6 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 		cd ~
 		sudo rm -r 8821cu-20210118
 		sleep 2
-
 
 	# Installing the RTL88x2BU
 	clear
@@ -298,7 +296,6 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	cd ~
 	sudo rm -r 88x2bu-20210702
 	sleep 2
-fi
 
 # For a Debian installation
 elif [ "$CHECK_OS" == "Debian" ]; then
