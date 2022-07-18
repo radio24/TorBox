@@ -5,8 +5,13 @@ stays in the way of a proper working TorBox (tor commonly uses ports 80,
 
 Therefore, TorBox uses by default countermeasures against a tightly
 configured firewall taking care that tor uses only port 80 and 443
-for its data stream. However, THIS CAN LEAD TO PROBLEMS IN CONNECTION
-WITH THE USE OF BRIDGES and DOESN'T WORK WITH AN OBFS4 BRIDGE RELAY simultaneously.
+for its data stream.
+
+IMPORTANT
+- If using bridges, this can lead to problems (depending on the
+  configuration of the bridges).
+- Don't use this option if you want to run an OBFS4 BRIDGE RELAY! This
+  will not work!
 
 Do you want to keep using the countermeasure against tightly configured
 firewalls?

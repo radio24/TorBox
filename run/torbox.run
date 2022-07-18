@@ -28,8 +28,8 @@ PING_SERVER=http://google.com
 
 # Used URLs (pre-filled with the default values)
 # Used go version
-GO_VERSION=go1.18.3.linux-armv6l.tar.gz
-GO_VERSION_64=go1.18.3.linux-arm64.tar.gz
+GO_VERSION=go1.18.4.linux-armv6l.tar.gz
+GO_VERSION_64=go1.18.4.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL=https://github.com/torproject/tor/tags
@@ -96,8 +96,10 @@ MAC_eth1=random
 MAC_wlan0=random
 MAC_wlan1=random
 
-# Should Nginx running?
-NGINX=OFF
+# TWebSSH
+# 0 - TorBox's Web SSH is disabled
+# 1 - TorBox's Web SSH is enabled
+TWEBSSH=1
 
 # TFS starting commands
 # Syntax: TFS-<service_name>=<tfs command>

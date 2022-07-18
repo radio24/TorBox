@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+                <div class="columns is-centered">
+                    <div class="column is-8">
+                        {% if type == 'DISK_SPACE_ERROR' %}
+                        <div class="box notification is-danger has-text-centered subtitle">
+                            This TorBox can not generate your zip file. Please try again with a smaller selection.
+                        </div>
+                        {% endif %}
+
+                        {% if type == 'SELECTION_ERROR' %}
+                        <div class="box notification is-info has-text-centered subtitle">
+                            Please select one or more files to generate a zip file.
+                        </div>
+                        {% endif %}
+                        
+                        <div class="block has-text-centered">
+                            <a href="{{request.META.HTTP_REFERER}}" class="button is-primary">Go back</a>
+                        </div>
+                        
+                    </div>
+                </div>
+{% endblock %}

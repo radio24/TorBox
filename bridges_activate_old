@@ -92,7 +92,7 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
 " 1" "Activate ALL configured OBFS4 bridges"  \
 " 2" "Activate only OBFS4 bridges, which are ONLINE"  \

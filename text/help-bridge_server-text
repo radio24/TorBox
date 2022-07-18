@@ -1,6 +1,6 @@
 All of the relays that make up the Tor network are publicly listed. One way to try to prevent people from using Tor is to blacklist the public IP addresses of all of the thousands of Tor relays. However, thanks to BRIDGES, Tor users are still able to connect to the network when the public Tor relays are blocked. Not only are bridges private, they can also modify their network packets in a way that it's difficult for an observer to conclude that somebody is using Tor. Unfortunately, the number of bridges have been stagnant for a while. The Tor network needs a constant trickle of new bridges that aren't blocked anywhere yet -- and you can help with that!
 
-By setting up a OBFS4 BRIDGE RELAY, you can help censored users connect to the open internet through Tor.
+By setting up an OBFS4 BRIDGE RELAY, you can help censored users connect to the open internet through Tor.
 
 REQUIREMENTS
 - At least 1 Mbit/s down-/upload bandwidth

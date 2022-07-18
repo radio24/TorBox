@@ -1,119 +1,151 @@
 {% extends 'base.html' %}
+{% block add %}
+
+{% endblock %}
+
 {% block content %}
-                <div class="columns is-centered">
-                    <div class="column is-10">
-                        <!-- download panel -->
-                        <div class="panel">
-                            <div class="panel-heading">
-                                {% if pk > 1 %}
-                                <a href="{% url 'download' pk=parent %}" class="is-small"><i class="far fa-arrow-alt-circle-left"></i></a> &nbsp;
-                                {{ dir_name }}
-                                {% else %}
-                                <a href="{% url 'index' %}" class="is-small"><i class="fas fa-home"></i></a> &nbsp;
-                                Download files
-                                {% endif %}
+                <form method="post" action="{% url 'download-zip' %}">
+                    {% csrf_token %}
+                    <!-- tools -->
+                    <div class="torbox-tfs-tools">
+                        <div class="box">
+                            <div class="field">
+                                <span class="is-centered"></span>
                             </div>
-                            {% if not files %}
-                            <!-- no files -->
-                            <a class="panel-block" href="#">
-                                <div class="column is-12 has-text-centered">
-                                    <span>No files available</span>
-                                </div>
-                            </a>
-                            <!-- /no files -->
-                            {% else %}
-                            <!-- titles -->
-                            <div class="panel-block">
-                                <div class="column is-7">
-                                    <h1 class="title is-6">Filename</h1>
-                                </div>
-                                <div class="column is-2">
-                                    <h1 class="title is-6">Size</h1>
-                                </div>
-                                <div class="column is-desktop">
-                                    <h1 class="title is-6">Date</h1>
-                                </div>
+                            <div class="field has-text-centered">
+                                <a class="button is-primary" title="Upload files in current directory" href="{% url 'upload-subfolder' subfolder_id=pk %}"><i class="fas fa-upload"></i></a><br/>
+                                <span>UPLOAD</span>
                             </div>
-                            <!-- /titles -->
-
-                            {% for file in files %}
-                            <!-- file link -->
-                            {% if file.is_dir %}
-                            <a class="panel-block" href="{% url 'download' pk=file.pk %}">
-                            {% else %}
-                            <a class="panel-block" href="{{ file.file.url }}">
-                            {% endif %}
-                                <div class="column is-7">
-                                    <p>
-                                        {% if file.is_dir %}
-                                        <i class="fas fa-folder"></i>
-                                        {% else %}
-                                        <i class="fas fa-file-alt"></i>
-                                        {% endif %}
-                                        <span>{{ file.name }}</span>
-                                    </p>
-                                </div>
-                                <div class="column is-2">
-                                    <p>
-                                        {% if file.is_dir %}
-                                        -
-                                        {% else %}
-                                        {{ file.size |filesizeformat}}
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                <div class="column is-desktop">
-                                    <p>{{ file.date }}</p>
-                                </div>
-                            </a>
-                            <!-- /file link -->
-                            {% endfor %}
-                            {% endif %}
-                            <!-- pagination -->
-                            {% if is_paginated %}
-                            <div class="panel-block ">
-                                <div class="column">
-                                    <nav class="pagination is-centered is-small" role="navigation" aria-label="paginaton">
-                                        
-                                        {% if page_obj.has_previous %}
-                                        <!-- Prev -->
-                                        <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous" aria-label="Go to previous page">Previous</a>
-                                        {% endif %}
-
-                                        {% if page_obj.has_next %}
-                                        <!-- Next -->
-                                        <a href="?page={{ page_obj.next_page_number }}" class="pagination-next" aria-label="Go to next page">Next</a>
-                                        {% endif %}
-                                        
-                                        <ul class="pagination-list">
-                                            {% if page_obj.number > 3 %}
-                                            <!-- First -->
-                                            <li><a href="?page=1" class="pagination-link" aria-label="Go to page 1">1</a></li>
-                                            <li><span class="pagination-ellipsis">&hellip;</span></li>
-                                            {% endif %}
-
-                                            {% for n in page_obj.paginator.page_range %}
-                                            <!-- Page numbers -->
-                                            {% if n == page_obj.number %}
-                                            <li><a href="#" class="pagination-link is-current" aria-label="Go to page {{ page_obj.number }}">{{ page_obj.number }}</a></li>
-                                            {% elif n > page_obj.number|add:'-3' and n < page_obj.number|add:'3' %}
-                                            <li><a href="?page={{ n }}" class="pagination-link" aria-label="Go to page {{ n }}">{{ n }}</a></li>
-                                            {% endif %}
-                                            {% endfor %}
-                                            
-                                            {% if page_obj.number|add:'3' <= page_obj.paginator.num_pages %}
-                                            <!-- Last-->
-                                            <li><span class="pagination-ellipsis">&hellip;</span></li>
-                                            <li><a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link" aria-label="Go to page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
-                                            {% endif %}
-                                        </ul>
-                                    </nav>
-                                </div>
+                            <!-- <div class="field">
+                                <button class="button is-primary" title="Sort files alphabetically"><i class="fas fa-sort-alpha-down"></i></button>
+                            </div> -->
+                            <div class="field has-text-centered">
+                                <button class="button is-primary" name="download-zip" title="Download selected files/folders as zip"><i class="fas fa-download"></i></button><br/>
+                                <span>DOWNLOAD</span>
                             </div>
-                            {% endif %}
-                            <!-- /pagination -->
                         </div>
-                        <!-- /download panel -->
                     </div>
-                </div>
+                    <!-- /tools -->
+                    <div class="columns is-centered">
+                        <div class="column is-10">
+                            <!-- download panel -->
+                            <div class="panel">
+                                <div class="panel-heading">
+                                    
+                                    {% if pk > 1 %}
+                                    <a href="{% url 'download' pk=parent %}" class="is-small"><i class="far fa-arrow-alt-circle-left"></i></a> &nbsp;
+                                    /{{ path }}/
+                                    {% else %}
+                                    <a href="{% url 'index' %}" class="is-small"><i class="fas fa-home"></i></a> &nbsp;
+                                    Download files
+                                    {% endif %}
+                                </div>
+                                {% if not files %}
+                                <!-- no files -->
+                                <a class="panel-block" href="#">
+                                    <div class="column is-12 has-text-centered">
+                                        <span>No files available</span>
+                                    </div>
+                                </a>
+                                <!-- /no files -->
+                                {% else %}
+                                <!-- titles -->
+                                <div class="panel-block">
+                                    <div class="column is-7">
+                                        <h1 class="title is-6">Filename</h1>
+                                    </div>
+                                    <div class="column is-2">
+                                        <h1 class="title is-6">Size</h1>
+                                    </div>
+                                    <div class="column is-desktop">
+                                        <h1 class="title is-6">Date</h1>
+                                    </div>
+                                </div>
+                                <!-- /titles -->
+
+                                {% for file in files %}
+                                <!-- file link -->
+                                <label class="panel-block">
+                                    <input type="checkbox" name="file_list" value="{{ file.pk }}" />
+                                    <div class="column is-7">
+                                        {% if file.is_dir %}
+                                        <a href="{% url 'download' pk=file.pk %}">
+                                        {% else %}
+                                        <a href="{{ file.file.url }}">
+                                        {% endif %}
+                                            {% if file.is_dir %}
+                                            <i class="fas fa-folder"></i>
+                                            {% else %}
+                                            <i class="fas fa-file-alt"></i>
+                                            {% endif %}
+                                            <span class="ml-1">{{ file.name }}</span>
+                                        </a>
+                                    </div>
+                                    <div class="column is-2">
+                                        {% if file.is_dir %}
+                                        <p>-</p>
+                                        {% else %}
+                                        <p>{{ file.size |filesizeformat}}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="column is-desktop">
+                                        {% if file.is_dir %}
+                                        <p>-</p>
+                                        {% else %}
+                                        <p>{{ file.date }}</p>
+                                        {% endif %}
+                                    </div>
+                                </label>
+                                <!-- /file link -->
+                                {% endfor %}
+                                {% endif %}
+
+                                <!-- pagination -->
+                                {% if is_paginated %}
+                                <div class="panel-block ">
+                                    <div class="column">
+                                        <nav class="pagination is-centered is-small" role="navigation" aria-label="paginaton">
+                                            
+                                            {% if page_obj.has_previous %}
+                                            <!-- Prev -->
+                                            <a href="?page={{ page_obj.previous_page_number }}" class="pagination-previous" aria-label="Go to previous page">Previous</a>
+                                            {% endif %}
+
+                                            {% if page_obj.has_next %}
+                                            <!-- Next -->
+                                            <a href="?page={{ page_obj.next_page_number }}" class="pagination-next" aria-label="Go to next page">Next</a>
+                                            {% endif %}
+                                            
+                                            <ul class="pagination-list">
+                                                {% if page_obj.number > 3 %}
+                                                <!-- First -->
+                                                <li><a href="?page=1" class="pagination-link" aria-label="Go to page 1">1</a></li>
+                                                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                                {% endif %}
+
+                                                {% for n in page_obj.paginator.page_range %}
+                                                <!-- Page numbers -->
+                                                {% if n == page_obj.number %}
+                                                <li><a href="#" class="pagination-link is-current" aria-label="Go to page {{ page_obj.number }}">{{ page_obj.number }}</a></li>
+                                                {% elif n > page_obj.number|add:'-3' and n < page_obj.number|add:'3' %}
+                                                <li><a href="?page={{ n }}" class="pagination-link" aria-label="Go to page {{ n }}">{{ n }}</a></li>
+                                                {% endif %}
+                                                {% endfor %}
+                                                
+                                                {% if page_obj.number|add:'3' <= page_obj.paginator.num_pages %}
+                                                <!-- Last-->
+                                                <li><span class="pagination-ellipsis">&hellip;</span></li>
+                                                <li><a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link" aria-label="Go to page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <!-- /pagination -->
+                            </div>
+                            <!-- /download panel -->
+                        </div>
+                    </div>
+                </form>
 {% endblock %}

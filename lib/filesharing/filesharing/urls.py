@@ -23,7 +23,9 @@ from apps.filesharing import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('upload/', views.upload, name='upload'),
+    path('upload/<int:subfolder_id>/', views.upload, name='upload-subfolder'),
     path('download/<int:pk>/', views.DownloadListView.as_view(), name='download'),
+    path('download_zip/', views.download_zip, name='download-zip'),
 ]
 
 if settings.DEBUG:

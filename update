@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -41,6 +42,7 @@ NO_SPACER=2
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
@@ -263,11 +265,11 @@ update_tor()
       echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
       tar xzf $filename
 		  echo ""
-			cd "$(ls -d */)"
+			cd "$(ls -d -- */)"
       echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 			# Give it a touch of git (without these lines the compilation will break with a git error)
 			git init
-			git add *
+			git add -- *
 			git config --global user.name "torbox"
 			git commit -m "Initial commit"
 			# Don't use ./autogen.sh
@@ -337,11 +339,11 @@ select_and_install_tor()
         echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
         tar xzf $filename
         echo ""
-        cd "$(ls -d */)"
+        cd "$(ls -d -- */)"
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add *
+				git add -- *
 				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
@@ -394,12 +396,7 @@ update_torcfg()
   clear
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
   echo ""
-  # Configuring Shellinabox
-  sudo cp etc/default/shellinabox /etc/default/shellinabox
-  sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-  sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-  sudo systemctl restart shellinabox.service
-  echo -e "${RED}[+]${NOCOLOR}  Copied /etc/default/shellinabox"
+	# NEW v.0.5.1: shellinabox removed
   # Configuring Vanguards
   sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
   echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
@@ -467,7 +464,7 @@ update_torcfg()
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
 
   # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox050
+  sudo hostnamectl set-hostname TorBox051
   (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
   sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
@@ -484,12 +481,21 @@ update_torbox_menu()
   clear
   EXPERT=$1
   if [ $EXPERT = 1 ]; then
-    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-  	if [ ! -z "$INPUT" ]; then
-    	TORBOXMENU_BRANCHNAME=$INPUT
-			INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-  		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; fi
+    INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "master" 3>&1 1>&2 2>&3)
+		exitstatus=$?
+		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
+			trap "screen bash update; exit 0" EXIT
+			exit 1
 		fi
+    if [ ! -z "$INPUT" ]; then TORBOXMENU_BRANCHNAME=$INPUT; else TORBOXMENU_BRANCHNAME="master"; fi
+		INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "radio24" 3>&1 1>&2 2>&3)
+		exitstatus=$?
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
+			trap "screen bash update; exit 0" EXIT
+			exit 1
+		fi
+		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; else TORBOXMENU_FORKNAME=radio24; fi
   fi
 	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   clear
@@ -538,7 +544,7 @@ update_torbox_menu()
 }
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
@@ -549,7 +555,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - UPDATE & MAINTENANCE MENU
 " 6" "Reset TorBox's configuration files (dangerous!)" \
 " 7" "Reset TWM and erase all wifi passwords (reboot required!)" \
 " 8" "Reset Tor and force a change of the permanent entry node" \
-" 9" "Restart TFS and/or Nginx to re-share on an Onion domain" \
+" 9" "Restart Nginx, webssh and TFS" \
 "10" "Force to deactivate the OBFS4 mode" \
 "11" "Rerun the \"First Start-up\" script" \
 "12" "Erase all log files" \
@@ -872,21 +878,11 @@ case "$CHOICE" in
 	8)
 		clear
     INPUT=$(cat text/tor-reset-text)
-    if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       clear
-      MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
       echo -e "${RED}[+] Stopping Tor...${NOCOLOR}"
       sudo systemctl stop tor
       sleep 2
-      echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
-      deactivating_bridge_relay
-      if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-      	sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
-        sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
-		    sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
-		    #Deaktivate all sort of bridges obfs4 and meek-azure
-		    sudo sed -i "s/^Bridge/#Bridge/g" ${TORRC}
-		  fi
 		  echo -e "${RED}[+] Deleting all circuits and forcing a change of the permanent entry node${NOCOLOR}"
 		  (sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
 		  (sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
@@ -909,24 +905,33 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# Restart TFS and Nginx to re-shhare on an Onion domain
+	# NEW v.0.5.1
+	# Restart nginx, webssh and TFS
 	9)
 		clear
-		if pgrep -f "filesharing.wsgi"; then
-			clear
-			echo -e "${RED}[+] Stopping TFS on Onion domain...${NOCOLOR}"
-			PID=$(pgrep -f -o "filesharing.wsgi" | tr "\n" " ")
-			(sudo kill $PID) &>/dev/null
+		# shellcheck disable=SC2012
+		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+		if [ ! -z "$TFS_NAME_LIST" ]; then
+			for TFS_NAME in $TFS_NAME_LIST; do
+				echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+				PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
+				(sudo kill $PID) &>/dev/null
+			done
 			echo ""
 		fi
-		echo -e "${RED}[+] Stopping Nginx...${NOCOLOR}"
-		sudo systemctl stop nginx
-		# shellcheck disable=SC2062
-		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-		echo ""
-		echo -e "${RED}[+] Starting TFS and/or Nginx again...${NOCOLOR}"
+    sleep 5
+		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
+		(sudo chown torbox:torbox /var/www) 2> /dev/null
+		if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
+			echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
+			[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+			[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+			PID=$(pgrep -f "twebssh")
+			[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+		fi
+		echo -e "${RED}[+] Starting TFS again and reload Nginx...${NOCOLOR}"
 		sudo ./run/start_tfs
-		sudo sed -E -i "s/NGINX=OFF/NGINX=ON/g" "${RUNFILE}"
+		sudo rm nohup.out
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5
@@ -957,6 +962,9 @@ case "$CHOICE" in
 	# Fixing and cleaning - just to be sure that all works properly.
 	13)
 		clear
+		# NEW v.0.5.1: new go versions
+		local_clearnet_dns_resolution_on
+		sleep 2
   	check_interface_with_internet
   	clear
   	if [ $CONNECTED == 1 ]; then
@@ -973,6 +981,7 @@ case "$CHOICE" in
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
   	sudo systemctl daemon-reload
   	sleep 3
+		local_clearnet_dns_resolution_off
 	;;
 
 	*)

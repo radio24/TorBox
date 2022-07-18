@@ -156,7 +156,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sudo killall systemd
         sleep 5
         sudo userdel -r pi
-				# NEW v.0.5.0: This will remove the anoying SSH warning during the log in (which is not valid)
+				# This will remove the anoying SSH warning during the log in (which is not valid)
 				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
 				sudo sed -i "/^pi:/d" /etc/shadow
       fi
@@ -202,7 +202,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Configuring the source of the Internet
     	check_interface_with_internet
-    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     	"==" "===============================================================" \
     	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
     	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -225,7 +225,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       INPUT=$(cat text/first_use-TACA-text)
       ##### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+      CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
       " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
       " 2" "Activate Vanguards to protect against Guard discovery" ON \
       3>&1 1>&2 2>&3)
@@ -237,7 +237,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
           #This activates TACA
           if [ $ARGUMENT = 1 ]; then
-						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" ~/torbox/run/torbox.run) &>/dev/null
+						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
   					sudo ./log_check.py &
             clear
             echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
@@ -258,7 +258,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       DEFAULT_OBFS4_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-      if (whiptail --title "TorBox v.0.5.0 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox v.0.5.1 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
         sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
         sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}

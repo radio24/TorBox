@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -91,25 +92,27 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.0: new go versions
 # Used go version
-GO_VERSION="go1.17.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.17.3.linux-arm64.tar.gz"
+GO_VERSION="go1.18.4.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.18.4.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
-# NEW v.0.5.0: TORURL changed --> the update script and the torbox.run have to be updated!
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# NEW v.0.5.0: TOR_HREF_FOR_SED is back
 TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
+SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
+# Offline?
 SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
-SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
+# Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
+# NEW v.0.5.1 - version 2.3.0
+SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
@@ -176,7 +179,6 @@ while true; do
   esac
 done
 
-# NEW v.0.5.0: We have to do that after catching the command line option
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
 [ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
@@ -345,11 +347,11 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd `ls -d */`
+          	cd `ls -d -- */`
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
-						git add *
+						git add -- *
 						git config --global user.name "torbox"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
@@ -358,12 +360,12 @@ select_and_install_tor()
           	make
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
-						# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+						Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
           	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
         	else
@@ -423,11 +425,11 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd `ls -d */`
+				cd `ls -d -- */`
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
-				git add *
+				git add -- *
 				git config --global user.name "torbox"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
@@ -436,12 +438,12 @@ select_and_install_tor()
 				make
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
         sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
-				# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+				Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
 			else
 				echo -e ""
@@ -574,21 +576,20 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs"
-# For some unknow reasons, the command bellow makes some headaches under Ubuntu 20.10
-#sudo apt-get -y install hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem raspberrypi-kernel-headers dkms nyx obfs4proxy apt-transport-tor
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp shellinabox python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez macchanger"
+# NEW v.0.5.1: New packages: macchanger and shellinabox removed
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -642,6 +643,10 @@ sudo pip3 install requests
 sudo pip3 install Django==3.2.14
 sudo pip3 install click
 sudo pip3 install gunicorn
+# NEW v.0.5.1
+sudo pip3 install click
+sudo pip3 install paramiko
+sudo pip3 install tornado
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -806,7 +811,6 @@ if [ "$VANGUARDS_INSTALL" = "YES" ]; then
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
 	fi
-	# NEW v.0.5.0: Synchronized with run_install.sh
 	sudo chown -R debian-tor:debian-tor vanguards
 	cd vanguards
 	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
@@ -923,12 +927,7 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# Configuring Shellinabox
-sudo cp etc/default/shellinabox /etc/default/shellinabox
-sudo mv /etc/shellinabox/options-enabled/00+Black\ on\ White.css /etc/shellinabox/options-enabled/00_Black\ on\ White.css
-sudo mv /etc/shellinabox/options-enabled/00_White\ On\ Black.css /etc/shellinabox/options-enabled/00+White\ On\ Black.css
-sudo systemctl restart shellinabox.service
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/shellinabox"
+# NEW v.0.5.1: shellinabox removed
 # Configuring Vanguards
 if [ "$VANGUARDS_INSTALL" = "YES" ]; then
   (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
@@ -988,20 +987,10 @@ sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-echo -e "${RED}[+]${NOCOLOR}         Changing .profile"
-
-# NEW v.0.5.0: Make Tor and Nginx ready for Onion Services
-# Make Tor and Nginx ready for Onion Services
 (sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
-echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
-# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
 
 #Back to the home directory
 cd
@@ -1064,10 +1053,9 @@ sudo systemctl start hostapd
 sudo systemctl unmask isc-dhcp-server
 sudo systemctl enable isc-dhcp-server
 sudo systemctl start isc-dhcp-server
-sudo systemctl stop nginx
 sudo systemctl stop tor
 sudo systemctl mask tor
-# NEW v.0.5.0: both tor services have to be masked to block outgoing tor connections
+Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
@@ -1082,24 +1070,22 @@ sudo systemctl disable dnsmasq
 sudo systemctl unmask rc-local
 sudo systemctl enable rc-local
 echo ""
-echo -e "${RED}[+]          Stop logging, now..${NOCOLOR}"
+echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog
 sudo systemctl disable rsyslog
-sudo systemctl daemon-reload
 echo""
 
-# Make Tor and Nginx ready for Onion Services
-echo -e "${RED}[+]          Remove Nginx defaults${NOCOLOR}"
+# Make Nginx ready for Webssh and Onion Services
+echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
-sudo chown -R debian-tor:debian-tor /var/lib/tor/services
-sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
-sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-sudo chmod -R go-rwx /var/lib/tor/onion_auth
+# This is necessary for Nginx / TFS
+(sudo chown torbox:torbox /var/www) 2> /dev/null
+# This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+# (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
+sudo systemctl restart nginx
+sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1173,7 +1159,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
-	cp ~/torbox/install/Network/install-rtl8812au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8812au.sh .
 	sudo chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1194,7 +1180,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
-	cp ~/torbox/install/Network/install-rtl8814au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8814au.sh .
 	sudo chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1215,7 +1201,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
-	cp ~/torbox/install/Network/install-rtl8821au.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8821au.sh .
 	sudo chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1236,7 +1222,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821cu-20210118.git
 	cd 8821cu-20210118
-	cp ~/torbox/install/Network/install-rtl8821cu.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl8821cu.sh .
 	sudo chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1257,7 +1243,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
-	cp ~/torbox/install/Network/install-rtl88x2bu.sh .
+	cp /home/torbox/torbox/install/Network/install-rtl88x2bu.sh .
 	sudo chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1333,8 +1319,6 @@ if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
   (sudo visudo -c) 2> /dev/null
 fi
-# This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www)
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1374,7 +1358,7 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox050) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox051) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 (sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
@@ -1383,7 +1367,7 @@ sudo mv /home/ubuntu/* /home/torbox/
 (sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
 sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
+sudo chown -R torbox:torbox /home/torbox/
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 for logs in `sudo find /var/log -type f`; do
@@ -1394,10 +1378,10 @@ done
 echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
-# NEW v.0.5.0: To start TACA notices.log has to be present
+# To start TACA notices.log has to be present
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
-# NEW v.0.5.0: To ensure the correct permissions
+# To ensure the correct permissions
 (sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""

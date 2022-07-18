@@ -85,14 +85,14 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.0 - DEFEND THE OPEN INTERNET!" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - DEFEND THE OPEN INTERNET!" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "HOW CAN I SUPPORT THE TOR PROJECT!" \
 " 2" "HOW CAN I HELP WITH TORBOX?" \
-"===" "===============================================[Sub-Menues]===" \
-" 3" "Run a OBFS4 Bridge Relay - ${TOGGLE07}" \
+"===" "================================================[Sub-Menues]===" \
+" 3" "Run an OBFS4 Bridge Relay - ${TOGGLE07}" \
 " 4" "Run an Onion Service - ${TOGGLE16}"  \
-" 5" "Manage my access to an Onion Service - COMING SOON!"  \
+" 5" "Manage my access to an Onion Service - BETA TESTING"  \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -113,7 +113,7 @@ case "$CHOICE" in
   # Sub-menues
   3) bash menu-server;;
   4) bash menu-onion;;
-#  5) bash menu-access;;
+  5) sudo bash menu-access;;
   *)
     clear
     exit 0

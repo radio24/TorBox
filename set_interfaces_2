@@ -63,11 +63,6 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-MENU_WIDTH=80
-MENU_WIDTH_REDUX=60
-MENU_HEIGHT_25=25
-MENU_HEIGHT_15=15
-MENU_HEIGHT_10=10
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 MY_OWN_IP1="192.168.42.1"
@@ -110,20 +105,12 @@ captive_tunneling()
 			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
 			echo ""
 		fi
-		(nohup ./hostapd_fallback_komplex $I_DEVICE1 $I_DEVICE2) 2>/dev/null
-	fi
-}
-
-# This function pass through Captive Portals on the Ethernet interface by using the SPOOFING or TUNNELLING method
-captive_eth()
-{
-	if [ $CAPTIVE = 2 ]; then
-		sudo bash change_MAC $O_DEVICE 3
-	fi
-	if [ $CAPTIVE = 1 ]; then
-		captive_tunneling
-	else
-		EXITLOOP=1
+		(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+		echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+		(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+		sleep 2
 	fi
 }
 
@@ -133,9 +120,7 @@ deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 while [ $EXITLOOP == 0 ]; do
-	if [ "$O_DEVICE" = "eth0" ] || [ "$O_DEVICE" = "eth1" ]; then
-		captive_eth
-	elif [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
+	if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
 		if [ $CAPTIVE = 2 ]; then
 			sudo bash change_MAC $O_DEVICE 3
 		fi
@@ -145,6 +130,14 @@ while [ $EXITLOOP == 0 ]; do
 		sudo ./torbox_wireless_manager.py -i $O_DEVICE
 		clear
 		if [ $CAPTIVE = 1 ]; then
+			captive_tunneling
+		else
+			EXITLOOP=1
+		fi
+	else
+		if [ $CAPTIVE = 2 ]; then
+			sudo bash change_MAC $O_DEVICE 3
+		elif [ $CAPTIVE = 1 ]; then
 			captive_tunneling
 		else
 			EXITLOOP=1
@@ -192,10 +185,18 @@ $IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 #$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
-## I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
+# NEW v.0.5.1: new go versions
+# TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
+# However, Meek and Snowflake nee local DNS resolution
+do_we_use_bridges
+if [ "$MODE_MEEK" != "Bridge meek_lite " ] || [ "$MODE_SNOW" != "Bridge snowflake " ]; then
+	$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
+	$IPTABLES -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+fi
+# I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
 $IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
 $IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
-## No other restrictions for OUTPUT
+# No other restrictions for OUTPUT
 
 ###### FORWARD chain ######
 echo -e "${RED}[+] Setting up FORWARD chain...${NOCOLOR}"

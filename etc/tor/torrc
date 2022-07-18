@@ -30,6 +30,9 @@ DisableDebuggerAttachment 0
 #######################################################
 ## This will configure the Onion Services (do not remove or change that line - this is an anchor)
 
+## This will configure the Onion Service authorizations
+#ClientOnionAuthDir /var/lib/tor/onion_auth
+
 ## THE CONFIGURATION OF THE BRIDGE RELAY STARTS HERE!
 ######################################################
 ## This will setup an obfs4 bridge relay.
@@ -39,7 +42,7 @@ DisableDebuggerAttachment 0
 #ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy
 #ServerTransportListenAddr obfs4 0.0.0.0:443
 #ContactInfo <address@email.com>
-#Nickname TorBox050
+#Nickname TorBox051
 #BridgeDistribution any
 
 ## TO OVERCOME A FIREWALL, START HERE!

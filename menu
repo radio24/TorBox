@@ -57,6 +57,7 @@ TORSTATS="sudo -u debian-tor nyx"
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 EXITID="EXITID=0"
+MMENUSTRING=""
 INTERNETSELECTION=$1
 
 #Connectivity check
@@ -70,6 +71,25 @@ FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev
 
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
+
+# TIS FUNCTION HAS TO BE INTEGRATED INTO THE LIB
+# This function imports the configuration and makes some preparations
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
+  MODE_BR=$(grep "^BridgeRelay" ${TORRC})
+  if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+    TOGGLE07="IS RUNNING"
+  else
+    TOGGLE07="IS NOT RUNNING"
+  fi
+  MODE_OS=$(grep "^HiddenServiceDir" ${TORRC})
+  if [ ! -z "$MODE_OS" ]; then
+    TOGGLE16="IS RUNNING"
+  else
+    TOGGLE16="IS NOT RUNNING"
+  fi
+}
 
 # This function opens the ports, after a restart if bridge relay is on
 check_bridge_relay()
@@ -135,6 +155,8 @@ sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 if [ -z "$INTERNETSELECTION" ]; then
   if [ $FRESHINSTALLED -gt 0 ]; then ./first_use; fi
 fi
+read_config
+do_we_use_bridges
 check_bridge_relay
 check_interface_with_internet
 check_log_check
@@ -159,7 +181,7 @@ if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
   CHOICE=$INTERNETSELECTION
 else
   ###### DISPLAY THE MAIN MENU ######
-  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.0 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
   " 2" "Enforce a new exit node with a new IP" \
   " 3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
@@ -172,12 +194,16 @@ else
   " 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
   "10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
   "===" "===============================================[Sub-Menues]===" \
-  "11" "Go to the countermeasure sub-menu..." \
+  "11" "Go to the countermeasure sub-menu... $MMENUSTRING" \
   "12" "Go to the configuration sub-menu..." \
-  "13" "Go to defend the open internet..." \
-  "14" "Go to the update and maintenance sub-menu..." \
+	"13" "Go to run an OBFS4 Bridge Relay                 ${TOGGLE07}" \
+	"14" "Go to run an Onion Service                      ${TOGGLE16}" \
+  "15" "Go to the update and maintenance sub-menu..." \
+	"==" "============================================[Informational]===" \
+	"16" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+	"17" "HOW CAN I HELP WITH TORBOX?" \
   "===" "========================================[Reboot & Shutdown]===" \
-  "15" "Reboot / Shutdown TorBox" \
+  "18" "Reboot / Shutdown TorBox" \
   3>&1 1>&2 2>&3)
 fi
 
@@ -224,7 +250,12 @@ case "$CHOICE" in
     INPUT=$(cat text/cable-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth1) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep wlan0 | grep "state UP" ; then
         WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -292,8 +323,14 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
-        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
-				ask_captive
+        # (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+        (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				sleep 2
+        ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -364,7 +401,12 @@ case "$CHOICE" in
     INPUT=$(cat text/wlan0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan1 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep wlan1 | grep "state UP" ; then
         WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
@@ -431,7 +473,12 @@ case "$CHOICE" in
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       if ip link | grep usb0 ; then
         if ip link | grep wlan0 | grep "state UP" ; then
@@ -495,6 +542,10 @@ case "$CHOICE" in
         echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
         echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
         echo ""
+				if pgrep -f "pppd"; then
+					poff
+					sleep 5
+				fi
         sudo pon
         echo ""
         sleep 2
@@ -570,7 +621,12 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
-        (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+				(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				sleep 2
 				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -640,7 +696,12 @@ case "$CHOICE" in
     INPUT=$(cat text/tun0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-      (nohup ./hostapd_fallback_komplex wlan0 eth0) 2>/dev/null
+			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
+			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			sleep 2
 			ask_captive
       tun0up=$(ip link | grep tun0)
       if [ -z "$tun0up" ] ; then
@@ -732,8 +793,9 @@ case "$CHOICE" in
   # Sub-menues
   11) bash menu-bridges;;
   12) bash menu-config;;
-  13) bash menu-defender;;
-  14)
+	13) bash menu-server;;
+	14) bash menu-onion;;
+  15)
     screen bash update
     clear
     # shellcheck disable=SC2164
@@ -742,9 +804,21 @@ case "$CHOICE" in
     cd torbox
   ;;
 
+	# How to support Tor
+	16)
+		INPUT=$(cat text/support-tor-text)
+		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+	;;
+
+	# How to support TorBox
+	17)
+		INPUT=$(cat text/support-torbox-text)
+		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+	;;
+
   # Reboot or Shotdown TorBox
-  15)
-    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.0 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+  18)
+    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.1 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \
     3>&1 1>&2 2>&3)

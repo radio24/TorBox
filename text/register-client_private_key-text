@@ -1,0 +1,7 @@
+With a key pair (public and private key), access to an Onion Service can be limited to those with the specific private key.
+
+If the Onion Service administration sends a private key to you, this menu entry will register this private key for a particular Onion Service. In this case, you don't have to send anything to the Onion Server operator - he already has the public key.
+
+Alternatively, you can generate a new key pair (public and private key) with menu entry 2.
+
+Would you like to register a private key from an Onion Service operator for a specific Onion Service?

@@ -1,0 +1,5 @@
+Onion Service allows easily and securely sharing of data through Tor, even if TorBox is located behind firewalls, network address translators or placed in a censoring country, while preserving the security and anonymity of both parties. How this is accomplished, see here: https://community.torproject.org/onion-services/overview/.
+
+Also, the operator of an Onion Service can limit the access by generating a key pair for access control. If you are such an operator, probably, you are in the wrong menu. Under the Defend the open Internet sub-menu with entry 4, "Run an Onion Service", you as an operator can generate a key pair for a client or register a key from a client.
+
+In contrast, this sub-menu helps you to register a private key from an Onion Service operator or, if needed, to generate a key pair so that you can give an Onion Operator a public key.

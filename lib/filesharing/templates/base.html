@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="{% static 'css/bulma.min.css'%}">
         <link rel="stylesheet" href="{% static 'css/all.css'%}">
         <link rel="stylesheet" href="{% static 'css/torbox.css'%}">
+        <link rel="stylesheet" href="{% static 'css/torbox-tfs.css'%}">
     </head>
     <body>
         <div class="torbox-screen-border border-top"></div>
@@ -37,7 +38,7 @@
         {% if MSG_HEADER %}
         <section class="section is-small">
             <div class="notification has-text-centered">
-                <p>{{ MSG_HEADER }}</p>
+                <p>{{ MSG_HEADER|linebreaksbr }}</p>
             </div>
         </section>
         {% endif %}
