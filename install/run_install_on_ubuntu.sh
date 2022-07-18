@@ -1367,7 +1367,7 @@ sudo mv /home/ubuntu/* /home/torbox/
 (sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
 sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2> /dev/null
-sudo chown -R torbox.torbox /home/torbox/
+sudo chown -R torbox:torbox /home/torbox/
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 for logs in `sudo find /var/log -type f`; do

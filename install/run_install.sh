@@ -1359,6 +1359,7 @@ sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn
+sudo chown -R torbox:torbox /home/torbox/
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers
   (sudo visudo -c) 2> /dev/null

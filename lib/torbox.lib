@@ -303,9 +303,8 @@ erase_logs()
 do_we_use_bridges()
 {
   # Do we use bridges? If yes, witch kind of?
-  DO_WE_USE_BRIDGES=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1)
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1) 2> /dev/null
 
-  clear
   if [ "$DO_WE_USE_BRIDGES" = "Bridge obfs4 " ]; then
       OBFS4STRING="ON!"
       OBFS4STRINGb="Deactivate"
@@ -319,8 +318,8 @@ do_we_use_bridges()
   fi
 
   # MEEKSTRING represents the status of the Meek-Azure bridging mode
-  DO_WE_USE_BRIDGES=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1)
-  clear
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge meek_lite " ${TORRC} | head -1) 2> /dev/null
+
   if [ "$DO_WE_USE_BRIDGES" = "Bridge meek_lite " ]; then
       MEEKSTRING="ON!"
       MEEKSTRINGb="Deactivate"
@@ -334,8 +333,8 @@ do_we_use_bridges()
   fi
 
   # SNOWSTRING represents the status of the Snowflake bridging mode
-  DO_WE_USE_BRIDGES=$(grep -o "^Bridge snowflake " ${TORRC} | head -1)          # WAS: MODE_OBFS4
-  clear
+  DO_WE_USE_BRIDGES=$(grep -o "^Bridge snowflake " ${TORRC} | head -1) 2> /dev/null
+
   if [ "$DO_WE_USE_BRIDGES" = "Bridge snowflake " ]; then
       SNOWSTRING="ON!"
       SNOWSTRINGb="Deactivate"
@@ -430,6 +429,7 @@ connecting_to_VPN()
   if [[ $REPLY =~ ^[1234567890]$ ]] ; then
     CHOICE_OVPN=$((REPLY-1))
     clear
+		local_clearnet_dns_resolution_on
     echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
     echo ""
     ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
@@ -438,6 +438,7 @@ connecting_to_VPN()
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
     sleep 15
+		local_clearnet_dns_resolution_off
   else
     sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
     trap "bash menu; exit 0" EXIT

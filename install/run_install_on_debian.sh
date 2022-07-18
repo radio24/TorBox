@@ -1246,7 +1246,7 @@ mv /root/* /home/torbox/
 (mv /root/.profile /home/torbox/) 2> /dev/null
 mkdir /home/torbox/openvpn
 (rm .bash_history) 2> /dev/null
-chown -R torbox.torbox /home/torbox/
+chown -R torbox:torbox /home/torbox/
 if !  grep "# Added by TorBox" /etc/sudoers ; then
   printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" |  tee -a /etc/sudoers
   (visudo -c) 2> /dev/null
