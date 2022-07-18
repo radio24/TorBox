@@ -187,8 +187,12 @@ $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
 # NEW v.0.5.1: new go versions
 # TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
-$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
-$IPTABLES -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+# However, Meek and Snowflake nee local DNS resolution
+do_we_use_bridges
+if [ "$MODE_MEEK" != "Bridge meek_lite " ] || [ "$MODE_SNOW" != "Bridge snowflake " ]; then
+	$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
+	$IPTABLES -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+fi
 # I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
 $IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
 $IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
@@ -207,9 +211,9 @@ $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
 # TCP/UDP/DNS over Tor
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040

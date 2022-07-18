@@ -123,6 +123,24 @@ else
 fi
 }
 
+# local_clearnet_dns_resolution_on()
+# This function turns the local DNS resolution on
+local_clearnet_dns_resolution_on()
+{
+	sudo systemctl stop dnsmasq
+	sudo iptables  -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
+	sudo iptables  -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+}
+
+# local_clearnet_dns_resolution_off()
+# This function turns the local DNS resolution off
+local_clearnet_dns_resolution_off()
+{
+	sudo iptables -t nat -D OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
+	sudo iptables  -t nat -D OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+	sudo systemctl start dnsmasq
+}
+
 # online_check()
 # Syntax online_check [<check_url>] [<no_connection_warning>] [<clearnet_warning>]
 # <check_url> -> Check if TorBox can reach this URL. If <check_url> is missing or "default", the URL defined under "PING_SERVER=" in run/torbox.run is used.

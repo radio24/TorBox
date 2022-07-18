@@ -1,6 +1,6 @@
 SNOWFLAKE circumvents sophisticated censorship. In contrast to the OBFS4 bridges (see menu entries above), SNOWFLAKE is based on another technique, which should also work for users in China.
 
-You should only activate SNOWFLAKE, if necessary and if OBFS4 bridges don't work. SNOWFLAKE could lead to a slower data transfer speed. However, SNOWFLAKE seems to be more performant than MEEK-AZURE, but it is currently in an experimental status. By default, SNOWFLAKE is deactivated.
+You should only activate SNOWFLAKE, if necessary and if OBFS4 bridges don't work. SNOWFLAKE could lead to a slower data transfer speed. However, SNOWFLAKE seems to be more performant than MEEK-AZURE. By default, SNOWFLAKE is deactivated.
 
 IMPORTANT
 - This menu entry activates SNOWFLAKE to bypass Tor blocking in a
@@ -8,6 +8,10 @@ IMPORTANT
   a firewall blocks the network traffic.
 - OBFS4 BRIDGE and BRIDGE RELAY MODE will automatically be deactivated;
   the configuration will be kept for later re-activation.
+- The countermeasure against tightly configured firewalls will automatically
+	be deactivated and local clearnet DNS resolution will be activated.
+	However, this is not a problem because all clients DNS resquests are still
+	handled through Tor.
 - Ignore all the error messages. At the end, you should see
   "Bootstrapped 100%: Done".
 - Tor Statistics (and probably some other tools) will not work under

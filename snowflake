@@ -71,8 +71,17 @@ case $SNOWSTRING in
 
 	"OFF")
 		clear
+		if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
+			INPUT="\n\nTo activate Snowflake, we have to DEACTIVATE the countermeasure against tightly configured firewalls because we cannot run both settings simultaneously!"
+			whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+			sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+		fi
+		echo -e "${WHITE}[!] SNOWFLAKE runs only with local clearnet DNS resolution!${NOCOLOR}"
+		echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
+		echo ""
+		local_clearnet_dns_resolution_on
 		trap "bash snowflake; exit 0" SIGINT
-		echo -e "${WHITE}[!] Let's first check, if SNOWFLAKE could work for you!${NOCOLOR}"
+		echo -e "${WHITE}[!] Let's check, if SNOWFLAKE could work for you!${NOCOLOR}"
 		readarray -t configured_snowflake_deactivated < <(grep "^#Bridge snowflake " ${TORRC})
 		if [ ${#configured_snowflake_deactivated[0]} = 0 ]; then
 			echo " "
@@ -161,6 +170,7 @@ case $SNOWSTRING in
       sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
       sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
       sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+			local_clearnet_dns_resolution_off
       restarting_tor snowflake
     fi
   ;;

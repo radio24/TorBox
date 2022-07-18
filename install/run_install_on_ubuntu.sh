@@ -106,8 +106,13 @@ TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
+SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
+# Offline?
 SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
-SNOWFLAKE_USED="https://github.com/keroserene/snowflake.git"
+# Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
+# NEW v.0.5.1 - version 2.3.0
+SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"

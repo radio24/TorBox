@@ -963,9 +963,7 @@ case "$CHOICE" in
 	13)
 		clear
 		# NEW v.0.5.1: new go versions
-		sudo iptables -t nat -D OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
-		sudo iptables -t nat -D OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
-		sudo systemctl restart dnsmasq
+		local_clearnet_dns_resolution_on
 		sleep 2
   	check_interface_with_internet
   	clear
@@ -983,11 +981,7 @@ case "$CHOICE" in
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
   	sudo systemctl daemon-reload
   	sleep 3
-		sudo systemctl stop dnsmasq
-		# NEW v.0.5.1: new go versions
-		# TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
-		sudo iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
-		sudo iptables -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+		local_clearnet_dns_resolution_off
 	;;
 
 	*)
