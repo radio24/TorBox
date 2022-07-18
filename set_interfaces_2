@@ -211,9 +211,9 @@ $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
 # TCP/UDP/DNS over Tor
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
