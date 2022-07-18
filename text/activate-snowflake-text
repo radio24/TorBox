@@ -8,10 +8,10 @@ IMPORTANT
   a firewall blocks the network traffic.
 - OBFS4 BRIDGE and BRIDGE RELAY MODE will automatically be deactivated;
   the configuration will be kept for later re-activation.
-- The countermeasure against tightly configured firewalls will automatically
-	be deactivated and local clearnet DNS resolution will be activated.
-	However, this is not a problem because all clients DNS resquests are still
-	handled through Tor.
+- The countermeasure against tightly configured firewalls will
+  automatically be deactivated, and local clearnet DNS resolution will be
+	activated. However, this is not a problem because all clients' DNS
+	requests are still handled through Tor.
 - Ignore all the error messages. At the end, you should see
   "Bootstrapped 100%: Done".
 - Tor Statistics (and probably some other tools) will not work under
