@@ -1419,7 +1419,7 @@ sudo raspi-config nonint do_boot_behaviour B1
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox050) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox051) 2> /dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 (sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

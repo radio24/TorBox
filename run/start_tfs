@@ -38,7 +38,7 @@ if [ $n -gt 0 ] ; then
 		TFS_CONFIG_LIST=$(grep -m $i "^TFS-" "${RUNFILE}" | cut -d "=" -f2-)
 		SERVICE_NAME=$(cut -d " " -f3 <<< ${TFS_CONFIG_LIST})
 		if [[ ! -f /home/torbox/torbox/lib/filesharing/pid/$SERVICE_NAME.pid && -z "$INITIAL" ]]; then
-			if (whiptail --title "TorBox v.0.5.0 - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TFS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TFS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TFS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TFS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				TFS_CONFIG_LIST="sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
 				eval $TFS_CONFIG_LIST
 			else
