@@ -27,7 +27,7 @@
 # network can be found on wlan0.
 #
 # SYNTAX
-# nohup ./hostapd_fallback_komplex <interface 1> <interface 2>
+# nohup ./hostapd_fallback_komplex_part_2 <interface 1> <interface 2>
 #
 # <interface 1>: Is the interface with the AP: wlan0 or wlan1.
 # <interface 2>: Is the interface with the connected cable client: eth0 or eth1
@@ -50,8 +50,6 @@ HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 INTERFACE1=$1
 INTERFACE2=$2
-INTERFACE1_DOWN=0
-INTERFACE2_DOWN=0
 
 # INTERFACE1 and INTERFACE2 are clients - INTERFACE3 and INTERFACE4 are potential Internet sources
 if [ "$INTERFACE1" == "wlan1" ] ; then

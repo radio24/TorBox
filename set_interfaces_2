@@ -187,7 +187,7 @@ $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
 # NEW v.0.5.1: new go versions
 # TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
-# However, Meek and Snowflake nee local DNS resolution
+# However, Meek and Snowflake need local DNS resolution
 do_we_use_bridges
 if [ "$MODE_MEEK" != "Bridge meek_lite " ] || [ "$MODE_SNOW" != "Bridge snowflake " ]; then
 	$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
@@ -241,6 +241,12 @@ else
 fi
 
 ###### FINISH ######
+# NEW v.0.5.1
+(sudo ifdown $O_DEVICE) 2> /dev/null
+sleep 2
+(sudo ifup $O_DEVICE) 2> /dev/null
+sleep 2
+# ==========
 if [ $RESTARTTOR -eq 1 ]; then
 	echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
 	sudo systemctl stop tor

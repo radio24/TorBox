@@ -27,7 +27,7 @@
 # network can be found on wlan0.
 #
 # SYNTAX
-# nohup ./hostapd_fallback_komplex <interface 1> <interface 2>
+# nohup ./hostapd_fallback_komplex_part_1 <interface 1> <interface 2>
 #
 # <interface 1>: Is the interface with the AP: wlan0 or wlan1.
 # <interface 2>: Is the interface with the connected cable client: eth0 or eth1
