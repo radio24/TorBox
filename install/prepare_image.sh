@@ -137,6 +137,10 @@ read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
 echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
+echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
+sudo /usr/sbin/ntpdate pool.ntp.org
+echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
+pkill -f "log_check.py"
 echo -e "${RED}[+] Stopping and masking tor${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
@@ -179,9 +183,6 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 sudo systemctl daemon-reload
-echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
-sudo /usr/sbin/ntpdate pool.ntp.org
-sleep 3
 echo -e "${RED}[+] Deleting all logs and resetting Tor statistics...${NOCOLOR}"
 echo
 erase_logs
