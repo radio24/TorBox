@@ -605,6 +605,7 @@ sudo pip3 install tornado
 sudo pip3 install APScheduler
 sudo pip3 install backports.zoneinfo
 sudo pip3 install eventlet
+sudo pip3 install python-socketio
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
