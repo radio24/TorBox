@@ -140,7 +140,7 @@ echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
 sudo /usr/sbin/ntpdate pool.ntp.org
 echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
-pkill -f "log_check.py"
+sudo pkill -f "log_check.py"
 echo -e "${RED}[+] Stopping and masking tor${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
