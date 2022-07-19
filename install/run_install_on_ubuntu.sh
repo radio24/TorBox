@@ -640,13 +640,16 @@ sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
 sudo pip3 install requests
-sudo pip3 install Django==3.2.14
+sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
 # NEW v.0.5.1
 sudo pip3 install click
 sudo pip3 install paramiko
 sudo pip3 install tornado
+sudo pip3 install APScheduler
+sudo pip3 install backports.zoneinfo
+sudo pip3 install eventlet
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
