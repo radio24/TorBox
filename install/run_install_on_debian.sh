@@ -1006,6 +1006,13 @@ echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
 systemctl disable rsyslog
+systemctl mask rsyslog
+# NEW v.0.5.1
+systemctl stop systemd-journald-dev-log.socket
+systemctl stop systemd-journald-audit.socket
+systemctl stop systemd-journald.socket
+systemctl stop systemd-journald.service
+systemctl mask systemd-journald.service
 echo""
 
 # Make Nginx ready for Webssh and Onion Services

@@ -104,6 +104,7 @@ read_config()
 {
   # TOGGLE03 / TOGGLE04 represents the extent of logging
   LOG_STATUS=$(sudo systemctl is-active rsyslog)
+	[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
   if [ $LOG_STATUS = inactive ]; then
       TOGGLE03="LOW✔︎]==="
       TOGGLE03b="LOW"
@@ -858,9 +859,16 @@ case "$CHOICE" in
   16)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
+			[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
       if [ $LOG_STATUS = inactive ]; then
+				sudo systemctl unmask rsyslog
         sudo systemctl enable rsyslog
         sudo systemctl start rsyslog
+				sudo systemctl unmask systemd-journald.service
+				sudo systemctl start systemd-journald.service
+				sudo systemctl start systemd-journald-dev-log.socket
+				sudo systemctl start systemd-journald-audit.socket
+				sudo systemctl start systemd-journald.socket
         if (whiptail --yesno "\n\nWould you like to reboot TorBox now to make sure all logging will be started?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo " "
@@ -876,10 +884,16 @@ case "$CHOICE" in
       echo " "
       echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
       sudo systemctl stop rsyslog
+			sudo systemctl stop systemd-journald-dev-log.socket
+			sudo systemctl stop systemd-journald-audit.socket
+			sudo systemctl stop systemd-journald.socket
+			sudo systemctl stop systemd-journald.service
+			sudo systemctl mask systemd-journald.service
       echo ""
       echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
       #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
       sudo systemctl disable rsyslog
+			sudo systemctl mask rsyslog
       echo ""
       erase_logs
       sleep 2

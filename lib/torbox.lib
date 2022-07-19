@@ -284,6 +284,7 @@ erase_logs()
   	sudo rm $logs
   	sleep 1
   done
+	sudo journalctl --vacuum-size=1M
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
   (sudo rm ../.bash_history) 2> /dev/null
   history -c
