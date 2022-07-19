@@ -117,7 +117,6 @@ SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.1 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
