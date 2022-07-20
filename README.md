@@ -28,7 +28,7 @@ A Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2022/01/TorBox-A5-RPI4-050-e1642257894825.png)](https://www.torbox.ch/wp-content/uploads/2022/01/TorBox-A5-RPI4-050.png)
+[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2022/07/TorBox-A5-RPI4-051-e1658300633301.png)](https://www.torbox.ch/wp-content/uploads2022/07/TorBox-A5-RPI4-051.png)
 
 ### Features
 * TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage.
