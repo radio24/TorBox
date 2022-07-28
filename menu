@@ -242,7 +242,7 @@ case "$CHOICE" in
     clear
     trap "bash menu; exit 0" SIGINT
     echo -e "${RED}[+] See below the tor log file:${NOCOLOR}"
-    sudo tail -f -n 30 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)"
+    sudo tail -f -n 30 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
   ;;
 
   # Ethernet cable internet eth0 --> wlan0 / eth1
