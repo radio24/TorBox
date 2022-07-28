@@ -544,7 +544,7 @@ case "$CHOICE" in
 						clear
 						echo -e "${RED}[+] Reset PPP connection (you may check the output for errors)${NOCOLOR}"
 						echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
-						poff
+						sudo poff
 						sleep 5
 						sudo pon
 						echo ""
@@ -556,7 +556,7 @@ case "$CHOICE" in
         	echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
         	echo ""
 					if pgrep -f "pppd"; then
-						poff
+						sudo poff
 						sleep 5
 					fi
         	sudo pon
