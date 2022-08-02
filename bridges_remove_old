@@ -49,7 +49,6 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -133,7 +132,9 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
+          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
           bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
         else
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi

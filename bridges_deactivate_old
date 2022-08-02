@@ -39,14 +39,12 @@ NO_SPACER=2
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
-MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -129,7 +127,9 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
+          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
           bridge_status=$(./bridges_check.py -f $bridge_hash)
+          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
         else
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi

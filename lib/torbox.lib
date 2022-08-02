@@ -186,6 +186,8 @@ add_open_dns()
 # OCHECK = 1     -> Internet is connected
 # TORCONNECT = 0 -> Connection through tor not possible
 # TORCONNECT = 1 -> Connection through tor possible
+# TOR_DNS = 0    -> DNS resolution through tor not possible
+# TOR_DNS = 1    -> DNS resolution through tor possible
 # CLEARNET_DECISSION = 0 -> The calling script should not use clearnet (this is not really necessary, because the function will stop the execution).
 # CLEARNET_DECISSION = 1 -> The calling script can use clearnet
 online_check()
@@ -207,6 +209,7 @@ online_check()
   TORCONNECT=0
   CLEARNET_DECISSION=0
   CLEARNET_ONLY=0
+	TOR_DNS=1
 
   # Start working!
   add_open_dns
@@ -235,9 +238,19 @@ online_check()
           if curl -m 6 -s $CHECK_URL >/dev/null; then
             OCHECK=1
             TORCONNECT=0
+						TOR_DNS=1
           else
-            OCHECK=0
-            TORCONNECT=0
+						local_clearnet_dns_resolution_on
+						if curl -m 6 -s $CHECK_URL >/dev/null; then
+							OCHECK=1
+							TORCONNECT=0
+							TOR_DNS=0
+						else
+							OCHECK=0
+							TORCONNECT=0
+							TOR_DNS=0
+						fi
+						local_clearnet_dns_resolution_off
           fi
         else
           CLEARNET_DECISSION=0
@@ -258,9 +271,19 @@ online_check()
     if curl -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=0
+			TOR_DNS=1
     else
-      OCHECK=0
-      TORCONNECT=0
+			local_clearnet_dns_resolution_on
+			if curl -m 6 -s $CHECK_URL >/dev/null; then
+				OCHECK=1
+				TORCONNECT=0
+				TOR_DNS=0
+			else
+				OCHECK=0
+				TORCONNECT=0
+				TOR_DNS=0
+			fi
+			local_clearnet_dns_resolution_off
     fi
   fi
 
@@ -564,7 +587,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
+						if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
+						if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
@@ -595,7 +620,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
+						if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
+						if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
