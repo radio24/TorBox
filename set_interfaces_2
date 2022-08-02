@@ -185,7 +185,7 @@ $IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 #$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
-# NEW v.0.5.1: new go versions
+# NEW v.0.5.1
 # TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
 # However, Meek and Snowflake need local DNS resolution
 do_we_use_bridges
@@ -243,7 +243,7 @@ fi
 ###### FINISH ######
 # NEW v.0.5.1
 # TEST: Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
-if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ]; then
+if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifdown $O_DEVICE) 2> /dev/null
 	sleep 2
 	(sudo ifup $O_DEVICE) 2> /dev/null
