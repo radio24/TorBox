@@ -161,16 +161,16 @@ while bridges == False:
 
     # look for the bridges if the captcha was beaten
     html = str(reply.read())
-    q = re.findall(r'<div class="bridge-lines" id="bridgelines">(.*?)</div>',
-                    html,
-                    re.DOTALL)
+    q = re.findall(r'<div[^>]+id="bridgelines"[^>]*>(.*?)</div>',
+                     html,
+                     re.DOTALL)
     try:
         txt = q[0]
         b = txt.split('<br />')
 
         for l in b:
             # clean string for newlines and spaces
-            _b = l.strip().replace('\\n', '')
+            _b = l.replace('\\n', '').strip()
             if _b != '':
                 bridges = _b
     # captcha failed, try again
