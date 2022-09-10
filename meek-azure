@@ -115,9 +115,9 @@ case $MEEKSTRING in
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				if [ $CLEARNET_DECISSION == 1 ]; then
-          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 					bridge_status=$(./bridges_check.py -f $bridge_hash)
-          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 				else
 					bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 				fi

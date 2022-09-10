@@ -92,7 +92,7 @@ update_firmware()
   clear
   online_check
   if [ $OCHECK == 1 ]; then
-    if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+    if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
     trap "screen bash update; exit 0" SIGINT
     clear
     sudo apt-get install rpi-eeprom
@@ -109,7 +109,7 @@ update_firmware()
     echo " "
     echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
     sleep 5
-    if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+    if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -255,10 +255,10 @@ update_tor()
     if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
     mkdir ~/debian-packages; cd ~/debian-packages
     if [ $TORCONNECT -eq 0 ]; then
-			if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+			if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
       wget $download_tor_url
       DLCHECK=$?
-			if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+			if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
     else
       # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
       torsocks wget $download_tor_url
@@ -330,10 +330,10 @@ select_and_install_tor()
       if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
       mkdir ~/debian-packages; cd ~/debian-packages
       if [ $TORCONNECT -eq 0 ]; then
-				if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         wget $download_tor_url
         DLCHECK=$?
-				if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
         torsocks wget $download_tor_url
@@ -514,9 +514,9 @@ update_torbox_menu()
   cd
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   if [ $TORCONNECT = 0 ]; then
-		if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
     wget $TORBOXURL
-		if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
     torsocks wget $TORBOXURL
@@ -593,7 +593,7 @@ case "$CHOICE" in
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
-      if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			clear
 			echo -e "${RED}[+] Updating the base system..."
 			sudo apt-get -y update
@@ -668,7 +668,7 @@ case "$CHOICE" in
 			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 			sudo systemctl enable tor
 			sudo systemctl daemon-reload
-      if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
       echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
@@ -694,9 +694,9 @@ case "$CHOICE" in
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
-      if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			bash install_network_drivers
-      if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 			recommended_reboot update
 		fi
 	;;
