@@ -11,7 +11,7 @@ click
 cryptography
 eventlet
 gunicorn
-mechanize
+mechanize==0.4.7
 paramiko
 pycparser
 pytesseract

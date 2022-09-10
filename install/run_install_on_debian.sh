@@ -590,7 +590,7 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 pip3 install pytesseract
-pip3 install mechanize
+pip3 install mechanize==0.47
 pip3 install PySocks
 pip3 install urwid
 pip3 install Pillow

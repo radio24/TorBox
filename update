@@ -603,7 +603,7 @@ case "$CHOICE" in
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
 			echo ""
 			sudo pip3 install --upgrade pytesseract
-			sudo pip3 install --upgrade mechanize
+			sudo pip3 install --upgrade mechanize==0.4.7
 			sudo pip3 install --upgrade PySocks
 			sudo pip3 install --upgrade urwid
 			sudo pip3 install --upgrade Pillow
@@ -611,6 +611,13 @@ case "$CHOICE" in
 			sudo pip3 install --upgrade Django
 			sudo pip3 install --upgrade click
 			sudo pip3 install --upgrade gunicorn
+			# NEW v.0.5.1
+			sudo pip3 install --upgrade paramiko
+			sudo pip3 install --upgrade tornado
+			sudo pip3 install --upgrade APScheduler
+			sudo pip3 install --upgrade backports.zoneinfo
+			sudo pip3 install --upgrade eventlet
+			sudo pip3 install --upgrade python-socketio
 			sleep 10
 			clear
 			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
