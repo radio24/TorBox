@@ -1022,6 +1022,7 @@ echo""
 
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
+systemctl stop nginx
 (rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (rm /etc/nginx/sites-available/default) 2> /dev/null
 (rm -r /var/www/html) 2> /dev/null
@@ -1030,7 +1031,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
-systemctl restart nginx
+systemctl start nginx
 systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

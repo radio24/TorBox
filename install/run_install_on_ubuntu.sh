@@ -1091,6 +1091,7 @@ echo""
 
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
+sudo systemctl stop nginx
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
@@ -1098,7 +1099,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 (sudo chown torbox:torbox /var/www) 2> /dev/null
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
-sudo systemctl restart nginx
+sudo systemctl start nginx
 sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
