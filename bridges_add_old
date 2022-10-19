@@ -89,9 +89,9 @@ case "$CHOICE" in
         trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
         echo " "
         if [ $CLEARNET_DECISSION == 1 ]; then
-          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
           bridge_address=$(sudo python3 bridges_get.py)
-          if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
         else
           bridge_address=$(sudo python3 bridges_get.py --network=tor)
         fi

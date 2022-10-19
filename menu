@@ -36,7 +36,7 @@
 NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -202,8 +202,8 @@ else
   "===" "===============================================[Sub-Menues]===" \
   "11" "Go to the countermeasure sub-menu... $MMENUSTRING" \
   "12" "Go to the configuration sub-menu..." \
-	"13" "Go to run an OBFS4 Bridge Relay                 ${TOGGLE07}" \
-	"14" "Go to run an Onion Service                      ${TOGGLE16}" \
+	"13" "Go to run an OBFS4 Bridge Relay...              ${TOGGLE07}" \
+	"14" "Go to run an Onion Service...                   ${TOGGLE16}" \
   "15" "Go to the update and maintenance sub-menu..." \
 	"==" "============================================[Informational]===" \
 	"16" "HOW CAN I SUPPORT THE TOR PROJECT!" \
@@ -225,7 +225,6 @@ case "$CHOICE" in
   # This enforces a new exit node
   2)
     clear
-    echo ""
     echo -e "${RED}[+] Requesting new identity...${WHITE}"
     echo ""
     sleep 2

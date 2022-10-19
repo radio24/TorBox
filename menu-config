@@ -32,14 +32,15 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=17
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=2
+NO_SPACER=4
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
@@ -914,14 +915,14 @@ case "$CHOICE" in
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
       if [ $OCHECK == 1 ]; then
-        if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
+        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         sudo apt-get -y install python3-dev
         wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
         chmod +x adafruit-pitft.py
         sudo pip3 install Click adafruit-python-shell
         sudo python3 adafruit-pitft.py -u /home/torbox
         rm adafruit-pitft.py
-        if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -936,20 +937,18 @@ case "$CHOICE" in
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)
-      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\n\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+      if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         cd
         sudo rm -rf LCD-show
-        # This is the original repository, but doesn't work with kernel 5.4.*, yet
-        # git clone https://github.com/goodtft/LCD-show.git
-        if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_on; fi
-        git clone https://github.com/MrYacha/LCD-show.git
-        if [ $TOR_DNS == 0 ]; then local_clearnet_dns_resolution_off; fi
+        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
+        git clone https://github.com/goodtft/LCD-show.git
+        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
         cp torbox/install/LCD-show/LCD35-show LCD-show/
         sudo chmod -R 755 LCD-show/
         cd LCD-show/
         if [ ! -z "$INPUT" ]; then
-          if [ "$INPUT" = 0 ] || [ "$INPUT" = 90 ] || [ "$INPUT" = 180 ] || [ "$INPUT" = 270 ] ; then
+          if [ $INPUT == 0 ] || [ $INPUT == 90 ] || [ $INPUT == 180 ] || [ $INPUT == 270 ] ; then
             sudo ./LCD35-show $INPUT
           else
             sudo ./LCD35-show
@@ -958,7 +957,7 @@ case "$CHOICE" in
           sudo ./LCD35-show
         fi
         cd
-        if (whiptail --defaultno --yesno "\n\nDo you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --defaultno --yesno "Do you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
           if ! grep "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
             sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin torbox --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
             sudo systemctl enable getty@tty1.service
@@ -968,13 +967,13 @@ case "$CHOICE" in
           (sudo systemctl disable /etc/systemd/system/getty@tty1.service.d/override.conf) 2>/dev/null
           sudo systemctl daemon-reload
         fi
-        if (whiptail --defaultno --yesno "\n\nWould you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --defaultno --yesno "Would you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           sudo sed -i "s/^.\/menu/screen .\/menu/g" .profile
         else
           sudo sed -i "s/^screen .\/menu/.\/menu/g" .profile
         fi
         sudo rm -rf LCD-show
-        if (whiptail --yesno "\n\nWould you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --yesno "Would you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
