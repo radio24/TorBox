@@ -96,7 +96,10 @@ GO_DL_PATH="https://golang.org/dl/"
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+#WARNING: Sometimes, GitHub will change this prefix!
+#TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED2="\" data-view-component=.*"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
@@ -260,7 +263,7 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
@@ -349,6 +352,7 @@ select_and_install_tor()
 						git init
 						git add -- *
 						git config --global user.name "torbox"
+						git config --global user.email "torbox@localhost"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
 		        sh autogen.sh
@@ -427,6 +431,7 @@ select_and_install_tor()
 				git init
 				git add -- *
 				git config --global user.name "torbox"
+				git config --global user.email "torbox@localhost"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
         sh autogen.sh
@@ -1017,6 +1022,7 @@ echo""
 
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
+systemctl stop nginx
 (rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (rm /etc/nginx/sites-available/default) 2> /dev/null
 (rm -r /var/www/html) 2> /dev/null
@@ -1025,7 +1031,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
-systemctl restart nginx
+systemctl start nginx
 systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1212,12 +1218,6 @@ sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
-sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
-sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
-sed -i "s|^TOR_HREF_FOR_SED=.*|TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}|g" ${RUNFILE}
-# We need the \\" so that \" is surviving
-sed -i 's|TOR_HREF_FOR_SED=href="|TOR_HREF_FOR_SED=href=\\"|g' ${RUNFILE}
-sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}

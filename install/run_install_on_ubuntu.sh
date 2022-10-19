@@ -100,7 +100,10 @@ GO_DL_PATH="https://golang.org/dl/"
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
 TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+#WARNING: Sometimes, GitHub will change this prefix!
+#TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED2="\" data-view-component=.*"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
@@ -264,7 +267,7 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
@@ -353,6 +356,7 @@ select_and_install_tor()
 						git init
 						git add -- *
 						git config --global user.name "torbox"
+						git config --global user.email "torbox@localhost"
 						git commit -m "Initial commit"
 						# Don't use ./autogen.sh
 		        sh autogen.sh
@@ -431,6 +435,7 @@ select_and_install_tor()
 				git init
 				git add -- *
 				git config --global user.name "torbox"
+				git config --global user.email "torbox@localhost"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
         sh autogen.sh
@@ -558,18 +563,14 @@ else
 	sleep 10
 fi
 
-if uname -a | grep "[L]inux ubuntu 5.15" ; then
-  echo ""
-  echo -e "${RED}[+]         If this is the first time to got here with Ubuntu, most probably the system${NOCOLOR}"
-  echo -e "${RED}[+]         just updated the the kernel and we recommend to reboot the system and restart this${NOCOLOR}"
-  echo -e "${RED}[+]         installation again.${NOCOLOR}"
-  echo ""
-  read -r -p $'\e[1;37mWould you like to reboot the system now [Y/n]? -> \e[0m'
-  echo
-  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-    if [[ $REPLY =~ ^[Yy]$ ]] ; then reboot ; fi
-  else exit 0 ; fi
-fi
+echo -e "${RED}[+]         Did an information window tell you that you just updated the Linux kernel?${NOCOLOR}"
+echo -e "${RED}[+]         In this case, we recommend rebooting the system and restarting the installation.${NOCOLOR}"
+echo ""
+read -r -p $'\e[1;37mWould you like to reboot the system now [Y/n]? -> \e[0m'
+echo
+if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+  if [[ $REPLY =~ ^[Yy]$ ]] ; then reboot ; fi
+else exit 0 ; fi
 
 # 3. Installing all necessary packages
 clear
@@ -631,6 +632,9 @@ fi
 # Additional installations for Python
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+echo ""
+echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
+sudo ln /usr/bin/python3 /usr/bin/python
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
@@ -1087,6 +1091,7 @@ echo""
 
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
+sudo systemctl stop nginx
 (sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
 (sudo rm /etc/nginx/sites-available/default) 2> /dev/null
 (sudo rm -r /var/www/html) 2> /dev/null
@@ -1094,7 +1099,7 @@ echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCO
 (sudo chown torbox:torbox /var/www) 2> /dev/null
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
-sudo systemctl restart nginx
+sudo systemctl start nginx
 sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1169,7 +1174,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
-	cp /home/torbox/torbox/install/Network/install-rtl8812au.sh .
+	cp torbox/install/Network/install-rtl8812au.sh .
 	sudo chmod a+x install-rtl8812au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1190,7 +1195,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
-	cp /home/torbox/torbox/install/Network/install-rtl8814au.sh .
+	cp torbox/install/Network/install-rtl8814au.sh .
 	sudo chmod a+x install-rtl8814au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1211,7 +1216,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
-	cp /home/torbox/torbox/install/Network/install-rtl8821au.sh .
+	cp torbox/install/Network/install-rtl8821au.sh .
 	sudo chmod a+x install-rtl8821au.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1232,7 +1237,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/8821cu-20210118.git
 	cd 8821cu-20210118
-	cp /home/torbox/torbox/install/Network/install-rtl8821cu.sh .
+	cp torbox/install/Network/install-rtl8821cu.sh .
 	sudo chmod a+x install-rtl8821cu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1253,7 +1258,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
-	cp /home/torbox/torbox/install/Network/install-rtl88x2bu.sh .
+	cp torbox/install/Network/install-rtl88x2bu.sh .
 	sudo chmod a+x install-rtl88x2bu.sh
 	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 		if uname -m | grep -q -E "arm64|aarch64"; then
@@ -1285,12 +1290,6 @@ sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
-sudo sed -i "s|^TORURL=.*|TORURL=${TORURL}|g" ${RUNFILE}
-sudo sed -i "s|^TORPATH_TO_RELEASE_TAGS=.*|TORPATH_TO_RELEASE_TAGS=${TORPATH_TO_RELEASE_TAGS}|g" ${RUNFILE}
-sudo sed -i "s|^TOR_HREF_FOR_SED=.*|TOR_HREF_FOR_SED=${TOR_HREF_FOR_SED}|g" ${RUNFILE}
-# We need the \\" so that \" is surviving
-sudo sed -i 's|TOR_HREF_FOR_SED=href="|TOR_HREF_FOR_SED=href=\\"|g' ${RUNFILE}
-sudo sed -i "s|^TORURL_DL_PARTIAL=.*|TORURL_DL_PARTIAL=${TORURL_DL_PARTIAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}

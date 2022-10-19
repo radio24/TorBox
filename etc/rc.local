@@ -77,6 +77,4 @@ fi
 sudo systemctl stop dnsmasq
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 
-sudo rm nohup.out
-
 exit 0

@@ -64,5 +64,3 @@ if sudo timeout 5 sudo route | grep -m 1 default ; then
 fi
 sudo systemctl stop dnsmasq
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-
-sudo rm nohup.out

@@ -59,15 +59,22 @@ if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
 
+# Release Page of the unofficial Tor repositories on GitHub
+TORURL="https://github.com/torproject/tor/tags"
+TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
+#WARNING: Sometimes, GitHub will change this prefix!
+#TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
+TOR_HREF_FOR_SED2="\" data-view-component=.*"
+# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
+# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
+TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
+
 # Read configuration from run/torbox.run
 RUNFILE="run/torbox.run"
 GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2> /dev/null
 GO_VERSION_64=$(grep "^GO_VERSION_64=" ${RUNFILE} | sed "s/GO_VERSION_64=//g") 2> /dev/null
 GO_DL_PATH=$(grep "^GO_DL_PATH=" ${RUNFILE} | sed "s/GO_DL_PATH=//g") 2> /dev/null
-TORURL=$(grep "^TORURL=" ${RUNFILE} | sed "s/TORURL=//g") 2> /dev/null
-TORPATH_TO_RELEASE_TAGS=$(grep "^TORPATH_TO_RELEASE_TAGS=" ${RUNFILE} | sed "s/TORPATH_TO_RELEASE_TAGS=//g") 2> /dev/null
-TOR_HREF_FOR_SED=$(grep "^TOR_HREF_FOR_SED=" ${RUNFILE} | sed "s/TOR_HREF_FOR_SED=//g") 2> /dev/null
-TORURL_DL_PARTIAL=$(grep "^TORURL_DL_PARTIAL=" ${RUNFILE} | sed "s/TORURL_DL_PARTIAL=//g") 2> /dev/null
 SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2> /dev/null
 TORBOXMENU_FORKNAME="radio24"
 TORBOXMENU_BRANCHNAME="master"
@@ -138,7 +145,7 @@ check_install_packages()
 
 # This function prepares the tor update
 # Syntax update_tor_preparations
-# Used predefined variables: $torversion_versionsorted_new RED, WHITE, NOCOLOR, TORCONNECT, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED
+# Used predefined variables: $torversion_versionsorted_new RED, WHITE, NOCOLOR, TORCONNECT, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED1, TOR_HREF_FOR_SED2
 # Provides the following variables: $torversion_versionsorted_new
 update_tor_preparations()
 {
@@ -148,9 +155,9 @@ update_tor_preparations()
   clear
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
   if [ $TORCONNECT -eq 0 ]; then
-    readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+    readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   else
-    readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+    readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   fi
 
   #How many tor version did we fetch?
@@ -274,6 +281,7 @@ update_tor()
 			git init
 			git add -- *
 			git config --global user.name "torbox"
+			git config --global user.email "torbox@localhost"
 			git commit -m "Initial commit"
 			# Don't use ./autogen.sh
 			sh autogen.sh
@@ -350,6 +358,7 @@ select_and_install_tor()
 				git init
 				git add -- *
 				git config --global user.name "torbox"
+				git config --global user.email "torbox@localhost"
 				git commit -m "Initial commit"
 				# Don't use ./autogen.sh
         sh autogen.sh

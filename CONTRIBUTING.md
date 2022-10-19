@@ -17,7 +17,7 @@ Please bear the following coding guidelines in mind:
   CHECK_OS="$(lsb_release -si)"
   ```
 
-  **Check if it is a Raspbarry Pi**
+  **Check if it is a Raspberry Pi**
   ```shell
   if grep -q --text 'Raspberry Pi' /proc/device-tree/model; then CHECK_HD1="Raspberry Pi"; fi
   if grep -q "Raspberry Pi" /proc/cpuinfo; then CHECK_HD2="Raspberry Pi"; fi

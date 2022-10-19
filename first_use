@@ -44,6 +44,9 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# Identify the Operation System
+CHECK_OS="$(lsb_release -si)"
+
 # Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
@@ -141,6 +144,10 @@ finish_default_obfs4_step1()
 
 #Check freshinstalled
 shopt -s checkwinsize
+
+#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+
 FRESHINSTALLED=$1
 if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 
@@ -269,11 +276,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
         DEFAULT_OBFS4_SUPPORT=1
         clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support!${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support...${NOCOLOR}"
         sleep 2
       else
         clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
         sleep 2
       fi
       (sudo systemctl unmask tor) 2> /dev/null
