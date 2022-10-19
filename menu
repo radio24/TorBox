@@ -52,6 +52,9 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# Identify the Operation System
+CHECK_OS="$(lsb_release -si)"
+
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
 TORRC="/etc/tor/torrc"
@@ -150,6 +153,10 @@ ask_captive()
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 shopt -s checkwinsize
+
+#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 if [ -z "$INTERNETSELECTION" ]; then
