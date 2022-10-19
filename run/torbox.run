@@ -31,15 +31,7 @@ PING_SERVER=http://google.com
 GO_VERSION=go1.18.4.linux-armv6l.tar.gz
 GO_VERSION_64=go1.18.4.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
-# Release Page of the unofficial Tor repositories on GitHub
-TORURL=https://github.com/torproject/tor/tags
-# The path to the release tags on GitHub
-TORPATH_TO_RELEASE_TAGS=/torproject/tor/releases/tag/
-# TOR_HREF_FOR_SED is the HREF statement with the release tag on it stripped from the source code of the release page (sed backspaces are already included)
-TOR_HREF_FOR_SED=href="/torproject/tor/releases/tag/tor-
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-TORURL_DL_PARTIAL=https://github.com/torproject/tor/archive/refs/tags/tor
+
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL=https://git.torproject.org/pluggable-transports/snowflake.git
 SNOWFLAKE_USED=https://github.com/keroserene/snowflake.git

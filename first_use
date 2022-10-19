@@ -269,11 +269,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
         DEFAULT_OBFS4_SUPPORT=1
         clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support!${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support...${NOCOLOR}"
         sleep 2
       else
         clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support!${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
         sleep 2
       fi
       (sudo systemctl unmask tor) 2> /dev/null
