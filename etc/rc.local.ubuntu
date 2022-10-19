@@ -68,9 +68,14 @@ if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
 fi
 
 sudo /home/torbox/torbox/run/start_tfs initial
+sleep 5
 sudo systemctl start dnsmasq
 if sudo timeout 5 sudo route | grep -m 1 default ; then
-	sudo /usr/sbin/ntpdate pool.ntp.org
+	wget -q --spider "pool.ntp.org"
+	OCHECK=$?
+	if [ $OCHECK -eq 0 ]; then
+		sudo /usr/sbin/ntpdate pool.ntp.org
+	fi
 fi
 sudo systemctl stop dnsmasq
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
