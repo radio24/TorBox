@@ -154,9 +154,6 @@ ask_captive()
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 shopt -s checkwinsize
 
-#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
-if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 if [ -z "$INTERNETSELECTION" ]; then
@@ -187,6 +184,8 @@ fi
 if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
   CHOICE=$INTERNETSELECTION
 else
+	#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+	if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
   ###### DISPLAY THE MAIN MENU ######
   CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
@@ -867,6 +866,8 @@ case "$CHOICE" in
 
   *)
     clear
+		#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
     PROMPTTEXT=$(cat text/prompt-text)
     echo -e "$PROMPTTEXT"
     echo " "
