@@ -2,6 +2,8 @@ With a key pair (public and private key), access to an Onion Service can be limi
 
 If the Onion Service administration sends a private key to you, this menu entry will register this private key for a particular Onion Service. In this case, you don't have to send anything to the Onion Server operator - he already has the public key.
 
-Alternatively, you can generate a new key pair (public and private key) with menu entry 2.
+With it, TorBox is authorized as a legit client. However, this will not only give the TorBox itself access but also all client devices, which data traffic is routed through the TorBox. It also works if your TorBox has an Onion Service with client authorization running, and you will give free access to the client devices whose data traffic is routed through the TorBox (in this case, TorBox is the server and client). After the initial start, it takes up to 30' minutes to activate the free access.
+
+Alternatively, you can generate a new key pair (public and private key) with menu entry 12.
 
 Would you like to register a private key from an Onion Service operator for a specific Onion Service?

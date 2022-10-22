@@ -25,7 +25,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file will set up a public .onion site.
+# This file will set up a public .onion site, optionally manage the client
+# access authorization and help to share resources over Onion services.
 #
 # SYNTAX
 # ./menu-onion [<SELECTION>]
@@ -65,6 +66,7 @@ TOR_USER="debian-tor"
 DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_OS="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 WEBSERVER="nginx"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
@@ -202,7 +204,7 @@ is_integer()
 
 # This function finds the virtual ports on a configured Onion Service
 # Syntax find_virtport <service_name>
-# Following variables can be used: VIRTPORT, HIDDENSSERVICEPORT
+# Following variables can be used: VIRTPORT, HIDDENSSERVICEPORT, UNIX_PATH
 find_virtport()
 {
   SERVICE_NAME="${1}"
@@ -215,6 +217,80 @@ find_virtport()
   VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
 }
 
+# This function will generate a new key pair (public and private key) for an operator).
+# As a client of an Onion Service, generate a key pair, from which you can give the public key to an Onion Operator.
+# Syntax client_auth_on <ONION_HOSTNAME> [<CLIENT_PRIV_KEY>]
+client_auth_on()
+{
+  ONION_HOSTNAME="${1}"
+  CLIENT_PRIV_KEY="${2}"
+	## removes protocol such as http(s)://, ssh:// and git:// from the front of the address and trailing / at the end of the onion to clean it and only show the hostname (address.onion)
+	ONION_HOSTNAME="$(printf %s"${ONION_HOSTNAME}\n" | sed "s|.*://||" | sed "s|/$||")"
+	ONION_HOSTNAME_WITHOUT_ONION="${ONION_HOSTNAME%.onion}"
+	[ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_onion_invalid 1
+	[ "${#ONION_HOSTNAME_WITHOUT_ONION}" = "56" ] || error_onion_invalid 2
+	echo -e "${RED}[+] Activating client Onion Service authorization... ${SERVICE_NAME}...${NOCOLOR}"
+	(sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/g" ${TORRC}) 2> /dev/null
+	[ -d "${CLIENT_ONION_AUTH_DIR}" ] || sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
+	if [ -z "${CLIENT_PRIV_KEY}" ]; then
+		## Generate pem and derive pub and priv keys
+		openssl genpkey -algorithm x25519 -out /tmp/k1.prv.pem
+		grep -v "PRIVATE KEY" /tmp/k1.prv.pem | base64pem -d | tail --bytes=32 | base32 | sed 's/=//g' > /tmp/k1.prv.key
+		openssl pkey -in /tmp/k1.prv.pem -pubout | grep -v "PUBLIC KEY" | base64pem -d | tail -c 32 | base32 | sed 's/=//g' > /tmp/k1.pub.key
+		## save variables
+		CLIENT_PUB_KEY=$(cat /tmp/k1.pub.key)
+    CLIENT_PRIV_KEY=$(cat /tmp/k1.prv.key)
+		CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+		CLIENT_PUB_KEY_CONFIG="descriptor:x25519:${CLIENT_PUB_KEY}"
+		## Delete pem and keys
+		sudo rm -f /tmp/k1.pub.key /tmp/k1.prv.key /tmp/k1.prv.pem
+		# Client side configuration
+		printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private" >/dev/null
+		sudo chown debian-tor:debian-tor "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private"
+		# Output
+		echo -e "${WHITE}[!] Client side authorization is now configured!${NOCOLOR}"
+		echo -e "${RED}[+] Below are the generated keys:${NOCOLOR}"
+		echo ""
+		echo -e "${WHITE}Service address                       = ${RED}${ONION_HOSTNAME}${NOCOLOR}"
+		echo -e "${WHITE}Private key (saved)                   = ${RED}${CLIENT_PRIV_KEY}${NOCOLOR}"
+		echo -e "${WHITE}Private key configuration             = ${RED}${CLIENT_PRIV_KEY_CONFIG}${NOCOLOR}"
+		echo -e "${WHITE}Public key (for the service operator) = ${RED}${CLIENT_PUB_KEY}${NOCOLOR}"
+		echo -e "${WHITE}Public key configuration              = ${RED}${CLIENT_PUB_KEY_CONFIG}${NOCOLOR}"
+		echo ""
+		echo -e "${NOCOLOR}Now it depends on the service operator to authorize your client public key"
+		echo -e "${NOCOLOR}Send the public key to the onion service operator of ${WHITE}${ONION_HOSTNAME}${NOCOLOR} with following instruction:"
+		echo ""
+		echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+		echo -e "Please, create a file with the client name (eg. alice) using the suffix '.auth' (eg. alice.auth) inside the folder"
+		echo -e "'<HiddenServiceDir>/authorized_clients/' where the service hostname is ${WHITE}${ONION_HOSTNAME}${NOCOLOR} and restart tor by using this command:"
+		echo -e "${WHITE}printf '${CLIENT_PUB_KEY_CONFIG}' | sudo tee /var/lib/tor/${ONION_HOSTNAME}/authorized_clients/alice.auth${NOCOLOR}"
+		echo -e "${WHITE}sudo chown -R debian-tor:debian-tor /var/lib/tor/${ONION_HOSTNAME}/authorized_clients/alice.auth${NOCOLOR}"
+		echo -e "${WHITE}sudo systemctl restart tor${NOCOLOR}"
+		printf "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  else
+		# Client side configuration
+		CLIENT_PRIV_KEY_CONFIG="${ONION_HOSTNAME_WITHOUT_ONION}:descriptor:x25519:${CLIENT_PRIV_KEY}"
+		printf %s"${CLIENT_PRIV_KEY_CONFIG}\n" | sudo tee "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private" >/dev/null
+		sudo chown debian-tor:debian-tor "${CLIENT_ONION_AUTH_DIR}/${ONION_HOSTNAME_WITHOUT_ONION}.auth_private"
+		# Output
+		echo -e "${WHITE}[!] Client side authorization is now configured!${NOCOLOR}"
+		echo ""
+		echo -e "${WHITE}Service address                       = ${RED}${ONION_HOSTNAME}${NOCOLOR}"
+		echo -e "${WHITE}Private key (saved)                   = ${RED}${CLIENT_PRIV_KEY}${NOCOLOR}"
+		echo -e "${WHITE}Private key configuration             = ${RED}${CLIENT_PRIV_KEY_CONFIG}${NOCOLOR}"
+		echo ""
+		echo -e "${NOCOLOR}As you inserted the private key manually, it ise expected that you have already sent/received the public key to/from the Onion Service operator."
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  fi
+	clear
+	echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+	sudo systemctl restart tor
+	echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+	sleep 2
+}
 
 # This function shows the .onion address and all necessary information to use it.
 # Syntax show_onion_address <service_name>
@@ -259,13 +335,13 @@ show_onion_address()
 		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && SHARED_FOLDER=$(grep "# Path to shared dir" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
 		echo -e "${RED}Shared folder   = ${WHITE}$SHARED_FOLDER${NOCOLOR}"
 		echo ""
-		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 13. If activated, it is accessible${NOCOLOR}"
-		else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 12. If activated, it is accessible${NOCOLOR}"; fi
+		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 18. If activated, it is accessible${NOCOLOR}"
+		else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 17. If activated, it is accessible${NOCOLOR}"; fi
 			if [ "$VIRTPORT" == "80" ]; then echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
 			else echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"; fi
 	else
     echo -e "${RED}Currently, the Onion Service above is ${WHITE}not accessible${NOCOLOR}."
-    echo -e "To change that, you have to start sharing a folder or configuring TFS (menu entry 12 or 13)."
+    echo -e "To change that, you have to start sharing a folder or configuring TFS (menu entry 17 or 18)."
   fi
   echo ""
   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -410,6 +486,34 @@ error_already_used()
 	exit 1
 }
 
+# This function displays an error message and exit if the Onion domain is invalid
+# Syntax error_onion_invalid <REASON>
+# <REASON>: 1 -> it is not within base32 alphabet lower-case encoding
+#           2 -> is different than 56 characters
+error_onion_invalid()
+{
+	REASON=$1
+	echo -e "${WHITE}[!] THE ONION DOMAIN IS INVALID!${NOCOLOR}"
+	[ "$REASON" = "1" ] && echo -e "${RED}[+] The entered Onion domain is invalid, it is not within base32 alphabet lower-case encoding [a-z][2-7]${NOCOLOR}"
+	[ "$REASON" = "2" ] && echo -e "${RED}[+] Onion domain is invalid, LENGTH=${#ONION_HOSTNAME_WITHOUT_ONION} is different than 56 characters (<56-char-base32>.onion)${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 1
+}
+
+# This function displays an error message and exit if there is no client authorization files
+# Syntax error_no_client_authorization
+error_no_client_authorization()
+{
+	echo -e "${WHITE}[!] NO CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 1
+}
 
 ######## PREPARATIONS ########
 read_config
@@ -437,12 +541,18 @@ else
   " 9" "Edit a client's authorization"  \
   "10" "List all clients for a particular Onion Service"  \
   "11" "Remove a client's authorization"  \
+	"==" "===============================[Manage my access to a server]==="  \
+	"12" "Generate a new key pair (public and private key) for a server"  \
+	"13" "Register a server with its private key"  \
+	"14" "Edit a server access authorization"  \
+	"15" "List all server access authorizations"  \
+	"16" "Remove a server access authorization"  \
   "==" "=================================================[Share it!]==="  \
-  "12" "Start/stop sharing a folder on an Onion domain and list them"  \
-	"13" "Start/stop upload or/and download files (TorBox File Sharing)"  \
+  "17" "Start/stop sharing a folder on an Onion domain and list them"  \
+	"18" "Start/stop upload or/and download files (TorBox File Sharing)"  \
   "==" "==========================================[Backup & Restore]===" \
-  "14" "Backup Onion Services"  \
-  "15" "Restore Onion Services" 3>&1 1>&2 2>&3)
+  "19" "Backup Onion Services"  \
+  "20" "Restore Onion Services" 3>&1 1>&2 2>&3)
 fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -678,13 +788,16 @@ case "$CHOICE" in
 							#This is necessary to work with special characters in sed
 							DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
 							SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
-							UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+							# This gives VIRTPORT, HIDDENSSERVICEPORT and UNIX_PATH
+							find_virtport $SERVICE_NAME
               if [ "$exitstatus" == "0" ]; then
+								echo -e "${RED}[+] Stopping TFS, if active${NOCOLOR}"
+								# shellcheck disable=SC2012
+								TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
                 echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 (sudo rm -rfv "${DATA_DIR_OS}/${SERVICE_NAME}") &>/dev/null
                 sudo sed -i "/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/d" ${TORRC}
-								# This gives VIRTPORT, HIDDENSSERVICEPORT
-								find_virtport $SERVICE_NAME
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
@@ -709,40 +822,33 @@ case "$CHOICE" in
               elif [ "$exitstatus" == "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
-								# This gives VIRTPORT, HIDDENSSERVICEPORT
-								find_virtport $SERVICE_NAME
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
+								echo -e "${RED}[+] Stopping TFS, if active${NOCOLOR}"
+								# shellcheck disable=SC2012
+								TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
+								sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+								echo -e "${RED}[+] Removing Nginx configuration for shared folders...${NOCOLOR}"
+								(sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
+								(sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
               fi
               sleep 2
             fi
           done
         done
         clear
-        read_config
-        if [ "$TOGGLE16b" == "OFF" ]; then
-					echo -e "${RED}[+] There is no Onion Service configured, cleaning up...${NOCOLOR}"
-					# The configuration line in the run-files is not deleted. start_tfs and the creation of tfs has to take care of it!!
-					# shellcheck disable=SC2012
-					TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-					if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
-					echo -e "${RED}[+] Removing Nginx configuration for shared folders...${NOCOLOR}"
-					for SERVICE_NAME in $SERVICE_NAME_LIST; do
-						find_virtport "${SERVICE_NAME}"
-						(sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
-						(sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
-					done
-					# shellcheck disable=SC2062
-					sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-					sleep 5
-					echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
-					sudo systemctl reload nginx
-        fi
+				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+				# shellcheck disable=SC2062
+				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				sleep 5
+				sudo systemctl reload nginx
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
         echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
 				sleep 5
+				read_config
 				clear
       fi
     fi
@@ -881,7 +987,7 @@ case "$CHOICE" in
     create_service_list only_with_clients
 		error_no_authorization
     INPUT=$(cat text/edit_clients_authorisation-text)
-    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
       if [ "$exitstatus" == "0" ]; then
@@ -1022,8 +1128,109 @@ case "$CHOICE" in
     fi
   ;;
 
+	# Generate a new key pair (public and private key) for an operator
+	# As a client of an Onion Service, generate a key pair, from which you can give the public key to an Onion Operator.
+	12)
+		INPUT=$(cat text/generate-new_key_pair_client_auth-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			ONION_HOSTNAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client\n(e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [ -n "${ONION_HOSTNAME}" ]; then
+				clear
+				client_auth_on "${ONION_HOSTNAME}"
+			fi
+		fi
+	;;
+
+	# Register an Onion Service with its private key
+	13)
+		INPUT=$(cat text/register-client_private_key-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			ONION_HOSTNAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nEnter the Onion Domain of the service you want to authenticate as a client\n(e.g.: duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			CLIENT_PRIV_KEY=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client's private key (e.g: GBJWTYNY5OIQT4BSBP7OY4I7NSTLRDOZNMKSVXEXKGMWPUDPLJRA):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if { [ -n "${ONION_HOSTNAME}" ] && [ -n "${CLIENT_PRIV_KEY}" ]; }; then
+				clear
+				client_auth_on "${ONION_HOSTNAME}" "${CLIENT_PRIV_KEY}"
+			fi
+		fi
+	;;
+
+	# Edit a Onion Service access authorization
+	14)
+		ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1)
+		[ -z "$ONION_AUTH_LIST" ] && error_no_client_authorization
+		INPUT=$(cat text/edit_clients_authorisation-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			exitstatus=$?
+			service_menu menu "$ONION_AUTH_LIST" "Choose an authorization of the Onion Service listed below to edit. (ESC -> go back)"
+			# shellcheck disable=SC2154
+			if [ "$exitstatus" == "0" ]; then
+				i=0
+				for ONION_AUTH in $ONION_AUTH_LIST; do
+					i=$((i+1))
+					for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+						if [ "$i" = "$SERVICE_NUMBER" ]; then sudo nano "${CLIENT_ONION_AUTH_DIR}/${ONION_AUTH}.auth_private"; fi
+					done
+				done
+				clear
+				echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+				sudo systemctl restart tor
+				echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+				sleep 2
+			fi
+		fi
+	;;
+
+	# List all server access authorizations
+  15)
+		ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1)
+		[ -z "$ONION_AUTH_LIST" ] && error_no_client_authorization
+		echo -e "${RED}[+] This are your authorizations as a client:${NOCOLOR}"
+		echo ""
+		for ONION_AUTH in $ONION_AUTH_LIST; do
+			echo -e "${WHITE}Onion Service   = ${RED}${ONION_AUTH}.onion${NOCOLOR}"
+			#printf %s"# Content:   $(sudo -u "${TOR_USER}" cat "${CLIENT_ONION_AUTH_DIR}"/"${AUTH}")"
+			CONTENT=$(sudo grep "descriptor:x25519:" "${CLIENT_ONION_AUTH_DIR}/${ONION_AUTH}.auth_private")
+			echo -e "${WHITE}Content   = ${RED}$CONTENT${NOCOLOR}"
+			echo ""
+		done
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+  ;;
+
+	#Remove a server access authorization
+	16)
+		ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1)
+		[ -z "$ONION_AUTH_LIST" ] && error_no_client_authorization
+		INPUT=$(cat text/remove_clients_authorization_2-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			exitstatus=$?
+			service_menu checklist "$ONION_AUTH_LIST" "Choose the client authorization of the Onion Service(s) listed below to remove. (ESC -> go back)"
+			# shellcheck disable=SC2154
+			if [ "$exitstatus" == "0" ]; then
+				i=0
+				for ONION_AUTH in $ONION_AUTH_LIST; do
+					i=$((i+1))
+					for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+						if [ "$i" = "$SERVICE_NUMBER" ]; then
+							echo -e "${RED}[+] Remove client authorization for $ONION_AUTH${NOCOLOR}"
+							sudo rm -fv "${CLIENT_ONION_AUTH_DIR}/${ONION_AUTH}.auth_private"
+						fi
+					done
+				done
+				ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1)
+				[ -z "$ONION_AUTH_LIST" ] && error_no_client_authorization
+				(sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/g" ${TORRC}) 2> /dev/null
+				echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+				sudo systemctl restart tor
+				echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+				sleep 2
+			fi
+		fi
+  ;;
+
   # Serve a website folder on onion domain
-  12)
+  17)
   	INPUT=$(cat text/web_server-text)
   	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
     	create_service_list
@@ -1118,7 +1325,7 @@ case "$CHOICE" in
 					create_web_service_list 0
 					if [ -z $SERVICE_NAME_LIST ]; then
            	echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start TFsharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
+						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
 						echo ""
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 						clear
@@ -1196,7 +1403,7 @@ case "$CHOICE" in
          	create_web_service_list 0
 					if [ -z $SERVICE_NAME_LIST ]; then
 						echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start TFsharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
+						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
 						echo ""
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 						clear
@@ -1249,7 +1456,7 @@ case "$CHOICE" in
 					create_web_service_list 0
 					if [ -z $SERVICE_NAME_LIST ]; then
 						echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start TFsharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
+						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
 						echo ""
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 						clear
@@ -1268,7 +1475,7 @@ case "$CHOICE" in
 	;;
 
 	# Start/stop upload or/and download files (TorBox File Sharing)
-	13)
+	18)
 		INPUT=$(cat text/tfs-text)
 		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			create_service_list
@@ -1276,7 +1483,7 @@ case "$CHOICE" in
 			clear
 			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
 			"==" "===============================================================" \
-			" 1" "Restart or Start TFS on Onion domains" \
+			" 1" "Start or restart TFS on Onion domains" \
 			" 2" "Change the configuration of a certain TFS" \
 			" 3" "Stop TFS on an Onion domain" \
 			" 4" "List all Onion domains with TFS" \
@@ -1536,7 +1743,7 @@ case "$CHOICE" in
 
   # Backup Onion Services (it doesn't backup my access permissions from the menu-defender entry 5!! )
   # Backups the torrc configuration, the Onion Services, the client keys, and optionally the nginx configuration and all shared folders
-  14)
+  19)
     clear
 		create_service_list
 		error_no_onion_service
@@ -1552,12 +1759,12 @@ case "$CHOICE" in
           echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx's and TFS configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
           echo ""
           # Checking if we have anough space
-          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "${TORRC}" "${NGINX_DIR}" "${WEBSITE_DIR}" "${RUNFILE}" | wc -c)
+          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}" "${NGINX_DIR}" "${WEBSITE_DIR}" "${RUNFILE}" | wc -c)
           AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
           if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
           AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
           if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "${NGINX_DIR}" "${TORRC}" "${WEBSITE_DIR}" "${RUNFILE}") >/dev/null
+            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${NGINX_DIR}" "${TORRC}" "${WEBSITE_DIR}" "${RUNFILE}") >/dev/null
             LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
             if [ -z "$LINK_EXIST" ]; then
               echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
@@ -1579,22 +1786,22 @@ case "$CHOICE" in
             exit 1
           fi
         else
-          echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's and TFS configuration and shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
+          echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's, TFS configuration and shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
           echo ""
           # Checking if we have anough space
-          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "${TORRC}" | wc -c)
+          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}" | wc -c)
           AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
           if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
           AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
           if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "${TORRC}") >/dev/null
+            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}") >/dev/null
             LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
             if [ -z "$LINK_EXIST" ]; then
               echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
               (sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
             fi
             clear
-            echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's and TFS configuration and shared folders to  ${WHITE}$OS_BK_TAR${NOCOLOR}"
+            echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's, TFS configuration and shared folders to  ${WHITE}$OS_BK_TAR${NOCOLOR}"
             echo -e "${RED}[+] Done!${NOCOLOR}"
             echo " "
             read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1614,7 +1821,7 @@ case "$CHOICE" in
 
   # Restore Onion Services
   # Backup tar file will be extracted and integrated into their respective tor folders
-  15)
+  20)
     INPUT=$(cat text/restore-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
@@ -1635,12 +1842,15 @@ case "$CHOICE" in
             (sudo mkdir restore.tbx) 2> /dev/null
             (sudo tar -xpzf $OS_BK_TAR -C restore.tbx) 2> /dev/null
             echo -e "${RED}[+] Removing old Onion Service data${NOCOLOR}"
-            (sudo rm -r /var/lib/tor/services) 2> /dev/null
+            (sudo rm -r ${DATA_DIR_OS}) 2> /dev/null
             echo -e "${RED}[+] Removing old Onion Service configuration${NOCOLOR}"
             sudo sed -i "/HiddenServiceDir/d" ${TORRC}
             sudo sed -i "/HiddenServicePort/d" ${TORRC}
+						echo -e "${RED}[+] Removing old privat keys for Onion Services${NOCOLOR}"
+						(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2> /dev/null
             echo -e "${RED}[+] Moving Onion Service keys to their places${NOCOLOR}"
             sudo mv restore.tbx${DATA_DIR_OS} /var/lib/tor/
+						sudo mv restore.tbx${CLIENT_ONION_AUTH_DIR} /var/lib/tor/
             echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
             REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
 						#This is necessary to work with special characters in sed
@@ -1651,6 +1861,10 @@ case "$CHOICE" in
               TORRC_LINE_STRING="$(<<< "${TORRC_LINE}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING\n$TORRC_LINE_STRING/g" "${TORRC}"
             done
+						TORRC_LINE=$(sudo grep "ClientOnionAuthDir" "restore.tbx/${TORRC}")
+						TORRC_LINE_STRING="$(<<< "${TORRC_LINE}" sed -e 's`[][\\/.*^$]`\\&`g')"
+						sudo sed -E -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/g" "${TORRC}"
+						sudo sed -E -i "s/^ClientOnionAuthDir.*/$TORRC_LINE_STRING/g" "${TORRC}"
             if [ -e "restore.tbx${WEBSITE_DIR}" ]; then
               if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Shared folder detected! Do you want to restore shared folders and Nginx's and/or TFS' configuration?\n\nATTENTION: Already existing shared folders and configurations will be overwritten without confirmation!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 								echo -e "${RED}[+] Cleaning...${NOCOLOR}"
