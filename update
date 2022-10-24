@@ -711,7 +711,7 @@ case "$CHOICE" in
 				exit 1
 			fi
       if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
-			bash install_network_drivers
+			bash install/install_network_drivers
       if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 			recommended_reboot update
 		fi

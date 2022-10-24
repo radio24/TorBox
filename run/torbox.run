@@ -41,8 +41,6 @@ VANGUARDS_COMMIT_HASH=10942de
 VANGUARD_LOG_FILE="/var/log/tor/vanguards.log
 # Wiringpi
 WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
-# WiFi drivers from Fars Robotics
-FARS_ROBOTICS_DRIVERS=http://downloads.fars-robotics.net/wifi-drivers/
 
 # Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing

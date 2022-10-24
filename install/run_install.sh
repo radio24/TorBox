@@ -128,12 +128,6 @@ VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
-# NEW v.0.5.1: since Octobre 2021 out of date - will probably be removed in v.0.5.1
-# WiFi drivers from Fars Robotics
-FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
-
-# above values will be saved into run/torbox.run #######
-
 # Connectivity check
 CHECK_URL1="http://ubuntu.com"
 CHECK_URL2="https://google.com"
@@ -227,7 +221,7 @@ if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
 
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
-# Syntax install_network_drivers <packagenames>
+# Syntax check_install_packages <packagenames>
 check_install_packages()
 {
  packagenames=$1
@@ -241,40 +235,6 @@ check_install_packages()
 #   echo ""
 #   read -n 1 -s -r -p "Press any key to continue"
  done
-}
-
-# install_network_drivers()
-# Syntax install_network_drivers <path> <filename> <text_message>
-# Used predefined variables: RED, NOCOLOR
-# This function downloads, unpacks and installs the network drivers
-
-install_network_drivers()
-{
-	path=$1
-  filename=$2
-  text_message=$3
-	clear
-  echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-  echo -e " "
-	cd ~
-	mkdir install_network_driver
-	cd install_network_driver
-	echo -e "${RED}[+] Downloading $filename ${NOCOLOR}"
-	wget $FARS_ROBOTICS_DRIVERS$path$filename
-	echo -e "${RED}[+] Unpacking $filename ${NOCOLOR}"
-	tar xzf $filename
-	chmod a+x install.sh
-	echo -e "${RED}[+] Installing the $text_message ${NOCOLOR}"
-	sudo ./install.sh
-	cd ~
-	rm -r install_network_driver
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
 }
 
 # select_and_install_tor()
@@ -1080,265 +1040,7 @@ fi
 
 # 14. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
-	# NEW v.0.5.1
-	# kernelversion=$(uname -rv | cut -d ' ' -f1-2 | tr '+' ' ' | tr '#' ' ' | sed -e "s/[[:space:]]\+/-/g")
-
-	# Deactivated because no driver for new kernels available
-	#	path_8188eu="8188eu-drivers/"
-	#	filename_8188eu="8188eu-$kernelversion.tar.gz"
-	#	text_filename_8188eu="Realtek RTL8188EU Wireless Network Driver"
-	#	install_network_drivers $path_8188eu $filename_8188eu $text_filename_8188eu
-
-	# NEW v.0.5.1
-	# path_8188fu="8188fu-drivers/"
-	# filename_8188fu="8188fu-$kernelversion.tar.gz"
-	# text_filename_8188fu="Realtek RTL8188FU Wireless Network Driver"
-	# install_network_drivers $path_8188fu $filename_8188fu $text_filename_8188fu
-
-	# NEW v.0.5.1
-	# path_8192eu="8192eu-drivers/"
-	# filename_8192eu="8192eu-$kernelversion.tar.gz"
-	# text_filename_8192eu="Realtek RTL8192EU Wireless Network Driver"
-	# install_network_drivers $path_8192eu $filename_8192eu $text_filename_8192eu
-
-	# Deactivated because no driver for new kernels available
-	#path_8192su="8192su-drivers/"
-	#filename_8192su="8192su-$kernelversion.tar.gz"
-	#text_filename_8192su="Realtek RTL8192SU Wireless Network Driver"
-	#install_network_drivers $path_8192su $filename_8192su $text_filename_8192su
-
-	# NEW v.0.5.1
-	# Deactivated because no driver for new kernels available
-	#path_8812au="8812au-drivers/"
-	#filename_8812au="8812au-$kernelversion.tar.gz"
-	#text_filename_8812au="Realtek RTL8812AU Wireless Network Driver"
-	#install_network_drivers $path_8812au $filename_8812au $text_filename_8812au
-
-	# NEW v.0.5.1
-	# Deactivated because no driver for new kernels available
-	# path_8821cu="8821cu-drivers/"
-	# filename_8821cu="8821cu-$kernelversion.tar.gz"
-	# text_filename_8821cu="Realtek RTL8821CU Wireless Network Driver"
-	# install_network_drivers $path_8821cu $filename_8821cu $text_filename_8821cu
-
-	# Deactivated because no driver for new kernels available
-	#path_mt7610="mt7610-drivers/"
-	#filename_mt7610="mt7610-$kernelversion.tar.gz"
-	#text_filename_mt7610="Mediatek MT7610 Wireless Network Driver"
-	#install_network_drivers $path_mt7610 $filename_mt7610 $text_filename_mt7610
-
-	# Deactivated because no driver for new kernels available
-	#path_mt7612="mt7612-drivers/"
-	#filename_mt7612="mt7612-$kernelversion.tar.gz"
-	#text_filename_mt7612="Mediatek MT7612 Wireless Network Driver"
-	#install_network_drivers $path_mt7612 $filename_mt7612 $text_filename_mt7612
-
-	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
-	cd ~
-
-	# NEW v.0.5.1
-	# Installing the RTL8188EU
-	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-	cd ~
-	git clone https://github.com/lwfinger/rtl8188eu.git
-	cd rtl8188eu
-	make all
-	sudo make install
-	cd ~
-	sudo rm -r rtl8188eu
-	sleep 2
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-	# NEW v.0.5.1
-	# Installing the RTL8188FU
-	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
-	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
-	sudo dkms add ./rtl8188fu-arm
-	sudo dkms build rtl8188fu/1.0
-	sudo dkms install rtl8188fu/1.0
-	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-	sudo rm -r rtl8188fu*
-	sleep 2
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-	# NEW v.0.5.1
-	# Installing the RTL8192EU
-	clear
-	echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/clnhub/rtl8192eu-linux.git
-	cd rtl8192eu-linux
-	sudo dkms add .
-	sudo dkms install rtl8192eu/1.0
-	cd ~
-	sudo rm -r rtl8192eu-linux
-	sleep 2
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-	# NEW v.0.5.1
-	# Installing the RTL8812AU
-	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8812au-20210629.git
-	cd 8812au-20210629
-	cp /home/torbox/torbox/install/Network/install-rtl8812au.sh .
-	chmod a+x install-rtl8812au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			sudo ./ARM64_RPI.sh
-		else
-	 	sudo ./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl8812au.sh
-	cd ~
-	sudo rm -r 8812au-20210629
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-	# Installing the RTL8814AU
-	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8814au.git
-	cd 8814au
-	cp /home/torbox/torbox/install/Network/install-rtl8814au.sh .
-	chmod a+x install-rtl8814au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		#This has to be checked
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			sudo ./ARM64_RPI.sh
-		else
-	 	sudo ./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl8814au.sh
-	cd ~
-	sudo rm -r 8814au
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-# Installing the RTL8821AU
-	clear
-	echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821au-20210708.git
-	cd 8821au-20210708
-	cp /home/torbox/torbox/install/Network/install-rtl8821au.sh .
-	chmod a+x install-rtl8821au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			sudo ./ARM64_RPI.sh
-		else
-	 	sudo ./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl8821au.sh
-	cd ~
-	sudo rm -r 8821au-20210708
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 2
-	fi
-
-	# NEW v.0.5.1
-	# Installing the RTL8821CU
-		clear
-		echo -e "${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"
-		echo -e " "
-		echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-		git clone https://github.com/morrownr/8821cu-20210118.git
-		cd 8821cu-20210118
-		cp /home/torbox/torbox/install/Network/install-rtl8821cu.sh .
-		chmod a+x install-rtl8821cu.sh
-		if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-			if uname -m | grep -q -E "arm64|aarch64"; then
-				sudo ./ARM64_RPI.sh
-			else
-		 	sudo ./ARM_RPI.sh
-	 		fi
-		fi
-		sudo ./install-rtl8821cu.sh
-		cd ~
-		sudo rm -r 8821cu-20210118
-
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 2
-		fi
-
-	# Installing the RTL88x2BU
-	clear
-	echo -e "${RED}[+] Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/88x2bu-20210702.git
-	cd 88x2bu-20210702
-	cp /home/torbox/torbox/install/Network/install-rtl88x2bu.sh .
-	chmod a+x install-rtl88x2bu.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-		 	sudo ./ARM64_RPI.sh
-		else
-			sudo ./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl88x2bu.sh
-	cd ~
-	sudo rm -r 88x2bu-20210702
-
+	bash install/install_network_drivers install
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1362,7 +1064,6 @@ sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
 sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
 sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
