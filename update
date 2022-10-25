@@ -604,7 +604,7 @@ case "$CHOICE" in
 			fi
       if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			clear
-			echo -e "${RED}[+] Updating the base system..."
+			echo -e "${RED}[+] Updating the base system...${NOCOLOR}"
 			sudo apt-get -y update
 			sudo apt-get -y dist-upgrade
 			sleep 10
