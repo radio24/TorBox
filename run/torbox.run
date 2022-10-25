@@ -95,5 +95,9 @@ TWEBSSH=1
 # Syntax: TFS-<service_name>=<tfs command>
 # This will configure the TFS program (do not remove or change that line - this is an anchor)
 
+# TCS starting commands
+# Syntax: TCS-<service_name>=<tcs command>
+# This will configure the TCS program (do not remove or change that line - this is an anchor)
+
 # Exit controll variable
 EXITID=0

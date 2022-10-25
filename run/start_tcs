@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2022 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This script starts TCS and Nginx, if configured that way in torbox.run.
+# It is executed by rc.local --> DON'T MOVE IT INTO TORBOX.LIB!
+#
+# SYNTAX
+# ./start_tcs [<initial>]
+# [<initial>] is optional and used, if it was started from rc.local
+#
+
+INITIAL=$1
+RUNFILE=/home/torbox/torbox/run/torbox.run
+TCSRUNNING="0"
+# HAS TO BE EDITED !!!
+if pgrep -f "tcs"; then TCSRUNNING="1"; fi
+n=$(grep -c "^TCS-" "${RUNFILE}")
+if [ $n -gt 0 ] ; then
+	i=0
+	until [ $i -eq $n ]; do
+		((i++))
+		TCS_CONFIG_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f2-)
+		SERVICE_NAME=$(cut -d " " -f3 <<< ${TCS_CONFIG_LIST})
+		if [[ "$TCSRUNNING" == "0" && -z "$INITIAL" ]]; then
+			if (whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+				eval $TCS_CONFIG_LIST
+			else
+				echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
+				sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
+				echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+				find_virtport "${SERVICE_NAME}"
+				(sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
+				(sudo rm "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
+				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+			fi
+		elif [[ "$INITIAL" == "initial" ]]; then
+			TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+			eval $TCS_CONFIG_LIST
+		fi
+	done
+fi
+
+sleep 5
+sudo systemctl reload nginx
