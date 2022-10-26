@@ -28,8 +28,14 @@
 # [<initial>] is optional and used, if it was started from rc.local
 #
 
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_20=20
+
+#Other variables
 INITIAL=$1
 RUNFILE=/home/torbox/torbox/run/torbox.run
+
 n=$(grep -c "^TFS-" "${RUNFILE}")
 if [ $n -gt 0 ] ; then
 	i=0
@@ -61,5 +67,5 @@ if [ $n -gt 0 ] ; then
 	done
 fi
 
-sleep 5
+sleep 2
 sudo systemctl reload nginx

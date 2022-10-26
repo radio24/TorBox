@@ -28,18 +28,25 @@
 # [<initial>] is optional and used, if it was started from rc.local
 #
 
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_20=20
+
+#Other variables
 INITIAL=$1
 RUNFILE=/home/torbox/torbox/run/torbox.run
 TCSRUNNING="0"
-# HAS TO BE EDITED !!!
-if pgrep -f "tcs"; then TCSRUNNING="1"; fi
+
+if pgrep -f "lib/chatsecure/tcs"; then TCSRUNNING="1"; fi
 n=$(grep -c "^TCS-" "${RUNFILE}")
 if [ $n -gt 0 ] ; then
 	i=0
 	until [ $i -eq $n ]; do
 		((i++))
-		TCS_CONFIG_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f2-)
-		SERVICE_NAME=$(cut -d " " -f3 <<< ${TCS_CONFIG_LIST})
+		#EDITED AND VALID!!
+		TCS_CONFIG_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f2)
+		SERVICE_NAME=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f1 | sed s/"^TCS-"//g)
+		#
 		if [[ "$TCSRUNNING" == "0" && -z "$INITIAL" ]]; then
 			if (whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
@@ -60,5 +67,5 @@ if [ $n -gt 0 ] ; then
 	done
 fi
 
-sleep 5
+sleep 2
 sudo systemctl reload nginx

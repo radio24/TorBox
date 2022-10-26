@@ -478,7 +478,9 @@ error_no_onion_service()
 	if [ -z "${SERVICE_NAME_LIST}" ]; then
 		echo -e "${WHITE}[!] NO ONION SERVICES AVAILABLE!!${NOCOLOR}"
 		echo -e "${RED}[+] There are no onion services configured, yet. You have to create them first (menu entry 2).${NOCOLOR}"
-		sleep 5
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 		trap "bash menu-onion; exit 0" EXIT
 		exit 1
 	fi
@@ -491,7 +493,9 @@ error_no_authorization()
 	if [ -z "${SERVICE_NAME_LIST}" ]; then
 		echo -e "${WHITE}[!] NO ONION SERVICES WITH CLIENT AUTHORIZATION AVAILABLE!!${NOCOLOR}"
 		echo -e "${RED}[+] There are no onion services with client authorization configured, yet.${NOCOLOR}"
-		sleep 5
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 		trap "bash menu-onion; exit 0" EXIT
 		exit 1
 	fi
@@ -539,6 +543,45 @@ error_no_client_authorization()
 	trap "bash menu-onion; exit 0" EXIT
 	exit 1
 }
+
+# This function displays an error message and exit if there is no folder actively shared
+# Syntax error_no_folder_shared
+error_no_folder_shared()
+{
+	echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
+	echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 1
+}
+
+# This function displays an error message and exit if TFS is not running
+# Syntax error_no_folder_shared
+error_no_tfs_running()
+{
+	echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS NOT RUNNING!!!${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 1
+}
+
+# This function displays an error message and exit if TCS is not running
+# Syntax error_no_folder_shared
+error_no_tcs_running()
+{
+	echo -e "${WHITE}[!] There is no TCS started on an Onion domain, yet!${NOCOLOR}"
+	echo -e "${RED}[+] Start TCS on an Onion domain, first (entry 1) ${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+	trap "bash menu-onion; exit 0" EXIT
+	exit 1
+}
+
 
 ######## PREPARATIONS ########
 read_config
@@ -1350,76 +1393,69 @@ case "$CHOICE" in
 					clear
 					# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
 					create_web_service_list 0
-					if [ -z $SERVICE_NAME_LIST ]; then
-           	echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
-						echo ""
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-						clear
-					else
-						service_menu menu "$SERVICE_NAME_LIST"
-						exitstatus=$?
-						if [ "$exitstatus" == "0" ]; then
-							i=0
-							for SERVICE_NAME in $SERVICE_NAME_LIST; do
-								i=$((i+1))
-								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-									if [ "$i" = "$SERVICE_NUMBER" ]; then
-										# This will give VIRTPORT and HIDDENSSERVICEPORT
-										find_virtport $SERVICE_NAME
-										# Old path
-										SHARE_PATH=$(grep "root" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d ";" -f1)
-										# Which folder should be shared?
-										SUB_FOLDER=$(whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --inputbox "\nWhich folder inside of $WEBSITE_DIR should be shared? Currently: $SHARE_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-										if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
-										if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
-										clear
-										# If the user doesn't write something into the dialogue, the old path is still valid
-										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
-											sleep 1
-										else
-											SHARE_PATH_OLD=$SHARE_PATH
-											SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
-										fi
-										if [ ! -d $SHARE_PATH ]; then
-											sudo chown torbox:torbox $WEBSITE_DIR
-											sudo -utorbox mkdir -p $SHARE_PATH
-										fi
-										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
-											sleep 1
-										else
-											#Configure Nginx
-											echo ""
-											echo -e "${RED}[+] Sharing the folder ${WHITE}$SHARE_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT${RED}"
-											sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
-											sudo systemctl reload nginx
-											sudo sed -i "s|$SHARE_PATH_OLD|$SHARE_PATH|g" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
-											(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
-											# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
-	               			EMPTY_FOLDER=$(ls -A "$SHARE_PATH")
-	               			if [ -z "$EMPTY_FOLDER" ]; then
-	                 			(sudo cp "etc/nginx/shared-folder/index.html" "$SHARE_PATH") >/dev/null
-	                 			(sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$SHARE_PATH") >/dev/null
-	               			fi
-										fi
-										echo ""
-										echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-										sleep 5
-										sudo systemctl reload nginx
-										(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf") &>/dev/null
-										echo ""
-										# This will give ONION_HOSTNAME
-										test_service_exists $SERVICE_NAME
-										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
-										fi
-										echo ""
-										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-										clear
+					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
+					service_menu menu "$WEB_SERVICE_NAME_LIST"
+					exitstatus=$?
+					if [ "$exitstatus" == "0" ]; then
+						i=0
+						for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+							i=$((i+1))
+							for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+								if [ "$i" = "$SERVICE_NUMBER" ]; then
+									# This will give VIRTPORT and HIDDENSSERVICEPORT
+									find_virtport $SERVICE_NAME
+									# Old path
+									SHARE_PATH=$(grep "root" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d ";" -f1)
+									# Which folder should be shared?
+									SUB_FOLDER=$(whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --inputbox "\nWhich folder inside of $WEBSITE_DIR should be shared? Currently: $SHARE_PATH\n\nPress enter or specify a new folder:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+									if grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^$WEBSITE_DIR/" <<< "${SUB_FOLDER}" | sed 's|^/var/www/||g'); fi
+									if grep "^/" <<< "${SUB_FOLDER}"; then SUB_FOLDER=$(grep "^/" <<< "${SUB_FOLDER}" | sed 's|^/||g'); fi
+									clear
+									# If the user doesn't write something into the dialogue, the old path is still valid
+									if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+										sleep 1
+									else
+										SHARE_PATH_OLD=$SHARE_PATH
+										SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 									fi
-								done
+									if [ ! -d $SHARE_PATH ]; then
+										sudo chown torbox:torbox $WEBSITE_DIR
+										sudo -utorbox mkdir -p $SHARE_PATH
+									fi
+									if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
+										sleep 1
+									else
+										#Configure Nginx
+										echo ""
+										echo -e "${RED}[+] Sharing the folder ${WHITE}$SHARE_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT${RED}"
+										sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+										sudo systemctl reload nginx
+										sudo sed -i "s|$SHARE_PATH_OLD|$SHARE_PATH|g" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+										(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+										# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
+	              		EMPTY_FOLDER=$(ls -A "$SHARE_PATH")
+	              		if [ -z "$EMPTY_FOLDER" ]; then
+	               			(sudo cp "etc/nginx/shared-folder/index.html" "$SHARE_PATH") >/dev/null
+	               			(sudo cp "etc/nginx/shared-folder/tb-001-logo.png" "$SHARE_PATH") >/dev/null
+	             			fi
+									fi
+									echo ""
+									echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+									sleep 5
+									sudo systemctl reload nginx
+									(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf") &>/dev/null
+									echo ""
+									# This will give ONION_HOSTNAME
+									test_service_exists $SERVICE_NAME
+									if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+										echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
+									fi
+									echo ""
+									read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+									clear
+								fi
 							done
-						fi
+						done
 					fi
 				;;
 
@@ -1428,51 +1464,34 @@ case "$CHOICE" in
          	clear
 					# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
          	create_web_service_list 0
-					if [ -z $SERVICE_NAME_LIST ]; then
-						echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
-						echo ""
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-						clear
-					else
-         		service_menu checklist "$WEB_SERVICE_NAME_FOR_MENU"
-         		if [ "$exitstatus" == "0" ]; then
-           		if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-             		i=0
-             		for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
-               		i=$((i+1))
-               		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-                 		if [ "$i" = "$SERVICE_NUMBER" ]; then
-											x=0
-											for VIRTPORT_WEB_SERVICE in $VIRTPORT_WEB_SERVICE_LIST; do
-												x=$((x+1))
-												if [ "$x" = "$i" ]; then
-                   				echo -e "${RED}[+] Stopping sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_WEB_SERVICE${NOCOLOR}."
-                   				sudo rm -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf"
-                   				sudo rm -f "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf"
-												fi
-											done
-                 		fi
-               		done
-             		done
-								# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-								create_web_service_list
-             		if [ -z "$WEB_SERVICE_NAME_LIST" ]; then
-               		echo ""
-               		echo -e "${RED}There are no shared folder configured; cleaning...${RED}$WEBSITE_DIR/$SERVICE_NAME${NOCOLOR}"
-									sleep 5
-									echo -e "${RED}[+] Reloading Nginx..."
-									sudo systemctl reload nginx
-             		else
-               		echo ""
-               		echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-									sleep 5
-									sudo systemctl reload nginx
-               		echo ""
-               		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-             		fi
-           		fi
-         		fi
+					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
+         	service_menu checklist "$WEB_SERVICE_NAME_FOR_MENU"
+         	if [ "$exitstatus" == "0" ]; then
+         		if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+           		i=0
+           		for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+             		i=$((i+1))
+               	for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+               		if [ "$i" = "$SERVICE_NUMBER" ]; then
+										x=0
+										for VIRTPORT_WEB_SERVICE in $VIRTPORT_WEB_SERVICE_LIST; do
+											x=$((x+1))
+											if [ "$x" = "$i" ]; then
+                 				echo -e "${RED}[+] Stopping sharing the folder ${WHITE}$WEBSITE_DIR/$SERVICE_NAME${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT_WEB_SERVICE${NOCOLOR}."
+                 				sudo rm -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf"
+                 				sudo rm -f "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT_WEB_SERVICE}-onion.conf"
+											fi
+										done
+                 	fi
+               	done
+             	done
+             	echo ""
+             	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+							sleep 5
+							sudo systemctl reload nginx
+           		echo ""
+           		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+           	fi
          	fi
        	;;
 
@@ -1481,20 +1500,13 @@ case "$CHOICE" in
          	clear
 					# This produces WEB_SERVICE_NAME_LIST
 					create_web_service_list 0
-					if [ -z $SERVICE_NAME_LIST ]; then
-						echo -e "${WHITE}[!] There are no folders actively shared, yet!${NOCOLOR}"
-						echo -e "${RED}[+] Start sharing a folder on an Onion domain, first (entry 1) ${NOCOLOR}"
-						echo ""
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-						clear
-					else
-           	i=0;
-           	for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
-             	i=$((i+1))
-             	echo -e "${WHITE}[+] This is the list of configured shared folders (page $i):${NOCOLOR}"
-             	show_onion_address $WEB_SERVICE_NAME
-           	done
-         	fi
+					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
+          i=0;
+          for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+            i=$((i+1))
+            echo -e "${WHITE}[+] This is the list of configured shared folders (page $i):${NOCOLOR}"
+            show_onion_address $WEB_SERVICE_NAME
+          done
        	;;
      	esac
 		fi
@@ -1708,50 +1720,35 @@ case "$CHOICE" in
 
 					#Stop TFS on Onion domain (this has to be change if TFS supports multiple instances)
 					3)
-						if ! pgrep -f "filesharing.wsgi"; then
-							clear
-							echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS NOT RUNNING!!!${NOCOLOR}"
-							sleep 5
-							trap "bash menu-onion; exit 0" EXIT
-							exit 1
-						else
-							clear
-							# shellcheck disable=SC2012
-							SERVICE_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-							service_menu checklist "$SERVICE_NAME_LIST"
-	         		if [ "$exitstatus" == "0" ]; then
-	           		if [ ! -z "$SERVICE_NAME_LIST" ]; then
-	             		i=0
-	             		for SERVICE_NAME in $SERVICE_NAME_LIST; do
-	               		i=$((i+1))
-	               		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-	                 		if [ "$i" = "$SERVICE_NUMBER" ]; then
-												stopping_tfs $SERVICE_NAME
-												echo ""
-											fi
-	               		done
+						clear
+						if ! pgrep -f "filesharing.wsgi"; then error_no_tfs_running; fi
+						# shellcheck disable=SC2012
+						SERVICE_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+						service_menu checklist "$SERVICE_NAME_LIST"
+	       		if [ "$exitstatus" == "0" ]; then
+	         		if [ ! -z "$SERVICE_NAME_LIST" ]; then
+	           		i=0
+	             	for SERVICE_NAME in $SERVICE_NAME_LIST; do
+	             		i=$((i+1))
+	             		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+	               		if [ "$i" = "$SERVICE_NUMBER" ]; then
+											stopping_tfs $SERVICE_NAME
+											echo ""
+										fi
 	             		done
-								fi
+	             	done
 							fi
-							echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-							sleep 5
-							echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
-							sudo systemctl reload nginx
-							echo ""
-							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-           	fi
+						fi
+						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
+						sudo systemctl reload nginx
+						echo ""
+						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					;;
 
 					#List all Onion domains with TFS
 					4)
-						if ! pgrep -f "filesharing.wsgi"; then
-							clear
-							echo -e "${WHITE}[!] TORBOX FILESHARING (TFS) IS NOT RUNNING!!!${NOCOLOR}"
-							sleep 5
-							trap "bash menu-onion; exit 0" EXIT
-							exit 1
-						fi
 						clear
+						if ! pgrep -f "filesharing.wsgi"; then error_no_tfs_running; fi
 						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
 						if [ ! -z "$SERVICE_NAME_LIST" ]; then
 							i=0;
@@ -1794,6 +1791,16 @@ case "$CHOICE" in
 					# Restart or Start TCS on Onion domains
 					1)
 						clear
+						if pgrep -f "lib/chatsecure/tcs"; then
+							echo -e "${WHITE}[!] TORBOX CHAT SECURE IS ALREADI RUNNING!${NOCOLOR}"
+							echo -e "${RED}[+] You cannot start TCS a second time!${NOCOLOR}"
+							echo ""
+							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+							clear
+							trap "bash menu-onion; exit 0" EXIT
+							exit 1;
+						fi
+
 						# Restart
 						sudo ./run/start_tcs
 
@@ -1816,7 +1823,7 @@ case "$CHOICE" in
 											[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 											[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
 											# HAS TO BE TESTED!!
-											TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Cat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+											TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Cat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 					      			configure_tcs
 											#Configure Nginx
 											echo ""
@@ -1853,85 +1860,67 @@ case "$CHOICE" in
 					#Change the message below the TorBox Chat Secure logo
 					2)
 						clear
-						SERVICE_NAME_LIST=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
-						if [ -z $SERVICE_NAME_LIST ]; then
-							echo -e "${WHITE}[!] There is no TCS started on an Onion domain, yet!${NOCOLOR}"
-							echo -e "${RED}[+] Start TCS on an Onion domain, first (entry 1) ${NOCOLOR}"
-							echo ""
-							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-							clear
-						else
-							service_menu menu "$SERVICE_NAME_LIST"
-							exitstatus=$?
-							if [ "$exitstatus" == "0" ]; then
-								i=0
-								for SERVICE_NAME in $SERVICE_NAME_LIST; do
-									i=$((i+1))
-									for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-										if [ "$i" = "$SERVICE_NUMBER" ]; then
-											TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-											sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
-											clear
-											# HAS TO BE EDITED !!!
-											if pgrep -f "tcs" ; then
-												echo -e "${RED}[+] Stopping TCS named ${WHITE}$SERVICE_NAME${RED} on Onion domain...${NOCOLOR}"
-												#HAS TO BE TESTED!!
-												(sudo pkill -f "chatsecure.wsgi") &>/dev/null
-												sudo sed -E -i "/^TCS-$SERVICE_NAME=lib\/filesharing\/tcs/d" "${RUNFILE}"
-											fi
-											configure_tcs
-											# RELOADING NGINX - PROBABLY NOT NECESARRY
-											echo ""
-											echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-											sleep 5
-											sudo systemctl reload nginx
-											echo ""
-											# This will give ONION_HOSTNAME
-											test_service_exists $SERVICE_NAME
-											if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-												echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
-											fi
-											echo ""
-											read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-											clear
+						SERVICE_NAME_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f1 | sed s/"^TCS-"//g)
+						[ -z $SERVICE_NAME_LIST ] && error_no_tcs_running
+						service_menu menu "$SERVICE_NAME_LIST"
+						exitstatus=$?
+						if [ "$exitstatus" == "0" ]; then
+							i=0
+							for SERVICE_NAME in $SERVICE_NAME_LIST; do
+								i=$((i+1))
+								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+									if [ "$i" = "$SERVICE_NUMBER" ]; then
+										TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+										sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+										clear
+										if pgrep -f "lib/chatsecure/tcs" ; then
+											echo -e "${RED}[+] Stopping TCS named ${WHITE}$SERVICE_NAME${RED} on Onion domain...${NOCOLOR}"
+											#HAS TO BE TESTED!!
+											(sudo pkill -f "lib/chatsecure/tcs") &>/dev/null
+											sudo sed -E -i "/^TCS-$SERVICE_NAME=lib\/filesharing\/tcs/d" "${RUNFILE}"
 										fi
-									done
+										configure_tcs
+										# RELOADING NGINX - PROBABLY NOT NECESARRY
+										echo ""
+										echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+										sleep 5
+										sudo systemctl reload nginx
+										echo ""
+										# This will give ONION_HOSTNAME
+										test_service_exists $SERVICE_NAME
+										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
+										fi
+										echo ""
+										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+										clear
+									fi
 								done
-							fi
+							done
 						fi
 					;;
 
 					#Stop TCS
 					3)
+						clear
+						echo -e "${RED}[+] Stopping TCS on Onion domain...${NOCOLOR}"
 						#HAS TO BE TESTED!!
-						if ! pgrep -f "chatsecure.wsgi"; then
-							clear
-							echo -e "${WHITE}[!] TORBOX CHATSECURE (TCS) IS NOT RUNNING!!!${NOCOLOR}"
-							sleep 5
-							trap "bash menu-onion; exit 0" EXIT
-							exit 1
-						else
-							clear
-							echo -e "${RED}[+] Stopping TCS on Onion domain...${NOCOLOR}"
-							#HAS TO BE TESTED!!
-							(sudo pkill -f "chatsecure.wsgi") &>/dev/null
-							SERVICE_NAME=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
-							sudo sed -E -i "/^TCS-$SERVICE_NAME=lib\/filesharing\/tcs/d" "${RUNFILE}"
-							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
-							find_virtport "${SERVICE_NAME}"
-							sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
-							sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
-							echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
-							sudo systemctl reload nginx
-							echo ""
-							read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-           	fi
+						(sudo pkill -f "lib/chatsecure/tcs") &>/dev/null
+						SERVICE_NAME=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
+						sudo sed -E -i "/^TCS-$SERVICE_NAME=lib\/filesharing\/tcs/d" "${RUNFILE}"
+						echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+						find_virtport "${SERVICE_NAME}"
+						sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+						sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
+						sudo systemctl reload nginx
+						echo ""
+						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					;;
 
-					#List all Onion domains with TFS
+					#List all Onion domains with TCS
 					4)
-						#HAS TO BE TESTED!!
-						if ! pgrep -f "chatsecure.wsgi"; then
+						if ! pgrep -f "lib/chatsecure/tcs"; then
 							clear
 							echo -e "${WHITE}[!] TORBOX CHATSECURE (TCS) IS NOT RUNNING!!!${NOCOLOR}"
 							sleep 5
