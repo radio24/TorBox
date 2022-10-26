@@ -1,0 +1,18 @@
+This menu entry backups the TorBox configuration. Users can also backup their OBFS4 Bridge Relay or Onion Services if available.
+
+In the end, the backup is stored as a compressed file in a directory called "backup" in TorBox's home directory.
+
+You can access this backup file by downloading it from your TorBox using an SFTP client (it uses the same login and password as your SSH client). Alternatively, you can retrieve the backup file by connecting an USB stick to your TorBox. You can mount the USB stick, most probably by "sudo mount /dev/sda /mnt", and then copy the backup file on your stick.
+
+Moving your TorBox from one installation to another is easy with that backup. Regarding OBFS4 Bridge Relays and Onion Services, upgrading or moving it to a different computer with keeping all the configuration, keys, and data is possible. Maintaining backups of the identity keys to restore a relay in the future is the recommended way to ensure the reputation of the relay/server won't be wasted and to ensure the availability of your data in case of a system crash.
+
+IMPORTANT
+- An already existing backup in the home directory will be overwritten
+  without confirmation!
+- If available and you choose to make a backup of your shared folders,
+  you need enough space on your SD card.
+- If available, we will link all your shared folders into your backup
+  directory so that you can easily copy all your shared data without
+	making a backup, which will probably exceed the SD card space.
+
+Do you want to start with the backup?

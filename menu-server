@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=10
+NO_ITEMS=9
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -146,10 +146,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE 
 " 6" "Enter the advanced tor configuration editor"  \
 " 7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
 "==" "==========================================[Backup & Restore]===" \
-" 8" "Backup the OBFS4 Bridge Relay configuration"  \
-" 9" "Restore the OBFS4 Bridge Relay configuration" \
+" 8" "Restore the OBFS4 Bridge Relay configuration" \
 "==" "================================================[Dangerous!]===" \
-"10" "Remove permanently OBFS4 Bridge Relay data" \
+" 9" "Remove permanently OBFS4 Bridge Relay data" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -313,31 +312,8 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Backup the configuration
-  8)
-		if sudo [ ! -f "/var/lib/tor/hashed-fingerprint" ]; then
-			clear
-			echo -e "${WHITE}[!] NO OBFS4 Bridge Relay configuration to backup!!${NOCOLOR}"
-			sleep 5
-			clear
-			trap "bash menu-server; exit 0" EXIT
-			exit 1
-		fi
-    INPUT=$(cat text/backup-bridge_relay_conf-text)
-    if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      clear
-      echo -e "${RED}[+] Backup bridge relay configuration to ~/torbox_bridge_relay_${sNICK}.tgz ${NOCOLOR}"
-      echo ""
-      if [ ! -d "$BACKUP_DIR" ]; then
-        mkdir $BACKUP_DIR
-      fi
-      (sudo tar -cpzf ${BACKUP_DIR}/torbox_bridge_relay_${sNICK}.tgz /var/lib/tor/fingerprint /var/lib/tor/hashed-fingerprint /var/lib/tor/keys /var/lib/tor/pt_state /etc/tor/torrc) 2> /dev/null
-      sleep 2
-    fi
-  ;;
-
   # Restore the configuration
-  9)
+  8)
     INPUT=$(cat text/restore-bridge_relay_conf-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       INPUT=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_bridge_relay_${sNICK}.tgz):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -398,7 +374,7 @@ case "$CHOICE" in
   ;;
 
 	#This permanently removes Bridge Relay data
-	10)
+	9)
 	   INPUT=$(cat text/remove-brdata-text)
 		 if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
 		 	clear

@@ -620,8 +620,7 @@ else
 	"18" "Start/stop upload or/and download files (TorBox File Sharing)"  \
 	"19" "Start/stop TorBox Chat Secure" \
   "==" "==========================================[Backup & Restore]===" \
-  "20" "Backup Onion Services"  \
-  "21" "Restore Onion Services" 3>&1 1>&2 2>&3)
+  "20" "Restore Onion Services" 3>&1 1>&2 2>&3)
 fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -1947,87 +1946,9 @@ case "$CHOICE" in
 		fi
 	;;
 
-  # Backup Onion Services (it doesn't backup my access permissions from the menu-defender entry 5!! )
-  # Backups the torrc configuration, the Onion Services, the client keys, and optionally the nginx configuration and all shared folders
-  20)
-    clear
-		create_service_list
-		error_no_onion_service
-    INPUT=$(cat text/backup-onion_service-text)
-    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      exitstatus=$?
-      if [ "$exitstatus" == "0" ]; then
-        if [ ! -d "$BACKUP_DIR" ]; then
-          mkdir $BACKUP_DIR
-        fi
-        OS_BK_TAR="$BACKUP_DIR/torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz"
-        if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Do you want to include Nginx's and TFS' configuration and all shared folders into your backup?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx's and TFS configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
-          echo ""
-          # Checking if we have anough space
-          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}" "${NGINX_DIR}" "${WEBSITE_DIR}" "${RUNFILE}" | wc -c)
-          AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
-          if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
-          AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
-          if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${NGINX_DIR}" "${TORRC}" "${WEBSITE_DIR}" "${RUNFILE}") >/dev/null
-            LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
-            if [ -z "$LINK_EXIST" ]; then
-              echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
-              (sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
-            fi
-            clear
-            echo -e "${RED}[+] Backup Onion Service configuration WITH Nginx's and TFS configuration and all shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
-            echo -e "${RED}[+] Done!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-          else
-            clear
-            echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-            echo -e "${WHITE}[+] Please, try again without shared folders.${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-            clear
-            trap "bash menu-onion; exit 0" EXIT
-            exit 1
-          fi
-        else
-          echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's, TFS configuration and shared folders to ${WHITE}$OS_BK_TAR${NOCOLOR}"
-          echo ""
-          # Checking if we have anough space
-          NEEDED_SIZE=$(sudo tar -cz "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}" | wc -c)
-          AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
-          if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
-          AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
-          if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            (sudo tar -cpvzf "$OS_BK_TAR" "${DATA_DIR_OS}" "{$CLIENT_ONION_AUTH_DIR}" "${TORRC}") >/dev/null
-            LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
-            if [ -z "$LINK_EXIST" ]; then
-              echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
-              (sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
-            fi
-            clear
-            echo -e "${RED}[+] Backup Onion Service configuration WITHOUT Nginx's, TFS configuration and shared folders to  ${WHITE}$OS_BK_TAR${NOCOLOR}"
-            echo -e "${RED}[+] Done!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-          else
-            clear
-            echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-            clear
-            trap "bash menu-onion; exit 0" EXIT
-            exit 1
-          fi
-        fi
-      fi
-    fi
-  ;;
-
   # Restore Onion Services
   # Backup tar file will be extracted and integrated into their respective tor folders
-  21)
+  20)
     INPUT=$(cat text/restore-onion_service-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
