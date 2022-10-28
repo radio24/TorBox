@@ -10,7 +10,7 @@ cffi
 click
 cryptography
 eventlet
-gunicorn
+https://github.com/benoitc/gunicorn/archive/refs/heads/master.zip#egg=gunicorn==20.1.0
 mechanize==0.4.7
 paramiko
 pycparser

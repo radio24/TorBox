@@ -101,6 +101,7 @@ def run_webserver(instance_name, dev=True):
             f"pid/{instance_name}.pid",
             "--chdir",
             settings.BASE_DIR,
+            "--worker-class", "eventlet",
             # "-b",
             # f"unix:/var/run/tcs_{instance_name}.sock",
             '-b', f'unix:/tmp/tcs_{instance_name}.sock',
@@ -108,6 +109,30 @@ def run_webserver(instance_name, dev=True):
             "--preload",
         ]
         subprocess.call(gunicorn_cmd)
+
+
+
+        # import eventlet
+        # import socket
+        # import signal
+        # from django.core.wsgi import get_wsgi_application
+        # from chatsecure.wsgi import application
+        #
+        # def stop_webserver(signum, frame):
+        #     print(signum, frame)
+        #     print("EXITED")
+        #
+        # signal.signal(signal.SIGTERM, stop_webserver)
+        #
+        # # application = get_wsgi_application()
+        #
+        # app_socket = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
+        # app_socket = f"/tmp/tcs_{settings.INSTANCE_NAME}.sock"  # dev
+        # app_socket_family = socket.AF_UNIX
+        # eventlet.wsgi.server(
+        #         sock=eventlet.listen(app_socket, family=app_socket_family),
+        #         site=application
+        #     )
 
         # Remove database at exit
         os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
