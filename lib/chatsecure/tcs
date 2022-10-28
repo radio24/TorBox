@@ -29,8 +29,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
                             default=False,
                             type=bool,
                             help="Run in development mode (Default: 0)")
+@click.option('--debug',
+                            default=False,
+                            type=bool,
+                            help="Run in debug mode (--dev must be true) (Default: 0)")
 # fmt: on
-def main(name, onion_domain, msg, dev):
+def main(name, onion_domain, msg, dev, debug):
     if not name:
         click.echo("Error: You must specify a name.")
         click.echo(f"run {sys.argv[0]} --help for more info.")
@@ -56,22 +60,25 @@ def main(name, onion_domain, msg, dev):
 
     # Set environment vars for django settings
     os.environ["MSG_HEADER"] = msg
-    os.environ["DEBUG"] = "1" if dev else "0"
+    if dev:
+        os.environ["DEBUG"] = "1"
+    else:
+        os.environ["DEBUG"] = "1" if debug else "0"
 
     # Start django
     django.setup()
 
     from django.conf import settings
 
-    clean_database(settings.BASE_DIR)
+    clean_database(settings.BASE_DIR, instance_name)
 
     run_webserver(instance_name=instance_name, dev=dev)
 
 
-def clean_database(base_dir):
+def clean_database(base_dir, instance_name):
     """Remove old database and create new one"""
     try:
-        os.remove(base_dir / "db.sqlite3")
+        os.remove(base_dir / f"db/{instance_name}.sqlite3")
     except:  # noqa
         pass
 
@@ -79,71 +86,49 @@ def clean_database(base_dir):
 
 
 def run_webserver(instance_name, dev=True):
-    from django.core.wsgi import get_wsgi_application
-
-    # application = get_wsgi_application()
-    # call_command("runserver", "127.0.0.1:8010", "--noreload")
-
     if dev:
         # Dev
-        from django.core.wsgi import get_wsgi_application
-
-        application = get_wsgi_application()
-        call_command("runserver", "127.0.0.1:8010", "--noreload")  # dev
-        quit()
+        import eventlet
+        from chatsecure.wsgi import application
+        eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 8010)), application)
+        sys.exit()
     else:
         # Production
         from django.conf import settings
+        import eventlet
+        import socket
+        import signal
+        from chatsecure.wsgi import application
 
-        gunicorn_cmd = [
-            "gunicorn",
-            "-p",
-            f"pid/{instance_name}.pid",
-            "--chdir",
-            settings.BASE_DIR,
-            "--worker-class", "eventlet",
-            # "-b",
-            # f"unix:/var/run/tcs_{instance_name}.sock",
-            '-b', f'unix:/tmp/tcs_{instance_name}.sock',
-            "chatsecure.wsgi",
-            "--preload",
-        ]
-        subprocess.call(gunicorn_cmd)
+        def stop_webserver(signum, frame):
+            # Remove database at exit
+            os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
 
-
-
-        # import eventlet
-        # import socket
-        # import signal
-        # from django.core.wsgi import get_wsgi_application
-        # from chatsecure.wsgi import application
-        #
-        # def stop_webserver(signum, frame):
-        #     print(signum, frame)
-        #     print("EXITED")
-        #
-        # signal.signal(signal.SIGTERM, stop_webserver)
-        #
-        # # application = get_wsgi_application()
-        #
-        # app_socket = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
-        # app_socket = f"/tmp/tcs_{settings.INSTANCE_NAME}.sock"  # dev
-        # app_socket_family = socket.AF_UNIX
-        # eventlet.wsgi.server(
-        #         sock=eventlet.listen(app_socket, family=app_socket_family),
-        #         site=application
-        #     )
-
-        # Remove database at exit
-        os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
-
-        # Remove pid file
-        try:
+            # Remove pid file
             os.remove(settings.BASE_DIR / f"pid/{instance_name}.pid")
-        except:
-            pass
 
-    quit()
+            # Remove unix socket
+            os.remove(f"/tmp/tcs_{instance_name}.sock")
+
+            sys.exit()
+
+        signal.signal(signal.SIGTERM, stop_webserver)
+
+        # Create pid file
+        pidfile = open(settings.BASE_DIR / f"pid/{instance_name}.pid", "w+")
+        pidfile.write("%s" % os.getpid())
+        pidfile.close()
+
+        # Unix socket file path
+        app_socket = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
+        # app_socket = f"/tmp/tcs_{settings.INSTANCE_NAME}.sock"  # dev
+
+        eventlet.wsgi.server(
+                sock=eventlet.listen(app_socket, family=socket.AF_UNIX),
+                site=application
+            )
+
+    sys.exit()
 
 
 if __name__ == "__main__":

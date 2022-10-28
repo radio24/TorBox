@@ -18,20 +18,11 @@ from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chatsecure.settings')
 
 application = get_wsgi_application()
-app_socket = (f"unix:/var/run/tcs_{settings.INSTANCE_NAME}.sock",)
-app_socket_family = socket.AF_UNIX
 
 if settings.DEBUG:
     # dev
     from django.contrib.staticfiles.handlers import StaticFilesHandler
-    application = StaticFilesHandler(get_wsgi_application())
-    app_socket = ('127.0.0.1', 8010)
-    app_socket_family = socket.AF_INET
+    application = StaticFilesHandler(application)
 
 from apps.socketio_app.views import sio
 application = socketio.WSGIApp(sio, application)
-# eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 8010)), application)
-# eventlet.wsgi.server(
-#         sock=eventlet.listen(app_socket),
-#         site=application
-#     )
