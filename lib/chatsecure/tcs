@@ -120,11 +120,14 @@ def run_webserver(instance_name, dev=True):
         pidfile.close()
 
         # Unix socket file path
-        app_socket = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
+        socket_path = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
         # app_socket = f"/tmp/tcs_{settings.INSTANCE_NAME}.sock"  # dev
 
+        green_sock = eventlet.listen(socket_path, family=socket.AF_UNIX)
+        os.chmod(socket_path, 0o777)
+
         eventlet.wsgi.server(
-                sock=eventlet.listen(app_socket, family=socket.AF_UNIX),
+                sock=green_sock,
                 site=application
             )
 
