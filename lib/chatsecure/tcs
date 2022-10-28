@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import click
+import sys
 import os
 import django
+import subprocess
 from django.core.management import call_command
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
@@ -11,16 +13,47 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
 
 # fmt: off
 @click.command()
+@click.option('--name', '-n',
+                            default=None,
+                            type=str,
+                            help="Onion Service Name")
+@click.option('--onion-domain', '-od',
+                            default=None,
+                            type=str,
+                            help="Onion domain where TFS will be published")
 @click.option('--msg', '-m',
-              default='',
-              type=str,
-              help="Message to show in header of web")
+                            default='',
+                            type=str,
+                            help="Message to show in header of web")
 @click.option('--dev',
-              default=False,
-              type=bool,
-              help="Run in development mode (Default: 0)")
+                            default=False,
+                            type=bool,
+                            help="Run in development mode (Default: 0)")
 # fmt: on
-def main(msg, dev):
+def main(name, onion_domain, msg, dev):
+    if not name:
+        click.echo("Error: You must specify a name.")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
+
+    if not onion_domain:
+        click.echo("Error: Onion domain is required")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
+
+    instance_name = name
+    os.environ["INSTANCE_NAME"] = instance_name
+    os.environ["ONION_DOMAIN"] = onion_domain
+
+    from pathlib import Path
+
+    base_dir = Path(__file__).resolve().parent
+    if os.path.exists(base_dir / f"pid/{instance_name}.pid"):
+        click.echo(
+            'Error: Another instance is already using name "%s"' % instance_name
+        )
+        sys.exit(1)
+
     # Set environment vars for django settings
     os.environ["MSG_HEADER"] = msg
     os.environ["DEBUG"] = "1" if dev else "0"
@@ -32,7 +65,7 @@ def main(msg, dev):
 
     clean_database(settings.BASE_DIR)
 
-    run_webserver(dev)
+    run_webserver(instance_name=instance_name, dev=dev)
 
 
 def clean_database(base_dir):
@@ -45,11 +78,46 @@ def clean_database(base_dir):
     call_command("migrate", interactive=False)
 
 
-def run_webserver(dev=True):
+def run_webserver(instance_name, dev=True):
     from django.core.wsgi import get_wsgi_application
 
-    application = get_wsgi_application()
-    call_command("runserver", "127.0.0.1:8010", "--noreload")
+    # application = get_wsgi_application()
+    # call_command("runserver", "127.0.0.1:8010", "--noreload")
+
+    if dev:
+        # Dev
+        from django.core.wsgi import get_wsgi_application
+
+        application = get_wsgi_application()
+        call_command("runserver", "127.0.0.1:8010", "--noreload")  # dev
+        quit()
+    else:
+        # Production
+        from django.conf import settings
+
+        gunicorn_cmd = [
+            "gunicorn",
+            "-p",
+            f"pid/{instance_name}.pid",
+            "--chdir",
+            settings.BASE_DIR,
+            # "-b",
+            # f"unix:/var/run/tcs_{instance_name}.sock",
+            '-b', f'unix:/tmp/tcs_{instance_name}.sock',
+            "chatsecure.wsgi",
+            "--preload",
+        ]
+        subprocess.call(gunicorn_cmd)
+
+        # Remove database at exit
+        os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
+
+        # Remove pid file
+        try:
+            os.remove(settings.BASE_DIR / f"pid/{instance_name}.pid")
+        except:
+            pass
+
     quit()
 
 
