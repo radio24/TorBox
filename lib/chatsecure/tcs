@@ -108,7 +108,7 @@ def run_webserver(instance_name, dev=True):
             os.remove(settings.BASE_DIR / f"pid/{instance_name}.pid")
 
             # Remove unix socket
-            os.remove(f"/tmp/tcs_{instance_name}.sock")
+            os.remove(f"/var/run/tcs_{instance_name}.sock")
 
             sys.exit()
 
