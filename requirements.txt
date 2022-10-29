@@ -13,7 +13,7 @@ eventlet
 gunicorn
 mechanize==0.4.7
 numpy
-opencv-python
+opencv-python-headless
 paramiko
 pycparser
 pytesseract
