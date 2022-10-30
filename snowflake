@@ -75,6 +75,7 @@ case $SNOWSTRING in
 			whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
 			sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 		fi
+    clear
 		echo -e "${WHITE}[!] SNOWFLAKE runs only with local clearnet DNS resolution!${NOCOLOR}"
 		echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
 		echo ""

@@ -9,7 +9,9 @@ for its data stream.
 
 IMPORTANT
 - If using bridges, this can lead to problems (depending on the
-  configuration of the bridges).
+  configuration of the bridges). Therefore, generally, we recommend
+  using either bridges or the countermeasure against tightly configured
+  firewalls.
 - Don't use this option if you want to run an OBFS4 BRIDGE RELAY! This
   will not work!
 

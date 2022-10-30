@@ -982,7 +982,7 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	12)
   	clear
-		./first_use 3
+		./first_use 3 update
 	;;
 
 	# This erases all log files

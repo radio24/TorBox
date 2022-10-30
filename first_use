@@ -25,12 +25,14 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use <NUMBER>
+# ./first_use <NUMBER> <SOURCE SCRIPT>
 #
 # Following NUMBERs are supported:
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
+#
+# If SOURCE SCRIPT is empty, the default is menu
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
@@ -50,6 +52,8 @@ CHECK_OS="$(lsb_release -si)"
 # Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
+FRESHINSTALLED=$1
+[ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 
 ##############################
 ######## FUNCTIONS ###########
@@ -57,13 +61,59 @@ RUNFILE="run/torbox.run"
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
+# This function is used for the step 1 as a trap for CTRL-C
+# Syntax finish_default_obfs4_step2 <DEFAULT_OBFS4_SUPPORT>
+# Used predefined variables: RED, NOCOLOR, TORRC
+finish_default_obfs4_step2()
+{
+	DEFAULT_OBFS4_SUPPORT=$1
+	trap
+	if [ "$DEFAULT_OBFS4_SUPPORT" = "1" ]; then
+		# Did OBFS4 start up?
+		REPLY=""
+		while true
+		do
+			read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+			# The following line is for the prompt to appear on a new line.
+			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+				echo
+				echo
+				break
+			fi
+		done
+		if [[ $REPLY =~ ^[Yy]$ ]] ; then
+			echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+			echo
+			echo
+			sleep 5
+			trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
+			exit 0
+		else
+			clear
+			whiptail --textbox text/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
+			CHECK=$(grep "^#ReachableAddresses" ${TORRC})
+			if [ -z ${CHECK} ] ; then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			else
+				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			fi
+			clear
+			trap "bash menu-bridges; trap; exit 0" EXIT
+			exit 0
+		fi
+	else
+		exit 0
+	fi
+}
+
 # This function is used for the main program as a trap for CTRL-C
-# Syntax finish_default_obfs4_step1
+# Syntax finish_default_obfs4_step1 <DEFAULT_OBFS4_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
 finish_default_obfs4_step1()
 {
  DEFAULT_OBFS4_SUPPORT=$1
- if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
+ trap
+ if [ "$DEFAULT_OBFS4_SUPPORT" = "1" ]; then
    # Did OBFS4 start up?
    echo ""
  	 while true
@@ -81,61 +131,38 @@ finish_default_obfs4_step1()
  		 echo
  		 echo
  		 sleep 5
- 		 trap "bash menu; exit 0" EXIT
+ 		 trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
  		 exit 0
  	 else
      INPUT=$(cat text/first_use-anti-firewall-text)
      if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-       sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			 CHECK=$(grep "^#ReachableAddresses" ${TORRC})
+			 if [ -z ${CHECK} ] ; then
+				 sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			 else
+				 sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			 fi
        clear
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
        echo -e "    Ignore any error messages, this can take minutes just wait..."
        echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
        echo -e "    You can leave the progress report with CTRL-C."
        echo ""
+			 # shellcheck disable=SC2064
+			 trap "finish_default_obfs4_step2 $DEFAULT_OBFS4_SUPPORT" SIGINT
        sudo systemctl restart tor &
        sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
-
-       # Did OBFS4 start up?
-       REPLY=""
-       while true
-       do
-        read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
-        # The following line is for the prompt to appear on a new line.
-        if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-       	 echo
-       	 echo
-       	 break
-        fi
-       done
-       if [[ $REPLY =~ ^[Yy]$ ]] ; then
-        echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
-        echo
-        echo
-        sleep 5
-        trap "bash menu; exit 0" EXIT
-        exit 0
-       else
-        clear
-        whiptail --textbox text/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-        trap "bash menu-bridges; exit 0" EXIT
-        exit 0
-       fi
-     else
-       clear
-       echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
-   		 echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
-   		 echo
-   		 echo
-   		 read -n 1 -s -r -p "Press any key to continue"
-   		 trap "bash menu-bridges; exit 0" EXIT
-   		 exit 0
-     fi
- 	 fi
- else
-# 	 trap "bash menu; exit 0" EXIT
- 	 exit 0
+		 else
+			 clear
+			 echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
+			 echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+			 echo
+			 echo
+			 read -n 1 -s -r -p "Press any key to continue"
+			 trap "bash menu-bridges; trap; exit 0" EXIT
+			 exit 0
+		 fi
+	 fi
  fi
 }
 
@@ -147,8 +174,6 @@ shopt -s checkwinsize
 
 #Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-
-FRESHINSTALLED=$1
 if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 
 # This will completely remove pi (only for Raspbian OS). The parameter
@@ -265,7 +290,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       DEFAULT_OBFS4_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-      if (whiptail --title "TorBox v.0.5.1 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox v.0.5.1 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
         sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
         sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
@@ -301,6 +326,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report with CTRL-C."
       echo ""
+			# shellcheck disable=SC2064
       trap "finish_default_obfs4_step1 $DEFAULT_OBFS4_SUPPORT" SIGINT
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"

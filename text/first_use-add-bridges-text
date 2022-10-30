@@ -7,8 +7,11 @@ tightly configured firewall.
 Choosing this option, TorBox tries to activate its internal OBFS4 bridges.
 If this fails, we will try to activate a possible measure against a
 tightly configured firewall. If this fails too, we start the
-Countermeasure sub-menu so that you can try SNOWFLAKE, MEEK or manually
-add new OBFS4 bridge information.
+Countermeasure sub-menu so that you can try SNOWFLAKE, MEEK-AZURE
+or manually add new OBFS4 bridge information.
+
+For China, Iran, Russia or Turkmenistan, we recommend to use SNOWFLAKE
+(see also here: https://github.com/radio24/TorBox/discussions/179).
 
 Again, we highlight that if your well-being depends on your anonymity, it
 is strongly advised not to use TorBox, but Tails!

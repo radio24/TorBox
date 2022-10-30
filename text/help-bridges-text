@@ -18,19 +18,21 @@ TYPE OF PLUGGABLE TRANSPORTS:
   active-probing attacks, where the censor discovers bridges by trying to
   connect to them. obfs3 and scramblesuit are similar in nature to obfs4
   but less successful and therefore not integrated into TorBox.
+- SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
+  built-in NAT punching. For censored users: If the Snowflake proxy gets
+  blocked, the broker will find a new proxy automatically.
 - MEEK-AZURE makes Tor traffic look like a connection to an HTTPS website.
   Unlike the other transports, it doesn't connect directly to a bridge.
   Instead, Meek first connects to a real HTTPS web server (in the Microsoft
   Azure cloud) and from there connects to the actual bridge. Censors cannot
   easily block Meek connections because the HTTPS servers also provide many
-  other useful services.
-- SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
-  built-in NAT punching. For censored users: If the Snowflake proxy gets
-  blocked, the broker will find a new proxy automatically.
+  other useful services. However, because it has a bandwidth limitation,
+	this it will be quite slow.
 
 WHICH PLUGGABLE TRANSPORT SHOULD I USE?
 - Countries with moderate internet censorship: OBFS4
-- China or countries with similar internet censorship: SNOWFLAKE or MEEK
+- For China, Iran, Russia or Turkmenistan, we recommend to use SNOWFLAKE
+  (see also here: https://github.com/radio24/TorBox/discussions/179).
 
 HOW TO ACTIVATE OBFS4?
 Just use menu entry 2 or 3.
