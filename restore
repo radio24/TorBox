@@ -147,21 +147,21 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			fi
 			if [ "$ONIONSERVICES" == "1" ]; then
 				i=$((i+1))
-				n=2+n
+				n=$((2+n))
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the Onion Service data (old data will be replaced or removed)\" ON"
 			fi
 			if [ "$ONIONAUTH" == "1" ]; then
 				i=$((i+1))
-				n=4+n
+				n=$((4+n))
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the server access authorization data\" ON"
 			fi
 			if [ "$SHAREDFOLDERS" == "1" ]; then
 				i=$((i+1))
-				n=8+n
+				n=$((8+n))
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore all shared folders\" ON"
 			fi
 			WHIPTAIL_LINE="$WHIPTAIL_LINE 3>&1 1>&2 2>&3"
-			CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
+			CHOICE=$(eval $WHIPTAIL_LINE)
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
 			[ "$exitstatus" == "255" ] && exit 1
@@ -169,42 +169,64 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			ONIONSERVICES=0
 			ONIONAUTH=0
 			SHAREDFOLDERS=0
-			if [ ! -z "$CHOICE_ENTRY" ]; then
-				mapfile -t CHOICE <<< "$CHOICE_ENTRY"
+			if [ ! -z "$CHOICE" ]; then mapfile -t CHOICE <<< "$CHOICE"
 				if [ "$n" == "1" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
 				if [ "$n" == "2" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
 				if [ "$n" == "3" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "3" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONSERVICES=1; fi
 				if [ "$n" == "4" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONAUTH=1; fi
 				if [ "$n" == "5" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "5" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONAUTH=1; fi
 				if [ "$n" == "6" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "6" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONAUTH=1; fi
 				if [ "$n" == "7" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "7" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "7" ] && [ "${CHOICE[2]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[0]}" == "3" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[1]}" == "3" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[2]}" == "3" ]; then ONIONAUTH=1; fi
 				if [ "$n" == "8" ] && [ "${CHOICE[0]}" == "1" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "9" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "9" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "9" ] && [ "${CHOICE[0]}" == "2" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "9" ] && [ "${CHOICE[1]}" == "2" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "10" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "10" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "10" ] && [ "${CHOICE[0]}" == "2" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "10" ] && [ "${CHOICE[1]}" == "2" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "11" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "11" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "11" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[0]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[1]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[2]}" == "3" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "12" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONAUTH=1; fi
-				if [ "$n" == "12" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "12" ] && [ "${CHOICE[0]}" == "2" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "12" ] && [ "${CHOICE[1]}" == "2" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "13" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "13" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
-				if [ "$n" == "13" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[0]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[1]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[2]}" == "3" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "14" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "14" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
-				if [ "$n" == "14" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[0]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[1]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[2]}" == "3" ]; then SHAREDFOLDERS=1; fi
 				if [ "$n" == "15" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$n" == "15" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$n" == "15" ] && [ "${CHOICE[2]}" == "1" ]; then ONIONAUTH=1; fi
-				if [ "$n" == "15" ] && [ "${CHOICE[3]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[0]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[0]}" == "3" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[0]}" == "4" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[1]}" == "3" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[1]}" == "4" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[2]}" == "3" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[2]}" == "4" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[3]}" == "4" ]; then SHAREDFOLDERS=1; fi
 			fi
-
 			# Restoring the core
 			echo -e "${RED}[+] Preparing...${NOCOLOR}"
 			# Stopping TACA, TFS and TCS because old and new configuration could be different
