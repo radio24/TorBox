@@ -43,7 +43,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 
 #Connectivity check
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
@@ -710,4 +710,41 @@ display_net_reconfiguration_info()
   echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
   echo -e "${RED}    load the default values.${NOCOLOR}"
   echo ""
+}
+
+# find_virtport(<service_name>)
+# Following variables can be used:
+# $VIRTPORT -> Virtual port of an Onion Service
+# $HIDDENSSERVICEPORT -> The entire HiddenServicePort configuration line of a specific Onion Service in torrc
+# $UNIX_PATH -> The Unix socket path of a specidic Onion Service
+# Finds the virtual port of a configured Onion Service
+find_virtport()
+{
+  SERVICE_NAME="${1}"
+  HIDDENSSERVICEPORT=""
+  VIRTPORT=""
+  UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
+  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
+  #Bash specific, but should also work with other shells
+  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
+  VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
+}
+
+# stopping_tfs(<tfs_name_list>)
+# Used predefined variables: RED, WHITE, NOCOLOR, RUNFILE
+# Used predefined function: find_virtport(<service_name>)
+# Stops certain TorBox Fils Sharing (TFS)
+stopping_tfs()
+{
+	TFS_NAME_LIST=$1
+	for TFS_NAME in $TFS_NAME_LIST; do
+		echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+		PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${TFS_NAME}.pid)
+		(sudo kill $PID) &>/dev/null
+		sudo sed -E -i "/^TFS-$TFS_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+		find_virtport "${TFS_NAME}"
+		sudo rm "/etc/nginx/sites-enabled/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
+		sudo rm "/etc/nginx/sites-available/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
+	done
 }

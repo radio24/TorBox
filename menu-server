@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=9
+NO_ITEMS=8
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -145,10 +145,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE 
 " 5" "Show me my personal OBFS4 bridge address"  \
 " 6" "Enter the advanced tor configuration editor"  \
 " 7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"==" "==========================================[Backup & Restore]===" \
-" 8" "Restore the OBFS4 Bridge Relay configuration" \
 "==" "================================================[Dangerous!]===" \
-" 9" "Remove permanently OBFS4 Bridge Relay data" \
+" 8" "Remove permanently OBFS4 Bridge Relay data" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -312,69 +310,8 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Restore the configuration
-  8)
-    INPUT=$(cat text/restore-bridge_relay_conf-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      INPUT=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_bridge_relay_${sNICK}.tgz):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      cd
-      if [ -e "$INPUT" ]; then
-        clear
-        echo -e "${RED}[+] Unpacking backup...${NOCOLOR}"
-        sudo mkdir restore.tbx
-        sudo tar -xpzvf $INPUT -C restore.tbx
-        sleep 1
-        echo -e "${RED}[+] Removing old Bridge Relay data${NOCOLOR}"
-        (sudo rm -r /var/lib/tor/keys) 2> /dev/null
-        (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-        (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-        (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
-        sleep 1
-        echo -e "${RED}[+] Moving new Bridge Relay data to its place${NOCOLOR}"
-        sudo mv restore.tbx/var/lib/tor/* /var/lib/tor/
-        sleep 1
-        echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
-        MODE_BR_BAK=$(grep "BridgeRelay" restore.tbx/etc/tor/torrc)
-        if [ "$MODE_BR_BAK" = "BridgeRelay 1" ]; then
-          ORPORT_BAK=$(grep "^ORPort" restore.tbx/etc/tor/torrc)
-          OBFS4PORT_BAK=$(grep "^ServerTransportListenAddr" restore.tbx/etc/tor/torrc)
-          CONTACT_BAK=$(grep "^ContactInfo" restore.tbx/etc/tor/torrc)
-          NICK_BAK=$(grep "^Nickname" restore.tbx/etc/tor/torrc)
-          BRIDGEDISTRIBUTION_BACK=$(grep "^BridgeDistribution" restore.tbx/etc/tor/torrc)
-        else
-          ORPORT_BAK=$(grep "^#ORPort" restore.tbx/etc/tor/torrc)
-          OBFS4PORT_BAK=$(grep "^#ServerTransportListenAddr" restore.tbx/etc/tor/torrc)
-          CONTACT_BAK=$(grep "^#ContactInfo" restore.tbx/etc/tor/torrc)
-          NICK_BAK=$(grep "^#Nickname" restore.tbx/etc/tor/torrc)
-          BRIDGEDISTRIBUTION_BACK=$(grep "^#BridgeDistribution" restore.tbx/etc/tor/torrc)
-        fi
-        nORPORT=$(cut -d ' ' -f2 <<< $ORPORT_BAK)
-        nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT_BAK)
-        nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT_BAK)
-        nNICK=$(cut -d ' ' -f2 <<< $NICK_BAK)
-        nBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION_BACK)
-        sleep 1
-        echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-        sudo rm -r restore.tbx
-        cd torbox
-        sleep 1
-        change_config
-      else
-				cd torbox
-				clear
-				echo -e "${WHITE}[!] File not found or not specified!!"
-				echo -e "${RED}[+] Did you put the backup-file into the home directory?${NOCOLOR}"
-        echo -e "${RED}[+] Did you enter the right filename with the right extension?${NOCOLOR}"
-				sleep 5
-				clear
-				trap "bash menu-server; exit 0" EXIT
-				exit 1
-      fi
-    fi
-  ;;
-
 	#This permanently removes Bridge Relay data
-	9)
+	8)
 	   INPUT=$(cat text/remove-brdata-text)
 		 if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
 		 	clear

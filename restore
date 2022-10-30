@@ -1,0 +1,363 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2022 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This script restores TorBox's configuration, which was backuped with
+# TorBox's backup script.
+#
+# SYNTAX
+# ./restore
+#
+#
+##### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
+MENU_HEIGHT_15=25
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+TOR_DIR="/etc/tor/"
+TORRC="${TOR_DIR}torrc"
+TOR_USER="debian-tor"
+DATA_DIR_ROOT="/var/lib"
+DATA_DIR="${DATA_DIR_ROOT}/tor"
+DATA_DIR_OS="${DATA_DIR}/services"
+CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
+WEBSITE_DIR="/var/www"
+NGINX_DIR="/etc/nginx"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+
+##############################
+######## FUNCTIONS ########
+
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+
+###### MAIN ######
+clear
+cd
+INPUT=$(cat text/restore-text)
+if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+	exitstatus=$?
+	if [ "$exitstatus" == "0" ]; then
+		OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_backup_date.tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+		[ -z "$OS_BK_TAR" ] && exit 0
+		cd
+		if [ ! -e "$OS_BK_TAR" ]; then
+			clear
+			echo -e "${WHITE}[!] File not found!${NOCOLOR}"
+			echo -e "${RED}[+]Did you enter the right filename with the right extension?${NOCOLOR}"
+			echo -e "${RED}[+]Is the backup file stored in TorBox's home directory (/home/torbox)?${NOCOLOR}"
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+			exit 1
+		fi
+		clear
+		echo -e "${RED}[+] Start restore...${NOCOLOR}"
+		echo -e "${RED}[+] Calculating needed size...${NOCOLOR}"
+		NEEDED_SIZE=$(tar -tzvf $OS_BK_TAR | sed 's/ \+/ /g' | cut -f3 -d' ' | sed '2,$s/^/+ /' | paste -sd' ' | bc)
+		AVAILABLE_SIZE=$(df -a | grep "$WEBSITE_DIR" | awk '{print $4}')
+		if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
+		AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
+		if [ $NEEDED_SIZE -ge $AVAILABLE_SIZE ]; then
+			clear
+			echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+			trap "bash menu-onion; exit 0" EXIT
+			exit 1
+		else
+			echo ""
+			echo -e "${RED}[+] Unpacking backup file ${OS_BK_TAR}${NOCOLOR}"
+			if [ -d "restore" ]; then
+				sudo rm -r restore
+			fi
+			(sudo mkdir restore) 2> /dev/null
+			(sudo tar -xpzf $OS_BK_TAR -C restore) 2> /dev/null
+			sleep 2
+
+			# OBFS4 Bridge Relay data exist?
+			if sudo -u "${TOR_USER}" [ ! -f "restore${HASHED_FINGERPRINT_DIR}" ]; then
+				OBFS4RELAY=0
+			else
+				OBFS4RELAY=1
+			fi
+
+			# Onion Services available?
+			SERVICE_NAME_LIST=$(sudo -u "${TOR_USER}" ls "restore${DATA_DIR_OS}")
+			if [ -z "${SERVICE_NAME_LIST}" ]; then
+				ONIONSERVICES=0
+			else
+				ONIONSERVICES=1
+			fi
+
+			# Onion Client Authorization used?
+			ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "restore${CLIENT_ONION_AUTH_DIR}")
+			if [ -z "${ONION_AUTH_LIST}" ]; then
+				ONIONAUTH=0
+			else
+				ONIONAUTH=1
+			fi
+
+			# Shared folders available?
+			SHAREDFOLDERS_LIST=$(sudo ls "restore${WEBSITE_DIR}")
+			if [ -z "${SHAREDFOLDERS_LIST}" ]; then
+				SHAREDFOLDERS=0
+			else
+				SHAREDFOLDERS=1
+			fi
+
+			# Please, choose with SPACE which data you want to restore
+			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.1 - RESTORE SELECTION\" --checklist --separate-output \"\nPlease, choose with SPACE which data you want to restore in addition to the TorBox configuration and press ENTER.\n (ESC -> go back)\n\nIMPORTANT: The old configuration will be deleted in ANY CASE!\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
+			i=0
+			n=0
+			if [ "$OBFS4RELAY" == "1" ]; then
+				i=$((i+1))
+				n=1
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the OBFS4 Bridge Relay data (old data will be replaced or removed)\" ON"
+			fi
+			if [ "$ONIONSERVICES" == "1" ]; then
+				i=$((i+1))
+				n=2+n
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the Onion Service data (old data will be replaced or removed)\" ON"
+			fi
+			if [ "$ONIONAUTH" == "1" ]; then
+				i=$((i+1))
+				n=4+n
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the server access authorization data\" ON"
+			fi
+			if [ "$SHAREDFOLDERS" == "1" ]; then
+				i=$((i+1))
+				n=8+n
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore all shared folders\" ON"
+			fi
+			WHIPTAIL_LINE="$WHIPTAIL_LINE 3>&1 1>&2 2>&3"
+			CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
+			exitstatus=$?
+			# exitstatus == 255 means that the ESC key was pressed
+			[ "$exitstatus" == "255" ] && exit 1
+			OBFS4RELAY=0
+			ONIONSERVICES=0
+			ONIONAUTH=0
+			SHAREDFOLDERS=0
+			if [ ! -z "$CHOICE_ENTRY" ]; then
+				mapfile -t CHOICE <<< "$CHOICE_ENTRY"
+				if [ "$n" == "1" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "2" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "4" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[2]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "8" ] && [ "${CHOICE[0]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "9" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "9" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "10" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "10" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "11" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "12" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "12" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "13" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "14" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[2]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "15" ] && [ "${CHOICE[3]}" == "1" ]; then SHAREDFOLDERS=1; fi
+			fi
+
+			# Restoring the core
+			echo -e "${RED}[+] Preparing...${NOCOLOR}"
+			# Stopping TACA, TFS and TCS because old and new configuration could be different
+			sudo pkill -f "log_check.py"
+			# shellcheck disable=SC2012
+			TFS_NAME_LIST=$(ls /home/torbox/torbox/lib/filesharing/pid/ | sed "s/.pid//")
+			if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
+			# These variables in the RUNFILE have to be kept
+			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE}) 2> /dev/null
+			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE}) 2> /dev/null
+			# These variables in the TORRC have to be kept
+			MODE_BRIDGES=$(grep "UseBridges" ${TORRC}) 2> /dev/null
+			UpdateBridgesFromAuthority=$(grep "UpdateBridgesFromAuthority" ${TORRC}) 2> /dev/null
+			MEEK_CONF=$(grep "ClientTransportPlugin meek_lite" ${TORRC}) 2> /dev/null
+			SNOW_CONF=$(grep "ClientTransportPlugin snowflake" ${TORRC}) 2> /dev/null
+			MEEK_BRIDGE=$(grep "Bridge meek_lite" ${TORRC}) 2> /dev/null
+			SNOW_BRIDGE=$(grep "Bridge snowflake" ${TORRC}) 2> /dev/null
+			# Removing old configuration...
+			echo -e "${RED}[+] Removing old configuration...${NOCOLOR}"
+			(sudo rm -r ${DATA_DIR_OS}) 2> /dev/null
+			(sudo rm -r ${NGINX_DIR}/sites-available/*) 2> /dev/null
+			(sudo rm -r ${NGINX_DIR}/sites-enabled/*) 2> /dev/null
+			sleep 1
+			# Restoring RUNFILE and TORRC
+			echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
+			(mv restore${RUNFILE} ${RUNFILE} ) 2> /dev/null
+			(sudo mv ${TORRC} ${TORRC}.bak) 2> /dev/null
+			(sudo mv restore${TORRC} ${TORRC}) 2> /dev/null
+			# Configure restored RUNFILE and TORRC
+			deactivating_bridge_relay
+			(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/^INTERNET_IFACE=.*/${INTERNET_IFACE}/" ${RUNFILE}) 2> /dev/null
+			(sudo sed -i "s/^CLIENT_IFACE=.*/${CLIENT_IFACE}/" ${RUNFILE}) 2> /dev/null
+			(sudo sed -i "s/UseBridges.*/${MODE_BRIDGES}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/UpdateBridgesFromAuthority.*/${UpdateBridgesFromAuthority}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/ClientTransportPlugin meek_lite.*/${MEEK_CONF}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/ClientTransportPlugin snowflake.*/${SNOW_CONF}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/Bridge meek_lite.*/${MEEK_BRIDGE}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/Bridge snowflake.*/${SNOW_BRIDGE}/" ${TORRC}) 2> /dev/null
+			sleep 1
+
+			# Restoring OBFS4 Bridge Relay data
+			if [ "$OBFS4RELAY" == "1" ]; then
+				echo -e "${RED}[+] Removing old Bridge Relay data...${NOCOLOR}"
+				(sudo rm -r /var/lib/tor/keys) 2> /dev/null
+				(sudo rm /var/lib/tor/fingerprint) 2> /dev/null
+				(sudo rm ${HASHED_FINGERPRINT_DIR}) 2> /dev/null
+				(sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
+				sleep 1
+				echo -e "${RED}[+] Restoring Bridge Relay data...${NOCOLOR}"
+				sudo mv restore/var/lib/tor/keys ${DATA_DIR}
+				sudo mv restore/var/lib/tor/fingerprint ${DATA_DIR}
+				sudo mv restore${HASHED_FINGERPRINT_DIR} ${DATA_DIR}
+				sudo mv restore/var/lib/tor/pt_state ${DATA_DIR}
+				# We will not start the OBFS4 Bridge Relay
+				sleep 1
+			fi
+
+			# Restoring Onion Service data
+			if [ "$ONIONSERVICES" == "1" ]; then
+				echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
+				sudo mv restore${DATA_DIR_OS} ${DATA_DIR}
+				sleep 1
+			fi
+
+			# Restoring server access authorization
+			if [ "$ONIONAUTH" == "1" ]; then
+				echo -e "${RED}[+] Removing old server access authorization...${NOCOLOR}"
+				(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2> /dev/null
+				echo -e "${RED}[+] Restoring server access authorization...${NOCOLOR}"
+				sudo mv restore${CLIENT_ONION_AUTH_DIR} ${DATA_DIR}
+				sleep 1
+			fi
+
+			# Restoring shared folders
+			if [ "$SHAREDFOLDERS" == "1" ]; then
+				echo ""
+				echo -e "${RED}[+] Restoring shared folders (old existing folder will be kept)...${NOCOLOR}"
+				echo -e "${WHITE}[!] Old existing folder will be kept and have to be removed manually!${NOCOLOR}"
+				FOLDER_LIST=$(sudo ls "restore${WEBSITE_DIR}")
+				for FOLDER in $FOLDER_LIST; do
+					[ -d "${WEBSITE_DIR}/${FOLDER}" ] && (sudo mv "${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}/$FOLDER.BAK") 2> /dev/null
+					(sudo mv "restore${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2> /dev/null
+					(sudo chown torbox:torbox "$WEBSITE_DIR/$FOLDER") 2> /dev/null
+				done
+				if [ "$ONIONSERVICES" == "1" ]; then
+					echo -e "${RED}[+] Restoring Nginx configuration...${NOCOLOR}"
+					(sudo mv "restore${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2> /dev/null
+					(sudo mv "restore${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2> /dev/null
+				fi
+				echo ""
+				sleep 1
+			fi
+
+			# Catch and remove the TFS configuration from the copied backup, if no Onion Service and/or shared folders are restored
+			TFS_CONFIG=$(grep -m 1 "^TFS-" "${RUNFILE}")
+			if [ "$ONIONSERVICES" == "0" ] || [ "$SHAREDFOLDERS" == "0" ]; then
+				[ ! -z "$TFS_CONFIG" ] && sudo sed -E -i "/^TFS-/d" "${RUNFILE}"
+			else
+				if [ ! -z "$TFS_CONFIG" ]; then
+					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
+					sudo bash /home/torbox/torbox/run/start_tfs
+					sleep 1
+				fi
+			fi
+
+			# Restore the activity of the Web SSH
+			if grep "TWEBSSH=1" ${RUNFILE} ; then
+				echo -e "${RED}[+] Configuring webssh...${NOCOLOR}"
+				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /home/torbox/torbox/etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+				PID=$(pgrep -f "twebssh")
+				[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+				sleep 1
+			fi
+
+			# Reloading Nginx to apply new configuration
+			echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
+			# shellcheck disable=SC2062
+			sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+			sleep
+			sudo systemctl reload nginx
+
+			# We don't need the restore directory anymore
+			echo -e "${RED}[+] Cleaning...${NOCOLOR}"
+			sudo rm -r /home/torbox/restore
+
+			# Additional configuration (mainly from a changed torbox.run)
+			#	SSH from the Internet
+			if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+				($IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+			else
+				($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+			fi
+			# HTTP block
+			(sudo /sbin/iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+			RULE_CHECK=$?
+			if [ $RULE_CHECK = 1 ]; then
+				sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
+			fi
+			# TACA
+			if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null fi
+			echo ""
+			sleep 1
+			# Finally, restarting tor
+			echo -e "${RED}[+] Checking if the tor config file is without errors...${NOCOLOR}"
+			sudo /home/torbox/torbox/onion-parser
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue or CTRL-C to stop... \e[0m'
+			echo ""
+			restarting_tor restore
+		fi
+	fi
+fi
+cd torbox

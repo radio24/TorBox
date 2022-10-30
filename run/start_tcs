@@ -27,7 +27,9 @@
 # ./start_tcs [<initial>]
 # [<initial>] is optional and used, if it was started from rc.local
 #
-
+#
+###### SET VARIABLES ######
+#
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_HEIGHT_20=20
@@ -36,6 +38,13 @@ MENU_HEIGHT_20=20
 INITIAL=$1
 RUNFILE=/home/torbox/torbox/run/torbox.run
 TCSRUNNING="0"
+
+######## FUNCTIONS ########
+
+# include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+######## MAIN ########
 
 if pgrep -f "lib/chatsecure/tcs"; then TCSRUNNING="1"; fi
 n=$(grep -c "^TCS-" "${RUNFILE}")

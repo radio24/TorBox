@@ -290,17 +290,7 @@ case "$CHOICE" in
   10)
     if [ "$LOGCHECK" = "Deactivate" ]; then
       echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
-      PID=$(pgrep -f -n "log_check.py")
-      echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
-      (sudo kill "$PID") &>/dev/null
-      sleep 2
-      (sudo kill -9 "$PID") &>/dev/null
-      unset PID
-      PID=$(pgrep -f -n "log_check.py")
-      echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
-      [ ! -z "$PID" ] && (sudo kill "$PID") &>/dev/null
-      sleep 2
-      [ ! -z "$PID" ] && (sudo kill -9 "$PID") &>/dev/null
+      sudo pkill -f "log_check.py"
       echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
       (sudo rm log_check_config.py) &>/dev/null
       echo -e "${RED}[+] ...log removed!${NOCOLOR}"

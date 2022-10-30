@@ -64,3 +64,22 @@ if sudo timeout 5 sudo route | grep -m 1 default ; then
 fi
 sudo systemctl stop dnsmasq
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+
+# NEW v.0.5.2
+# This function opens the ports, after a restart if bridge relay is on
+MODE_BR=$(grep "^BridgeRelay" /etc/tor/torrc)
+if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+  ORPORT=$(grep "^ORPort" /etc/tor/torrc)
+  OBFS4PORT=$(grep "^ServerTransportListenAddr" /etc/tor/torrc)
+  sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+  sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+  (sudo /sbin/iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+  RULE_CHECK=$?
+  if [ $RULE_CHECK = 1 ]; then
+    (sudo /sbin/iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+    (sudo /sbin/iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+  fi
+else
+  (sudo /sbin/iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+  (sudo /sbin/iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+fi

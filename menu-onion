@@ -202,21 +202,6 @@ is_integer()
  fi
 }
 
-# This function finds the virtual ports on a configured Onion Service
-# Syntax find_virtport <service_name>
-# Following variables can be used: VIRTPORT, HIDDENSSERVICEPORT, UNIX_PATH
-find_virtport()
-{
-  SERVICE_NAME="${1}"
-  HIDDENSSERVICEPORT=""
-  VIRTPORT=""
-  UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
-  HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
-  #Bash specific, but should also work with other shells
-  HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
-  VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
-}
-
 # This function will generate a new key pair (public and private key) for an operator).
 # As a client of an Onion Service, generate a key pair, from which you can give the public key to an Onion Operator.
 # Syntax client_auth_on <ONION_HOSTNAME> [<CLIENT_PRIV_KEY>]
@@ -453,24 +438,6 @@ configure_tcs()
 	fi
 }
 
-# This function stops a certain TFS
-# Syntax stopping_tfs <TFS_NAME_LIST>
-# <TFS_NAME_LIST>: this is the list of service names which TFS will be stopped
-stopping_tfs()
-{
-	TFS_NAME_LIST=$1
-	for TFS_NAME in $TFS_NAME_LIST; do
-		echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-		PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
-		(sudo kill $PID) &>/dev/null
-		sudo sed -E -i "/^TFS-$TFS_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
-		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
-		find_virtport "${TFS_NAME}"
-		sudo rm "/etc/nginx/sites-enabled/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
-		sudo rm "/etc/nginx/sites-available/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
-	done
-}
-
 # This function checks if an Onion Service is configured and exit when this is not the case
 # Syntax error_no_onion_service
 error_no_onion_service()
@@ -618,9 +585,8 @@ else
   "==" "=================================================[Share it!]==="  \
   "17" "Start/stop sharing a folder on an Onion domain and list them"  \
 	"18" "Start/stop upload or/and download files (TorBox File Sharing)"  \
-	"19" "Start/stop TorBox Chat Secure" \
-  "==" "==========================================[Backup & Restore]===" \
-  "20" "Restore Onion Services" 3>&1 1>&2 2>&3)
+	"19" "Start/stop TorBox Chat Secure"
+  3>&1 1>&2 2>&3)
 fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -1946,129 +1912,9 @@ case "$CHOICE" in
 		fi
 	;;
 
-  # Restore Onion Services
-  # Backup tar file will be extracted and integrated into their respective tor folders
-  20)
-    INPUT=$(cat text/restore-onion_service-text)
-    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      exitstatus=$?
-      if [ "$exitstatus" == "0" ]; then
-        OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_onion_service-2021-11-20-22h-34m.tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-        cd
-        if [ -e "$OS_BK_TAR" ]; then
-          NEEDED_SIZE=$(tar -tzvf $OS_BK_TAR | sed 's/ \+/ /g' | cut -f3 -d' ' | sed '2,$s/^/+ /' | paste -sd' ' | bc)
-          AVAILABLE_SIZE=$(df -a | grep "$WEBSITE_DIR" | awk '{print $4}')
-          if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
-          AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
-          if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-            clear
-            echo -e "${RED}[+] Unpacking backup file ${OS_BK_TAR}${NOCOLOR}"
-            if [ -d "restore.tbx" ]; then
-              sudo rm -r restore.tbx
-            fi
-            (sudo mkdir restore.tbx) 2> /dev/null
-            (sudo tar -xpzf $OS_BK_TAR -C restore.tbx) 2> /dev/null
-            echo -e "${RED}[+] Removing old Onion Service data${NOCOLOR}"
-            (sudo rm -r ${DATA_DIR_OS}) 2> /dev/null
-            echo -e "${RED}[+] Removing old Onion Service configuration${NOCOLOR}"
-            sudo sed -i "/HiddenServiceDir/d" ${TORRC}
-            sudo sed -i "/HiddenServicePort/d" ${TORRC}
-						echo -e "${RED}[+] Removing old privat keys for Onion Services${NOCOLOR}"
-						(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2> /dev/null
-            echo -e "${RED}[+] Moving Onion Service keys to their places${NOCOLOR}"
-            sudo mv restore.tbx${DATA_DIR_OS} /var/lib/tor/
-						sudo mv restore.tbx${CLIENT_ONION_AUTH_DIR} /var/lib/tor/
-            echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
-            REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
-						#This is necessary to work with special characters in sed
-						REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-            mapfile -t TORRC_ALL_LINES < <( sudo grep "HiddenService" "restore.tbx/${TORRC}" | tac )
-            for TORRC_LINE in "${TORRC_ALL_LINES[@]}"; do
-							#This is necessary to work with special characters in sed
-              TORRC_LINE_STRING="$(<<< "${TORRC_LINE}" sed -e 's`[][\\/.*^$]`\\&`g')"
-              sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING\n$TORRC_LINE_STRING/g" "${TORRC}"
-            done
-						TORRC_LINE=$(sudo grep "ClientOnionAuthDir" "restore.tbx/${TORRC}")
-						TORRC_LINE_STRING="$(<<< "${TORRC_LINE}" sed -e 's`[][\\/.*^$]`\\&`g')"
-						sudo sed -E -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/g" "${TORRC}"
-						sudo sed -E -i "s/^ClientOnionAuthDir.*/$TORRC_LINE_STRING/g" "${TORRC}"
-            if [ -e "restore.tbx${WEBSITE_DIR}" ]; then
-              if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Shared folder detected! Do you want to restore shared folders and Nginx's and/or TFS' configuration?\n\nATTENTION: Already existing shared folders and configurations will be overwritten without confirmation!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-								echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-								sleep 5
-								echo -e "${RED}[+] Removing old Nginx configuration${NOCOLOR}"
-								(sudo rm -r ${NGINX_DIR}/sites-available) 2> /dev/null
-								(sudo rm -r ${NGINX_DIR}/sites-enabled) 2> /dev/null
-								# shellcheck disable=SC2012
-								TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-								stopping_tfs $TFS_NAME_LIST
-                echo -e "${RED}[+] Moving shared folders...${NOCOLOR}"
-                FOLDER_LIST=$(sudo ls "restore.tbx${WEBSITE_DIR}")
-                for FOLDER in $FOLDER_LIST; do
-                  (sudo rm -r "${WEBSITE_DIR}/$FOLDER") 2> /dev/null
-                  (sudo mv "restore.tbx${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2> /dev/null
-									(sudo chown torbox:torbox "$WEBSITE_DIR/$SERVICE_NAME") 2> /dev/null
-                done
-								# Remove the old TFS and webssh configuration in the run-file
-								sudo sed -E -i "/^TFS-/d" "torbox/${RUNFILE}"
-                sudo sed -E -i "/^TWEBSSH=/d" "torbox/${RUNFILE}"
-								# Catch the TFS configuration from the backup
-								TFS_CONFIG=$(grep -m 1 "^TFS-" "restore.tbx${RUNFILE}")
-								WEBSSH_CONFIG=$(grep -m 1 "^TWEBSSH=" "restore.tbx${RUNFILE}")
-								# Using the Anchor in torbox.run
-								if [ ! -z "$TFS_CONFIG" ]; then
-									echo -e "${RED}[+] Moving TFS configuration...${NOCOLOR}"
-									# This is necessary to work with special characters in sed
-									TFS_CONFIG_STRING="$(<<< "$TFS_CONFIG" sed -e 's`[][\\/.*^$]`\\&`g')"
-									REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" "torbox/${RUNFILE}")
-									#This is necessary to work with special characters in sed
-									REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-									sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING\n$TFS_CONFIG_STRING/g" "torbox/${RUNFILE}"
-									echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
-									sudo ./run/start_tfs
-								fi
-								if [ ! -z "$WEBSSH_CONFIG" ]; then
-									echo -e "${RED}[+] Moving webssh configuration...${NOCOLOR}"
-									sudo sed -i "s/^TWEBSSH=.*/$WEBSSH_CONFIG/" ${RUNFILE}
-								fi
-              	echo -e "${RED}[+] Moving Nginx configuration...${NOCOLOR}"
-                (sudo mv "restore.tbx${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2> /dev/null
-                (sudo mv "restore.tbx${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2> /dev/null
-								if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
-									[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-									[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-									(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
-                  sudo rm nohup.out
-                  clear
-								fi
-								echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-								sleep 5
-								sudo systemctl reload nginx
-              fi
-            fi
-            echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-            sudo rm -r restore.tbx
-          else
-            clear
-            echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-            clear
-            trap "bash menu-onion; exit 0" EXIT
-            exit 1
-          fi
-          cd torbox
-          restarting_tor menu-onion
-        else
-          clear
-          echo -e "${WHITE}[!] File not found or not specified!!"
-          echo -e "${RED}[+]Did you enter the right filename with the right extension?${NOCOLOR}"
-          sleep 2
-        fi
-        cd torbox
-      fi
-    fi
-  ;;
+	*)
+    clear
+    exit 0
 
 esac
 bash menu-onion

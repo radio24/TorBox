@@ -33,7 +33,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=3
@@ -568,16 +568,17 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU
 " 4" "Update or change the version of Tor" \
 " 5" "Update the TorBox menu (whitout touching the configuration)"  \
 "==" "==========================================[Backup & Restore]===" \
-" 6" "Backup TorBox" \
+" 6" "Backup TorBox's configuration to a backup file" \
+" 7" "Restore TorBox's configuration from a backup file" \
 "===" "==============================================[Maintenance]===" \
-" 7" "Reset TorBox's configuration files (dangerous!)" \
-" 8" "Reset TWM and erase all wifi passwords (reboot required!)" \
-" 9" "Reset Tor and force a change of the permanent entry node" \
-"10" "Restart Nginx, webssh and TFS" \
-"11" "Force to deactivate the OBFS4 mode" \
-"12" "Rerun the \"First Start-up\" script" \
-"13" "Erase all log files" \
-"14" "Just fixing and cleaning" \
+" 8" "Reset TorBox's configuration files (dangerous!)" \
+" 9" "Reset TWM and erase all wifi passwords (reboot required!)" \
+"10" "Reset Tor and force a change of the permanent entry node" \
+"11" "Restart Nginx, webssh and TFS" \
+"12" "Force to deactivate the OBFS4 mode" \
+"13" "Rerun the \"First Start-up\" script" \
+"14" "Erase all log files" \
+"15" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -876,13 +877,20 @@ case "$CHOICE" in
     exit 0
 	;;
 
+	#This makes a backup of TorBox
 	6)
   	clear
 		./backup
 	;;
 
-	# Reset TorBox's configuration files (dangerous!)
+	#Restoring TorBox's configuration from a backup file
 	7)
+  	clear
+		./restore
+	;;
+
+	# Reset TorBox's configuration files (dangerous!)
+	8)
 		clear
     INPUT=$(cat text/torboxcfg_update-text)
 	  if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -893,7 +901,7 @@ case "$CHOICE" in
 	;;
 
 	# Erase all passwords in Torbox Wireless Manager
-	8)
+	9)
 		clear
   	INPUT=$(cat text/erase_TWM_pwd-text)
 	  if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -909,7 +917,7 @@ case "$CHOICE" in
 	;;
 
 	#This resets Tor and forces a change of the permanent entry node
-	9)
+	10)
 		clear
     INPUT=$(cat text/tor-reset-text)
     if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -941,7 +949,7 @@ case "$CHOICE" in
 
 	# NEW v.0.5.1
 	# Restart nginx, webssh and TFS
-	10)
+	11)
 		clear
 		# shellcheck disable=SC2012
 		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
@@ -972,13 +980,13 @@ case "$CHOICE" in
 	;;
 
 	# Rerun the "First Start-up" script
-	11)
+	12)
   	clear
 		./first_use 3
 	;;
 
 	# This erases all log files
-	12)
+	13)
   	clear
     erase_logs
     echo ""
@@ -987,7 +995,7 @@ case "$CHOICE" in
 	;;
 
 	# Fixing and cleaning - just to be sure that all works properly.
-	13)
+	14)
 		clear
 		# NEW v.0.5.1: new go versions
 		local_clearnet_dns_resolution_on

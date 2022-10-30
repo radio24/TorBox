@@ -40,7 +40,7 @@ NOCOLOR='\033[0m'
 
 #Generating the filename for the backup
 BACKUP_DIR="/home/torbox/backup"
-OS_BK_TAR="$BACKUP_DIR/torbox_onion_service-$(date +%Y-%m-%d-%H'h'-%M'm').tgz"
+OS_BK_TAR="$BACKUP_DIR/torbox_backup-$(date +%Y-%m-%d-%H'h'-%M'm').tgz"
 
 #Other variables
 TORRC="/etc/tor/torrc"
@@ -49,15 +49,10 @@ DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_OS="${DATA_DIR}/services"
 CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
+HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
-
-##############################
-######## FUNCTIONS ########
-
-#include lib
-#.  /home/torbox/torbox/lib/torbox.lib
 
 
 ###### MAIN ######
@@ -67,7 +62,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 	exitstatus=$?
 	if [ "$exitstatus" == "0" ]; then
 		# OBFS4 Bridge Relay data exist?
-		if sudo -u "${TOR_USER}" [ ! -f "/var/lib/tor/hashed-fingerprint" ]; then
+		if sudo -u "${TOR_USER}" [ ! -f "${HASHED_FINGERPRINT_DIR}" ]; then
 			OBFS4RELAY=0
 		else
 			OBFS4RELAY=1
@@ -92,40 +87,58 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		# Please, choose with SPACE which data you want to includ
 		if [ "$OBFS4RELAY" == "1" ] || [ "$ONIONSERVICES" == "1" ]; then
 			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.1 - BACKUP SELECTION\" --checklist --separate-output \"\nAdditionally to the TorBox configuration, we have found OBFS4 Bridge Relay and/or Onion Services data, which can be included in the backup. \n\nPlease, choose with SPACE which data you want to includ and press ENTER \n(ESC -> go back)\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
-			exitstatus=$?
-			# exitstatus == 255 means that the ESC key was pressed
-			[ "$exitstatus" == "255" ] && exit 1
 			i=0
+			n=0
 			if [ "$OBFS4RELAY" == "1" ]; then
 				i=$((i+1))
+				n=1
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Backup the OBFS4 Bridge Relay data\" ON"
 			fi
 			if [ "$ONIONSERVICES" == "1" ]; then
+				n=2+n
 				i=$((i+1))
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Backup the Onion Services data\" ON"
 				i=$((i+1))
 				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Backup all shared folders\" ON"
 			fi
+			if [ "$ONIONAUTH" == "1" ]; then
+				i=$((i+1))
+				n=4+n
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Backup all server access authorization\" ON"
+			fi
 			WHIPTAIL_LINE="$WHIPTAIL_LINE 3>&1 1>&2 2>&3"
 			CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
+			exitstatus=$?
+			# exitstatus == 255 means that the ESC key was pressed
+			[ "$exitstatus" == "255" ] && exit 1
 			OBFS4RELAY=0
 			ONIONSERVICES=0
 			SHAREDFOLDERS=0
+			ONIONAUTH=0
 			if [ ! -z "$CHOICE_ENTRY" ]; then
 				mapfile -t CHOICE <<< "$CHOICE_ENTRY"
-				CHOICE_LENGTH=${#CHOICE[@]}
-				if [ "$CHOICE_LENGTH" == "1" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$CHOICE_LENGTH" == "2" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
-				if [ "$CHOICE_LENGTH" == "2" ] && [ "${CHOICE[1]}" == "2" ]; then SHAREDFOLDERS=1; fi
-				if [ "$CHOICE_LENGTH" == "3" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
-				if [ "$CHOICE_LENGTH" == "3" ] && [ "${CHOICE[1]}" == "2" ]; then ONIONSERVICES=1; fi
-				if [ "$CHOICE_LENGTH" == "3" ] && [ "${CHOICE[2]}" == "3" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "1" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "2" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "2" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "3" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "4" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "5" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[0]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[1]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "6" ] && [ "${CHOICE[2]}" == "1" ]; then ONIONAUTH=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[0]}" == "1" ]; then OBFS4RELAY=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[1]}" == "1" ]; then ONIONSERVICES=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[2]}" == "1" ]; then SHAREDFOLDERS=1; fi
+				if [ "$n" == "7" ] && [ "${CHOICE[3]}" == "1" ]; then ONIONAUTH=1; fi
 			fi
 		fi
 		BACKUPSTRING="${TORRC} ${RUNFILE} ${NGINX_DIR}"
 		if [ "$OBFS4RELAY" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR}/fingerprint ${DATA_DIR}/hashed-fingerprint ${DATA_DIR}/keys ${DATA_DIR}/pt_state"; fi
 		if [ "$ONIONSERVICES" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR_OS}" ; fi
-		if [ "$ONIONSERVICES" == "1" ] && [ "$ONIONAUTH" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${CLIENT_ONION_AUTH_DIR}"; fi
+		if [ "$ONIONAUTH" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${CLIENT_ONION_AUTH_DIR}"; fi
 		if [ "$SHAREDFOLDERS" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${WEBSITE_DIR}"; fi
 		clear
 		echo -e "${RED}[+] Start backup...${NOCOLOR}"
