@@ -6,8 +6,8 @@
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
-* **TorBox Image** (about 1 GB): [v.0.5.1 (19.07.2022)](https://www.torbox.ch/data/torbox-20220719-v051.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
-* **TorBox Menu only**: [v.0.5.1 (19.07.2022)](https://www.torbox.ch/data/torbox050-20220719.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Image** (about 1 GB): [v.0.5.1 (20.10.2022)](https://www.torbox.ch/data/torbox-20221020-v051.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Menu only**: [v.0.5.1 (19.07.2022)](https://www.torbox.ch/data/torbox050-20221020.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 ![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
 

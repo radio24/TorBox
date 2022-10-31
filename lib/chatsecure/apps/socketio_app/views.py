@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from apps.chat.models import UserChat
 
 # Create your views here.
-sio = socketio.Server(async_mode="eventlet")
+sio = socketio.Server(async_mode="eventlet", cors_allowed_origins="*")
 
 
 def index(request):

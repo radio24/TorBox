@@ -14,6 +14,15 @@ import os
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
 
+try:
+    INSTANCE_NAME = os.environ["INSTANCE_NAME"]
+
+    MSG_HEADER = os.environ["MSG_HEADER"]
+    CSRF_TRUSTED_ORIGINS = ["http://%s" % os.environ["ONION_DOMAIN"]]
+except:
+    INSTANCE_NAME = "default"
+    pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -80,7 +89,7 @@ WSGI_APPLICATION = "chatsecure.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": BASE_DIR / f"db/{INSTANCE_NAME}.sqlite3",
     }
 }
 
@@ -105,8 +114,3 @@ USE_TZ = False
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "../static"]
 
-# NOTE: Try except needed for manage.py shell
-try:
-    MSG_HEADER = os.environ["MSG_HEADER"]
-except:  # noqa
-    pass
