@@ -734,7 +734,7 @@ find_virtport()
 # stopping_tfs(<tfs_name_list>)
 # Used predefined variables: RED, WHITE, NOCOLOR, RUNFILE
 # Used predefined function: find_virtport(<service_name>)
-# Stops certain TorBox Fils Sharing (TFS)
+# Stops certain TorBox Fils Sharing (TFS) instances
 stopping_tfs()
 {
 	TFS_NAME_LIST=$1
@@ -747,5 +747,24 @@ stopping_tfs()
 		find_virtport "${TFS_NAME}"
 		sudo rm "/etc/nginx/sites-enabled/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
 		sudo rm "/etc/nginx/sites-available/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"
+	done
+}
+
+# stopping_tcs(<tcs_name_list>)
+# Used predefined variables: RED, WHITE, NOCOLOR, RUNFILE
+# Used predefined function: find_virtport(<service_name>)
+# Stops certain TorBox Chat Secure (TCS) instances
+stopping_tcs()
+{
+	TCS_NAME_LIST=$1
+	for TCS_NAME in $TCS_NAME_LIST; do
+		echo -e "${RED}[+] Stopping TCS named ${WHITE}${TCS_NAME}${RED} on Onion domain...${NOCOLOR}"
+		PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
+		(sudo kill $PID) &>/dev/null
+		sudo sed -E -i "/^TCS-$TCS_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
+		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+		find_virtport "${TCS_NAME}"
+		sudo rm "/etc/nginx/sites-enabled/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+		sudo rm "/etc/nginx/sites-available/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 	done
 }
