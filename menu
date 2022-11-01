@@ -135,7 +135,6 @@ check_log_check()
 ask_captive()
 {
 	clear
-	sudo rm nohup.out
 	INPUT=$(cat text/captive_or_not-text)
 	if (whiptail --title "TorBox - INFO" --defaultno --no-button "OPEN ACCESS" --yes-button "CAPTIVE PORTAL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 		INPUT=$(cat text/captive_portal-text)
@@ -153,6 +152,7 @@ ask_captive()
 ######## PREPARATIONS ########
 # Resetting run-file (the initial EXITID in the runfile has to be 0)
 shopt -s checkwinsize
+sudo rm nohup.out
 
 clear
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}

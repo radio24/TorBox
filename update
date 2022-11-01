@@ -948,7 +948,7 @@ case "$CHOICE" in
 	;;
 
 	# NEW v.0.5.1
-	# Restart nginx, webssh and TFS
+	# Restart nginx, webssh, TFS and TCS
 	11)
 		clear
 		# shellcheck disable=SC2012
@@ -961,6 +961,15 @@ case "$CHOICE" in
 			done
 			echo ""
 		fi
+    TCS_NAME_LIST=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
+    if [ ! -z "$TCS_NAME_LIST" ]; then
+      for TCS_NAME in $TCS_NAME_LIST; do
+        echo -e "${RED}[+] Stopping TCS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+        PID=$(cat lib/chatsecure/pid/${TFS_NAME}.pid)
+        (sudo kill $PID) &>/dev/null
+      done
+      echo ""
+    fi
     sleep 5
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null
@@ -971,8 +980,12 @@ case "$CHOICE" in
 			PID=$(pgrep -f "twebssh")
 			[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 		fi
-		echo -e "${RED}[+] Starting TFS again and reload Nginx...${NOCOLOR}"
+		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		sleep 5
+		sudo systemctl restart nginx
+		echo -e "${RED}[+] Starting TFS and TCS again and reload Nginx...${NOCOLOR}"
 		sudo ./run/start_tfs
+    sudo ./run/start_tcs
 		sudo rm nohup.out
 		echo ""
 		echo -e "${RED}[+] Done!${NOCOLOR}"

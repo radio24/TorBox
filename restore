@@ -348,8 +348,8 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 			# shellcheck disable=SC2062
 			sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-			sleep
-			sudo systemctl reload nginx
+			sleep 5
+			sudo systemctl restart nginx
 
 			# We don't need the restore directory anymore
 			echo -e "${RED}[+] Cleaning...${NOCOLOR}"

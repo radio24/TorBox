@@ -302,7 +302,6 @@ case "$CHOICE" in
         echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
         echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
         (nohup ./hostapd_fallback) 2>/dev/null
-        sudo rm nohup.out
       fi
     fi
   ;;
@@ -727,7 +726,8 @@ case "$CHOICE" in
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				pkill -t twebssh
 				sudo rm /etc/nginx/sites-enabled/webssh.conf
-				sudo systemctl reload nginx
+        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				sudo systemctl restart nginx
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
 			fi
 		else
@@ -735,10 +735,12 @@ case "$CHOICE" in
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				sleep 5
 				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 				clear
 				sleep 2
-				sudo systemctl reload nginx
+				sudo systemctl restart nginx
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
 			fi
 		fi

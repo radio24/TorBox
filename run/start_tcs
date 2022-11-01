@@ -54,9 +54,8 @@ if [ $n -gt 0 ] ; then
 		SERVICE_NAME=$(cut -d " " -f3 <<< ${TCS_CONFIG_LIST})
 		if [[ ! -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && -z "$INITIAL" ]]; then
 			if (whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				# Is nohup necessary?
-				TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
-				eval $TCS_CONFIG_LIST
+				TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+				(eval $TCS_CONFIG_LIST) &>/dev/null
 			else
 				echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
 				sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
@@ -67,16 +66,16 @@ if [ $n -gt 0 ] ; then
 				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 			fi
 		elif [[ ! -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
-			# Is nohup necessary?
-			TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
-			eval $TCS_CONFIG_LIST
+			TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+			(eval $TCS_CONFIG_LIST) &>/dev/null
 		elif [[ -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
 			sudo rm /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid
-			TCS_CONFIG_LIST="sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
-			eval $TCS_CONFIG_LIST
+			TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+			(eval $TCS_CONFIG_LIST) &>/dev/null
 		fi
 	done
 fi
 
-sleep 2
+# sudo systemctl reload nginx will not create new socks !!
+# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 sudo systemctl reload nginx
