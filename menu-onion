@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2010,SC2016,SC2128,SC2178
+# shellcheck disable=SC2001,SC2010,SC2016,SC2062,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -360,7 +360,6 @@ configure_tfs()
 	test_service_exists $SERVICE_NAME
 	# This will give VIRTPORT and HIDDENSSERVICEPORT
 	find_virtport $SERVICE_NAME
-	CHOICE_VIRTPORT=$VIRTPORT
 	# allow_ud = 0 --> neither up- nor download
 	# allow_ud = 1 --> only upload
 	# allow_ud = 2 --> only download
@@ -415,24 +414,24 @@ configure_tfs()
 		fi
 		#Configure Nginx
 		echo ""
-		echo -e "${RED}[+] Sharing the folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
-		(cp "etc/nginx/sites-available/sample-onion-filesharing.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf") >/dev/null
+		echo -e "${RED}[+] Sharing the folder ${WHITE}$TFS_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT${RED}"
+		(cp "etc/nginx/sites-available/sample-onion-filesharing.conf" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf") >/dev/null
 		UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
 		HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
 		#Bash specific, but should also work with other shells
 		HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
 		TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-		sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
-		sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
-		sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
-		sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf"
-		(sudo mv "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-		(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+		sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+		sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+		sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+		sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+		(sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+		(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 		echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
     # sudo systemctl reload nginx will not create new socks !!
 		# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		sudo systemctl reload nginx
-		(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-filesharing.conf") &>/dev/null
+		(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf") &>/dev/null
 	fi
 }
 
@@ -453,7 +452,6 @@ configure_tcs()
 	test_service_exists $SERVICE_NAME
 	# This will give VIRTPORT and HIDDENSSERVICEPORT
 	find_virtport $SERVICE_NAME
-	CHOICE_VIRTPORT=$VIRTPORT
 	echo -e "${RED}[+] Configuring TCS...${NOCOLOR}"
 	if [ ! -z "$TCS_MESSAGE_TXT" ]; then TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -m \"$TCS_MESSAGE_TXT\" -od $ONION_HOSTNAME"
 	else TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME"
@@ -466,23 +464,23 @@ configure_tcs()
 	# NEW v.0.5.2 - New placed in this function
 	# Configure Nginx
 	echo ""
-	echo -e "${RED}[+] Starting TCS for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
-	(cp "etc/nginx/sites-available/sample-onion-chatsecure.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf") >/dev/null
+	echo -e "${RED}[+] Starting TCS for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT${RED}"
+	(cp "etc/nginx/sites-available/sample-onion-chatsecure.conf" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") >/dev/null
 	UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
 	HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
 	#Bash specific, but should also work with other shells
 	HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
 	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf"
-	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf"
-	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf"
-	(sudo mv "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf"
+	(sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
   # sudo systemctl reload nginx will not create new socks !!
 	# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sudo systemctl reload nginx
-	(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion-chatsecure.conf") &>/dev/null
+	(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
 }
 
 # This function checks if an Onion Service is configured and exit when this is not the case
@@ -1347,7 +1345,6 @@ case "$CHOICE" in
               		test_service_exists $SERVICE_NAME
 									# This will give VIRTPORT and HIDDENSSERVICEPORT
 									find_virtport $SERVICE_NAME
-									CHOICE_VIRTPORT=$VIRTPORT
 									# Check if the service/port pair is already used
 									[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 									[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
@@ -1367,19 +1364,19 @@ case "$CHOICE" in
 										sudo chown torbox:torbox $WEBSITE_DIR
 										sudo -utorbox mkdir -p $SHARE_PATH
 									fi
-									echo -e "${RED}[+] Sharing the folder ${WHITE}$SHARE_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$CHOICE_VIRTPORT${RED}"
-									(cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") >/dev/null
+									echo -e "${RED}[+] Sharing the folder ${WHITE}$SHARE_PATH${RED} for the Onion Service named ${WHITE}$SERVICE_NAME${RED} on port ${WHITE}$VIRTPORT${RED}"
+									(cp "etc/nginx/sites-available/sample-onion.conf" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
 									UNIX_PATH="unix:/var/run/${SERVICE_NAME}-onion"
 									HIDDENSSERVICEPORT=$(grep -m 1 "$UNIX_PATH" ${TORRC})
 									#Bash specific, but should also work with other shells
 	               	HIDDENSSERVICEPORT=${HIDDENSSERVICEPORT//#}
 	               	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
-	               	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-	               	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-	               	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-	               	sed -i'' "s|FOLDER|$SHARE_PATH|" "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf"
-              		(sudo mv "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
-              		(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
+	               	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+	               	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+	               	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+	               	sed -i'' "s|FOLDER|$SHARE_PATH|" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
+              		(sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
+              		(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 									# Check if the shared folder is empty. If this is the case, the splash screen will be copied into the folder
 	               	EMPTY_FOLDER=$(ls -A "$SHARE_PATH")
 	               	if [ -z "$EMPTY_FOLDER" ]; then
@@ -1390,10 +1387,10 @@ case "$CHOICE" in
                   # sudo systemctl reload nginx will not create new socks !!
 									# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									sudo systemctl reload nginx
-									(sudo rm -f "/tmp/${SERVICE_NAME}-${CHOICE_VIRTPORT}-onion.conf") &>/dev/null
+									(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf") &>/dev/null
 									echo ""
-									if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-										echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+									if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+										echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
 									fi
 									echo ""
 									read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1574,7 +1571,6 @@ case "$CHOICE" in
 										test_service_exists $SERVICE_NAME
 										# This will give VIRTPORT and HIDDENSSERVICEPORT
 										find_virtport $SERVICE_NAME
-										CHOICE_VIRTPORT=$VIRTPORT
 										# Check if the service/port pair is already used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf" ] && error_already_used
@@ -1603,8 +1599,8 @@ case "$CHOICE" in
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 					     			configure_tfs "$TFS_MESSAGE"
 										echo ""
-										if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
 										fi
 										echo ""
 										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1642,7 +1638,6 @@ case "$CHOICE" in
 										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
 											sleep 1
 										else
-											TFS_PATH_OLD=$TFS_PATH
 											TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 										fi
 										if [ ! -d $TFS_PATH ]; then
@@ -1696,24 +1691,33 @@ case "$CHOICE" in
 
 					#Stop TFS on Onion domain
 					3)
-						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
+						SERVICE_NAME_LIST_001=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
 						[ -z "$SERVICE_NAME_LIST" ] && error_no_tfs_running
 						clear
 						# shellcheck disable=SC2012
-						SERVICE_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-						service_menu checklist "$SERVICE_NAME_LIST"
-	       		if [ "$exitstatus" == "0" ]; then
-	         		if [ ! -z "$SERVICE_NAME_LIST" ]; then
-	           		i=0
-	             	for SERVICE_NAME in $SERVICE_NAME_LIST; do
-	             		i=$((i+1))
-	             		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-	               		if [ "$i" = "$SERVICE_NUMBER" ]; then
-											stopping_tfs $SERVICE_NAME
-											echo ""
-										fi
+						SERVICE_NAME_LIST_002=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+						if [ ! -z "$SERVICE_NAME_LIST_001" ] && [ -z "$SERVICE_LIST_002" ]; then
+							echo -e "${RED}[+] Removing TFS configuration...${NOCOLOR}"
+							sudo sed -i "/^TFS-${SERVICE_NAME}/d" "${RUNFILE}"
+							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+							sudo ls /etc/nginx/sites-enabled | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
+							sudo ls /etc/nginx/sites-available | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available{}
+						fi
+						if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
+							service_menu checklist "$SERVICE_NAME_LIST_002"
+	       			if [ "$exitstatus" == "0" ]; then
+	         			if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
+	           			i=0
+	             		for SERVICE_NAME in $SERVICE_NAME_LIST_002; do
+	             			i=$((i+1))
+	             			for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+	               			if [ "$i" = "$SERVICE_NUMBER" ]; then
+												stopping_tfs $SERVICE_NAME
+												echo ""
+											fi
+	             			done
 	             		done
-	             	done
+								fi
 							fi
 						fi
 						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
@@ -1758,7 +1762,7 @@ case "$CHOICE" in
 			"==" "===============================================================" \
 			" 1" "Start or restart TCS on Onion domains" \
 			" 2" "Change the message below the TorBox Chat Secure logo" \
-			" 3" "Stop TCS" \
+			" 3" "Stop TCS on an Onion domain" \
 			" 4" "List all Onion domains with TCS" \
 			"==" "===============================================================" \
 			3>&1 1>&2 2>&3)
@@ -1784,7 +1788,6 @@ case "$CHOICE" in
 										test_service_exists $SERVICE_NAME
 										# This will give VIRTPORT and HIDDENSSERVICEPORT
 										find_virtport $SERVICE_NAME
-										CHOICE_VIRTPORT=$VIRTPORT
 										# Check if the service/port pair is already used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
@@ -1792,8 +1795,8 @@ case "$CHOICE" in
 										TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				      			configure_tcs $TCS_MESSAGE
 										echo ""
-										if [ "$CHOICE_VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${CHOICE_VIRTPORT}${NOCOLOR}"
+										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
+											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
 										fi
 										echo ""
 										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1809,7 +1812,7 @@ case "$CHOICE" in
 						clear
 						SERVICE_NAME_LIST=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
 						[ -z $SERVICE_NAME_LIST ] && error_no_tcs_running
-						TCS_CONFIG_LIST=$(grep "^TCS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/chatsecure/tcs ||")
+						#TCS_CONFIG_LIST=$(grep "^TCS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/chatsecure/tcs ||")
 						service_menu menu "$SERVICE_NAME_LIST"
 						exitstatus=$?
 						if [ "$exitstatus" == "0" ]; then
@@ -1843,24 +1846,33 @@ case "$CHOICE" in
 
 					#Stop TCS on Onion domain
 					3)
-						SERVICE_NAME_LIST=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
+						SERVICE_NAME_LIST_001=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
 						[ -z "$SERVICE_NAME_LIST" ] && error_no_tCs_running
 						clear
 						# shellcheck disable=SC2012
-						SERVICE_NAME_LIST=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
-						service_menu checklist "$SERVICE_NAME_LIST"
-						if [ "$exitstatus" == "0" ]; then
-							if [ ! -z "$SERVICE_NAME_LIST" ]; then
-								i=0
-								for SERVICE_NAME in $SERVICE_NAME_LIST; do
-									i=$((i+1))
-									for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-										if [ "$i" = "$SERVICE_NUMBER" ]; then
-											stopping_tcs $SERVICE_NAME
-											echo ""
-										fi
+						SERVICE_NAME_LIST_002=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
+						if [ ! -z "$SERVICE_NAME_LIST_001" ] && [ -z "$SERVICE_LIST_002" ]; then
+							echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
+							sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
+							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
+							sudo ls /etc/nginx/sites-enabled | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
+							sudo ls /etc/nginx/sites-available | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available{}
+						fi
+						if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
+							service_menu checklist "$SERVICE_NAME_LIST_002"
+							if [ "$exitstatus" == "0" ]; then
+								if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
+									i=0
+									for SERVICE_NAME in $SERVICE_NAME_LIST_002; do
+										i=$((i+1))
+										for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+											if [ "$i" = "$SERVICE_NUMBER" ]; then
+												stopping_tcs $SERVICE_NAME
+												echo ""
+											fi
+										done
 									done
-								done
+								fi
 							fi
 						fi
 						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
