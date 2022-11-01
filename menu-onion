@@ -1698,6 +1698,7 @@ case "$CHOICE" in
 						SERVICE_NAME_LIST_002=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 						if [ ! -z "$SERVICE_NAME_LIST_001" ] && [ -z "$SERVICE_LIST_002" ]; then
 							echo -e "${RED}[+] Removing TFS configuration...${NOCOLOR}"
+							(sudo pkill -f "filesharing") &>/dev/null
 							sudo sed -i "/^TFS-${SERVICE_NAME}/d" "${RUNFILE}"
 							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 							sudo ls /etc/nginx/sites-enabled | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
@@ -1793,7 +1794,7 @@ case "$CHOICE" in
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
 										# HAS TO BE TESTED!!
 										TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.1 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-				      			configure_tcs $TCS_MESSAGE
+				      			configure_tcs "$TCS_MESSAGE"
 										echo ""
 										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
 											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
@@ -1853,6 +1854,7 @@ case "$CHOICE" in
 						SERVICE_NAME_LIST_002=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
 						if [ ! -z "$SERVICE_NAME_LIST_001" ] && [ -z "$SERVICE_LIST_002" ]; then
 							echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
+							(sudo pkill -f "chatsecure") &>/dev/null
 							sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
 							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 							sudo ls /etc/nginx/sites-enabled | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
