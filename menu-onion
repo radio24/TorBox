@@ -1481,11 +1481,11 @@ case "$CHOICE" in
 					# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
          	create_web_service_list 0
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
-         	service_menu checklist "$WEB_SERVICE_NAME_FOR_MENU"
+         	service_menu checklist "$WEB_SERVICE_NAME_LIST"
          	if [ "$exitstatus" == "0" ]; then
-         		if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+         		if [ ! -z "$SERVICE_NAME_LIST" ]; then
            		i=0
-           		for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
+           		for SERVICE_NAME in $SERVICE_NAME_LIST; do
              		i=$((i+1))
                	for SERVICE_NUMBER in $ENTRY_NUMBERS; do
                		if [ "$i" = "$SERVICE_NUMBER" ]; then
