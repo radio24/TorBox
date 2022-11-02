@@ -1,4 +1,4 @@
-An Onion Service can be used to serve a website folder (menu entry 17 or 18). The served data will be publicly available without activated client authorization (menu entry 7-11). This behaviour may not be the intention of the service operator. However, with a key pair (public and private key), access to an Onion Service can be limited to those with the private key.
+An Onion Service can be used to serve a website folder (menu entry 17 or 18) or chat securely with someone else (menu entry 19). The served data and the chat space will be publicly available without activated client authorization (menu entry 7-11). This behaviour may not be the intention of the service operator. However, with a key pair (public and private key), access to an Onion Service can be limited to those with the private key.
 
 This menu entry will generate a key pair (public and private key) where the public key is automatically stored in the specific Onion Service. The private key should be sent to the client, which gives him access to the particular Onion Service.
 

@@ -234,6 +234,9 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			# shellcheck disable=SC2012
 			TFS_NAME_LIST=$(ls /home/torbox/torbox/lib/filesharing/pid/ | sed "s/.pid//")
 			if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
+			# shellcheck disable=SC2012
+			TCS_NAME_LIST=$(ls /home/torbox/torbox/lib/chstsecure/pid/ | sed "s/.pid//")
+			if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $TCS_NAME_LIST; fi
 			# These variables in the RUNFILE have to be kept
 			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE}) 2> /dev/null
 			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE}) 2> /dev/null
@@ -330,6 +333,18 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				if [ ! -z "$TFS_CONFIG" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
 					sudo bash /home/torbox/torbox/run/start_tfs
+					sleep 1
+				fi
+			fi
+
+			# Catch and remove the TCS configuration from the copied backup, if no Onion Service and/or shared folders are restored
+			TCS_CONFIG=$(grep -m 1 "^TCS-" "${RUNFILE}")
+			if [ "$ONIONSERVICES" == "0" ] || [ "$SHAREDFOLDERS" == "0" ]; then
+				[ ! -z "$TCS_CONFIG" ] && sudo sed -E -i "/^TCS-/d" "${RUNFILE}"
+			else
+				if [ ! -z "$TCS_CONFIG" ]; then
+					echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
+					sudo bash /home/torbox/torbox/run/start_tcs
 					sleep 1
 				fi
 			fi

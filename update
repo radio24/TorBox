@@ -81,6 +81,7 @@ TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
+TMP_DIR="/home/torbox/tmp"
 RECOMPILE=0
 i=0
 n=0
@@ -515,12 +516,21 @@ update_torbox_menu()
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
-  echo -e "${RED}[+] Reading configuration...${NOCOLOR}"
-  # Save configuration
-  RUNFILECONTENT=$(<${RUNFILE})
-  sudo mv log_check_config.py ..
-  # ======================
+  echo -e "${RED}[+] Reading and save configuration...${NOCOLOR}"
   cd
+	# Backup configuration
+	if [ -d "$TMP_DIR" ]; then
+		sudo rm -r $TMP_DIR
+	fi
+	mkdir $TMP_DIR
+	# Save the RUN-file
+	RUNFILECONTENT=$(<${RUNFILE})
+  # Save TACA configuration
+  cp torbox/log_check_config.py $TMP_DIR
+	# Save TFS/TCS PID files
+	cp --parents -R torbox/lib/filesharing/pid $TMP_DIR
+	cp --parents -R torbox/lib/chatsecure/pid $TMP_DIR
+
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   if [ $TORCONNECT = 0 ]; then
 		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -543,10 +553,23 @@ update_torbox_menu()
     cd torbox
     echo -e "${RED}[+] Writing configuration...${NOCOLOR}"
     # Restore configuration
+		# Restore the RUN-file
     (printf "%s" "$RUNFILECONTENT" > "${RUNFILE}") 2> /dev/null
-    sudo mv ../log_check_config.py .
-    # ======================
-    echo -e "${RED} ${NOCOLOR}"
+  	# Restore TACA configuration
+		sudo mv ../$TMP_DIR/log_check_config.py .
+		# Restore  TFS/TCS PID files
+		TFS_NAME_LIST=$(ls ../$TMP_DIR/lib/filesharing/pid/)
+		if [ ! -z "$TFS_NAME_LIST" ]; then
+			for TFS_NAME in $TFS_NAME_LIST; do
+				cp ../$TMP_DIR/lib/filesharing/pid/$TFS_NAME lib/filesharing/pid/
+			done
+		fi
+		TFS_NAME_LIST=$(ls ../$TMP_DIR/lib/chatsecure/pid/)
+		if [ ! -z "$TCS_NAME_LIST" ]; then
+			for TCS_NAME in $TCS_NAME_LIST; do
+				cp ../$TMP_DIR/lib/chatsecure/pid/$TCS_NAME lib/chatsecure/pid/
+			done
+		fi
     echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
   else

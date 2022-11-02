@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2010,SC2016,SC2062,SC2128,SC2178
+# shellcheck disable=SC2001,SC2010,SC2012,SC2016,SC2062,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -154,9 +154,9 @@ create_client_list()
   CLIENT_COUNT=$((CLIENT_COUNT+1))
 }
 
-# This function lists the services which shares a folder through nginx
+# This function lists the services which have an nginx configuration
 # Syntax create_web_service_list <TFS>
-# <TFS> 0 -> only shared folders; 1 -> only TFS; else -> shared folders and TFS
+# <TFS> 0 -> only shared folders; 1 -> only TFS; 2 -> only TCS; else -> shared folders, TFS and TCS
 # Following variables can be used:
 # WEB_SERVICE_NAME_LIST is a list with the service names which shares a folder through Nginx (SERV1,SERV2,...)
 # VIRTPORT_WEB_SERVICE_LIST is a list with shows on which port the folder is shared through Nginx
@@ -166,6 +166,7 @@ create_web_service_list(){
 	TFS="${1}"
 	if [ "$TFS" == "0" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion.conf" | sed "s/-onion.conf//g")
 	elif [ "$TFS" == "1" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
+	elif [ "$TFS" == "2" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-chatsecure.conf" | sed "s/-onion-chatsecure.conf//g")
 	else WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion.conf" | sed "s/-onion.conf//g"; sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g"; sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-chatsecure.conf" | sed "s/-onion-chatsecure.conf//g"); fi
 	i=0
 	for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST_WITH_PORT; do
@@ -659,11 +660,23 @@ case "$CHOICE" in
           (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
           (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
           if grep "HiddenServiceDir" ${TORRC}; then
-						# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-						create_web_service_list
+						# This produces WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
+						create_web_service_list 0
+            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+              echo -e "${RED}[+] Found shared folders... Nginx reloaded to make them available.${NOCOLOR}"
+							# sudo systemctl reload nginx will not create new socks !!
+							# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+							sudo systemctl reload nginx
+            fi
+						create_web_service_list 1
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
 							sudo ./run/start_tfs initial
-              echo -e "${RED}[+] Found shared folders or/and a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+              echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+            fi
+						create_web_service_list 2
+            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+							sudo ./run/start_tcs initial
+              echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
             sudo systemctl restart tor
@@ -689,13 +702,23 @@ case "$CHOICE" in
         (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2> /dev/null
         (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
         (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
-				# shellcheck disable=SC2012
+				# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
 				TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-				if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
-				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
-        # sudo systemctl reload nginx will not create new socks !!
-				# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-				sudo systemctl reload nginx
+				if [ ! -z "$TFS_NAME_LIST" ]; then
+					for TFS_NAME in $TFS_NAME_LIST; do
+						echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+						PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${TFS_NAME}.pid)
+						(sudo kill $PID) &>/dev/null
+					done
+				fi
+				TCS_NAME_LIST=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
+				if [ ! -z "$TCS_NAME_LIST" ]; then
+					for TCS_NAME in $TCS_NAME_LIST; do
+						echo -e "${RED}[+] Stopping TCS named ${WHITE}${TCS_NAME}${RED} on Onion domain...${NOCOLOR}"
+						PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
+						(sudo kill $PID) &>/dev/null
+					done
+				fi
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
         echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
@@ -752,16 +775,24 @@ case "$CHOICE" in
               #This is necessary to work with special characters in sed
               HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-							# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-							create_web_service_list
-              if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-								sudo ./run/start_tfs
-                echo -e "${RED}[+] Found shared folders or/and a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
-                # sudo systemctl reload nginx will not create new socks !!
-  							# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+							# This produces WEB_SERVICE_NAME_LIST with all available shared folder (0), TFS (1) and TCS (2) configurations for Nginx
+							create_web_service_list 0
+	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+	              echo -e "${RED}[+] Found shared folders... Nginx reloaded to make them available.${NOCOLOR}"
+								# sudo systemctl reload nginx will not create new socks !!
+								# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 								sudo systemctl reload nginx
-              fi
-              sleep 2
+	            fi
+							create_web_service_list 1
+	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+								sudo ./run/start_tfs initial
+	              echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+	            fi
+							create_web_service_list 2
+	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+								sudo ./run/start_tcs initial
+	              echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+	            fi
               echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
               sudo systemctl restart tor
               echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
@@ -839,9 +870,9 @@ case "$CHOICE" in
       i=$((i+1))
       clear
 			if [ "$i" -gt "1" ]; then
-				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; TFS shares included (page $i)${NOCOLOR}"
+				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; shared folders, TFS and TCS included (page $i)${NOCOLOR}"
 			else
-				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; TFS shares included${NOCOLOR}"
+				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; folders, TFS and TCS included${NOCOLOR}"
 			fi
       show_onion_address $SERVICE_NAME
     done
@@ -861,7 +892,7 @@ case "$CHOICE" in
           i=$((i+1))
           for SERVICE_NUMBER in $ENTRY_NUMBERS; do
             if [ "$i" = "$SERVICE_NUMBER" ]; then
-              INPUT="Would you DEACTIVATE or DELETE the Onion Service named ->$SERVICE_NAME<-?\n\nDEACTIVATE means that nothing will be deleted and the Onion Service can be reactivatet later.\n\nDELETE means that the Onion Service, client authorizations, and the HOSTED DATA IN THE SHARED FOLDER be deleted PERMANENTLY! The service CANNOT be reactivated and the same onion address CANNOT be used anymore.\n"
+              INPUT="Would you DEACTIVATE or DELETE the Onion Service named ->$SERVICE_NAME<-?\n\nDEACTIVATE means that nothing will be deleted and the Onion Service can be reactivatet later.\n\nDELETE means that the Onion Service, client authorizations, configuration for TFS & TCS and the HOSTED DATA IN THE SHARED FOLDER will be deleted PERMANENTLY! The service CANNOT be reactivated and the same onion address CANNOT be used anymore.\n"
               if (whiptail --title "TorBox - INFO" --defaultno --no-button "DEACTIVATE" --yes-button "DELETE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
                 exitstatus=$?
               else
@@ -874,48 +905,57 @@ case "$CHOICE" in
 							# This gives VIRTPORT, HIDDENSSERVICEPORT and UNIX_PATH
 							find_virtport $SERVICE_NAME
               if [ "$exitstatus" == "0" ]; then
-								echo -e "${RED}[+] Stopping TFS, if active${NOCOLOR}"
-								# shellcheck disable=SC2012
-								TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
+								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
+								TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)
+								TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)
+								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $SERVICE_NAME; fi
+								if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $SERVICE_NAME; fi
                 echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 (sudo rm -rfv "${DATA_DIR_OS}/${SERVICE_NAME}") &>/dev/null
                 sudo sed -i "/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/d" ${TORRC}
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
-								sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+								echo -e "${RED}[+] Removing Nginx configuration for shared folders...${NOCOLOR}"
+								(sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
+								(sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
                 echo ""
-                echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
-                echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
-                trap "bash menu-onion; exit 0" SIGINT
-                sleep 1
-                echo -e "1"
-                sleep 1
-                echo -e "2"
-                sleep 1
-                echo -e "3"
-                sleep 1
-                echo -e "4"
-                sleep 1
-                echo -e "5"
-                sleep 1
-                echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
-                (sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
+								if [ -d "${WEBSITE_DIR}/${SERVICE_NAME}" ]; then
+                	echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
+                	echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
+                	trap "bash menu-onion; exit 0" SIGINT
+                	sleep 1
+                	echo -e "1"
+                	sleep 1
+                	echo -e "2"
+                	sleep 1
+                	echo -e "3"
+                	sleep 1
+                	echo -e "4"
+                	sleep 1
+                	echo -e "5"
+                	sleep 1
+                	echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
+                	(sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
+								fi
               elif [ "$exitstatus" == "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
                 sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
                 #This is necessary to work with special characters in sed
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-								echo -e "${RED}[+] Stopping TFS, if active${NOCOLOR}"
-								# shellcheck disable=SC2012
-								TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
-								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
-								sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
-								echo -e "${RED}[+] Removing Nginx configuration for shared folders...${NOCOLOR}"
-								(sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
-								(sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
+								# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
+								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
+								TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)
+								if [ ! -z "$TFS_NAME_LIST" ]; then
+									PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${SERVICE_NAME}.pid)
+									(sudo kill $PID) &>/dev/null
+								fi
+								TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)
+								if [ ! -z "$TCS_NAME_LIST" ]; then
+									PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${SERVICE_NAME}.pid)
+									(sudo kill $PID) &>/dev/null
+								fi
               fi
               sleep 2
             fi
@@ -1323,7 +1363,7 @@ case "$CHOICE" in
       " 1" "Start sharing a folder on an Onion domain"  \
 			" 2" "Change the shared folder of a certain Onion domain" \
       " 3" "Stop sharing a folder on an Onion domain"  \
-      " 4" "List of all configured shared folders (TFS included)"  \
+      " 4" "List of all configured shared folders"  \
       "==" "===============================================================" \
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
@@ -1405,7 +1445,7 @@ case "$CHOICE" in
        	2)
 					clear
 					# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-					create_web_service_list 1
+					create_web_service_list 0
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
 					service_menu menu "$WEB_SERVICE_NAME_LIST"
 					exitstatus=$?
@@ -1478,7 +1518,7 @@ case "$CHOICE" in
        	3)
          	clear
 					# This produces WEB_SERVICE_NAME_LIST with all available shared folder and TFS locations
-         	create_web_service_list 1
+         	create_web_service_list 0
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
          	service_menu checklist "$WEB_SERVICE_NAME_LIST"
          	if [ "$exitstatus" == "0" ]; then
@@ -1515,7 +1555,7 @@ case "$CHOICE" in
        	4)
          	clear
 					# This produces WEB_SERVICE_NAME_LIST
-					create_web_service_list 1
+					create_web_service_list 0
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
           i=0;
           for WEB_SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
@@ -1690,7 +1730,6 @@ case "$CHOICE" in
 						SERVICE_NAME_LIST_001=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
 						[ -z "$SERVICE_NAME_LIST_001" ] && error_no_tfs_running
 						clear
-						# shellcheck disable=SC2012
 						SERVICE_NAME_LIST_002=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 						if [ -z "$SERVICE_NAME_LIST_002" ]; then
 							echo -e "${RED}[+] Removing TFS configuration...${NOCOLOR}"
@@ -1842,7 +1881,6 @@ case "$CHOICE" in
 						SERVICE_NAME_LIST_001=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
 						[ -z "$SERVICE_NAME_LIST_001" ] && error_no_tCs_running
 						clear
-						# shellcheck disable=SC2012
 						SERVICE_NAME_LIST_002=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
 						if [ -z "$SERVICE_NAME_LIST_002" ]; then
 							echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
