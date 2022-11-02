@@ -88,12 +88,13 @@ case "$CHOICE" in
         echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
         trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
         echo " "
+				(rm -r /tmp/captcha.*) 2> /dev/null
         if [ $CLEARNET_DECISSION == 1 ]; then
           if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
-          bridge_address=$(sudo python3 bridges_get.py)
+          bridge_address=$(python3 bridges_get.py)
           if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
         else
-          bridge_address=$(sudo python3 bridges_get.py --network=tor)
+          bridge_address=$(python3 bridges_get.py --network=tor)
         fi
         if [ "$bridge_address" = "0" ]; then
           echo " "
