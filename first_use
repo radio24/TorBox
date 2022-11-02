@@ -146,12 +146,14 @@ finish_default_obfs4_step1()
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
        echo -e "    Ignore any error messages, this can take minutes just wait..."
        echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-       echo -e "    You can leave the progress report with CTRL-C."
+       echo -e "    You can leave the progress report by pressing q."
        echo ""
 			 # shellcheck disable=SC2064
 			 trap "finish_default_obfs4_step2 $DEFAULT_OBFS4_SUPPORT" SIGINT
+			 stty intr q
        sudo systemctl restart tor &
        sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+			 stty intr ^c
 		 else
 			 clear
 			 echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
@@ -324,12 +326,14 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report with CTRL-C."
+      echo -e "    You can leave the progress report by pressing q."
       echo ""
 			# shellcheck disable=SC2064
       trap "finish_default_obfs4_step1 $DEFAULT_OBFS4_SUPPORT" SIGINT
+			stty intr q
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+			stty intr ^c
     ;;
 
     *) exit 1

@@ -144,7 +144,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE 
 " 4" "Reset configuration to default"  \
 " 5" "Show me my personal OBFS4 bridge address"  \
 " 6" "Enter the advanced tor configuration editor"  \
-" 7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
+" 7" "Restart Tor - check if it is working (press q to quit)"  \
 "==" "================================================[Dangerous!]===" \
 " 8" "Remove permanently OBFS4 Bridge Relay data" \
 3>&1 1>&2 2>&3)

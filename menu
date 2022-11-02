@@ -190,8 +190,8 @@ else
   CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
   " 2" "Enforce a new exit node with a new IP" \
-  " 3" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-  " 4" "Display the Tor log file - quick and dirty (press CTRL-C to leave)" \
+  " 3" "Restart Tor - check if it is working (press q to quit)"  \
+  " 4" "Display the Tor log file - quick and dirty (press q to quit)" \
   "===" "===================================[Where is the Internet?]===" \
   " 5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
   " 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -246,8 +246,10 @@ case "$CHOICE" in
   4)
     clear
     trap "bash menu; exit 0" SIGINT
-    echo -e "${RED}[+] See below the tor log file:${NOCOLOR}"
+    echo -e "${RED}[+] See below the tor log file (press q to quit):${NOCOLOR}"
+		stty intr q
     sudo tail -f -n 30 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+		stty intr ^c
   ;;
 
   # Ethernet cable internet eth0 --> wlan0 / eth1
