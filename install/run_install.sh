@@ -614,7 +614,7 @@ sudo pip3 install backports.zoneinfo
 sudo pip3 install eventlet
 sudo pip3 install python-socketio
 # NEW v.0.5.2
-sudo pip3 install opencv-python
+sudo pip3 install opencv-python-headless
 sudo pip3 install numpy
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
