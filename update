@@ -653,6 +653,9 @@ case "$CHOICE" in
 			sudo pip3 install --upgrade backports.zoneinfo
 			sudo pip3 install --upgrade eventlet
 			sudo pip3 install --upgrade python-socketio
+			# NEW v.0.5.2
+			sudo pip3 install --upgrade opencv-python
+			sudo pip3 install --upgrade numpy
 			sleep 10
 			clear
 			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
