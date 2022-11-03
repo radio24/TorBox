@@ -43,8 +43,8 @@ from pytesseract import image_to_string
 def get_proxy(network=''):
     # Tor Socks Proxy
     proxy = {
-        "http": "socks://127.0.0.1:9050",
-        "https": "socks://127.0.0.1:9050",
+        "http": "socks5://127.0.0.1:9050",
+        "https": "socks5://127.0.0.1:9050",
     }
 
     if not network:
