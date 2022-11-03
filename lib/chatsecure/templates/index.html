@@ -11,6 +11,7 @@
         <link rel="stylesheet" href="{% static 'css/torbox.css' %}">
         <link rel="stylesheet" href="{% static 'css/torbox-chat.css' %}">
 
+        <script src="{% static 'js/sql-wasm.js' %}"></script>
         <script type="module">
             import { main } from "{% static 'js/torbox-chat.js' %}";
             main();
@@ -116,7 +117,7 @@
                 <section class="modal-card-body">
                     <input id="nick_txt" type="text" class="input text" placeholder="Nickname" maxlength="18" autocomplete="off" />
                     <p id="nick_error" class="help is-danger is-hidden"></p>
-                        
+
                     <div class="block mt-3">
                         <p class="is-size-7 has-text-grey-light">This chat is not keeping logs. If you close/refresh the window you will lose the chat history.</p>
                     </div>
