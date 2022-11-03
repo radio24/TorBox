@@ -51,7 +51,7 @@ chmod a+x run_install.sh
 ./run_install.sh
 ```
 \
-See [here](https://www.torbox.ch/?page_id=1168) for more detailed information and installation scripts for other systems, which might run on different hardware platforms.
+See [here](https://www.torbox.ch/?page_id=1168) for more detailed information and [installation scripts for other systems](https://www.torbox.ch/?page_id=1168#others), which might run on different hardware platforms.
 
 ### Building from scratch
 All you need to run TorBox on your Raspberry Pi is the image file. However, if you want to build it from scratch, whether you like to implement it to an existing system, to another hardware, respectively another operating system, or you don’t trust an image file, which you didn’t bundle of your own, then check out our detailed manual [for a Raspberry Pi with Raspberry Pi OS Lite](https://www.torbox.ch/?page_id=205).
