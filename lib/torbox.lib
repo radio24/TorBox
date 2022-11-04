@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -432,6 +432,7 @@ restarting_tor()
 connecting_to_VPN()
 {
   clear
+	# shellcheck disable=SC2012
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
   if [ -z "${ovpnlist[0]}" ] ; then
     whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -507,6 +508,7 @@ service_menu()
 	[ -z $LIST_OF_ENTRIES ] && exit 1;
   for ENTRY in $LIST_OF_ENTRIES; do
     i=$((i+1))
+		# shellcheck disable=SC2001
 		ENTRY=$(sed "s/%/ /g" <<< "$ENTRY")
     case "${DIALOG_TYPE}" in
       checklist)
@@ -676,6 +678,12 @@ activate_obfs4_bridges()
   SOURCE_SCRIPT=$1
   number_of_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
+		if grep "^#ReachableAddresses" ${TORRC} ; then
+			INPUT=$(cat text/no_antifirewall-please-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+		fi
     deactivating_bridge_relay
     sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
     sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}

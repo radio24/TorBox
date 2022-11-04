@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -70,7 +71,7 @@ i=0
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
-" 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+" 1" "Add OBFS4 bridges automatically"  \
 " 2" "Add OBFS4 bridges manually"  \
 "==" "===============================================================" \
 3>&1 1>&2 2>&3)
@@ -95,7 +96,7 @@ case "$CHOICE" in
         else
           bridge_address=$(python3 bridges_get.py --network=tor)
         fi
-        if [ "$bridge_address" = "0" ]; then
+        if [ "$bridge_address" = "-1" ]; then
           echo " "
           echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
           echo " "
@@ -103,35 +104,38 @@ case "$CHOICE" in
           clear
           exit 0
         else
-          if grep -q "$bridge_address" $TORRC ; then
-            echo " "
-            echo -e "${WHITE}[!] We fetched a bridge, but it is already added!${NOCOLOR}"
-            echo -e "${RED}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            clear
+					clear
+					# Create an array
+					SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+					IFS=$'\n'      # Change IFS to newline char
+					# shellcheck disable=SC2206
+					bridge_address=($bridge_address) # split the `names` string into an array by the same name
+					IFS=$SAVEIFS   # Restore original IFS
+					number_bridges=${#bridge_address[@]}
+					for (( i=0; i<$number_bridges; i++ ))
+					do
+						echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges bridge(s)${NOCOLOR}"
+						if grep -q "${bridge_address[$i]}" $TORRC ; then
+							echo -e "${RED}[+] Sorry, bridge number $i is already added!${NOCOLOR}"
+						else
+							echo -e "${RED}[+] Adding, bridge number $i...${NOCOLOR}"
+            	if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+              	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4`Bridge obfs4`g')"
+              	bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+            	else
+              	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4`#Bridge obfs4`g')"
+              	bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+            	fi
+							printf %s"${bridge_address[$i]}\n" | sudo tee -a $TORRC
+						fi
+					done
+          echo ""
+          echo -e "${RED}[+] DONE!${NOCOLOR}"
+          sleep 5
+          clear
+          if [ $STANDALONE = 1 ]; then
+            activate_obfs4_bridges bridges_add_old
             exit 0
-          else
-            echo " "
-            echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
-            if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            else
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            fi
-            echo -e "${RED}[+] Saving a valid bridge!${NOCOLOR}"
-            echo ""
-            printf %s"$bridge_address\n" | sudo tee -a $TORRC
-            echo ""
-            echo -e "${RED}[+] DONE!${NOCOLOR}"
-            sleep 5
-            clear
-            if [ $STANDALONE = 1 ]; then
-              activate_obfs4_bridges bridges_add_old
-              exit 0
-            fi
           fi
         fi
       else

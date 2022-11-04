@@ -209,9 +209,10 @@ case "$CHOICE" in
 
   # Add bridges
   3)
-    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-    fi
+		# NEW v.0.5.2: Deactivated because it should be possible to add OBFS4 bridges when using Snowflake or Meek
+    #if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+    #  whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    #fi
     sudo bash bridges_add_old "$MODE_BRIDGES" 1
     read_config
   ;;
