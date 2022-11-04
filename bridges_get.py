@@ -139,7 +139,7 @@ def get_bridges(network):
 
 
 @click.command()
-@click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network")
+@click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network.      Example: -n <tor|inet>")
 def main(network):
     bridges = get_bridges(network)
     print("\n".join(bridges))
