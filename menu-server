@@ -161,13 +161,13 @@ case "$CHOICE" in
   # Toggle Bridge Relay Mode ON or OFF
   2)
     if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-      if [ "$FIREWALL" = "ON" ]; then
-				INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the countermeasure against tightly configured firewalls in the countermeasure sub-menu. You can not run both settings simultaneously!"
-        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
-				trap "bash menu-server; exit 0" EXIT
-				exit 1
-			fi
 			if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+				if grep "^#ReachableAddresses" ${TORRC} ; then
+					INPUT=$(cat text/no_antifirewall-please-text)
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+					fi
+				fi
         INPUT=$(cat text/activate-bridge_server-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
