@@ -112,15 +112,15 @@ case $SNOWSTRING in
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				#Snowflake works only through clearnet
-				bridge_status=$(./bridges_check.py -f $bridge_hash
-				if [ $bridge_status == 1 ]; then
-					bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					SNOW_ON=$((SNOW_ON+1))
-				elif [ $bridge_status == 0 ]; then
-					bridge_status_txt="${RED}- OFFLINE${NOCOLOR}"
-				elif [ $bridge_status == 2 ]; then
-					bridge_status_txt="- DOESN'T EXIST"
-				fi
+				bridge_status=$(./bridges_check.py -f $bridge_hash)
+				case $bridge_status in
+					0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
+					1)
+						bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+						SNOW_ON=$((SNOW_ON+1))
+					;;
+					2) bridge_status_txt="- DOESN'T EXIST";;
+				esac
 				i=$((i+1))
 				bridge_address="$i : $bridge_address $bridge_status_txt"
 				echo -e "$bridge_address"
