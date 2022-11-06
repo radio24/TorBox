@@ -22,7 +22,7 @@
 # This file deletes already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_remove_old <bridge mode>
+# ./bridges_remove_obfs4 <bridge mode>
 #
 # <show when zero bridges> -> defines if a message is shown or not if no bridges are configured in /etc/tor/torrc.
 #
@@ -71,7 +71,7 @@ i=0
 
 ######## PREPARATIONS ########
 #
-# number_of_bridges()
+# number_of_obfs4_bridges()
 # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
 # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
@@ -79,7 +79,7 @@ i=0
 # $number_configured_bridges_deactivated -> Number of deactivated bridges
 # $number_configured_bridges_activated -> Number of activated bridges
 # $number_configured_bridges_total -> Total number of bridges
-number_of_bridges
+number_of_obfs4_bridges
 
 ###########################
 
@@ -110,7 +110,7 @@ case "$CHOICE" in
         sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         clear
-        restarting_tor bridges_remove_old
+        restarting_tor bridges_remove_obfs4
     fi
     exit 0
   ;;
@@ -124,7 +124,7 @@ case "$CHOICE" in
       echo " "
       echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
-      trap "bash bridges_remove_old; exit 0" SIGINT
+      trap "bash bridges_remove_obfs4; exit 0" SIGINT
       j=0
       i=0
       while [ $i -lt $number_configured_bridges_deactivated ]
@@ -179,16 +179,16 @@ case "$CHOICE" in
         # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
         sleep 5
         clear
-        number_of_bridges
+        number_of_obfs4_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           if [ $number_configured_bridges_activated = 0 ]; then
             deactivate_obfs4_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_old
+            restarting_tor bridges_remove_obfs4
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_old
+            restarting_tor bridges_remove_obfs4
           fi
         fi
       fi
@@ -242,7 +242,7 @@ case "$CHOICE" in
           delete_number=$(cut -d ' ' -f1 <<< $number_to_be_deleted)
         fi
       done
-      number_of_bridges
+      number_of_obfs4_bridges
       if [ $j = 0 ]; then
         echo " "
         echo -e "${WHITE}[!] We had nothing to delete! Did we?${NOCOLOR}"
@@ -252,16 +252,16 @@ case "$CHOICE" in
         # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
         sleep 5
         clear
-        number_of_bridges
+        number_of_obfs4_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
           if [ $number_configured_bridges_activated = 0 ]; then
             deactivate_obfs4_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_old
+            restarting_tor bridges_remove_obfs4
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_old
+            restarting_tor bridges_remove_obfs4
           fi
         fi
       fi
@@ -277,5 +277,5 @@ case "$CHOICE" in
     clear
     exit 0
 esac
-bash bridges_remove_old
+bash bridges_remove_obfs4
 exit 0

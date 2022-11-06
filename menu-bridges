@@ -130,7 +130,7 @@ read_config()
 	MODE_BR=$(grep "^BridgeRelay" ${TORRC})
 	if [ "$MODE_BR" = "BridgeRelay 1" ]; then TOGGLE07b="ON"; else TOGGLE07b="OFF"; fi
 
-  # number_of_bridges()
+  # number_of_obfs4_bridges()
   # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
   # Following variables can be used:
   # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
@@ -138,7 +138,7 @@ read_config()
   # $number_configured_bridges_deactivated -> Number of deactivated bridges
   # $number_configured_bridges_activated -> Number of activated bridges
   # $number_configured_bridges_total -> Total number of bridges
-  number_of_bridges
+  number_of_obfs4_bridges
 }
 
 ######## PREPARATIONS ########
@@ -186,7 +186,7 @@ case "$CHOICE" in
     if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       INPUT=$(cat text/add-bridges-first-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add_old "$MODE_BRIDGES" 0
+        sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 0
       else
         deactivate_obfs4_bridges
         trap "bash menu-bridges; exit 0" EXIT
@@ -196,13 +196,13 @@ case "$CHOICE" in
     if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
       INPUT=$(cat text/activate-bridges-text)
       if (whiptail --title "TorBox - INFO" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_activate_old
+        sudo bash bridges_activate_obfs4
       else
         trap "bash menu-bridges; exit 0" EXIT
         exit 0
       fi
     else
-      sudo bash bridges_activate_old
+      sudo bash bridges_activate_obfs4
     fi
     read_config
   ;;
@@ -213,7 +213,7 @@ case "$CHOICE" in
     #if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
     #  whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     #fi
-    sudo bash bridges_add_old "$MODE_BRIDGES" 1
+    sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 1
     read_config
   ;;
 
@@ -230,7 +230,7 @@ case "$CHOICE" in
       sleep 5
     else
       whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
-      sudo bash bridges_remove_old "$MODE_BRIDGES"
+      sudo bash bridges_remove_obfs4 "$MODE_BRIDGES"
       read_config
     fi
   ;;
@@ -249,7 +249,7 @@ case "$CHOICE" in
         sleep 5
       else
         whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo bash bridges_deactivate_old
+        sudo bash bridges_deactivate_obfs4
         read_config
       fi
     fi

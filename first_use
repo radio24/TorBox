@@ -295,7 +295,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       if (whiptail --title "TorBox v.0.5.1 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^#ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat text/no_antifirewall-please-text)
-					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
 				fi

@@ -77,7 +77,7 @@ case $MEEKSTRING in
 		clear
 		if grep "^#ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat text/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -115,13 +115,8 @@ case $MEEKSTRING in
 			do
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-				if [ $CLEARNET_DECISSION == 1 ]; then
-          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
-					bridge_status=$(./bridges_check.py -f $bridge_hash)
-          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
-				else
-					bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
-				fi
+				#Meek works only through clearnet
+				bridge_status=$(./bridges_check.py -f $bridge_hash)
         case $bridge_status in
           0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
           1)

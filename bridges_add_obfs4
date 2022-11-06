@@ -22,11 +22,11 @@
 # This file add automatically or manually bridges to /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_add_old <bridge mode> <standalone>
+# ./bridges_add_obfs4 <bridge mode> <standalone>
 #
 # <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
-# <standalone>: 0 - bridges_add_old was executed as part of the activation process, when no bridges were found
-#               1 - bridges_add_old was directly executed
+# <standalone>: 0 - bridges_add_obfs4 was executed as part of the activation process, when no bridges were found
+#               1 - bridges_add_obfs4 was directly executed
 #
 ###### SET VARIABLES ######
 #
@@ -87,7 +87,7 @@ case "$CHOICE" in
       online_check $TOR_GET_BRIDGES_URL 1 1
       if [ $OCHECK == 1 ]; then
         echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
-        trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
+        trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
         (rm -r /tmp/captcha.*) 2> /dev/null
         if [ $CLEARNET_DECISSION == 1 ]; then
           if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -134,7 +134,7 @@ case "$CHOICE" in
           sleep 5
           clear
           if [ $STANDALONE = 1 ]; then
-            activate_obfs4_bridges bridges_add_old
+            activate_obfs4_bridges bridges_add_obfs4
             exit 0
           fi
         fi
@@ -156,7 +156,7 @@ case "$CHOICE" in
     whiptail --title "TorBox - INFO" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
     number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if ! [[ "$number_bridges" =~ ^[0-9]+$  ]]; then
-      trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+      trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" EXIT
       echo ""
       echo -e "${WHITE}[!] I asked you for a number and you gave me... what??? ${NOCOLOR}"
       echo " "
@@ -170,7 +170,7 @@ case "$CHOICE" in
         bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx:xxxx cert=abcd.. iat-mode=0)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         bridge_address="$(<<< "$bridge_address" sed -e 's/[[:blank:]]*$//')"
         if [ -z "$bridge_address" ]; then
-          trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+          trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" EXIT
           exit 0
         fi
         if grep -q "$bridge_address" $TORRC ; then
@@ -191,7 +191,7 @@ case "$CHOICE" in
       sleep 5
       clear
       if [ $STANDALONE = 1 ]; then
-        activate_obfs4_bridges bridges_add_old
+        activate_obfs4_bridges bridges_add_obfs4
         exit 0
       fi
     else
@@ -204,5 +204,5 @@ case "$CHOICE" in
     exit 0
 esac
 
-bash bridges_add_old
+bash bridges_add_obfs4
 exit 0

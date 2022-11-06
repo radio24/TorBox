@@ -22,7 +22,7 @@
 # This file deactivates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_deactivate_old
+# ./bridges_deactivate_obfs4
 #
 #
 ###### SET VARIABLES ######
@@ -63,7 +63,7 @@ i=0
 
 ######## PREPARATIONS ########
 #
-# number_of_bridges()
+# number_of_obfs4_bridges()
 # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
 # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
@@ -71,7 +71,7 @@ i=0
 # $number_configured_bridges_deactivated -> Number of deactivated bridges
 # $number_configured_bridges_activated -> Number of activated bridges
 # $number_configured_bridges_total -> Total number of bridges
-number_of_bridges
+number_of_obfs4_bridges
 
 ###########################
 
@@ -106,7 +106,7 @@ case "$CHOICE" in
   # Deactivate ALL configured bridges
   1)
 		sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-    deactivate_obfs4_bridges bridges_deactivate_old
+    deactivate_obfs4_bridges bridges_deactivate_obfs4
 		clear
     exit 0
   ;;
@@ -119,7 +119,7 @@ case "$CHOICE" in
       echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
       echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
-      trap "bash bridges_deactivate_old; exit 0" SIGINT
+      trap "bash bridges_deactivate_obfs4; exit 0" SIGINT
       j=0
       i=0
       while [ $i -lt $number_configured_bridges_activated ]
@@ -157,15 +157,15 @@ case "$CHOICE" in
         # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
         sleep 5
         clear
-        number_of_bridges
+        number_of_obfs4_bridges
         if [ $number_configured_bridges_activated = 0 ]; then
 			    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-					deactivate_obfs4_bridges bridges_deactivate_old
+					deactivate_obfs4_bridges bridges_deactivate_obfs4
 					clear
 					exit 0
         else
 					sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-          activate_obfs4_bridges bridges_deactivate_old
+          activate_obfs4_bridges bridges_deactivate_obfs4
 					clear
           exit 0
         fi
@@ -217,16 +217,16 @@ case "$CHOICE" in
       # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
       sleep 5
       clear
-      number_of_bridges
+      number_of_obfs4_bridges
       if [ $number_configured_bridges_activated = 0 ]; then
 		    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-				deactivate_obfs4_bridges bridges_deactivate_old
+				deactivate_obfs4_bridges bridges_deactivate_obfs4
 				clear
 				exit 0
       else
         if [ $j -gt 0 ]; then
 		    	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-          activate_obfs4_bridges bridges_deactivate_old
+          activate_obfs4_bridges bridges_deactivate_obfs4
 					clear
           exit 0
         fi
@@ -243,5 +243,5 @@ case "$CHOICE" in
     clear
     exit 0
 esac
-bash bridges_deactivate_old
+bash bridges_deactivate_obfs4
 exit 0
