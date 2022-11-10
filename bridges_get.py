@@ -27,12 +27,22 @@
 # of which we pick one. With the bridges already delivered this should be sufficient.
 #
 # SYNTAX
-# ./bridges_get.py [-n, --network=<tor|inet>] [-h, --help]
+# Usage: bridges_get.py [OPTIONS]
 #
-# -h, --help: print the help screen
-# -n, --network=<tor|inet>: force check over specific network
+# Options:
+#   -n, --network TEXT  Force to get bridges over specific network
+#   -c, --country TEXT  Circumvention country setting
+#   --snowflake         Get snowflake bridges instead of obfs4 (circumvention
+#                       country need to be set)
+#   --help              Show this message and exit.
+#
+# ERROR CODES:
+# -1: Network error
+# -2: Bridges not found
+
 
 import click
+import sys
 import base64
 import requests
 import numpy as np
@@ -138,10 +148,63 @@ def get_bridges(network):
     return bridges
 
 
+def get_circumvention_bridges(country, network, snowflake):
+    proxy = get_proxy(network)
+    url = "https://bridges.torproject.org/moat/circumvention/settings"
+    headers = {"Content-type": "application/vnd.api+json"}
+    data = {"country": country}
+
+    try:
+        r = requests.get(url, json=data, proxies=proxy, headers=headers)
+        r = r.json()
+        r = r["settings"]
+        if len(r):
+            if snowflake:
+                for i in r:
+                    bridge = i["bridges"]
+                    if bridge["type"] == "snowflake":
+                        return bridge["bridge_strings"]
+                print(-2)
+                sys.exit(1)
+            else:
+                for i in r:
+                    bridge = i["bridges"]
+                    if bridge["type"] == "obfs4" and bridge["source"] == "bridgedb":
+                        return bridge["bridge_strings"]
+            print(-2)
+            sys.exit(1)
+        else:
+            print(-2)
+            sys.exit(1)
+
+    except:
+        print(-1)
+        sys.exit(1)
+
+# fmt: off
 @click.command()
 @click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network")
-def main(network):
-    bridges = get_bridges(network)
+@click.option('--country', '-c', default='', type=str, help="Circumvention country setting")
+@click.option('--snowflake', is_flag=True, default=False, show_default=True, help="Get snowflake bridges instead of obfs4 (circumvention country need to be set)")
+# fmt: on
+def main(network, country, snowflake):
+    # Validate options
+    if country:
+        if len(country) > 2:
+            print("[X] Invalid country")
+            sys.exit(1)
+    if snowflake:
+        if country == '':
+            print("[x] Country must be set")
+            sys.exit(1)
+
+    # If country is set get circumvention bridges
+    if country:
+        bridges = get_circumvention_bridges(country=country, network=network, snowflake=snowflake)
+    # BridgeDB obfs4 bridges
+    else:
+        bridges = get_bridges(network)
+
     print("\n".join(bridges))
 
 
