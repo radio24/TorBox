@@ -177,7 +177,7 @@ def get_circumvention_bridges(country, network, snowflake):
             print(-2)
             sys.exit(1)
 
-    except:
+    except requests.exceptions.ConnectionError:
         print(-1)
         sys.exit(1)
 
