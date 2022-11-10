@@ -86,6 +86,9 @@ RECOMPILE=0
 i=0
 n=0
 
+# Check if local clearnet DNS resolution is on or off
+CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+
 ##############################
 ######## FUNCTIONS ###########
 
@@ -117,7 +120,7 @@ update_firmware()
     echo " "
     echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
     sleep 5
-    if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+    if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -266,7 +269,7 @@ update_tor()
 			if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
       wget $download_tor_url
       DLCHECK=$?
-			if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+			if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
     else
       # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
       torsocks wget $download_tor_url
@@ -342,7 +345,7 @@ select_and_install_tor()
 				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         wget $download_tor_url
         DLCHECK=$?
-				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+				if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
         torsocks wget $download_tor_url
@@ -535,7 +538,7 @@ update_torbox_menu()
   if [ $TORCONNECT = 0 ]; then
 		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
     wget $TORBOXURL
-		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+		if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
     torsocks wget $TORBOXURL
@@ -556,20 +559,21 @@ update_torbox_menu()
 		# Restore the RUN-file
     (printf "%s" "$RUNFILECONTENT" > "${RUNFILE}") 2> /dev/null
   	# Restore TACA configuration
-		sudo mv ../$TMP_DIR/log_check_config.py .
+		sudo mv $TMP_DIR/log_check_config.py .
 		# Restore  TFS/TCS PID files
-		TFS_NAME_LIST=$(ls ../$TMP_DIR/lib/filesharing/pid/)
+		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/filesharing/pid/)
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
-				cp ../$TMP_DIR/lib/filesharing/pid/$TFS_NAME lib/filesharing/pid/
+				cp $TMP_DIR/torbox/lib/filesharing/pid/$TFS_NAME lib/filesharing/pid/
 			done
 		fi
-		TFS_NAME_LIST=$(ls ../$TMP_DIR/lib/chatsecure/pid/)
+		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/chatsecure/pid/)
 		if [ ! -z "$TCS_NAME_LIST" ]; then
 			for TCS_NAME in $TCS_NAME_LIST; do
-				cp ../$TMP_DIR/lib/chatsecure/pid/$TCS_NAME lib/chatsecure/pid/
+				cp $TMP_DIR/torbox/lib/chatsecure/pid/$TCS_NAME lib/chatsecure/pid/
 			done
 		fi
+		#sudo rm -r $TMP_DIR
     echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
   else
@@ -713,7 +717,7 @@ case "$CHOICE" in
 			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 			sudo systemctl enable tor
 			sudo systemctl daemon-reload
-      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+      if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
@@ -741,7 +745,7 @@ case "$CHOICE" in
 			fi
       if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			bash install/install_network_drivers
-      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+      if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
 			recommended_reboot update
 		fi
 	;;
@@ -987,6 +991,7 @@ case "$CHOICE" in
 			done
 			echo ""
 		fi
+		# shellcheck disable=SC2012
     TCS_NAME_LIST=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
     if [ ! -z "$TCS_NAME_LIST" ]; then
       for TCS_NAME in $TCS_NAME_LIST; do
@@ -1006,6 +1011,7 @@ case "$CHOICE" in
 			PID=$(pgrep -f "twebssh")
 			[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 		fi
+		# shellcheck disable=SC2062
 		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		sleep 5
 		sudo systemctl restart nginx
@@ -1055,7 +1061,7 @@ case "$CHOICE" in
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
   	sudo systemctl daemon-reload
   	sleep 3
-		local_clearnet_dns_resolution_off
+		if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
 	;;
 
 	*)

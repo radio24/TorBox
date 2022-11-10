@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -132,6 +132,7 @@ local_clearnet_dns_resolution_on()
 	(sudo iptables -t nat -D OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2> /dev/null
 	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
 	sudo systemctl start dnsmasq
+	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=1/" ${RUNFILE}
 }
 
 # local_clearnet_dns_resolution_off()
@@ -139,9 +140,10 @@ local_clearnet_dns_resolution_on()
 local_clearnet_dns_resolution_off()
 {
 	sudo systemctl stop dnsmasq
-	sudo iptables  -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
-	sudo iptables  -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
+	(sudo iptables  -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053) 2> /dev/null
+	(sudo iptables  -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2> /dev/null
 	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=0/" ${RUNFILE}
 }
 
 # add_open_dns()
@@ -194,7 +196,8 @@ add_open_dns()
 online_check()
 {
   # Define all variables
-  CHECK_URL=$1
+  RUNFILE="/home/torbox/torbox/run/torbox.run"
+	CHECK_URL=$1
   if [ -z "$CHECK_URL" ] || [ "$CHECK_URL" == "default" ]; then
     CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   fi
@@ -206,6 +209,8 @@ online_check()
   if [ "$NO_CONNECTION_WARNING" == "0" ] && [ "$CLEARNET_WARNING" == "0" ]; then
     CLEARNET_ONLY=1
   fi
+	# Check if local clearnet DNS resolution is on or off
+	CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
@@ -274,7 +279,7 @@ online_check()
       TORCONNECT=0
 			TOR_DNS=1
     else
-			local_clearnet_dns_resolution_on
+			if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_on; fi
 			if curl -m 6 -s $CHECK_URL >/dev/null; then
 				OCHECK=1
 				TORCONNECT=0
@@ -284,7 +289,7 @@ online_check()
 				TORCONNECT=0
 				TOR_DNS=0
 			fi
-			local_clearnet_dns_resolution_off
+			if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
     fi
   fi
 
@@ -432,6 +437,7 @@ restarting_tor()
 connecting_to_VPN()
 {
   clear
+	# shellcheck disable=SC2012
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
   if [ -z "${ovpnlist[0]}" ] ; then
     whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -507,6 +513,7 @@ service_menu()
 	[ -z $LIST_OF_ENTRIES ] && exit 1;
   for ENTRY in $LIST_OF_ENTRIES; do
     i=$((i+1))
+		# shellcheck disable=SC2001
 		ENTRY=$(sed "s/%/ /g" <<< "$ENTRY")
     case "${DIALOG_TYPE}" in
       checklist)
@@ -530,7 +537,7 @@ service_menu()
   [ ! -z "${CHOICE_ENTRY}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_ENTRY}")
 }
 
-# number_of_bridges()
+# number_of_obfs4_bridges()
 # Used predefined variables: TORRC
 # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
@@ -539,7 +546,7 @@ service_menu()
 # $number_configured_bridges_deactivated -> Number of deactivated bridges
 # $number_configured_bridges_activated -> Number of activated bridges
 # $number_configured_bridges_total -> Total number of bridges
-number_of_bridges()
+number_of_obfs4_bridges()
 {
   readarray -t configured_bridges_deactivated < <(grep "^#Bridge obfs4 " ${TORRC})
   readarray -t configured_bridges_activated < <(grep "^Bridge obfs4 " ${TORRC})
@@ -558,7 +565,7 @@ number_of_bridges()
 
 # list_all_obfs4_bridges()
 # Used predefined variables: RED, NOCOLOR, WHITE, GREEN
-# Used predefined function: number_of_bridges()
+# Used predefined function: number_of_obfs4_bridges()
 # List all OBFS4 bridges
 list_all_obfs4_bridges()
 {
@@ -573,7 +580,7 @@ list_all_obfs4_bridges()
     echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
     sleep 2
   fi
-  number_of_bridges
+  number_of_obfs4_bridges
   if [ $number_configured_bridges_deactivated -gt 0 ]; then
     echo " "
     echo " "
@@ -674,8 +681,14 @@ deactivate_obfs4_bridges()
 activate_obfs4_bridges()
 {
   SOURCE_SCRIPT=$1
-  number_of_bridges
+  number_of_obfs4_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
+		if grep "^#ReachableAddresses" ${TORRC} ; then
+			INPUT=$(cat text/no_antifirewall-please-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+		fi
     deactivating_bridge_relay
     sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
     sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}

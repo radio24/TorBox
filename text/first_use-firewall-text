@@ -8,12 +8,8 @@ configured firewall taking care that tor uses only port 80 and 443
 for its data stream.
 
 IMPORTANT
-- If using bridges, this can lead to problems (depending on the
-  configuration of the bridges). Therefore, generally, we recommend
-  using either bridges or the countermeasure against tightly configured
-  firewalls.
-- Don't use this option if you want to run an OBFS4 BRIDGE RELAY! This
-  will not work!
+- DON'T USE IT, if you plan to use BRIDGES or to run an OBFS4 BRIDGE
+	RELAY! This will not work!
 
 Do you want to keep using the countermeasure against tightly configured
 firewalls?

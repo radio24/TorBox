@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -21,11 +22,11 @@
 # This file add automatically or manually bridges to /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_add_old <bridge mode> <standalone>
+# ./bridges_add_obfs4 <bridge mode> <standalone>
 #
 # <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
-# <standalone>: 0 - bridges_add_old was executed as part of the activation process, when no bridges were found
-#               1 - bridges_add_old was directly executed
+# <standalone>: 0 - bridges_add_obfs4 was executed as part of the activation process, when no bridges were found
+#               1 - bridges_add_obfs4 was directly executed
 #
 ###### SET VARIABLES ######
 #
@@ -70,7 +71,7 @@ i=0
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
-" 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
+" 1" "Add OBFS4 bridges automatically"  \
 " 2" "Add OBFS4 bridges manually"  \
 "==" "===============================================================" \
 3>&1 1>&2 2>&3)
@@ -86,7 +87,7 @@ case "$CHOICE" in
       online_check $TOR_GET_BRIDGES_URL 1 1
       if [ $OCHECK == 1 ]; then
         echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
-        trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
+        trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
         (rm -r /tmp/captcha.*) 2> /dev/null
         if [ $CLEARNET_DECISSION == 1 ]; then
           if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -95,7 +96,7 @@ case "$CHOICE" in
         else
           bridge_address=$(python3 bridges_get.py --network=tor)
         fi
-        if [ "$bridge_address" = "0" ]; then
+        if [ "$bridge_address" = "-1" ]; then
           echo " "
           echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
           echo " "
@@ -103,35 +104,38 @@ case "$CHOICE" in
           clear
           exit 0
         else
-          if grep -q "$bridge_address" $TORRC ; then
-            echo " "
-            echo -e "${WHITE}[!] We fetched a bridge, but it is already added!${NOCOLOR}"
-            echo -e "${RED}[+] Sorry, I didn't found a new valid bridge! Please, try again later or add bridges manually!${NOCOLOR}"
-            echo " "
-            read -n 1 -s -r -p "Press any key to continue"
-            clear
+					clear
+					# Create an array
+					SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+					IFS=$'\n'      # Change IFS to newline char
+					# shellcheck disable=SC2206
+					bridge_address=($bridge_address) # split the `names` string into an array by the same name
+					IFS=$SAVEIFS   # Restore original IFS
+					number_bridges=${#bridge_address[@]}
+					for (( i=0; i<$number_bridges; i++ ))
+					do
+						echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges bridge(s)${NOCOLOR}"
+						if grep -q "${bridge_address[$i]}" $TORRC ; then
+							echo -e "${RED}[+] Sorry, bridge number $i is already added!${NOCOLOR}"
+						else
+							echo -e "${RED}[+] Adding, bridge number $i...${NOCOLOR}"
+            	if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+              	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4`Bridge obfs4`g')"
+              	bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+            	else
+              	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4`#Bridge obfs4`g')"
+              	bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+            	fi
+							printf %s"${bridge_address[$i]}\n" | sudo tee -a $TORRC
+						fi
+					done
+          echo ""
+          echo -e "${RED}[+] DONE!${NOCOLOR}"
+          sleep 5
+          clear
+          if [ $STANDALONE = 1 ]; then
+            activate_obfs4_bridges bridges_add_obfs4
             exit 0
-          else
-            echo " "
-            echo -e "${RED}[+] Found a valid bridge!${NOCOLOR}"
-            if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            else
-              bridge_address="$(<<< "$bridge_address" sed -e 's`obfs4`#Bridge obfs4`g')"
-              bridge_address=$(echo -e "$bridge_address\n")
-            fi
-            echo -e "${RED}[+] Saving a valid bridge!${NOCOLOR}"
-            echo ""
-            printf %s"$bridge_address\n" | sudo tee -a $TORRC
-            echo ""
-            echo -e "${RED}[+] DONE!${NOCOLOR}"
-            sleep 5
-            clear
-            if [ $STANDALONE = 1 ]; then
-              activate_obfs4_bridges bridges_add_old
-              exit 0
-            fi
           fi
         fi
       else
@@ -152,7 +156,7 @@ case "$CHOICE" in
     whiptail --title "TorBox - INFO" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
     number_bridges=$(whiptail --title "TorBox - INFO" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if ! [[ "$number_bridges" =~ ^[0-9]+$  ]]; then
-      trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+      trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" EXIT
       echo ""
       echo -e "${WHITE}[!] I asked you for a number and you gave me... what??? ${NOCOLOR}"
       echo " "
@@ -166,7 +170,7 @@ case "$CHOICE" in
         bridge_address=$(whiptail --title "TorBox - INFO" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx:xxxx cert=abcd.. iat-mode=0)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         bridge_address="$(<<< "$bridge_address" sed -e 's/[[:blank:]]*$//')"
         if [ -z "$bridge_address" ]; then
-          trap "bash bridges_add_old $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+          trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" EXIT
           exit 0
         fi
         if grep -q "$bridge_address" $TORRC ; then
@@ -187,7 +191,7 @@ case "$CHOICE" in
       sleep 5
       clear
       if [ $STANDALONE = 1 ]; then
-        activate_obfs4_bridges bridges_add_old
+        activate_obfs4_bridges bridges_add_obfs4
         exit 0
       fi
     else
@@ -200,5 +204,5 @@ case "$CHOICE" in
     exit 0
 esac
 
-bash bridges_add_old
+bash bridges_add_obfs4
 exit 0

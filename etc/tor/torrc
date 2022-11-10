@@ -68,50 +68,35 @@ ReachableAddresses accept *:443, accept *:80
 #UseBridges 1
 #UpdateBridgesFromAuthority 1
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
-#ClientTransportPlugin snowflake exec /usr/bin/snowflake-client -url https://snowflake-broker.torproject.net.global.prod.fastly.net/ -front cdn.sstatic.net -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478
+#ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 
 ## Meek-Azure
 #Bridge meek_lite 192.0.2.18:80 BE776A53492E1E044A26F17306E1BC46A55A1625 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
 
-## Snowflake
-#Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72
+## Snowflake (do not remove or change that line - this is an anchor)
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for Iran
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.azureedge.net/ front=ajax.aspnetcdn.com ice=stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for Turkmenistan
+#Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:206.53.159.130:3479,stun:176.119.42.11:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:52.26.251.34:3479,stun:18.191.223.12:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479
 
 ## OBFS4 bridges
 ##
 ## You have three ways to get new bridge-addresses:
 ## 1. Get them here https://bridges.torproject.org/
-##    (chose "Advanced Options", "obfs4" and press "Get Bridges)
 ## 2. Or send an email to bridges@torproject.org, using an address
 ##    from Riseup or Gmail with "get transport obfs4" in the body of the mail.
 ## 3. Via Telegram (official): https://t.me/GetBridgesBot ; then use /bridges to get a bridge.
 ## 4. (Not recommended, only if needed): Via Telegram (unofficial): https://t.me/tor_bridges
-#Bridge obfs4 144.217.20.138:80 FB70B257C162BF1038CA669D568D76F5B7F0BABB cert=vYIV5MgrghGQvZPIi1tJwnzorMgqgmlKaB77Y3Z9Q/v94wZBOAXkW+fdx4aSxLVnKO+xNw iat-mode=0
-#Bridge obfs4 37.218.245.14:38224 D9A82D2F9C2F65A18407B1D2B764F130847F8B5D cert=bjRaMrr1BRiAW8IE9U5z27fQaYgOhX1UCmOpg2pFpoMvo6ZgQMzLsaTzzQNTlm7hNcb+Sg iat-mode=0
-#Bridge obfs4 109.105.109.147:13764 BBB28DF0F201E706BE564EFE690FE9577DD8386D cert=KfMQN/tNMFdda61hMgpiMI7pbwU1T+wxjTulYnfw+4sgvG0zSH7N7fwT10BI8MUdAD7iJA iat-mode=2
-#Bridge obfs4 212.101.26.106:443 594A38734ACA5A611AF3C4444A914E5F940BCAAF cert=cNymj+v4Orz558wzvDYjmhVAEcFW1xKjbyVf/xUp+M6OoOvNRixvxLpyoY0SPsXSxIneFw iat-mode=0
-#Bridge obfs4 50.115.168.41:443 BD0443DBEB32E9C96290DDFFB2F8B8681906D2BB cert=zqc3tU9Bw7uYfTi5AydGZC1pFu/UVpWRS3c4gzfS/qtCxJwC94d1XrKb116qoW/MZ8soTw iat-mode=0
-#Bridge obfs4 34.255.123.165:52176 EFF298A7FB2A1056189C5C12B46CD912AA77B16A cert=5CLOANyguG1hzulvbHZNlWy2BoMGk/VTAyfKvA7S0w0v/24XIYTz5tWlKWbyrZhxPEvWFA iat-mode=0
-#Bridge obfs4 192.155.95.222:53050 68FE1B7511B5956D81DDDD23B30B49828DF36D21 cert=r8elMzelcc8b4wvG6MdvBrOTXWshKiDi1gPbpSgjgDJGzqLC2iGHiZ+GRx9gAZALlcqQPA iat-mode=0
-#Bridge obfs4 93.104.174.209:55405 3C3893086B27E879778E4A6275E5230AA49132E9 cert=uZorJsxG11sfGmt2tsJRX6jCDQF043crM0vfsY+BJUdciPsszVN1eAem2zNteZ2WVjFqLg iat-mode=0
-#Bridge obfs4 94.16.156.109:36739 491CEAB740FDEA24D588B28C6915E6EC37D65B90 cert=Vax0EBHOO0x1NGjVJPNCECfTK9XSGy8IVjBk/ewyeoBq+o1i9/ksmKBj+XmMpUc5BCCzOQ iat-mode=0
-#Bridge obfs4 216.252.162.21:46089 0DB8799466902192B6C7576D58D4F7F714EC87C1 cert=XPUwcQPxEXExHfJYX58gZXN7mYpos7VNAHbkgERNFg+FCVNzuYo1Wp+uMscl3aR9hO2DRQ iat-mode=0
-#Bridge obfs4 76.230.156.129:5002 B37BC162454314B6572F9A3A79A1C92BB9E63809 cert=IIJMWkUUmzRbS78LCm8znYKvMf/mmcWIM5ZNyzwl1gHxKievV4h1NKdlVkRH3KpZH/fmbg iat-mode=0
-#Bridge obfs4 95.31.12.22:5010 5721D25FA2D0194E698EC46AC4703F24DE82829F cert=whNT5Nx/k1fZL4MQu99SIl+5OXccyAlMKwjKmjoTGTgPTdVSNeMnh6lPBxcqbx4vMdRTTQ iat-mode=0
-#Bridge obfs4 185.185.251.132:443 91C99EA7DD3851DC18F40D66D9283829AECC95C3 cert=i9dbEJaVF+4Keam69Bg5lbtfDiITFc2i7Otly9OEBmxBPq8xk2Nr5BWOOYlslTFdfPKFfg iat-mode=0
 #Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
-#Bridge obfs4 209.148.46.65:443 74FAD13168806246602538555B5521A0383A1875 cert=ssH+9rP8dG2NLDN2XuFw63hIO/9MNNinLmxQDpVa+7kTOa9/m+tGWT1SmSYpQ9uTBGa6Hw iat-mode=0
-#Bridge obfs4 146.57.248.225:22 10A6CD36A537FCE513A322361547444B393989F0 cert=K1gDtDAIcUfeLqbstggjIw2rtgIKqdIhUlHp82XRqNSq/mtAjp1BIC9vHKJ2FAEpGssTPw iat-mode=0
-#Bridge obfs4 45.145.95.6:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
-#Bridge obfs4 [2a0c:4d80:42:702::1]:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
-#Bridge obfs4 51.222.13.177:80 5EDAC3B810E12B01F6FD8050D2FD3E277B289A08 cert=2uplIpLQ0q9+0qMFrK5pkaYRDOe460LL9WHBvatgkuRr/SL31wBOEupaMMJ6koRE6Ld0ew iat-mode=0
 #Bridge obfs4 193.11.166.194:27015 2D82C2E354D531A68469ADF7F878FA6060C6BACA cert=4TLQPJrTSaDffMK7Nbao6LC7G9OW/NHkUwIdjLSS3KYf0Nv4/nQiiI8dY2TcsQx01NniOg iat-mode=0
 #Bridge obfs4 193.11.166.194:27020 86AC7B8D430DAC4117E9F42C9EAED18133863AAF cert=0LDeJH4JzMDtkJJrFphJCiPqKx7loozKN7VNfuukMGfHO0Z8OGdzHVkhVAOfo1mUdv9cMg iat-mode=0
-#Bridge obfs4 174.128.247.177:443 1FFA4FB830435BC15FD7EC8D4DA59E7DE047C524 cert=7h0xI5/XhF+iF1S4506pNwaD7PZkU4JdBk6oNHRk9gfB76ZKdW5zJbGFfzUkvj+qAJYpCA iat-mode=0
-#Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
 #Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
-#Bridge obfs4 185.100.85.3:443 5B403DFE34F4872EB027059CECAE30B0C864B3A2 cert=bWUdFUe8io9U6JkSLoGAvSAUDcB779/shovCYmYAQb/pW/iEAMZtO/lCd94OokOF909TPA iat-mode=2
-#Bridge obfs4 38.229.1.78:80 C8CBDB2464FC9804A69531437BCF2BE31FDD2EE4 cert=Hmyfd2ev46gGY7NoVxA9ngrPF2zCZtzskRTzoWXbxNkzeVnGFPWmrTtILRyqCTjHR+s9dg iat-mode=1
-#Bridge obfs4 38.229.33.83:80 0BAC39417268B96B9F514E7F63FA6FBA1A788955 cert=VwEFpk9F/UN9JED7XpG1XOjm/O8ZCXK80oPecgWnNDZDv5pdkhq1OpbAH0wNqOT6H6BmRQ iat-mode=1
-#Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
-#Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
-#Bridge obfs4 141.94.209.30:11310 F7BB6D360E5E1802ED89C4345E41D1BAE1996B3A cert=053jwbx68e7VbFVV8DBG623CECh1v4htzVE71Mwyhzt0p65SBi0Wex7YWr80lGDKaHQIUg iat-mode=0
+#Bridge obfs4 5.45.100.58:1337 66002E678B3A3C6968AB1944C233A82A34FCF0B8 cert=cZei7/b4KsHqb0tTn3mnAZ+LruUAJ1+yiXKwWxmNFLbpfQycmibCoYjlmX8n1gGskaiQLQ iat-mode=0
+#Bridge obfs4 23.94.134.145:8082 1F36B62A1ECED5C884D188330D7291ED6A98827F cert=sCzTCeprtMZ3IyVjJo+ksd0d/XYbPDT3TrfBM0nQv+DL1LkFC5eRPmXPpAsfsUNeIxfzJA iat-mode=0
+#Bridge obfs4 51.68.156.67:14638 66CDD5C6A077CAE91B497B22A9EAEAF7C55B023D cert=RqjodnFshvL9WvQx0jPN4OxxV0ITbmw1Y8Bsoz3aYXtl1ShWU4VfDTM64SXi9Ngq/MCBFw iat-mode=0
+#Bridge obfs4 51.68.86.212:33427 75D8ECC96D0249ABE56E86D1F2325FBFAE02FB57 cert=3En/B81R63+m1PiiQwhiAXsIMP9YmytOwTGBvckE4VlU8rFeqTkGoQkA8oayQ0f1MrxhMQ iat-mode=0
+#Bridge obfs4 185.44.209.160:15045 3176C361647E23B1371E4EB444B05D6841386C11 cert=fgq1fgr8UDsBPUHY1Jbe9u6Ozj+eF5/zsMk9yqfvpxNC02rtgM8/MKYR/V4P5FO4CDbrBw iat-mode=0
+#Bridge obfs4 185.247.226.57:443 C2A28A62022616D17173FBB79EFF8162628EE136 cert=2LUpLXg7zAfYuCYFr3aMlYI2i1LMqj5we+s06LtVrVrUV1EGcjoxTyj054Ykdyu1G5XTUQ iat-mode=0
+#Bridge obfs4 139.162.53.29:9091 27243AB18BEDA83528E87D585DAFF625ABD04CE8 cert=IOcH6JY+WUTsUh2zj43IRKqoQ8p/3QpZOCYitHLd9N8LbUOexnapA4NEAE/QFfdm3wDECw iat-mode=0

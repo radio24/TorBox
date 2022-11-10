@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034,SC2062
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -68,6 +68,8 @@ TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 RUNFILE="run/torbox.run"
 
+# Check if local clearnet DNS resolution is on or off
+CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ########
@@ -924,7 +926,7 @@ case "$CHOICE" in
         sudo pip3 install Click adafruit-python-shell
         sudo python3 adafruit-pitft.py -u /home/torbox
         rm adafruit-pitft.py
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+        if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -945,7 +947,7 @@ case "$CHOICE" in
         sudo rm -rf LCD-show
         if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         git clone https://github.com/goodtft/LCD-show.git
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+        if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
         cp torbox/install/LCD-show/LCD35-show LCD-show/
         sudo chmod -R 755 LCD-show/
         cd LCD-show/

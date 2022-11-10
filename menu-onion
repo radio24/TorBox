@@ -1736,8 +1736,8 @@ case "$CHOICE" in
 							(sudo pkill -f "filesharing") &>/dev/null
 							sudo sed -i "/^TFS-/d" "${RUNFILE}"
 							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
-							sudo ls /etc/nginx/sites-enabled | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
-							sudo ls /etc/nginx/sites-available | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available{}
+							sudo ls /etc/nginx/sites-enabled | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled/{}
+							sudo ls /etc/nginx/sites-available | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available/{}
 						else
 							service_menu checklist "$SERVICE_NAME_LIST_002"
 	       			if [ "$exitstatus" == "0" ]; then
@@ -1887,8 +1887,8 @@ case "$CHOICE" in
 							(sudo pkill -f "chatsecure") &>/dev/null
 							sudo sed -i "/^TCS-/d" "${RUNFILE}"
 							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
-							sudo ls /etc/nginx/sites-enabled | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled{}
-							sudo ls /etc/nginx/sites-available | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available{}
+							sudo ls /etc/nginx/sites-enabled | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled/{}
+							sudo ls /etc/nginx/sites-available | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available/{}
 						else
 							service_menu checklist "$SERVICE_NAME_LIST_002"
 							if [ "$exitstatus" == "0" ]; then
