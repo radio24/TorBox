@@ -183,7 +183,7 @@ def get_circumvention_bridges(country, network, snowflake):
 
 # fmt: off
 @click.command()
-@click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network")
+@click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network. Example: -n <tor|inet>")
 @click.option('--country', '-c', default='', type=str, help="Circumvention country setting")
 @click.option('--snowflake', is_flag=True, default=False, show_default=True, help="Get snowflake bridges instead of obfs4 (circumvention country need to be set)")
 # fmt: on
