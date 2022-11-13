@@ -332,14 +332,17 @@ erase_logs()
 # This function imports the configuration and makes some preparations
 do_we_use_bridges()
 {
-  # Do we use bridges? If yes, witch kind of?
+	# Do we use bridges?
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC})
+
+	# Do we use bridges? If yes, witch kind of?
   DO_WE_USE_BRIDGES=$(grep -o "^Bridge obfs4 " ${TORRC} | head -1) 2> /dev/null
 
   if [ "$DO_WE_USE_BRIDGES" = "Bridge obfs4 " ]; then
       OBFS4STRING="ON!"
       OBFS4STRINGb="Deactivate"
       BRIDGESTRING="       OBFS4 ON!"
-			MMENUSTRING="(OBFS is activated)"
+			MMENUSTRING="OBFS4 IS ON"
 			#Needed for menu-bridges
 			MODE_OBFS4=$DO_WE_USE_BRIDGES
   else
@@ -353,8 +356,8 @@ do_we_use_bridges()
   if [ "$DO_WE_USE_BRIDGES" = "Bridge meek_lite " ]; then
       MEEKSTRING="ON!"
       MEEKSTRINGb="Deactivate"
-      BRIDGESTRING="  MEEK-AZURE ON!"
-			MMENUSTRING="(MEEK-AZURE is activated)"
+      BRIDGESTRING="  MEEK ON!"
+			MMENUSTRING="MEEK IS ON"
 			#Needed for menu-bridges
 			MODE_MEEK=$DO_WE_USE_BRIDGES
   else
@@ -369,7 +372,7 @@ do_we_use_bridges()
       SNOWSTRING="ON!"
       SNOWSTRINGb="Deactivate"
       BRIDGESTRING="   SNOWFLAKE ON!"
-			MMENUSTRING="(SNOWFLAKE is activated)"
+			MMENUSTRING="SNOWFLAKE IS ON"
 			#Needed for menu-bridges
 			MODE_SNOW=$DO_WE_USE_BRIDGES
   else
@@ -503,14 +506,14 @@ recommended_reboot()
 # service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>]
 # Used predefined variables: $ENTRY_NUMBERS (empty, global variable)
 # This function creates a ckeclist or a menu out of a <list_of_entries> and returns the global variable $ENTRY_NUMBERS.
-# The entries in the <list_of_entries> can be separate by newlines (/n)
+# The entries in the <list_of_entries> must be separate by newlines (\n)
 service_menu()
 {
   DIALOG_TYPE="${1}"
   LIST_OF_ENTRIES="${2}"
   ADDITIONAL_MENU_TEXT="${3}"
   i=0
-	[ -z $LIST_OF_ENTRIES ] && exit 1;
+	[ -z "$LIST_OF_ENTRIES" ] && exit 1
   for ENTRY in $LIST_OF_ENTRIES; do
     i=$((i+1))
 		# shellcheck disable=SC2001
@@ -534,6 +537,8 @@ service_menu()
   if [ $i -gt 14 ]; then i=14; fi
   WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
   CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
+	# NEW v.0.5.2
+	exitstatus=$?
   [ ! -z "${CHOICE_ENTRY}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_ENTRY}")
 }
 
@@ -561,6 +566,32 @@ number_of_obfs4_bridges()
     number_configured_bridges_activated=${#configured_bridges_activated[*]}
   fi
   number_configured_bridges_total=$((number_configured_bridges_deactivated+number_configured_bridges_activated))
+}
+
+# number_of_snowflake_bridges()
+# Used predefined variables: TORRC
+# How many Snowflake bridges do we have? readarray reads into an array beginning with index 0
+# Following variables can be used:
+# $configured_snowflake_bridges_deactivated -> An array with all deactivated Snowflake bridges
+# $configured_snowflake_bridges_activated -> An array with all activated Snowflake bridges
+# $number_configured_snowflake_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_snowflake_bridges_activated -> Number of activated bridges
+# $number_configured_snowflake_bridges_total -> Total number of bridges
+number_of_snowflake_bridges()
+{
+  readarray -t configured_snowflake_bridges_deactivated < <(grep "^#Bridge snowflake " ${TORRC})
+  readarray -t configured_snowflake_bridges_activated < <(grep "^Bridge snowflake " ${TORRC})
+  if [ ${#configured_snowflake_bridges_deactivated[0]} = 0 ]; then
+    number_configured_snowflake_bridges_deactivated=0
+  else
+    number_configured_snowflake_bridges_deactivated=${#configured_snowflake_bridges_deactivated[*]}
+  fi
+  if [ ${#configured_snowflake_bridges_activated[0]} = 0 ]; then
+    number_configured_snowflake_bridges_activated=0
+  else
+    number_configured_snowflake_bridges_activated=${#configured_snowflake_bridges_activated[*]}
+  fi
+  number_configured_snowflake_bridges_total=$((number_configured_snowflake_bridges_deactivated+number_configured_snowflake_bridges_activated))
 }
 
 # list_all_obfs4_bridges()
@@ -656,6 +687,101 @@ list_all_obfs4_bridges()
   read -n 1 -s -r -p "Press any key to continue"
 }
 
+# list_all_snowflake_bridges()
+# Used predefined variables: RED, NOCOLOR, WHITE, GREEN
+# Used predefined function: number_of_snowflake_bridges()
+# List all Snowflake bridges
+list_all_snowflake_bridges()
+{
+  BRIDGE_DB_URL="https://onionoo.torproject.org"
+  clear
+  online_check $BRIDGE_DB_URL 1 1
+  clear
+  if [ $OCHECK == 1 ]; then
+    echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+    sleep 2
+  else
+    echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+    sleep 2
+  fi
+  number_of_snowflake_bridges
+  if [ $number_configured_snowflake_bridges_deactivated -gt 0 ]; then
+    echo " "
+    echo " "
+    echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
+    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
+		echo -e "${RED}[+] For Snowflake bridges, the status is not always accurate!${NOCOLOR}"
+    echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
+    echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+    echo " "
+    trap "bash menu-bridges; exit 0" SIGINT
+    i=0
+    while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
+    do
+        bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
+        if [ $OCHECK == 1 ]; then
+          bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
+          if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
+          elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
+          elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST"
+          fi
+        else bridge_status=" "
+        fi
+        i=$((i+1))
+        bridge_address="$i : $bridge_address $bridge_status"
+        echo -e $bridge_address
+    done
+  fi
+  if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
+    echo " "
+    echo " "
+    echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
+    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
+		echo -e "${RED}[+] For Snowflake bridges, the status is not always accurate!${NOCOLOR}"
+    echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
+    echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
+    echo " "
+    trap "bash menu-bridges; exit 0" SIGINT
+    j=0
+    while [ $j -lt $number_configured_snowflake_bridges_activated ]
+    do
+        bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$j]})
+        if [ $OCHECK == 1 ]; then
+          bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+          if [ $CLEARNET_DECISSION == 1 ]; then
+						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
+            bridge_status=$(./bridges_check.py -f $bridge_hash)
+						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+          else
+            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          fi
+          if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
+          elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
+          elif [ $bridge_status == 2 ]; then bridge_status="- DOESN'T EXIST" ; fi
+        else bridge_status=" "
+        fi
+        j=$((j+1))
+        n=$((i+j))
+        bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
+        echo -e "$bridge_address"
+    done
+  fi
+  if [ "$number_configured_snowflake_bridges_total" == "0" ]; then
+    echo " "
+    echo " "
+    echo -e "${WHITE}[!] SORRY! - there are no configured Snowflake bridges!${NOCOLOR}"
+  fi
+  echo " "
+  read -n 1 -s -r -p "Press any key to continue"
+}
+
 # deactivate_obfs4_bridges()
 # Used predefined variables: TORRC
 # Dectivates OBFS4 if the number of activated obfs4 bridge entries in torrc is 0
@@ -674,6 +800,24 @@ deactivate_obfs4_bridges()
 	fi
 }
 
+# deactivate_snowflake_bridges()
+# Used predefined variables: TORRC
+# Dectivates Snowflake if the number of activated obfs4 bridge entries in torrc is 0
+deactivate_snowflake_bridges()
+{
+	SOURCE_SCRIPT=$1
+  sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+  sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+  sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/g" ${TORRC}
+  sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+	INPUT=$(cat text/restart-tor-text)
+	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
+		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			restarting_tor $SOURCE_SCRIPT
+		fi
+	fi
+}
+
 # activate_obfs4_bridges(<source script>)
 # Used predefined variables: TORRC
 # Used predefined function: restarting_tor(), deactivate_obfs4_bridges()
@@ -683,7 +827,7 @@ activate_obfs4_bridges()
   SOURCE_SCRIPT=$1
   number_of_obfs4_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
-		if grep "^#ReachableAddresses" ${TORRC} ; then
+		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat text/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
@@ -695,6 +839,37 @@ activate_obfs4_bridges()
     sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
     sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
     sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+    sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+    INPUT=$(cat text/restart-tor-bridges-text)
+    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      restarting_tor $SOURCE_SCRIPT
+    else
+      deactivate_obfs4_bridges NORESTART
+    fi
+  fi
+}
+
+# activate_obfs4_bridges(<source script>)
+# Used predefined variables: TORRC
+# Used predefined function: restarting_tor(), deactivate_snowflake_bridges()
+# Activates Snowflake if the number of activated obfs4 bridge entries in torrc is >0
+activate_snowflake_bridges()
+{
+  SOURCE_SCRIPT=$1
+  number_of_snowflake_bridges
+  if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
+		if grep "^ReachableAddresses" ${TORRC} ; then
+			INPUT=$(cat text/no_antifirewall-please-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+		fi
+    deactivating_bridge_relay
+    sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+    sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+    sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+    sudo sed -i "s/^#ClientTransportPlugin snowflake /ClientTransportPlugin snowflake /g" ${TORRC}
+    sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
     sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
     INPUT=$(cat text/restart-tor-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then

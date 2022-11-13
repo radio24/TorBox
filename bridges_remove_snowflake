@@ -22,7 +22,7 @@
 # This file deletes already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_remove_obfs4 <bridge mode>
+# ./bridges_remove_snowflake <bridge mode>
 #
 # <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
 #
@@ -67,15 +67,15 @@ i=0
 
 ######## PREPARATIONS ########
 #
-# number_of_obfs4_bridges()
-# How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+# number_of_snowflake_bridges()
+# How many Snowflake bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
-# $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
-# $configured_bridges_activated -> An array with all activated OBFS4 bridges
-# $number_configured_bridges_deactivated -> Number of deactivated bridges
-# $number_configured_bridges_activated -> Number of activated bridges
-# $number_configured_bridges_total -> Total number of bridges
-number_of_obfs4_bridges
+# $configured_snowflake_bridges_deactivated -> An array with all deactivated Snowflake bridges
+# $configured_snowflake_bridges_activated -> An array with all activated Snowflake bridges
+# $number_configured_snowflake_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_snowflake_bridges_activated -> Number of activated bridges
+# $number_configured_snowflake_bridges_total -> Total number of bridges
+number_of_snowflake_bridges
 
 ###########################
 
@@ -87,26 +87,26 @@ fi
 clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
-" 1" "Delete ALL configured OBFS4 bridges and directly connect tor"  \
-" 2" "Delete only OBFS4 bridges, which do not exist anymore"  \
-" 3" "Delete only selected OBFS4 bridges"  \
-" 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
+" 1" "Delete ALL configured Snowflake bridges and directly connect tor"  \
+" 2" "Delete only Snowflake bridges, which do not exist anymore"  \
+" 3" "Delete only selected Snowflake bridges"  \
+" 4" "List all $number_configured_snowflake_bridges_total Snowflake bridges"  \
 "==" "===============================================================" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
 
-  # Delete ALL configured OBFS4 bridges
+  # Delete ALL configured Snowflake bridges
   1)
     INPUT=$(cat text/delete-all-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
-        deactivate_obfs4_bridges NORESTART
-        sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
+        deactivate_snowflake_bridges NORESTART
+        sudo sed -i "/^#Bridge snowflake /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
         clear
-        restarting_tor bridges_remove_obfs4
+        restarting_tor bridges_remove_snowflake
     fi
     exit 0
   ;;
@@ -120,12 +120,12 @@ case "$CHOICE" in
       echo " "
       echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
-      trap "bash bridges_remove_obfs4; exit 0" SIGINT
+      trap "bash bridges_remove_snowflake; exit 0" SIGINT
       j=0
       i=0
-      while [ $i -lt $number_configured_bridges_deactivated ]
+      while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
       do
-        bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
+        bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
           if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -138,7 +138,7 @@ case "$CHOICE" in
           j=$((j+1))
           echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
           #This is necessary to work with special characters in sed
-          ORIGINAL_STR="${configured_bridges_deactivated[$i]}"
+          ORIGINAL_STR="${configured_snowflake_bridges_deactivated[$i]}"
           ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           ORIGINAL_STR="^$ORIGINAL_STR"
           sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
@@ -146,9 +146,9 @@ case "$CHOICE" in
         i=$((i+1))
       done
       i=0
-      while [ $i -lt $number_configured_bridges_activated ]
+      while [ $i -lt $number_configured_snowflake_bridges_activated ]
       do
-        bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
+        bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_activated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
           bridge_status=$(./bridges_check.py -f $bridge_hash)
@@ -159,7 +159,7 @@ case "$CHOICE" in
           j=$((j+1))
           echo -e "${RED}[+] Removing bridge with the hash $bridge_hash${NOCOLOR}"
           #This is necessary to work with special characters in sed
-          ORIGINAL_STR="${configured_bridges_activated[$i]}"
+          ORIGINAL_STR="${configured_snowflake_bridges_activated[$i]}"
           ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           ORIGINAL_STR="^$ORIGINAL_STR"
           sudo grep -v "${ORIGINAL_STR}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
@@ -168,23 +168,23 @@ case "$CHOICE" in
       done
       if [ $j = 0 ]; then
         echo " "
-        echo -e "${WHITE}[!] All checked OBFS4 do exist -> nothing to delete!${NOCOLOR}"
+        echo -e "${WHITE}[!] All checked Snowflake do exist -> nothing to delete!${NOCOLOR}"
         sleep 5
         clear
       else
         # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
         sleep 5
         clear
-        number_of_obfs4_bridges
+        number_of_snowflake_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-          if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges NORESTART
+          if [ $number_configured_snowflake_bridges_activated = 0 ]; then
+            deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_obfs4
+            restarting_tor bridges_remove_snowflake
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_obfs4
+            restarting_tor bridges_remove_snowflake
           fi
         fi
       fi
@@ -212,17 +212,15 @@ case "$CHOICE" in
 				echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 				sleep 2
 			fi
-			number_of_obfs4_bridges
 			trap "bash menu-bridges; exit 0" SIGINT
 			echo ""
 			i=0
-			while [ $i -lt $number_configured_bridges_deactivated ]
+			while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
 			do
 				n=$((i+1))
-				echo -e "${RED}[+] Checking bridge $n of $number_configured_bridges_total bridges${NOCOLOR}"
-				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
+				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
+				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
 				if [ $OCHECK == 1 ]; then
-					bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 					bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 					if [ $CLEARNET_DECISSION == 1 ]; then
 						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -239,25 +237,20 @@ case "$CHOICE" in
 				fi
 				i=$((i+1))
 				bridge_address="$bridge_address$bridge_status"
-				bridge_address_display="$bridge_ip$bridge_status"
 				bridge_address=$(sed "s/ /-/g" <<< "$bridge_address")
-				bridge_address_display=$(sed "s/ /-/g" <<< "$bridge_address_display")
 				if [ "$bridge_address_list" == "" ]; then
 					bridge_address_list="$(printf "%s\n" "${bridge_address}")"
-					bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
 				else
 					bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
-					bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 				fi
 			done
 			j=0
-	    while [ $j -lt $number_configured_bridges_activated ]
+	    while [ $j -lt $number_configured_snowflake_bridges_activated ]
 	    do
 				n=$j+$i
-				echo -e "${RED}[+] Checking bridge $n of $number_configured_bridges_total bridges${NOCOLOR}"
-	      bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
+				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
+	      bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$j]})
 	      if [ $OCHECK == 1 ]; then
-					bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 	      	bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 	      	if [ $CLEARNET_DECISSION == 1 ]; then
 						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -274,18 +267,14 @@ case "$CHOICE" in
 	      fi
 	      j=$((j+1))
 				bridge_address="$bridge_address$bridge_status"
-				bridge_address_display="$bridge_ip$bridge_status"
 				bridge_address=$(sed "s/ /-/g" <<< "$bridge_address")
-				bridge_address_display=$(sed "s/ /-/g" <<< "$bridge_address_display")
 				if [ "$bridge_address_list" == "" ]; then
 					bridge_address_list="$(printf "%s\n" "${bridge_address}")"
-					bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
 				else
 					bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
-					bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 				fi
 			done
-			service_menu checklist "${bridge_address_display_list}" "\nImportant: the bridge status is not always accurate!"
+			service_menu checklist "${bridge_address_list}" "\nImportant: the bridge status is not always accurate!"
 			if [ "$exitstatus" == "0" ]; then
 				clear
 				sudo cp ${TORRC} ${BAK}
@@ -308,16 +297,18 @@ case "$CHOICE" in
 				sleep 5
 				clear
         # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
-        number_of_obfs4_bridges
+        sleep 5
+        clear
+        number_of_snowflake_bridges
         if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
-          if [ $number_configured_bridges_activated = 0 ]; then
-            deactivate_obfs4_bridges NORESTART
+          if [ $number_configured_snowflake_bridges_activated = 0 ]; then
+            deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_obfs4
+            restarting_tor bridges_remove_snowflake
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_obfs4
+            restarting_tor bridges_remove_snowflake
           fi
         fi
       fi
@@ -326,12 +317,12 @@ case "$CHOICE" in
 
   # List all bridges configured in torrc and if online display the status of the bridges
   4)
-    list_all_obfs4_bridges
+    list_all_snowflake_bridges
   ;;
 
   *)
     clear
     exit 0
 esac
-bash bridges_remove_obfs4
+bash bridges_remove_snowflake
 exit 0

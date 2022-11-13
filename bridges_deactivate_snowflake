@@ -19,10 +19,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This file activates already configured bridges in /etc/tor/torrc.
+# This file deactivates already configured bridges in /etc/tor/torrc.
 #
 # SYNTAX
-# ./bridges_activate_obfs4
+# ./bridges_deactivate_snowflake
 #
 #
 ###### SET VARIABLES ######
@@ -63,15 +63,15 @@ i=0
 
 ######## PREPARATIONS ########
 #
-# number_of_obfs4_bridges()
-# How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
+# number_of_snowflake_bridges()
+# How many Snowflake bridges do we have? readarray reads into an array beginning with index 0
 # Following variables can be used:
-# $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
-# $configured_bridges_activated -> An array with all activated OBFS4 bridges
-# $number_configured_bridges_deactivated -> Number of deactivated bridges
-# $number_configured_bridges_activated -> Number of activated bridges
-# $number_configured_bridges_total -> Total number of bridges
-number_of_obfs4_bridges
+# $configured_snowflake_bridges_deactivated -> An array with all deactivated Snowflake bridges
+# $configured_snowflake_bridges_activated -> An array with all activated Snowflake bridges
+# $number_configured_snowflake_bridges_deactivatedconfigured_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_snowflake_bridges_activated -> Number of activated bridges
+# $number_configured_snowflake_bridges_total -> Total number of bridges
+number_of_snowflake_bridges
 
 ###########################
 
@@ -80,10 +80,10 @@ if [ $EXITID = "EXITID=1" ]; then
   exit 0
 fi
 
-if [ $number_configured_bridges_deactivated = 0 ]; then
+if [ $number_configured_snowflake_bridges_activated = 0 ]; then
   clear
-  echo -e "${WHITE}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
-  echo -e "${RED}[+] You may use the menu entry \"Deactivate OBFS4...\". ${NOCOLOR}"
+  echo -e "${WHITE}[!] There are no activated Snowflake bridges. ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Activate configured Snowflake bridges...\". ${NOCOLOR}"
   echo " "
   read -n 1 -s -r -p "Press any key to continue"
   clear
@@ -91,82 +91,87 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - BRIDGE DEACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
-" 1" "Activate ALL configured OBFS4 bridges"  \
-" 2" "Activate only OBFS4 bridges, which are ONLINE"  \
-" 3" "Activate only selected OBFS4 bridges"  \
-" 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
+" 1" "Deactivate ALL configured Snowflake bridges and directly connect tor"  \
+" 2" "Deactivate only Snowflake bridges, which are not longer ONLINE"  \
+" 3" "Deactivate only selected Snowflake bridges"  \
+" 4" "List all $number_configured_bridges_total Snowflake bridges"  \
 "==" "===============================================================" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
 
-  # Activate ALL configured bridges
+  # Deactivate ALL configured bridges
   1)
-    sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
 		sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-    activate_obfs4_bridges bridges_activate_obfs4
+    deactivate_snowflake_bridges bridges_deactivate_snowflake
 		exit 0
   ;;
 
-  # Activate only bridges, which are ONLINE
+  # Deactivate only bridges, which are OFFLINE or do not exist anymore
   2)
     clear
     online_check $BRIDGE_DB_URL 1 1
     if [ $OCHECK == 1 ]; then
       echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
-      echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
-      trap "bash bridges_activate_obfs4; exit 0" SIGINT
+      echo -e "${RED}[+] Checking for bridges to deactivate - please wait...${NOCOLOR}"
+      trap "bash bridges_deactivate_snowflake; exit 0" SIGINT
+      j=0
       i=0
-			j=0
-      while [ $i -lt $number_configured_bridges_deactivated ]
+      while [ $i -lt $number_configured_snowflake_bridges_activated ]
       do
-        bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
+        bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_activated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
-					if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
           bridge_status=$(./bridges_check.py -f $bridge_hash)
-					if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
+          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
         else
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi
-        if [ $bridge_status == 1 ]; then
-          j=$((i+1))
-          echo -e "${RED}[+] Activating bridge number $j${NOCOLOR}"
+        if [ $bridge_status == 0 ] || [ $bridge_status == 2 ]; then
+          j=$((j+1))
+          echo -e "${RED}[+] Deactivating bridge number $j${NOCOLOR}"
           #This is necessary to work with special characters in sed
-          ORIGINAL_STR="#Bridge $bridge_address"
+          ORIGINAL_STR="Bridge $bridge_address"
           ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           ORIGINAL_STR="^$ORIGINAL_STR"
-          REPLACEMENT_STR="Bridge $bridge_address"
+          REPLACEMENT_STR="#Bridge $bridge_address"
           REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
           sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
         fi
         i=$((i+1))
       done
-      # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
-      sleep 5
-      clear
-      if [ $j -gt 0 ]; then
-				sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-        activate_obfs4_bridges bridges_activate_obfs4
-        clear
-				exit 0
-      else
-        echo ""
-        echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
-        echo -e "${RED}[+] Please add some new OBFS4 bridges first! ${NOCOLOR}"
+      if [ $j = 0 ]; then
+        echo " "
+        echo -e "${WHITE}[!] All checked Snowflake do exist and are online -> nothing to deactivate!${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p "Press any key to continue"
         clear
         exit 0
+      else
+        # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
+        sleep 5
+        clear
+        number_of_snowflake_bridges
+        if [ $number_configured_snowflake_bridges_activated = 0 ]; then
+			    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+					deactivate_snowflake_bridges bridges_deactivate_snowflake
+					clear
+					exit 0
+        else
+					sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+          activate_snowflake_bridges bridges_deactivate_snowflake
+					clear
+          exit 0
+        fi
       fi
     else
-      echo ""
-      echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-      echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+      echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+      echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
       clear
@@ -174,7 +179,7 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Activate only selected bridges
+  # Deactivate only selected bridges
   3)
 		online_check $BRIDGE_DB_URL 1 1
 		clear
@@ -185,10 +190,10 @@ case "$CHOICE" in
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 			sleep 2
 		fi
-		number_of_obfs4_bridges
-		if [ "$number_configured_bridges_deactivated" == "0" ]; then
+		number_of_snowflake_bridges
+		if [ "$number_configured_snowflake_bridges_activated" == "0" ]; then
 			echo ""
-			echo -e "${WHITE}[!] There is no deactivated bridge, which can be activated!${NOCOLOR}"
+			echo -e "${WHITE}[!] There is no activated bridge, which can be deactivated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 			clear
@@ -197,11 +202,11 @@ case "$CHOICE" in
 		trap "bash menu-bridges; exit 0" SIGINT
 		echo ""
 		i=0
-		while [ $i -lt $number_configured_bridges_deactivated ]
+		while [ $i -lt $number_configured_snowflake_bridges_activated ]
 		do
 			n=$((i+1))
-			echo -e "${RED}[+] Checking bridge $n of $number_configured_bridges_deactivated bridges${NOCOLOR}"
-			bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
+			echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_activated bridges${NOCOLOR}"
+			bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$i]})
 			if [ $OCHECK == 1 ]; then
 				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
@@ -231,7 +236,7 @@ case "$CHOICE" in
 				bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 			fi
 		done
-		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\nImportant: the bridge status is not always accurate!"
+		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get deactivated.\nImportant: the bridge status is not always accurate!"
 		if [ "$exitstatus" == "0" ]; then
 			clear
 			sudo cp ${TORRC} ${BAK}
@@ -240,16 +245,16 @@ case "$CHOICE" in
 				i=$((i+1))
 				for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 					if [ "$i" == "$SERVICE_NUMBER" ]; then
-						echo -e "${RED}[+] Activate bridge number $i${NOCOLOR}"
+						echo -e "${RED}[+] Deactivate bridge number $i${NOCOLOR}"
 						bridge_address=$(sed "s/-ONLINE//g" <<< "$bridge_address")
 						bridge_address=$(sed "s/-OFFLINE//g" <<< "$bridge_address")
 						bridge_address=$(sed "s/-REMOVED//g" <<< "$bridge_address")
 						bridge_address=$(sed "s/-/ /g" <<< "$bridge_address")
-        		ORIGINAL_STR="#Bridge obfs4 $bridge_address"
+        		ORIGINAL_STR="Bridge snowflake $bridge_address"
 						#This is necessary to work with special characters in sed
         		ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
         		ORIGINAL_STR="^$ORIGINAL_STR"
-        		REPLACEMENT_STR="Bridge obfs4 $bridge_address"
+        		REPLACEMENT_STR="#Bridge snowflake $bridge_address"
 						#This is necessary to work with special characters in sed
         		REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
         		sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
@@ -260,16 +265,16 @@ case "$CHOICE" in
 			echo -e "${RED}[+] DONE!${NOCOLOR}"
 			sleep 5
 			clear
-			number_of_obfs4_bridges
-      if [ $number_configured_bridges_activated = 0 ]; then
+			number_of_snowflake_bridges
+      if [ $number_configured_snowflake_bridges_activated = 0 ]; then
 		    sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-				deactivate_obfs4_bridges bridges_activate_obfs4
+				deactivate_snowflake_bridges bridges_deactivate_snowflake
 				clear
 				exit 0
       else
-        if [ $i -gt 0 ]; then
+        if [ $j -gt 0 ]; then
 		    	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-          activate_obfs4_bridges bridges_activate_obfs4
+          activate_snowflake_bridges bridges_deactivate_snowflake
 					clear
           exit 0
         fi
@@ -279,12 +284,12 @@ case "$CHOICE" in
 
   # List all bridges configured in torrc and if online display the status of the bridges
   4)
-    list_all_obfs4_bridges
+    list_all_snowflake_bridges
   ;;
 
   *)
     clear
     exit 0
 esac
-bash bridges_activate_obfs4
+bash bridges_deactivate_snowflake
 exit 0

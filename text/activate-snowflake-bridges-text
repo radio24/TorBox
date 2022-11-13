@@ -1,0 +1,13 @@
+SNOWFLAKE circumvents sophisticated censorship. In contrast to the OBFS4 bridges (see menu entries above), SNOWFLAKE is based on another technique, which should also work for users in China, Iran, Russia or Turkmenistan (see also our discussion: https://github.com/radio24/TorBox/discussions/179).
+
+You should only activate SNOWFLAKE, if necessary and if OBFS4 bridges don't work. SNOWFLAKE could lead to a slower data transfer speed. However, SNOWFLAKE is more performant than MEEK-AZURE. By default, SNOWFLAKE is deactivated.
+
+IMPORTANT
+- This menu entry activates SNOWFLAKE bridges of TorBox to bypass
+  Tor blocking in a country. It helps to circumvent censorship; however,
+  it doesn't help if a firewall blocks the network traffic.
+- If SNOWFLAKE bridges don't help, try OBFS4 or MEEK-AZURE.
+- BRIDGE RELAY MODE will automatically be deactivated; the configuration
+  will be kept for later re-activation.
+
+Would you like to ACTIVATE SNOWFLAKE bridges?

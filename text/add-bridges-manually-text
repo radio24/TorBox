@@ -1,12 +1,18 @@
-With this menu entry, you can ADD OBFS4 BRIDGES MANUALLY. OBFS4 Bridges are necessary for TorBox to bypass Tor blocking in a country.
+With this menu entry, you can ADD BRIDGES MANUALLY. Bridges are necessary for TorBox to bypass Tor blocking in a country.
 
-With the help of this dialogue-based configuration assistant, 3-5 OBFS4 bridges can easily be added. When adding more than 5 OBFS4 bridges, it is recommended to use the advanced configuration editor (menu entry 7).
+With the help of this dialogue-based configuration assistant, 3-5 bridges can easily be added. When adding more than 5 bridges, it is recommended to use the advanced configuration editor (menu entry 13).
 
 HOW TO OBTAIN OBFS4 BRIDGES?
-With TorBox, you have four ways to obtain bridges:
-1. Obtain about every 24h one OBFS4 bridge automatically.
-2. Get them here: https://bridges.torproject.org/
-   (chose "Advanced Options", "obfs4" and press "Get Bridges).
-3. Send an email to bridges@torproject.org, using an address from Riseup
+Besides of TorBox's internal bridges and the possibility to automatically fetch more bridges, there are other ways to obtain and add OBFS4 manually bridges:
+1. Get them here: https://bridges.torproject.org/
+   (chose "Step 2" under the advanced options "obfs4" and press
+   "Get Bridges").
+2. Send an email to bridges@torproject.org, using an address from Riseup
    or Gmail with "get transport obfs4" in the body of the mail.
-4. (Not recommended, only if needed): Via Telegram: https://t.me/tor_bridges
+3. Via Telegram (official): https://t.me/GetBridgesBot ; then use
+   /bridges to get a bridge.
+4. (Not recommended, only if needed): Via Telegram (unofficial):
+   https://t.me/tor_bridges
+
+HOW TO OBTAIN SNOWFLAKE BRIDGES?
+In contrast to OBFS4 bridges, in general, the Torproject doesn't provide additional Snowflake bridges. However, there are so specially configured Snowflake bridges for specific countries, like China, Russia, Iran and Turkmenistan. Besides TorBox's internal bridges, TorBox can automatically try to fetch more Snowflake bridges.
