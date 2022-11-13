@@ -33,7 +33,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=15
+NO_ITEMS=14
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=3
@@ -609,10 +609,9 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU
 " 9" "Reset TWM and erase all wifi passwords (reboot required!)" \
 "10" "Reset Tor and force a change of the permanent entry node" \
 "11" "Restart Nginx, webssh and TFS" \
-"12" "Force to deactivate the OBFS4 mode" \
-"13" "Rerun the \"First Start-up\" script" \
-"14" "Erase all log files" \
-"15" "Just fixing and cleaning" \
+"12" "Rerun the \"First Start-up\" script" \
+"13" "Erase all log files" \
+"14" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
