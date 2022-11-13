@@ -162,7 +162,7 @@ case "$CHOICE" in
 						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
 					else
 						echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
-        		if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+        		if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$SNOWSTRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
           		bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4 `Bridge obfs4 `g')"
           		bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
         		else
@@ -176,7 +176,7 @@ case "$CHOICE" in
       	echo -e "${RED}[+] DONE!${NOCOLOR}"
       	sleep 5
       	clear
-      	if [ $STANDALONE = 1 ]; then
+      	if [ $STANDALONE = 0 ]; then
         	activate_obfs4_bridges bridges_add_obfs4
         	exit 0
       	fi
@@ -220,7 +220,7 @@ case "$CHOICE" in
           sleep 3
           i=$((i+1))
         else
-          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$SNOWSTRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
             bridge_address="Bridge $bridge_address"
           else
             bridge_address="#Bridge $bridge_address"
@@ -232,7 +232,7 @@ case "$CHOICE" in
       done
       sleep 5
       clear
-      if [ $STANDALONE = 1 ]; then
+      if [ $STANDALONE = 0 ]; then
         activate_obfs4_bridges bridges_add_obfs4
         exit 0
       fi

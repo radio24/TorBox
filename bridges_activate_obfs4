@@ -37,6 +37,8 @@ NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
@@ -119,7 +121,7 @@ case "$CHOICE" in
       echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
       echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
-      trap "bash bridges_activate_obfs4; exit 0" SIGINT
+			trap break SIGINT
       i=0
 			j=0
       while [ $i -lt $number_configured_bridges_deactivated ]
@@ -146,6 +148,7 @@ case "$CHOICE" in
         fi
         i=$((i+1))
       done
+			trap "bash bridges_activate_obfs4; exit 0" SIGINT
       # We will not use "Press any key to continue" because the User shouldn't have the impression he can CTRL-C the process, which will break torrc
       sleep 5
       clear
@@ -179,8 +182,14 @@ case "$CHOICE" in
 		online_check $BRIDGE_DB_URL 1 1
 		clear
 		if [ $OCHECK == 1 ]; then
-			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-			sleep 2
+			if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+				echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+				echo " "
+				sleep 2
+				STATUS=1
+			else
+				STATUS=0
+			fi
 		else
 			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 			sleep 2
@@ -194,7 +203,7 @@ case "$CHOICE" in
 			clear
 			exit 0
 		fi
-		trap "bash menu-bridges; exit 0" SIGINT
+		trap break SIGINT
 		echo ""
 		i=0
 		while [ $i -lt $number_configured_bridges_deactivated ]
@@ -202,8 +211,8 @@ case "$CHOICE" in
 			n=$((i+1))
 			echo -e "${RED}[+] Checking bridge $n of $number_configured_bridges_deactivated bridges${NOCOLOR}"
 			bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
-			if [ $OCHECK == 1 ]; then
-				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+			bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+			if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				if [ $CLEARNET_DECISSION == 1 ]; then
 					if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
@@ -231,6 +240,7 @@ case "$CHOICE" in
 				bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 			fi
 		done
+		trap "bash bridges_activate_obfs4; exit 0" SIGINT
 		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\nImportant: the bridge status is not always accurate!"
 		if [ "$exitstatus" == "0" ]; then
 			clear

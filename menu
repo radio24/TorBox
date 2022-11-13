@@ -150,12 +150,15 @@ ask_captive()
 }
 
 ######## PREPARATIONS ########
-# Resetting run-file (the initial EXITID in the runfile has to be 0)
+# Resetting
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
 
-clear
+# Resetting run-file (the initial EXITID in the runfile has to be 0)
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+clear
 if [ -z "$INTERNETSELECTION" ]; then
   if [ $FRESHINSTALLED -gt 0 ]; then ./first_use; fi
 fi

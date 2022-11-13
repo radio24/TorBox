@@ -586,6 +586,13 @@ update_torbox_menu()
   fi
 }
 
+######## PREPARATIONS ########
+# Resetting
+shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
+
 ###### DISPLAY THE MAIN MENU ######
 CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \

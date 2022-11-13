@@ -134,7 +134,7 @@ elif [ $ARGUMENT = 3 ]; then
 # Entry 4: Synchronize time
 # This should work in every configuration
 elif [ $ARGUMENT = 4 ]; then
-	if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_on; fi
+	local_clearnet_dns_resolution_on
 	sleep 2
 	(sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null
 	sleep 2

@@ -95,13 +95,11 @@ case "$CHOICE" in
       trap "bash bridges_add_snowflake $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
       (rm -r /tmp/captcha.*) 2> /dev/null
       if [ $CLEARNET_DECISSION == 1 ]; then
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 				if [ "$COUNTRY" == "00" ]; then
 					bridge_address=$(python3 bridges_get.py --snowflake)
 				else
 					bridge_address=$(python3 bridges_get.py --snowflake -c $COUNTRY)
 				fi
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
       else
 				if [ "$COUNTRY" == "00" ]; then
 					bridge_address=$(python3 bridges_get.py --network=tor --snowflake)
@@ -149,7 +147,7 @@ case "$CHOICE" in
 						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
 					else
 						echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
-          	if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+          	if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
             	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`snowflake `Bridge snowflake `g')"
             	bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
           	else
@@ -169,7 +167,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] DONE!${NOCOLOR}"
         sleep 5
         clear
-        if [ $STANDALONE = 1 ]; then
+        if [ $STANDALONE = 0 ]; then
           activate_snowflake_bridges bridges_add_snowflake
           exit 0
         fi
@@ -213,7 +211,7 @@ case "$CHOICE" in
           sleep 3
           i=$((i+1))
         else
-          if [ "$MODE_BRIDGES" = "UseBridges 1" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
             bridge_address="Bridge $bridge_address"
           else
             bridge_address="#Bridge $bridge_address"
@@ -229,7 +227,7 @@ case "$CHOICE" in
       done
       sleep 5
       clear
-      if [ $STANDALONE = 1 ]; then
+      if [ $STANDALONE = 0 ]; then
         activate_snowflake_bridges bridges_add_snowflake
         exit 0
       fi

@@ -38,6 +38,9 @@ NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
+MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
@@ -105,8 +108,11 @@ case "$CHOICE" in
         deactivate_snowflake_bridges NORESTART
         sudo sed -i "/^#Bridge snowflake /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-        clear
-        restarting_tor bridges_remove_snowflake
+				INPUT=$(cat text/restart-tor-text)
+				if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        	clear
+        	restarting_tor bridges_remove_snowflake
+				fi
     fi
     exit 0
   ;;
@@ -120,7 +126,7 @@ case "$CHOICE" in
       echo " "
       echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
-      trap "bash bridges_remove_snowflake; exit 0" SIGINT
+			trap break SIGINT
       j=0
       i=0
       while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
@@ -128,9 +134,7 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
-          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
           bridge_status=$(./bridges_check.py -f $bridge_hash)
-          if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
         else
           bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
         fi
@@ -166,6 +170,7 @@ case "$CHOICE" in
         fi
         i=$((i+1))
       done
+			trap "bash bridges_remove_snowflake; exit 0" SIGINT
       if [ $j = 0 ]; then
         echo " "
         echo -e "${WHITE}[!] All checked Snowflake do exist -> nothing to delete!${NOCOLOR}"
@@ -181,10 +186,16 @@ case "$CHOICE" in
             deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_snowflake
+						INPUT=$(cat text/restart-tor-text)
+						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            	restarting_tor bridges_remove_snowflake
+						fi
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_snowflake
+						INPUT=$(cat text/restart-tor-text)
+						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            	restarting_tor bridges_remove_snowflake
+						fi
           fi
         fi
       fi
@@ -206,13 +217,19 @@ case "$CHOICE" in
 			online_check $BRIDGE_DB_URL 1 1
 			clear
 			if [ $OCHECK == 1 ]; then
-				echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-				sleep 2
+				if (whiptail --title "TorBox - BRIDGE REMOVAL" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+					echo " "
+					sleep 2
+					STATUS=1
+				else
+					STATUS=0
+				fi
 			else
 				echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 				sleep 2
 			fi
-			trap "bash menu-bridges; exit 0" SIGINT
+			trap break SIGINT
 			echo ""
 			i=0
 			while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
@@ -220,12 +237,10 @@ case "$CHOICE" in
 				n=$((i+1))
 				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
-				if [ $OCHECK == 1 ]; then
+				if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 					bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 					if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 						bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 					else
 						bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 					fi
@@ -250,12 +265,10 @@ case "$CHOICE" in
 				n=$j+$i
 				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
 	      bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$j]})
-	      if [ $OCHECK == 1 ]; then
+	      if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 	      	bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 	      	if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 	          bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 	        else
 	          bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 	        fi
@@ -274,6 +287,7 @@ case "$CHOICE" in
 					bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
 				fi
 			done
+			trap "bash bridges_remove_snowflake; exit 0" SIGINT
 			service_menu checklist "${bridge_address_list}" "\nImportant: the bridge status is not always accurate!"
 			if [ "$exitstatus" == "0" ]; then
 				clear
@@ -305,10 +319,16 @@ case "$CHOICE" in
             deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_snowflake
+						INPUT=$(cat text/restart-tor-text)
+						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            	restarting_tor bridges_remove_snowflake
+						fi
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-            restarting_tor bridges_remove_snowflake
+						INPUT=$(cat text/restart-tor-text)
+						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            	restarting_tor bridges_remove_snowflake
+						fi
           fi
         fi
       fi

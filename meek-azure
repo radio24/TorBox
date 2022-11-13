@@ -85,6 +85,7 @@ case $MEEKSTRING in
 		echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
 		echo ""
 		local_clearnet_dns_resolution_on
+		sleep 5
 		trap "bash meek-azure; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})

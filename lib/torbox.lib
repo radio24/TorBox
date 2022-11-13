@@ -208,13 +208,14 @@ online_check()
   # Don't change it to "-z" !
   if [ "$NO_CONNECTION_WARNING" == "0" ] && [ "$CLEARNET_WARNING" == "0" ]; then
     CLEARNET_ONLY=1
+	else
+		CLEARNET_ONLY=0
   fi
 	# Check if local clearnet DNS resolution is on or off
 	CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
-  CLEARNET_ONLY=0
 	TOR_DNS=1
 
   # Start working!
@@ -256,7 +257,7 @@ online_check()
 							TORCONNECT=0
 							TOR_DNS=0
 						fi
-						local_clearnet_dns_resolution_off
+						if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
           fi
         else
           CLEARNET_DECISSION=0
@@ -279,7 +280,7 @@ online_check()
       TORCONNECT=0
 			TOR_DNS=1
     else
-			if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_on; fi
+			local_clearnet_dns_resolution_on
 			if curl -m 6 -s $CHECK_URL >/dev/null; then
 				OCHECK=1
 				TORCONNECT=0
@@ -474,7 +475,7 @@ connecting_to_VPN()
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
     sleep 15
-		local_clearnet_dns_resolution_off
+		if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
     trap "bash menu; exit 0" EXIT
@@ -810,6 +811,7 @@ deactivate_snowflake_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/g" ${TORRC}
   sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+	local_clearnet_dns_resolution_off
 	INPUT=$(cat text/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then

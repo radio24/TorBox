@@ -132,6 +132,12 @@ fi
 ######## PREPARATIONS ########
 read_config
 
+# Resetting
+shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
+
 ###### DISPLAY THE MENU ######
 clear
 
