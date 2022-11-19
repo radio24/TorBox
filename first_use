@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -37,9 +38,11 @@
 ##### SET VARIABLES ######
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
+MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
@@ -62,14 +65,14 @@ FRESHINSTALLED=$1
 .  /home/torbox/torbox/lib/torbox.lib
 
 # This function is used for the step 1 as a trap for CTRL-C
-# Syntax finish_default_obfs4_step2 <DEFAULT_OBFS4_SUPPORT>
+# Syntax finish_bridge_start2 <DEFAULT_BRIDGE_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
-finish_default_obfs4_step2()
+finish_bridge_start2()
 {
-	DEFAULT_OBFS4_SUPPORT=$1
+	DEFAULT_BRIDGE_SUPPORT=$1
 	trap
-	if [ "$DEFAULT_OBFS4_SUPPORT" = "1" ]; then
-		# Did OBFS4 start up?
+	if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
+   	# Did tor with bridge-support start up?
 		REPLY=""
 		while true
 		do
@@ -107,14 +110,14 @@ finish_default_obfs4_step2()
 }
 
 # This function is used for the main program as a trap for CTRL-C
-# Syntax finish_default_obfs4_step1 <DEFAULT_OBFS4_SUPPORT>
+# Syntax finish_bridge_start1 <DEFAULT_BRIDGE_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
-finish_default_obfs4_step1()
+finish_bridge_start1()
 {
- DEFAULT_OBFS4_SUPPORT=$1
+ DEFAULT_BRIDGE_SUPPORT=$1
  trap
- if [ "$DEFAULT_OBFS4_SUPPORT" = "1" ]; then
-   # Did OBFS4 start up?
+ if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
+   # Did tor with bridge-support start up?
    echo ""
  	 while true
  	 do
@@ -149,7 +152,7 @@ finish_default_obfs4_step1()
        echo -e "    You can leave the progress report by pressing q."
        echo ""
 			 # shellcheck disable=SC2064
-			 trap "finish_default_obfs4_step2 $DEFAULT_OBFS4_SUPPORT" SIGINT
+			 trap "finish_bridge_start2 $DEFAULT_BRIDGE_SUPPORT" SIGINT
 			 stty intr q
        sudo systemctl restart tor &
        sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
@@ -169,15 +172,17 @@ finish_default_obfs4_step1()
 }
 
 
-######## MAIN ########
-
-#Check freshinstalled
+######## PREPARATIONS ########
+# Resetting
 shopt -s checkwinsize
 
-#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+# Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
 if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 
+
+######## MAIN ########
+# IMPORTANT: Check if this is still necessary with Raspberry Pi
 # This will completely remove pi (only for Raspbian OS). The parameter
 # will be set at the end of the run_install.sh
 while [ $FRESHINSTALLED -gt 0 ]; do
@@ -229,7 +234,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat text/first_use-firewall-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				sleep 1
+				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
@@ -288,34 +293,51 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         done
       fi
 
-      # Ask for OBFS4 support
-      clear
-      DEFAULT_OBFS4_SUPPORT=0
+      # Ask for bridge support
+			clear
+      DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-      if (whiptail --title "TorBox v.0.5.1 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox v.0.5.1 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat text/no_antifirewall-please-text)
 					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
 				fi
-        sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-        sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-        sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-        sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
-        sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
-        sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-        sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-        sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-        DEFAULT_OBFS4_SUPPORT=1
-        clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support...${NOCOLOR}"
+				if (whiptail --title "TorBox - INFO" --no-button "SNOWFLAKE" --yes-button "OBFS4" --yesno "Do you want to use OBFS4 or SNOWFLAKE bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+					sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+					sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+					sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+					sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
+					sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				else
+					sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+					sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+					sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+					sudo sed -i "s/^#ClientTransportPlugin snowflake /ClientTransportPlugin snowflake /g" ${TORRC}
+					sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+					sudo sed -i "s/^#Bridge snowflake /Bridge snowflake /g" ${TORRC}
+					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				fi
+	      DEFAULT_BRIDGE_SUPPORT=1
+				clear
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} bridge support...${NOCOLOR}"
         sleep 2
-      else
-        clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
-        sleep 2
-      fi
+			else
+				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+				sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+				sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				DEFAULT_BRIDGE_SUPPORT=0
+				clear
+				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
+				sleep 2
+			fi
       (sudo systemctl unmask tor) 2> /dev/null
 			(sudo systemctl unmask tor@default.service) 2> /dev/null
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
@@ -335,7 +357,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "    You can leave the progress report by pressing q."
       echo ""
 			# shellcheck disable=SC2064
-      trap "finish_default_obfs4_step1 $DEFAULT_OBFS4_SUPPORT" SIGINT
+      trap "finish_bridge_start1 $DEFAULT_BRIDGE_SUPPORT" SIGINT
 			stty intr q
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"

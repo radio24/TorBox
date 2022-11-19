@@ -1,11 +1,5 @@
-We are sorry that the activation of tor with OBFS4 bridges failed. If you
-are located in China, Iran, Russia or Turkmenistan, we recommend to use
-SNOWFLAKE instead (see: https://github.com/radio24/TorBox/discussions/179).
+We are sorry that the activation of tor with bridges failed. If you used OBFS4, we recommend giving SNOWFLAKE a try, especially if you are located in China, Iran, Russia or Turkmenistan (see: https://github.com/radio24/TorBox/discussions/179).
 
-TOR commonly uses ports 80, 443, 9001 and 9030 for network traffic and
-directory information. A tightly configured firewall or our countermeasures
-against it could also lead to problems.
+However, there is another possibility of failing to get a connection. Tor commonly uses ports 80, 443, 9001 and 9030 for network traffic and directory information. A tightly configured firewall or TorBox's countermeasures against it could also lead to problems.
 
-Do you want to try to change the status of the anti-firewall countermeasure
-or quit to the Countermeasure sub-menu to deactivate or reconfigure OBFS4
-respectively to activate SNOWFLAKE / MEEK-AZURE?
+Do you want to try to change the status of the anti-firewall countermeasure or quit to the Countermeasure sub-menu to switch between OBFS4, SNOWFLAKE and MEEK-AZURE and try different configurations?

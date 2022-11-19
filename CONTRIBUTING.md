@@ -109,7 +109,7 @@ Please bear the following coding guidelines in mind:
   ```shell
   # This function is used for check_fresh_install() as a trap for CTRL-C
   # Syntax finish_default_obfs4
-  # Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
+  # Used predefined variables: DEFAULT_BRIDGE_SUPPORT, RED, NOCOLOR, RUNFILE
   ```
 
 - It has to be noted if the function expects predefined variables and also if the function returns something specific. The same is also essential with executable files:

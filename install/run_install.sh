@@ -1135,7 +1135,8 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 (sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
 (sudo cp torbox/etc/hosts /etc/) 2> /dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-#echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
+# IMPORTANT: check if this is still necessary. If not --> delete the rows, change FRESHINSTALL to 3 and edit torbox.run/first_use
+# echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
 # This can be undone by sudo chage -E-1 pi
 # Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
