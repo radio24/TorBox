@@ -1034,6 +1034,7 @@ case "$CHOICE" in
 	12)
   	clear
 		./first_use 3 update
+		exit 0
 	;;
 
 	# This erases all log files
@@ -1073,5 +1074,6 @@ case "$CHOICE" in
 	*)
 		clear
 		exit 0
+
 esac
 bash update
