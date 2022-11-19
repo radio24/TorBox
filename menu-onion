@@ -319,9 +319,9 @@ show_onion_address()
 		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && SHARED_FOLDER=$(grep "root" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
 		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && SHARED_FOLDER=$(grep "# Path to shared dir" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
 		[ ! -z "$SHARED_FOLDER" ] && echo -e "${RED}Shared folder   = ${WHITE}$SHARED_FOLDER${NOCOLOR}"
-		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 18. If activated, it is accessible${NOCOLOR}"
-		elif grep -q -c "^TCS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TCS is configured ${RED}for this service address. You can change that with menu entry 19. If activated, it is accessible${NOCOLOR}"
-		else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 17. If activated, it is accessible${NOCOLOR}"; fi
+		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 18. If started, it is accessible${NOCOLOR}"
+	elif grep -q -c "^TCS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TCS is configured ${RED}for this service address. You can change that with menu entry 19. If started, it is accessible${NOCOLOR}"
+else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 17. If started, it is accessible${NOCOLOR}"; fi
 		if [ "$VIRTPORT" == "80" ]; then echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
 		else echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"; fi
 	else

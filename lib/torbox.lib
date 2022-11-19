@@ -504,17 +504,24 @@ recommended_reboot()
   fi
 }
 
-# service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>]
+# service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>] [number_of_lines_of_the_menu_text]
 # Used predefined variables: $ENTRY_NUMBERS (empty, global variable)
 # This function creates a ckeclist or a menu out of a <list_of_entries> and returns the global variable $ENTRY_NUMBERS.
 # The entries in the <list_of_entries> must be separate by newlines (\n)
 service_menu()
 {
   DIALOG_TYPE="${1}"
+	[ -z "$DIALOG_TYPE" ] && exit 1
   LIST_OF_ENTRIES="${2}"
-  ADDITIONAL_MENU_TEXT="${3}"
-  i=0
 	[ -z "$LIST_OF_ENTRIES" ] && exit 1
+  ADDITIONAL_MENU_TEXT="${3}"
+	NUMBER_OF_LINES=${4}
+	if [ -z $NUMBER_OF_LINES ]; then
+		NUMBER_OF_LINES=0
+	else
+		if [ $NUMBER_OF_LINES -lt 3 ]; then NUMBER_OF_LINES=0; fi
+	fi
+  i=0
   for ENTRY in $LIST_OF_ENTRIES; do
     i=$((i+1))
 		# shellcheck disable=SC2001
@@ -535,8 +542,9 @@ service_menu()
     i=$((i+2))
   fi
   clear
+	NUMBER_OF_LINES=$((i+NUMBER_OF_LINES+7))
   if [ $i -gt 14 ]; then i=14; fi
-  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $((i+10)) 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
+  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $NUMBER_OF_LINES 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
   CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
 	# NEW v.0.5.2
 	exitstatus=$?

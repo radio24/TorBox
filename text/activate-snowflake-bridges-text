@@ -6,8 +6,8 @@ IMPORTANT
 - This menu entry activates SNOWFLAKE bridges of TorBox to bypass
   Tor blocking in a country. It helps to circumvent censorship; however,
   it doesn't help if a firewall blocks the network traffic.
-- In contrast to OBFS4, activating more than one Snowflake bridge
-  simultaneously is NOT recommended.
+- Currently, Snowflake supports only one bridge line. Only the first one
+  will be used if you select several bridge lines.
 - If SNOWFLAKE bridges don't help, try OBFS4 or MEEK-AZURE.
 - BRIDGE RELAY MODE will automatically be deactivated; the configuration
   will be kept for later re-activation.

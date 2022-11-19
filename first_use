@@ -318,8 +318,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
 					sudo sed -i "s/^#ClientTransportPlugin snowflake /ClientTransportPlugin snowflake /g" ${TORRC}
 					sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-					sudo sed -i "s/^#Bridge snowflake /Bridge snowflake /g" ${TORRC}
 					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+					clear
+					sudo bash bridges_activate_snowflake norestart
 				fi
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear

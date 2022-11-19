@@ -81,6 +81,7 @@ ReachableAddresses accept *:443, accept *:80
 #Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.azureedge.net/ front=ajax.aspnetcdn.com ice=stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
 #Specific Snowflake bridge for Turkmenistan
 #Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:206.53.159.130:3479,stun:176.119.42.11:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:52.26.251.34:3479,stun:18.191.223.12:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479
+## IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
 
 ## OBFS4 bridges
 ##
