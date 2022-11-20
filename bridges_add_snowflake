@@ -153,7 +153,7 @@ case "$CHOICE" in
 							COUNTRY=$(cat ${ZONEINFO} | tail -n +26 | grep "$COUNTRY" | cut -d$'\t' -f2 | sed "s/ /_/g" )
 							country_string="#Specific Snowflake bridge for $COUNTRY"
 						fi
-          	if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
+          	if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" ] && [ "$MEEKSTRING" = "OFF" ]; then
             	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`snowflake `Bridge snowflake `g')"
           	else
             	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`snowflake `#Bridge snowflake `g')"
@@ -221,7 +221,7 @@ case "$CHOICE" in
           sleep 3
           i=$((i+1))
         else
-          if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" && "$MEEKSTRING" = "OFF" ]; then
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" ] && [ "$MEEKSTRING" = "OFF" ]; then
             bridge_address="Bridge $bridge_address"
           else
             bridge_address="#Bridge $bridge_address"
