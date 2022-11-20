@@ -241,7 +241,7 @@ case "$CHOICE" in
 			fi
 		done
 		trap "bash bridges_activate_obfs4; exit 0" SIGINT
-		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\nImportant: the bridge status is not always accurate!"
+		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\nImportant: If available, the bridge status is not always accurate!"
 		if [ "$exitstatus" == "0" ]; then
 			clear
 			sudo cp ${TORRC} ${BAK}

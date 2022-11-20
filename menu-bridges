@@ -335,7 +335,7 @@ case "$CHOICE" in
     fi
   ;;
 
-	# Deactivate bridges
+	# Deactivate Snowflake bridges
   11)
     if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
       clear
@@ -349,7 +349,7 @@ case "$CHOICE" in
         sleep 5
       else
         whiptail --title "TorBox - INFO" --textbox text/deactivate-snowflake-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo bash bridges_deactivate_snowflake
+				deactivate_snowflake_bridges menu-bridges
         read_config
       fi
     fi

@@ -120,6 +120,10 @@ do
 	echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_deactivated bridges${NOCOLOR}"
 	bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
 	bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+	COUNTRY_LINE=""
+	COUNTRY_LINE=$(grep -B 1 "${configured_snowflake_bridges_deactivated[$i]}" ${TORRC})
+	COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for " <<< "$COUNTRY_LINE")
+	COUNTRY_LINE=$(sed "s/#Specific Snowflake bridge for //g" <<< "$COUNTRY_LINE")
 	if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 		bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 		if [ $CLEARNET_DECISSION == 1 ]; then
@@ -127,17 +131,19 @@ do
 		else
 			bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 		fi
-		if [ $bridge_status == 1 ]; then bridge_status="-ONLINE"
-		elif [ $bridge_status == 0 ]; then bridge_status="-OFFLINE"
-		elif [ $bridge_status == 2 ]; then bridge_status="-REMOVED"
+		if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
+	elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+	elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
 		fi
 	else bridge_status=""
 	fi
 	i=$((i+1))
 	bridge_address="$bridge_address$bridge_status"
-	bridge_address_display="$bridge_ip$bridge_status"
-	bridge_address=$(sed "s/ /-/g" <<< "$bridge_address")
-	bridge_address_display=$(sed "s/ /-/g" <<< "$bridge_address_display")
+	if [ -z $COUNTRY_LINE ]; then bridge_address_display="$bridge_ip$bridge_status"
+	else bridge_address_display=$bridge_ip"_for_$COUNTRY_LINE$bridge_status"
+	fi
+	bridge_address=$(sed "s/ /_/g" <<< "$bridge_address")
+	bridge_address_display=$(sed "s/ /_/g" <<< "$bridge_address_display")
 	if [ "$bridge_address_list" == "" ]; then
 		bridge_address_list="$(printf "%s\n" "${bridge_address}")"
 		bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
@@ -146,41 +152,40 @@ do
 		bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 	fi
 done
-trap "bash bridges_activate_snowflake; exit 0" SIGINT
-service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\n\nImportant: Only activate one bridge-line. If available, the bridge status is not always accurate!" 5
-if [ "$exitstatus" == "0" ]; then
-	clear
-	sudo cp ${TORRC} ${BAK}
-	i=0
-	for bridge_address in $bridge_address_list; do
-		i=$((i+1))
-		for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-			if [ "$i" == "$SERVICE_NUMBER" ]; then
-				echo -e "${RED}[+] Activate bridge number $i${NOCOLOR}"
-				bridge_address=$(sed "s/-ONLINE//g" <<< "$bridge_address")
-				bridge_address=$(sed "s/-OFFLINE//g" <<< "$bridge_address")
-				bridge_address=$(sed "s/-REMOVED//g" <<< "$bridge_address")
-				bridge_address=$(sed "s/-/ /g" <<< "$bridge_address")
-				ORIGINAL_STR="#Bridge snowflake $bridge_address"
-				#This is necessary to work with special characters in sed
-				ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-				ORIGINAL_STR="^$ORIGINAL_STR"
-				REPLACEMENT_STR="Bridge snowflake $bridge_address"
-				#This is necessary to work with special characters in sed
-				REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
-				sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
-			fi
-		done
+trap
+service_menu menu "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\n\nImportant: If available, the bridge status is not always accurate!" 5
+clear
+sudo cp ${TORRC} ${BAK}
+i=0
+for bridge_address in $bridge_address_list; do
+	i=$((i+1))
+	for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+		if [ "$i" == "$SERVICE_NUMBER" ]; then
+			echo -e "${RED}[+] Activate bridge number $i${NOCOLOR}"
+			sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+			bridge_address=$(sed "s/_-_ONLINE//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_-_OFFLINE//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_-_REMOVED//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_/ /g" <<< "$bridge_address")
+			ORIGINAL_STR="#Bridge snowflake $bridge_address"
+			#This is necessary to work with special characters in sed
+			ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+			ORIGINAL_STR="^$ORIGINAL_STR"
+			REPLACEMENT_STR="Bridge snowflake $bridge_address"
+			#This is necessary to work with special characters in sed
+			REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+			sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
+		fi
 	done
-	echo ""
-	echo -e "${RED}[+] DONE!${NOCOLOR}"
-	sleep 5
-	clear
-	if [ "$NORESTART" == "norestart" ]; then exit 0; fi
-	#Not sure if this is necassary. If the script exit sometimes without explanation then remove the lines below
-	if [ $i -gt 0 ]; then
-		sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-		activate_snowflake_bridges bridges_activate_snowflake
-		exit 0
-	fi
+done
+echo ""
+echo -e "${RED}[+] DONE!${NOCOLOR}"
+sleep 5
+clear
+if [ "$NORESTART" == "norestart" ]; then exit 0; fi
+#Not sure if this is necassary. If the script exit sometimes without explanation then remove the lines below
+if [ $i -gt 0 ]; then
+	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+	activate_snowflake_bridges bridges_activate_snowflake
+	exit 0
 fi

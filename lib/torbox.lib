@@ -507,7 +507,7 @@ recommended_reboot()
 # service_menu <checklist|menu> <list_of_entries> [<additional_menu_text>] [number_of_lines_of_the_menu_text]
 # Used predefined variables: $ENTRY_NUMBERS (empty, global variable)
 # This function creates a ckeclist or a menu out of a <list_of_entries> and returns the global variable $ENTRY_NUMBERS.
-# The entries in the <list_of_entries> must be separate by newlines (\n)
+# The entries in the <list_of_entries> must be separate by newlines (\n). _ serves as SPACE!
 service_menu()
 {
   DIALOG_TYPE="${1}"
@@ -526,6 +526,8 @@ service_menu()
     i=$((i+1))
 		# shellcheck disable=SC2001
 		ENTRY=$(sed "s/%/ /g" <<< "$ENTRY")
+		# NEW v.0.5.2: This should make it possible to use SPACES
+		ENTRY=$(sed "s/_/ /g" <<< "$ENTRY")
     case "${DIALOG_TYPE}" in
       checklist)
           if [ $i == 1 ]; then ENTRY_LIST="\"${i}\" \"${ENTRY}\" OFF"

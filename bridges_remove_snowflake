@@ -237,6 +237,11 @@ case "$CHOICE" in
 				n=$((i+1))
 				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
+				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+				COUNTRY_LINE=""
+				COUNTRY_LINE=$(grep -B 1 "${configured_snowflake_bridges_deactivated[$i]}" ${TORRC})
+				COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for "<<< "$COUNTRY_LINE")
+				COUNTRY_LINE=$(sed "s/#Specific Snowflake bridge for //g" <<< "$COUNTRY_LINE")
 				if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 					bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 					if [ $CLEARNET_DECISSION == 1 ]; then
@@ -244,19 +249,25 @@ case "$CHOICE" in
 					else
 						bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 					fi
-					if [ $bridge_status == 1 ]; then bridge_status="-ONLINE"
-					elif [ $bridge_status == 0 ]; then bridge_status="-OFFLINE"
-					elif [ $bridge_status == 2 ]; then bridge_status="-REMOVED"
+					if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
+				elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+			elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
 					fi
 				else bridge_status=""
 				fi
 				i=$((i+1))
 				bridge_address="$bridge_address$bridge_status"
-				bridge_address=$(sed "s/ /-/g" <<< "$bridge_address")
+				if [ -z $COUNTRY_LINE ]; then bridge_address_display="$bridge_ip$bridge_status"
+				else bridge_address_display=$bridge_ip"_for_$COUNTRY_LINE$bridge_status"
+				fi
+				bridge_address=$(sed "s/ /_/g" <<< "$bridge_address")
+				bridge_address_display=$(sed "s/ /_/g" <<< "$bridge_address_display")
 				if [ "$bridge_address_list" == "" ]; then
 					bridge_address_list="$(printf "%s\n" "${bridge_address}")"
+					bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
 				else
 					bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
+					bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 				fi
 			done
 			j=0
@@ -264,7 +275,12 @@ case "$CHOICE" in
 	    do
 				n=$j+$i
 				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
-	      bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$j]})
+				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$i]})
+				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+				COUNTRY_LINE=""
+				COUNTRY_LINE=$(grep -B 1 "${configured_snowflake_bridges_activated[$i]}" ${TORRC})
+				COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for "<<< "$COUNTRY_LINE")
+				COUNTRY_LINE=$(sed "s/#Specific Snowflake bridge for //g" <<< "$COUNTRY_LINE")
 	      if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 	      	bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 	      	if [ $CLEARNET_DECISSION == 1 ]; then
@@ -272,23 +288,29 @@ case "$CHOICE" in
 	        else
 	          bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 	        fi
-	        if [ $bridge_status == 1 ]; then bridge_status="-ONLINE"
-	        elif [ $bridge_status == 0 ]; then bridge_status="-OFFLINE"
-					elif [ $bridge_status == 2 ]; then bridge_status="-REMOVED"
+					if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
+				  elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+					elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
 					fi
 	      else bridge_status=""
 	      fi
 	      j=$((j+1))
 				bridge_address="$bridge_address$bridge_status"
-				bridge_address=$(sed "s/ /-/g" <<< "$bridge_address")
+				if [ -z $COUNTRY_LINE ]; then bridge_address_display="$bridge_ip$bridge_status"
+				else bridge_address_display=$bridge_ip"_for_$COUNTRY_LINE$bridge_status"
+				fi
+				bridge_address=$(sed "s/ /_/g" <<< "$bridge_address")
+				bridge_address_display=$(sed "s/ /_/g" <<< "$bridge_address_display")
 				if [ "$bridge_address_list" == "" ]; then
 					bridge_address_list="$(printf "%s\n" "${bridge_address}")"
+					bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
 				else
 					bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
+					bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
 				fi
 			done
-			trap "bash bridges_remove_snowflake; exit 0" SIGINT
-			service_menu checklist "${bridge_address_list}" "\nImportant: the bridge status is not always accurate!"
+			trap
+			service_menu checklist "${bridge_address_display_list}" "\nImportant: If available, the bridge status is not always accurate!"
 			if [ "$exitstatus" == "0" ]; then
 				clear
 				sudo cp ${TORRC} ${BAK}
@@ -298,10 +320,14 @@ case "$CHOICE" in
 					for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 						if [ "$i" == "$SERVICE_NUMBER" ]; then
           		echo -e "${RED}[+] Removing bridge number $i${NOCOLOR}"
-							bridge_address=$(sed "s/-ONLINE//g" <<< "$bridge_address")
-							bridge_address=$(sed "s/-OFFLINE//g" <<< "$bridge_address")
-							bridge_address=$(sed "s/-REMOVED//g" <<< "$bridge_address")
-							bridge_address=$(sed "s/-/ /g" <<< "$bridge_address")
+							bridge_address=$(sed "s/_-_ONLINE//g" <<< "$bridge_address")
+							bridge_address=$(sed "s/_-_OFFLINE//g" <<< "$bridge_address")
+							bridge_address=$(sed "s/_-_REMOVED//g" <<< "$bridge_address")
+							bridge_address=$(sed "s/_/ /g" <<< "$bridge_address")
+							COUNTRY_LINE=""
+							COUNTRY_LINE=$(grep -B 1 "${bridge_address}" ${TORRC})
+							COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for "<<< "$COUNTRY_LINE")
+							if [ ! -z "$COUNTRY_LINE" ]; then	sudo grep -v "${COUNTRY_LINE}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}; fi
 							sudo grep -v "${bridge_address}" ${TORRC} > ${TMP}; sudo mv ${TMP} ${TORRC}
 						fi
 					done
