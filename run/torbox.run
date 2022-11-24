@@ -49,11 +49,6 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # 3 - Ask for the activating of bridges before unmasking and enabling tor
 FRESH_INSTALLED=0
 
-# This is the status of the local clearnet resolution
-# 0 - OFF - No local DNS resolution through clearnet. Local DNS resolution is routed through tor.
-# 1 - ON  - Local DNS resolution through clearnet.
-CLEARNET_DNS=0
-
 # SSH access from the Internet
 # 0 - SSH access from the Internet is blocked HTTP (default)
 # 1 - SSH access from the Internet is allowed

@@ -68,9 +68,6 @@ TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 RUNFILE="run/torbox.run"
 
-# Check if local clearnet DNS resolution is on or off
-CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
-
 ##############################
 ######## FUNCTIONS ########
 
@@ -925,14 +922,12 @@ case "$CHOICE" in
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
       if [ $OCHECK == 1 ]; then
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         sudo apt-get -y install python3-dev
         wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
         chmod +x adafruit-pitft.py
         sudo pip3 install Click adafruit-python-shell
         sudo python3 adafruit-pitft.py -u /home/torbox
         rm adafruit-pitft.py
-        if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -951,9 +946,7 @@ case "$CHOICE" in
         INPUT=$(whiptail --title "Degree of Rotation" --inputbox "\nEnter the degree of rotation (0 / 90 / 180 / 270 / default is 0):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
         cd
         sudo rm -rf LCD-show
-        if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         git clone https://github.com/goodtft/LCD-show.git
-        if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
         cp torbox/install/LCD-show/LCD35-show LCD-show/
         sudo chmod -R 755 LCD-show/
         cd LCD-show/

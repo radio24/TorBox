@@ -86,8 +86,6 @@ RECOMPILE=0
 i=0
 n=0
 
-# Check if local clearnet DNS resolution is on or off
-CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
 
 ##############################
 ######## FUNCTIONS ###########
@@ -103,7 +101,6 @@ update_firmware()
   clear
   online_check
   if [ $OCHECK == 1 ]; then
-    if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
     trap "screen bash update; exit 0" SIGINT
     clear
     sudo apt-get install rpi-eeprom
@@ -120,7 +117,6 @@ update_firmware()
     echo " "
     echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
     sleep 5
-    if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -266,10 +262,8 @@ update_tor()
     if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
     mkdir ~/debian-packages; cd ~/debian-packages
     if [ $TORCONNECT -eq 0 ]; then
-			if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
       wget $download_tor_url
       DLCHECK=$?
-			if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
     else
       # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
       torsocks wget $download_tor_url
@@ -342,10 +336,8 @@ select_and_install_tor()
       if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
       mkdir ~/debian-packages; cd ~/debian-packages
       if [ $TORCONNECT -eq 0 ]; then
-				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
         wget $download_tor_url
         DLCHECK=$?
-				if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       else
         # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
         torsocks wget $download_tor_url
@@ -536,9 +528,7 @@ update_torbox_menu()
 
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
   if [ $TORCONNECT = 0 ]; then
-		if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
     wget $TORBOXURL
-		if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     # IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
     torsocks wget $TORBOXURL
@@ -638,7 +628,6 @@ case "$CHOICE" in
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
-      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			clear
 			echo -e "${RED}[+] Updating the base system...${NOCOLOR}"
 			sudo apt-get -y update
@@ -723,7 +712,6 @@ case "$CHOICE" in
 			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 			sudo systemctl enable tor
 			sudo systemctl daemon-reload
-      if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
       echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
@@ -749,9 +737,7 @@ case "$CHOICE" in
 				trap "screen bash update; exit 0" EXIT
 				exit 1
 			fi
-      if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 			bash install/install_network_drivers
-      if [ "$TOR_DNS" == "0" ] && [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
 			recommended_reboot update
 		fi
 	;;
@@ -1049,8 +1035,6 @@ case "$CHOICE" in
 	# Fixing and cleaning - just to be sure that all works properly.
 	14)
 		clear
-		# NEW v.0.5.1: new go versions
-		local_clearnet_dns_resolution_on
 		sleep 2
   	check_interface_with_internet
   	clear
@@ -1068,7 +1052,6 @@ case "$CHOICE" in
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
   	sudo systemctl daemon-reload
   	sleep 3
-		if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
 	;;
 
 	*)

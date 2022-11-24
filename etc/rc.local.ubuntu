@@ -78,7 +78,6 @@ if sudo timeout 5 sudo route | grep -m 1 default ; then
 		sudo /usr/sbin/ntpdate pool.ntp.org
 	fi
 fi
-sudo systemctl stop dnsmasq
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 
 # NEW v.0.5.2

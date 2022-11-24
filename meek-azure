@@ -81,11 +81,6 @@ case $MEEKSTRING in
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-		echo -e "${WHITE}[!] MEEK-AZURE runs only with local clearnet DNS resolution!${NOCOLOR}"
-		echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
-		echo ""
-		local_clearnet_dns_resolution_on
-		sleep 5
 		trap "bash meek-azure; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
@@ -174,7 +169,6 @@ case $MEEKSTRING in
       sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
       sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
       sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-			local_clearnet_dns_resolution_off
       restarting_tor meek-azure
     fi
   ;;

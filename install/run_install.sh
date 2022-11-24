@@ -1002,8 +1002,6 @@ sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl disable dhcpcd
-sudo systemctl stop dnsmasq
-sudo systemctl disable dnsmasq
 echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog

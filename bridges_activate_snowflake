@@ -81,11 +81,6 @@ if [ $number_configured_snowflake_bridges_deactivated = 0 ]; then
   exit 0
 fi
 
-echo -e "${WHITE}[!] SNOWFLAKE runs only with local clearnet DNS resolution!${NOCOLOR}"
-echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
-echo ""
-local_clearnet_dns_resolution_on
-
 # IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
 #            In case that changes, the support of multiple Snowflake bridges can be found in the code archive
 online_check $BRIDGE_DB_URL 1 1

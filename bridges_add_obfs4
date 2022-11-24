@@ -96,8 +96,6 @@ case "$CHOICE" in
     	echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
     	trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
     	(rm -r /tmp/captcha.*) 2> /dev/null
-    	if [ $CLEARNET_DECISSION == 1 ]; then
-				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
 				if [ "$COUNTRY" == "00" ]; then
 					bridge_address=$(python3 bridges_get.py)
 				else
@@ -112,7 +110,6 @@ case "$CHOICE" in
 						fi
 					fi
 				fi
-				if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
 			else
 				if [ "$COUNTRY" == "00" ]; then
 					bridge_address=$(python3 bridges_get.py --network=tor)

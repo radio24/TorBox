@@ -124,6 +124,7 @@ else
 fi
 }
 
+# Currently not in use - only for documentation
 # local_clearnet_dns_resolution_on()
 # This function turns the local DNS resolution on
 local_clearnet_dns_resolution_on()
@@ -135,6 +136,7 @@ local_clearnet_dns_resolution_on()
 	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=1/" ${RUNFILE}
 }
 
+# Currently not in use - only for documentation
 # local_clearnet_dns_resolution_off()
 # This function turns the local DNS resolution off
 local_clearnet_dns_resolution_off()
@@ -247,7 +249,6 @@ online_check()
             TORCONNECT=0
 						TOR_DNS=1
           else
-						local_clearnet_dns_resolution_on
 						if curl -m 6 -s $CHECK_URL >/dev/null; then
 							OCHECK=1
 							TORCONNECT=0
@@ -257,7 +258,6 @@ online_check()
 							TORCONNECT=0
 							TOR_DNS=0
 						fi
-						if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
           fi
         else
           CLEARNET_DECISSION=0
@@ -280,7 +280,6 @@ online_check()
       TORCONNECT=0
 			TOR_DNS=1
     else
-			local_clearnet_dns_resolution_on
 			if curl -m 6 -s $CHECK_URL >/dev/null; then
 				OCHECK=1
 				TORCONNECT=0
@@ -290,7 +289,6 @@ online_check()
 				TORCONNECT=0
 				TOR_DNS=0
 			fi
-			if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
     fi
   fi
 
@@ -466,7 +464,6 @@ connecting_to_VPN()
   if [[ $REPLY =~ ^[1234567890]$ ]] ; then
     CHOICE_OVPN=$((REPLY-1))
     clear
-		local_clearnet_dns_resolution_on
     echo -e "${RED}[+] Connecting OpenVPN server...${NOCOLOR}"
     echo ""
     ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
@@ -475,7 +472,6 @@ connecting_to_VPN()
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
     sleep 15
-		if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
   else
     sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
     trap "bash menu; exit 0" EXIT
@@ -639,9 +635,7 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
@@ -672,9 +666,7 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
@@ -733,9 +725,7 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
@@ -767,9 +757,7 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_on; fi
             bridge_status=$(./bridges_check.py -f $bridge_hash)
-						if [ "$TOR_DNS" == "0" ]; then local_clearnet_dns_resolution_off; fi
           else
             bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
           fi
@@ -821,7 +809,6 @@ deactivate_snowflake_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/g" ${TORRC}
   sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-	local_clearnet_dns_resolution_off
 	INPUT=$(cat text/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then

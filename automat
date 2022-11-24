@@ -41,9 +41,6 @@ n=0
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
-# Check if local clearnet DNS resolution is on or off
-CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
-
 # Check and create log file
 DATE=$(date)
 sudo -u debian-tor test -f /var/log/tor/automat.log && LOG="/var/log/tor/automat.log"
@@ -133,10 +130,4 @@ elif [ $ARGUMENT = 3 ]; then
 
 # Entry 4: Synchronize time
 # This should work in every configuration
-elif [ $ARGUMENT = 4 ]; then
-	local_clearnet_dns_resolution_on
-	sleep 2
-	(sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null
-	sleep 2
-	if [ "$CLEARNET_DNS" = "0" ]; then local_clearnet_dns_resolution_off; fi
-fi
+elif [ $ARGUMENT = 4 ]; then (sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null; fi
