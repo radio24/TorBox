@@ -12,3 +12,10 @@
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 1',
     },
+		{
+        "file": '/var/log/tor/notices.log',
+        "match": "*died due to an invalid selected path, purpose General-purpose client.*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
+    },

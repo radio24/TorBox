@@ -39,6 +39,13 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
+        "match": "*died due to an invalid selected path, purpose General-purpose client.*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
         "match": "*Tor has not observed any network activity for the past*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
@@ -70,6 +77,6 @@ matches = [
         "match": "*Tor needs an accurate clock to work correctly*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash /home/torbox/torbox/automat 4',
+        "command": 'sudo bash /home/torbox/torbox/automat 5',
     },
 ]
