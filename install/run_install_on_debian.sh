@@ -998,9 +998,6 @@ systemctl mask tor@default.service
 systemctl unmask ssh
 systemctl enable ssh
 systemctl start ssh
-# sudo systemctl disable dhcpcd - not installed on Debian
-systemctl stop dnsmasq
-systemctl disable dnsmasq
 # Debian specific
 systemctl unmask resolvconf
 systemctl enable resolvconf

@@ -83,8 +83,9 @@ fi
 
 ######## PREPARATIONS ########
 clear
-echo -e "${RED}[+] Starting DNS forwarder...${NOCOLOR}"
-sudo systemctl start $DNSPROG
+# NEW v.0.5.2: dnsmasq is already running - there may be a reload/restart necessary
+#echo -e "${RED}[+] Starting DNS forwarder...${NOCOLOR}"
+#sudo systemctl start $DNSPROG
 echo -e "${RED}[+] Flushing existing iptables rules...${NOCOLOR}"
 $IPTABLES -F
 $IPTABLES -F -t nat
@@ -114,8 +115,9 @@ if (whiptail --title "TorBox - INFO" --defaultno --no-button "CONTINUE" --yes-bu
 else
   EXITLOOP=1
 fi
-echo -e "${RED}[+] Stopping DNS forwarder...${NOCOLOR}"
-sudo systemctl stop $DNSPROG
+# NEW v.0.5.2: dnsmasq keeps running - there may be a reload/restart necessary
+#echo -e "${RED}[+] Stopping DNS forwarder...${NOCOLOR}"
+#sudo systemctl stop $DNSPROG
 
 ########## FINISHING ##########
 exit $EXITLOOP

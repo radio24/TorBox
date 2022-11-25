@@ -1072,9 +1072,7 @@ sudo systemctl start ssh
 sudo systemctl restart systemd-resolved
 # We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 # --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
-# However, we don't want to start dnsmasq automatically after booting the system
 sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
-sudo systemctl disable dnsmasq
 sudo systemctl unmask rc-local
 sudo systemctl enable rc-local
 echo ""
