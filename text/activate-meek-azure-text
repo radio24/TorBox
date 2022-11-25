@@ -1,4 +1,4 @@
-MEEK-AZURE circumvents sophisticated censorship. In contrast to the OBFS4 bridges (see menu entries above), MEEK-AZURE is based on another technique. However, because it has a bandwidth limitation, this it will be quite slow.
+MEEK-AZURE circumvents sophisticated censorship. In contrast to the OBFS4 bridges (see menu entries above), MEEK-AZURE is based on another technique. However, because it has a bandwidth limitation, it will be pretty slow.
 
 You should only activate MEEK-AZURE, if necessary and if OBFS4 bridges and SNOWFLAKE don't work. By default, MEEK-AZURE is deactivated.
 
@@ -6,12 +6,13 @@ IMPORTANT
 - This menu entry activates MEEK-AZURE to bypass Tor blocking in a
   country. It helps to circumvent censorship; however, it doesn't help if
   a firewall blocks the network traffic.
-- OBFS4 BRIDGE, BRIDGE RELAY MODE and SNOWFLAKE will automatically be
-	deactivated; the configuration will be kept for later re-activation.
-- The countermeasure against tightly configured firewalls will
-  automatically be deactivated, and local clearnet DNS resolution will
-	be activated. However, this is not a problem because all clients'
-	DNS requests are still handled through Tor.
+- To run correctly, MEEK-AZURE has to resolve DNS requests and connect
+  some URLs directly. It is not a problem because all client's DNS
+	requests and data are still handled through the tor network.
+	However, your network provider may see that you are using tor.
+- OBFS4 BRIDGE, BRIDGE RELAY MODE, SNOWFLAKE and countermeasures against
+  tightly configured firewalls will automatically be deactivated; the
+  configuration will be kept for later re-activation.
 - Ignore error messages! In the end, you should see
   "Bootstrapped 100%: Done".
 - Tor statistics (and probably some other tools) will not work under
