@@ -41,7 +41,7 @@ matches = [
         "file": '/var/log/tor/notices.log',
         "match": "*died due to an invalid selected path*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
-        "match_time": 1*60,  # (seconds) time range of match count to execute cmd
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 4',
     },
     {
@@ -61,7 +61,7 @@ matches = [
     {
         "file": '/var/log/tor/notices.log',
         "match": "*Tried for * seconds to get a connection to * Giving up*",  # use * as wildcard
-        "match_count": 40,  # min matches to execute command
+        "match_count": 30,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
