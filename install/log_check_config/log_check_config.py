@@ -39,7 +39,7 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
-        "match": "*died due to an invalid selected path.*",  # use * as wildcard
+        "match": "*died due to an invalid selected path*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 1*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 4',
