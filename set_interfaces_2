@@ -243,6 +243,7 @@ fi
 ###### FINISH ######
 # NEW v.0.5.1
 # TEST: Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
+# REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifdown $O_DEVICE) 2> /dev/null
 	sleep 2
