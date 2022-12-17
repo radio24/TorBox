@@ -113,6 +113,9 @@ SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.1 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
+# NEW v.0.5.2
+OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
+
 # Vanguards Repository
 VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
 VANGUARDS_COMMIT_HASH=10942de
@@ -537,9 +540,9 @@ systemctl mask tor@default.service
 
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
 check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
-# NEW v.0.5.1: New packages: macchanger and shellinabox removed
+# NEW v.0.5.2: (Re)moved: obfs4proxy
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -696,6 +699,31 @@ fi
 # 5. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
+# NEW v.0.5.2 - new installation method for obfs4proxy
+cd ~
+git clone $OBFS4PROXY_USED
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ]; then
+	export GO111MODULE="on"
+	cd obfs4proxy
+	/usr/local/go/bin/go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	cp ./obfs4proxy/obfs4proxy /usr/bin
+	cd ~
+	rm -rf obfs4proxy
+	rm -rf go*
+else
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+	echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	check_install_packages obfs4proxy
+	clear
+fi
+setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 (mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
 (chmod a+x /usr/share/tor/geoip*) 2> /dev/null
 # Debian specific
@@ -704,7 +732,6 @@ echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NO
 (cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
 # Debian specific
 (cp /usr/local/share/tor/geoip* /usr/bin) 2> /dev/null
-setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
@@ -723,7 +750,19 @@ cd ~
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
-	sleep 1
+	export GO111MODULE="on"
+	cd ~/snowflake/proxy
+	#These paths to go are Debian specific
+	/usr/local/go/bin/go get
+	/usr/local/go/bin/go build
+	cp proxy /usr/bin/snowflake-proxy
+	cd ~/snowflake/client
+	/usr/local/go/bin/go get
+	/usr/local/go/bin/go build
+	cp client /usr/bin/snowflake-client
+	cd ~
+	rm -rf snowflake
+	rm -rf go*
 else
 	echo ""
 	echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
@@ -734,20 +773,6 @@ else
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
 fi
-export GO111MODULE="on"
-cd ~/snowflake/proxy
-#These paths to go are Debian specific
-/usr/local/go/bin/go get
-/usr/local/go/bin/go build
-cp proxy /usr/bin/snowflake-proxy
-cd ~/snowflake/client
-/usr/local/go/bin/go get
-/usr/local/go/bin/go build
-cp client /usr/bin/snowflake-client
-cd ~
-rm -rf snowflake
-rm -rf go*
-
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1059,6 +1084,7 @@ sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
+sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}

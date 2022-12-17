@@ -75,6 +75,7 @@ RUNFILE="run/torbox.run"
 GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2> /dev/null
 GO_VERSION_64=$(grep "^GO_VERSION_64=" ${RUNFILE} | sed "s/GO_VERSION_64=//g") 2> /dev/null
 GO_DL_PATH=$(grep "^GO_DL_PATH=" ${RUNFILE} | sed "s/GO_DL_PATH=//g") 2> /dev/null
+OBFS4PROXY_USED=$(grep "^OBFS4PROXY_USED=" ${RUNFILE} | sed "s/OBFS4PROXY_USED=//g") 2> /dev/null
 SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2> /dev/null
 TORBOXMENU_FORKNAME="radio24"
 TORBOXMENU_BRANCHNAME="master"
@@ -817,12 +818,50 @@ case "$CHOICE" in
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
         sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 				echo ""
+				echo -e "${RED}[+] Re-installing obfs4proxy...${NOCOLOR}"
+				# NEW v.0.5.2 - new installation method for obfs4proxy
+				cd ~
+				git clone $OBFS4PROXY_USED
+				DLCHECK=$?
+				if [ $DLCHECK -eq 0 ]; then
+					export GO111MODULE="on"
+					cd obfs4proxy
+					go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+					sudo cp ./obfs4proxy/obfs4proxy /usr/bin
+					cd ~
+					sudo rm -rf obfs4proxy
+					sudo rm -rf go*
+				else
+					echo ""
+					echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+					echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
+					echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+					echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+					echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
+					echo ""
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					check_install_packages obfs4proxy
+					clear
+				fi
+				sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+				echo ""
 				echo -e "${RED}[+] Re-installing Snowflake...${NOCOLOR}"
 				cd ~
 				git clone $SNOWFLAKE_USED
 				DLCHECK=$?
 				if [ $DLCHECK -eq 0 ]; then
-					sleep 1
+					export GO111MODULE="on"
+					cd ~/snowflake/proxy
+					go get
+					go build
+					sudo cp proxy /usr/bin/snowflake-proxy
+					cd ~/snowflake/client
+					go get
+					go build
+					sudo cp client /usr/bin/snowflake-client
+					cd ~
+					sudo rm -rf snowflake
+					sudo rm -rf go*
 				else
 					echo ""
 					echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
@@ -833,18 +872,6 @@ case "$CHOICE" in
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					clear
 				fi
-				export GO111MODULE="on"
-				cd ~/snowflake/proxy
-				go get
-				go build
-				sudo cp proxy /usr/bin/snowflake-proxy
-				cd ~/snowflake/client
-				go get
-				go build
-				sudo cp client /usr/bin/snowflake-client
-				cd ~
-				sudo rm -rf snowflake
-				sudo rm -rf go*
 				echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
         sudo systemctl stop tor
         sudo systemctl enable tor

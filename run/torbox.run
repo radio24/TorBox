@@ -32,6 +32,9 @@ GO_VERSION=go1.18.4.linux-armv6l.tar.gz
 GO_VERSION_64=go1.18.4.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
 
+# obfs4proxy repositories
+OBFS4PROXY_USED=https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git
+
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL=https://git.torproject.org/pluggable-transports/snowflake.git
 SNOWFLAKE_USED=https://github.com/keroserene/snowflake.git
