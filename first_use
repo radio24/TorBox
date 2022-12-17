@@ -31,7 +31,7 @@
 # Following NUMBERs are supported:
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
-# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
+# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
 #
 # If SOURCE SCRIPT is empty, the default is menu
 #
@@ -219,7 +219,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 10
     ;;
 
-    # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
+    # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA should be activated.
     3)
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
@@ -241,7 +241,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Configuring the source of the Internet
     	check_interface_with_internet
-    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     	"==" "===============================================================" \
     	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
     	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -260,37 +260,15 @@ while [ $FRESHINSTALLED -gt 0 ]; do
           ./menu $CHOICE
         fi
       fi
-      # Ask for TACA and Vanguards support
+      # Ask for TACA support
       clear
       INPUT=$(cat text/first_use-TACA-text)
-      ##### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-      " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
-      " 2" "Activate Vanguards to protect against Guard discovery" ON \
-      3>&1 1>&2 2>&3)
-
-      CHOICE=$(echo "$CHOICE" | tr -d ' ')
-      if [ ! -z "$CHOICE" ]; then
-        mapfile -t CHOICE <<< "$CHOICE"
-        for ARGUMENT in "${CHOICE[@]}"; do
-
-          #This activates TACA
-          if [ $ARGUMENT = 1 ]; then
-						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
-  					sudo ./log_check.py &
-            clear
-            echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
-            sleep 2
-
-          #This activates Vanguards
-          elif [ $ARGUMENT = 2 ]; then
-            (sudo systemctl enable vanguards@default.service) &>/dev/null
-            (sudo systemctl restart vanguards@default.service) &>/dev/null
-            (sudo systemctl daemon-reload) &>/dev/null
-            echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-            sleep 2
-          fi
-        done
+			if (whiptail --title "TorBox - FIRST START UP!" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+  			sudo ./log_check.py &
+        clear
+        echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
+        sleep 2
       fi
 
       # Ask for bridge support

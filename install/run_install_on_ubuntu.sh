@@ -56,16 +56,15 @@
 #  4. Install Tor
 #  5. Configuring Tor with its pluggable transports
 #  6. Install Snowflake
-#  7. Install Vanguards
-#  8. Re-checking Internet connectivity
-#  9. Downloading and installing the latest version of TorBox
-# 10. Installing all configuration files
-# 11. Disabling Bluetooth
-# 12. Configure the system services
-# 13. Installing additional network drivers
-# 14. Updating run/torbox.run
-# 15. Adding and implementing the user torbox
-# 16. Finishing, cleaning and booting
+#  7. Re-checking Internet connectivity
+#  8. Downloading and installing the latest version of TorBox
+#  9. Installing all configuration files
+# 10. Disabling Bluetooth
+# 11. Configure the system services
+# 12. Installing additional network drivers
+# 13. Updating run/torbox.run
+# 14. Adding and implementing the user torbox
+# 15. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -81,8 +80,6 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 # Include/Exclude parts of the installations
-# "YES" will install Vanguards / "NO" will not install it -> the related entry in the countermeasure menu will have no effect
-VANGUARDS_INSTALL="YES"
 # "YES" will install additional network drivers / "NO" will not install them -> these driver can be installed later from the Update and Reset sub-menu
 ADDITIONAL_NETWORK_DRIVER="YES"
 
@@ -119,11 +116,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # NEW v.0.5.2
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
-
-# Vanguards Repository
-VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
-VANGUARDS_COMMIT_HASH=10942de
-VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
 
 # Wiringpi
 WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
@@ -823,52 +815,7 @@ else
 	sleep 10
 fi
 
-# 7. Install Vanguards
-if [ "$VANGUARDS_INSTALL" = "YES" ]; then
-	clear
-	cd
-	echo -e "${RED}[+] Step 7: Installing Vanguards...${NOCOLOR}"
-	(sudo rm -rf vanguards) 2> /dev/null
-	(sudo rm -rf /var/lib/tor/vanguards) 2> /dev/null
-	sudo git clone $VANGUARDS_USED
-	DLCHECK=$?
-	if [ $DLCHECK -eq 0 ]; then
-	  sleep 1
-	else
-		echo ""
-		echo -e "${WHITE}[!] COULDN'T CLONE THE VANGUARDS REPOSITORY!${NOCOLOR}"
-		echo -e "${RED}[+] The Vanguards repository may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	fi
-	sudo chown -R debian-tor:debian-tor vanguards
-	cd vanguards
-	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
-	cd
-	sudo mv vanguards /var/lib/tor/
-	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
-	sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
-	#This is necessary to work with special characters in sed
-	sudo sed -i "s|^logfile =.*|logfile = ${VANGUARDS_LOG_FILE}|" /etc/tor/vanguards.conf
-	# Because of TorBox's automatic counteractions, Vanguard cannot interfere with tor's log file
-	sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
-	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
-	sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
-	sudo chmod -R go-rwx /var/lib/tor/vanguards
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
-	fi
-fi
-
-# 8. Again checking connectivity
+# 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider $CHECK_URL1
@@ -916,7 +863,7 @@ else
   fi
 fi
 
-# 9. Downloading and installing the latest version of TorBox
+# 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
@@ -955,17 +902,12 @@ else
 	sleep 10
 fi
 
-# 10. Installing all configuration files
+# 9. Installing all configuration files
 clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.1: shellinabox removed
-# Configuring Vanguards
-if [ "$VANGUARDS_INSTALL" = "YES" ]; then
-  (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
-  echo -e "${RED}[+]${NOCOLOR}         Copied vanguards@default.service"
-fi
+# NEW v.0.5.2: Vanguards removed
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -1047,7 +989,7 @@ else
 	sleep 10
 fi
 
-# 11. Disabling Bluetooth
+# 10. Disabling Bluetooth
 clear
 echo -e "${RED}[+] Step 11: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
@@ -1062,7 +1004,7 @@ else
 	sleep 10
 fi
 
-# 12. Configure the system services
+# 11. Configure the system services
 sleep 10
 clear
 echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
@@ -1133,7 +1075,7 @@ else
 	sleep 10
 fi
 
-# 13. Installing additional network drivers
+# 12. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	bash install/install_network_drivers install
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1145,7 +1087,7 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	fi
 fi
 
-# 14. Updating run/torbox.run
+# 13. Updating run/torbox.run
 clear
 echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
@@ -1156,9 +1098,6 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
-sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
@@ -1170,7 +1109,7 @@ else
 	sleep 10
 fi
 
-# 15. Adding the user torbox
+# 14. Adding the user torbox
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1200,7 +1139,7 @@ else
 	sleep 10
 fi
 
-# 16. Finishing, cleaning and booting
+# 15. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 16: We are finishing and cleaning up now!${NOCOLOR}"
@@ -1253,9 +1192,6 @@ history -c
 # To start TACA notices.log has to be present
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
-# To ensure the correct permissions
-(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
 echo ""
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3

@@ -407,10 +407,7 @@ update_torcfg()
   clear
   echo -e "${RED}[+] Copying TorBox's configuration files...${NOCOLOR}"
   echo ""
-	# NEW v.0.5.1: shellinabox removed
-  # Configuring Vanguards
-  sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/
-  echo -e "${RED}[+]${NOCOLOR} Copied vanguards@default.service"
+	# NEW v.0.5.2: Vanguards removed
   (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
   sudo cp etc/default/hostapd /etc/default/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/default/hostapd -- backup done"

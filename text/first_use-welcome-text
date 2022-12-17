@@ -4,8 +4,7 @@ TorBox didn't connect the Tor network yet, but it will do so after the
 next start-up dialogue boxes, which will ask you the following:
 - if you want to use a (default) firewall circumvention method;
 - from where the Internet is coming;
-- if you want to activate the TorBox automatic counter actions and/or
-  Vanguards;
+- if you want to activate the TorBox automatic counter actions;
 - and if you want to use OBFS4 or SNOWFLAKE bridges.
 
 Leaving now, for security reasons, tor will stay blocked to communicate with the Internet. However, if needed, you can rerun the script using the Update and Maintenance sub-menu.

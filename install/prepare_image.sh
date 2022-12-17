@@ -53,14 +53,6 @@ else
   LOGCHECK="Deactivated!"
 fi
 
-# Is Vanguards activated?
-VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-if [ ${VANGUARDSSTATUS} == "active" ]; then
-  VANGUARDSSTATUSb="Activated!"
-else
-  VANGUARDSSTATUSb="Deactivated!"
-fi
-
 # Are bridges activated?
 if grep "^UseBridges" ${TORRC}; then
 	if grep -o "^Bridge obfs4 " ${TORRC}; then
@@ -120,7 +112,6 @@ echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc
 echo -e "${RED}Firewall countermeasures                     :${WHITE} $FIREWALL${NOCOLOR}"
 echo -e "${RED}Disconnection when idle countermeasure       :${WHITE} $PING${NOCOLOR}"
 echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK${NOCOLOR}"
-echo -e "${RED}Vanguards is                                 :${WHITE} $VANGUARDSSTATUSb${NOCOLOR}"
 echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
 echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
 echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"

@@ -284,9 +284,6 @@ case "$CHOICE" in
       else
         (printf %s"${INPUTHASH}\n" | sudo tee -a $TORRC) 2> /dev/null
       fi
-      if [ -d "/var/lib/tor/vanguards" ]; then
-        sudo sed -i "s/^control_pass =.*/control_pass = ${INPUT}/" /var/lib/tor/vanguards/vanguards.conf
-      fi
       restarting_tor menu-config
     fi
   ;;

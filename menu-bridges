@@ -114,16 +114,6 @@ read_config()
     PING="OFF"
   fi
 
-  # Is the Countermeasure against attacks to deanonymize server location active?
-  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  if [ "${VANGUARDSSTATUS}" == "active" ]; then
-    VANGUARDS="Deactivate"
-    VANGUARDSSTATUSb="ON"
-  else
-    VANGUARDS="Activate"
-    VANGUARDSSTATUSb="OFF"
-  fi
-
 	# Is the OBFS4 Bridge Relay running?
 	MODE_BR=$(grep "^BridgeRelay" ${TORRC})
 	if [ "$MODE_BR" = "BridgeRelay 1" ]; then TOGGLE07b="ON"; else TOGGLE07b="OFF"; fi
@@ -182,10 +172,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - COUNTERMEASUR
 "==" "======================================[More Countermeasures]===" \
 "13" "Enter the advanced tor configuration editor"  \
 "14" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
-"15" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-"16" "Countermeasure against a tightly configured firewall - $FIREWALL" \
-"17" "Countermeasure against a disconnection when idle feature - $PING" \
-"18" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
+"15" "Countermeasure against a tightly configured firewall - $FIREWALL" \
+"16" "Countermeasure against a disconnection when idle feature - $PING" \
+"17" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
 3>&1 1>&2 2>&3)
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -429,43 +418,8 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
-  15)
-    if [ "$VANGUARDS" = "Deactivate" ]; then
-      echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
-      sudo systemctl stop vanguards@default.service
-      sudo systemctl disable vanguards@default.service
-      sudo systemctl daemon-reload
-      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
-      sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
-      sleep 1
-      clear
-      echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
-      echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
-      i=1
-      while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
-      do
-        sleep 1
-        echo -e "${RED}$i${NOCOLOR}"
-      done
-    fi
-    if [ "$VANGUARDS" = "Activate" ]; then
-      INPUT=$(cat text/vanguards-explanation-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo systemctl enable vanguards@default.service
-        sudo systemctl restart vanguards@default.service
-        sudo systemctl daemon-reload
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-        sleep 5
-      fi
-    fi
-    read_config
-  ;;
-
   # Countermeasure against a tightly configured firewall
-  16)
+  15)
     if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
 			if [ "$TOGGLE07b" = "ON" ]; then
 				INPUT="\n\nTo activate the countermeasure against tightly configured firewalls, you have first to DEACTIVATE OBFS4 Bridge Relay Mode in the OBFS4 Bridge Relay sub-menu. You can not run both settings simultaneously!"
@@ -510,7 +464,7 @@ case "$CHOICE" in
   ;;
 
   # Countermeasure against a disconnection when idle feature
-  17)
+  16)
     if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
       INPUT=$(cat text/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -530,7 +484,7 @@ case "$CHOICE" in
   ;;
 
   # Connect/Disconnect TorBox to/from VPN
-  18)
+  17)
     if [ -z "$tun0up" ] ; then
       INPUT=$(cat text/connecting-VPN-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
