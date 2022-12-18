@@ -229,11 +229,13 @@ fi
 
 ###### HTTP plain text traffic blocker ######
 if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
-	$IPTABLES -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options
-	$IPTABLES -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
-	$IPTABLES -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0
-	$IPTABLES -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0
+	($IPTABLES -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2> /dev/null
+	($IPTABLES -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+	($IPTABLES -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+	($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+	($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
 else
+	($IPTABLES -t nat -I PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2> /dev/null
 	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
 	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
 	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null

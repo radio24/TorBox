@@ -405,7 +405,7 @@ deactivating_bridge_relay()
   	sudo sed -i "s/^Nickname/#Nickname/g" ${TORRC}
     sudo sed -i "s/^BridgeDistribution/#BridgeDistribution/g" ${TORRC}
   	sleep 2
-    echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
+    echo -e "${RED}[+] Closing port ORPort $sORPORT and OBFS4Port $sOBFS4PORT (just ignore any error message)${NOCOLOR}"
   	(sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
   	(sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
     sleep 2
