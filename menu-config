@@ -726,9 +726,9 @@ case "$CHOICE" in
 		if [ "$TOGGLE17" = "Disable" ]; then
 			INPUT=$(cat text/disable_twebssh-text)
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-				pkill -t twebssh
+				sudo pkill -f "twebssh"
 				sudo rm /etc/nginx/sites-enabled/webssh.conf
-        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
 				sudo systemctl restart nginx
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
 			fi
@@ -819,12 +819,12 @@ case "$CHOICE" in
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
-        echo " "
         echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
-        (sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
-        (sudo iptables -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
-        (sudo iptables -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
-        (sudo iptables -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+				(sudo iptables -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2> /dev/null
+        (sudo iptables -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
+        (sudo iptables -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
+        (sudo iptables -t nat -I PREROUTING 6 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+        (sudo iptables -t nat -I PREROUTING 7 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
         sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
         sleep 2
@@ -833,8 +833,8 @@ case "$CHOICE" in
     if [ "$TOGGLE12" = "Disable" ]; then
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         clear
-        echo " "
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
+				(sudo iptables -t nat -I PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2> /dev/null
         (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
         (sudo iptables -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
         (sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null

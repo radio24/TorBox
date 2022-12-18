@@ -1020,13 +1020,16 @@ case "$CHOICE" in
     sleep 5
 		echo -e "${RED}[+] Resetting ownership rights...${NOCOLOR}"
 		(sudo chown torbox:torbox /var/www) 2> /dev/null
-		if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
-			echo -e "${RED}[+] Configure webssh...${NOCOLOR}"
+		echo -e "${RED}[+] Configuring webssh, if TWEBSSH=1...${NOCOLOR}"
+		if grep "TWEBSSH=1" ${RUNFILE} ; then
 			[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 			[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-			PID=$(pgrep -f "twebssh")
-			[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+			if ! pgrep -f "twebssh" ; then
+				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+				sleep 1
+			fi
 		fi
+
 		# shellcheck disable=SC2062
 		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		sleep 5
@@ -1034,8 +1037,7 @@ case "$CHOICE" in
 		echo -e "${RED}[+] Starting TFS and TCS again and reload Nginx...${NOCOLOR}"
 		sudo ./run/start_tfs
     sudo ./run/start_tcs
-		sudo rm nohup.out
-		echo ""
+		[ -f nohup.out ] && sudo rm nohup.out
 		echo -e "${RED}[+] Done!${NOCOLOR}"
 		sleep 5
 	;;

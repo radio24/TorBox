@@ -62,8 +62,8 @@ RUNFILE="/home/torbox/torbox/run/torbox.run"
 
 ###### MAIN ######
 clear
-cd
 INPUT=$(cat text/restore-text)
+cd
 if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	if [ "$exitstatus" == "0" ]; then
@@ -96,11 +96,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			trap "bash menu-onion; exit 0" EXIT
 			exit 1
 		else
-			echo ""
 			echo -e "${RED}[+] Unpacking backup file ${OS_BK_TAR}${NOCOLOR}"
-			if [ -d "restore" ]; then
-				sudo rm -r restore
-			fi
+			#if [ -d "restore" ]; then
+				(sudo rm -r restore) 2> /dev/null
+			#fi
 			(sudo mkdir restore) 2> /dev/null
 			(sudo tar -xpzf $OS_BK_TAR -C restore) 2> /dev/null
 			sleep 2
@@ -137,18 +136,18 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			fi
 
 			# Please, choose with SPACE which data you want to restore
-			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.1 - RESTORE SELECTION\" --checklist --separate-output \"\nPlease, choose with SPACE which data you want to restore in addition to the TorBox configuration and press ENTER.\n (ESC -> go back)\n\nIMPORTANT: The old configuration will be deleted in ANY CASE!\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
+			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.1 - RESTORE SELECTION\" --checklist --separate-output \"\nPlease, choose with SPACE which data you want to restore in addition to the TorBox configuration and press ENTER (ESC -> go back).\n\nIMPORTANT: The old configuration will be deleted in ANY CASE!\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
 			i=0
 			n=0
 			if [ "$OBFS4RELAY" == "1" ]; then
 				i=$((i+1))
 				n=1
-				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the OBFS4 Bridge Relay data (old data will be replaced or removed)\" ON"
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the OBFS4 Bridge Relay data (old data will be removed)\" ON"
 			fi
 			if [ "$ONIONSERVICES" == "1" ]; then
 				i=$((i+1))
 				n=$((2+n))
-				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the Onion Service data (old data will be replaced or removed)\" ON"
+				WHIPTAIL_LINE="$WHIPTAIL_LINE \"$i\" \"Restore the Onion Service data (old data will be removed)\" ON"
 			fi
 			if [ "$ONIONAUTH" == "1" ]; then
 				i=$((i+1))
@@ -235,7 +234,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			TFS_NAME_LIST=$(ls /home/torbox/torbox/lib/filesharing/pid/ | sed "s/.pid//")
 			if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
 			# shellcheck disable=SC2012
-			TCS_NAME_LIST=$(ls /home/torbox/torbox/lib/chstsecure/pid/ | sed "s/.pid//")
+			TCS_NAME_LIST=$(ls /home/torbox/torbox/lib/chatsecure/pid/ | sed "s/.pid//")
 			if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $TCS_NAME_LIST; fi
 			# These variables in the RUNFILE have to be kept
 			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE}) 2> /dev/null
@@ -350,13 +349,14 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			fi
 
 			# Restore the activity of the Web SSH
+			echo -e "${RED}[+] Configuring webssh, if TWEBSSH=1...${NOCOLOR}"
 			if grep "TWEBSSH=1" ${RUNFILE} ; then
-				echo -e "${RED}[+] Configuring webssh...${NOCOLOR}"
 				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /home/torbox/torbox/etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-				PID=$(pgrep -f "twebssh")
-				[ -z $PID ] && (nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
-				sleep 1
+				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+				if ! pgrep -f "twebssh" ; then
+					(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+					sleep 1
+				fi
 			fi
 
 			# Reloading Nginx to apply new configuration
@@ -384,7 +384,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
 			fi
 			# TACA
-			if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null fi
+			if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null ; fi
 			echo ""
 			sleep 1
 			# Finally, restarting tor
