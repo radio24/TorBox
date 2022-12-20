@@ -39,14 +39,12 @@ import argparse
 import logging
 import os
 import sys
-from pathlib import Path
 
 # Try to import the required functions from the stem library.
 # If the stem library is not installed, print a message explaining how to install it.
 # If some other error occurs while importing, print a message that there was an error importing stem.
 try:
     from stem.descriptor import parse_file
-    from stem.descriptor import router_status_entry
 except ImportError:
     print("""\
 This script requires Stem. If you're on a Debian-based system, try installing\n
@@ -67,7 +65,7 @@ TOR_DATA_DIR = "/var/lib/tor"
 # The path where torrc.exclude-slow will be stored
 TOR_STORE_DIR = "./"
 
-#The file to write the new ExcludeNodes torrc lines
+# The file to write the new ExcludeNodes torrc lines
 FILENAME = "torrc.exclude-slow"
 
 # The path to Tor's init.d script (default: "/etc/init.d/tor-git")
@@ -81,22 +79,25 @@ POTENTIAL_CONSENSII = ["cached-consensus", "cached-microdesc-consensus"]
 # Set up logging for the script.
 log = logging.getLogger()
 
+
 # Parse and return command-line arguments
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--data-dir', type=str, help=("Path to tor's data directory (default: {TOR_DATA_DIR})"))
     parser.add_argument('-c', '--consensus-file', type=str, help=("The filename of tor's consensus file (default: %s)" % POTENTIAL_CONSENSII[-1]))
-    parser.add_argument('-b', '--min-bandwidth', type=int, help=("The minimum bandwidth in KB/s a relay should have (default: {MINIMUM_BANDWIDTH})"), default = MINIMUM_BANDWIDTH)
-    parser.add_argument('-s', '--store-dir', type=str, help=("The path where the exclude-nodes file will be stored (default: {TOR_STORE_DIR})"), default = TOR_STORE_DIR)
-    parser.add_argument('-o', '--output-file', type=str, help=("The file to write the new ExcludeNodes torrc lines (default: {FILENAME})"), default = FILENAME)
+    parser.add_argument('-b', '--min-bandwidth', type=int, help=("The minimum bandwidth in KB/s a relay should have (default: {MINIMUM_BANDWIDTH})"), default=MINIMUM_BANDWIDTH)
+    parser.add_argument('-s', '--store-dir', type=str, help=("The path where the exclude-nodes file will be stored (default: {TOR_STORE_DIR})"), default=TOR_STORE_DIR)
+    parser.add_argument('-o', '--output-file', type=str, help=("The file to write the new ExcludeNodes torrc lines (default: {FILENAME})"), default=FILENAME)
 #    parser.add_argument('-i', '--in-place', help=("Edit the primary torrc file in place. Provide the path to the torrc file to edit in place"))
     args = parser.parse_args()
     return args
+
 
 # Define a function to create an ExcludeNodes line for the exclude-nodes file.
 def create_exclude_nodes_line(fingerprints):
     exclude_nodes = 'ExcludeNodes ' + ','.join(fingerprints) + '\n'
     return exclude_nodes
+
 
 # Define a function to find slow nodes in the consensus file.
 def find_slow_nodes(consensus, minimum_bandwidth):
@@ -124,6 +125,7 @@ def find_slow_nodes(consensus, minimum_bandwidth):
 
     return too_slow
 
+
 # Define a function to write the ExcludeNodes lines to the exclude-nodes file.
 def write_torrc(data_dir, output_file, lines):
     filepath = os.path.join(os.path.abspath(data_dir), output_file)
@@ -139,6 +141,7 @@ def write_torrc(data_dir, output_file, lines):
     log.debug("Wrote ExcludeNodes line to new torrc file: %s" % filepath)
 
     return filepath
+
 
 # Define a function to update the primary torrc file with the contents of the exclude-nodes file.
 # This will be used with the -i --in-place option. Currently, it is disabeled for safety reasons.
@@ -172,6 +175,7 @@ def write_torrc_in_place(torrc_path, exclude):
         log.debug("Appended ExcludeNodes line to torrc file: %s" % torrc_path)
 
     return torrc_path
+
 
 # The main function that will be executed when the script is run.
 def main():
@@ -209,7 +213,7 @@ def main():
                              % (filepath))
     else:
         log.warning("Permission denied! Can't read the consensus file in %s. Try to run it as root."
-                 % (data_dir))
+                    % (data_dir))
 
     if not consensus:
         log.error("Could not find or read consensus file.")
@@ -222,9 +226,10 @@ def main():
 #        if args.in_place:
 #            write_torrc_in_place(args.in_place, too_slow)
         if args.output_file:
-            torrc = write_torrc(store_dir, output_file, exclude_nodes)
+            write_torrc(store_dir, output_file, exclude_nodes)
 
     return exclude_nodes
+
 
 # Execute the main function
 if __name__ == "__main__":
