@@ -18,7 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
-#
 # DESCRIPTION
 # This script checks /var/log/tor/notices.log for error messages and executes
 # the sccript automat to automatically restor the tor functionality.
