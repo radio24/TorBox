@@ -67,6 +67,9 @@ HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 RUNFILE="run/torbox.run"
+TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
+# This is necessary to work with special characters in sed
+TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
 ##############################
 ######## FUNCTIONS ########
@@ -184,10 +187,17 @@ read_config()
   fi
 
 	# TOGGLE17 shows if TWEBSSH is enabled or disabled
-	if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
+	if grep "TWEBSSH=1" ${RUNFILE} ; then
 		TOGGLE17="Disable"
 	else
 		TOGGLE17="Enable"
+	fi
+
+	# TOGGLE18 shows if slow tor relays are excluded or not
+	if grep "EX_SLOW=1" ${RUNFILE} ; then
+		TOGGLE18="Stop"
+	else
+		TOGGLE18="Start"
 	fi
 }
 
@@ -207,7 +217,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - CONFIGURATION
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
 " 2" "Change the password of TorBox's WLAN (reboot required)"  \
-" 3" "Change the password of your Tor control port (restarts Tor!)"  \
+" 3" "Change the password of your tor control port (restarts tor!)"  \
 "==" "==================================================[Network]===" \
 " 4" "Change the name of TorBox's WLAN"  \
 " 5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
@@ -222,14 +232,15 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - CONFIGURATION
 "13" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
 "14" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"15" "Enter the advanced tor configuration editor"  \
+"15" "$TOGGLE18 excluding slow tor relays"  \
+"16" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"16" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"17" "Erase all log files" \
+"17" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"18" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"18" "Support for Adafruit's PiTFT displays (reboot required)" \
-"19" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"20" "Support for Sixfab Shields/HATs for cellular connections" \
+"19" "Support for Adafruit's PiTFT displays (reboot required)" \
+"20" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"21" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 
@@ -846,8 +857,58 @@ case "$CHOICE" in
     fi
   ;;
 
-	# Enter the advanced configuration editor
+	# Exclude slow tor relays
   15)
+		if [ "$TOGGLE18" = "Start" ]; then
+    	INPUT=$(cat text/exclude_slow_tor_relays-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				INPUT=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				exitstatus=$?
+				# exitstatus == 255 means that the ESC key was pressed
+				[ "$exitstatus" == "255" ] && exit 1
+				if [ "$INPUT" != "" ] ; then
+					is_integer "${INPUT}"
+					exitstatus=$?
+					# exitstatus == 1 means that $INPUT is not an integer
+					if [ "$exitstatus" == "1" ]; then
+						clear
+						echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+						sleep 5
+						clear
+						trap "bash menu-config; exit 0" EXIT
+						exit 1
+					fi
+					clear
+					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+				else
+					clear
+					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+				fi
+				sudo ./exclude-slow-tor-relays-ng -b $INPUT
+				sleep 5
+				clear
+				sudo mv torrc.exclude-slow /etc/tor
+				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=1/" ${RUNFILE}
+				restarting_tor menu-config
+			fi
+		fi
+		if [ "$TOGGLE18" = "Stop" ]; then
+			clear
+			echo -e "${RED}[+] Stop excluding slow tor relays...${NOCOLOR}"
+			sudo rm /etc/tor/torrc.exclude-slow
+			sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+			sleep 1
+			echo -e "${RED}[+] DONE!${NOCOLOR}"
+			sleep 5
+			restarting_tor menu-config
+		fi
+  ;;
+
+	# Enter the advanced configuration editor
+  16)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -861,7 +922,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-  16)
+  17)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
 			[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
@@ -907,14 +968,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-  17)
+  18)
     clear
     erase_logs
     sleep 2
   ;;
 
   #This is the support for Adafruit's PiTFT displays
-  18)
+  19)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
@@ -935,7 +996,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  19)
+  20)
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)
@@ -993,7 +1054,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.1 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  20)
+  21)
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh

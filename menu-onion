@@ -187,21 +187,6 @@ create_web_service_list(){
 	done
 }
 
-# This function checks if a variable is an integer
-# Syntax is_integer [<variable_to_check>]
-is_integer()
-{
- printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
- if [ "$ERROR" == "1" ]; then
-   clear
-   echo -e "${WHITE}[!] This is not an integer! ${NOCOLOR}"
-   echo " "
-   read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-   clear
-   exit 1
- fi
-}
-
 # This function will generate a new key pair (public and private key) for an operator).
 # As a client of an Onion Service, generate a key pair, from which you can give the public key to an Onion Operator.
 # Syntax client_auth_on <ONION_HOSTNAME> [<CLIENT_PRIV_KEY>]
@@ -827,6 +812,16 @@ case "$CHOICE" in
           echo -e "${RED}[+] Configuring torrc...${NOCOLOR}"
           VIRTPORT=$(cut -d ' ' -f1 <<< $SERVICE_PORTS)
           is_integer "${VIRTPORT}"
+					exitstatus=$?
+					# exitstatus == 1 means that $VIRTPORT is not an integer
+					if [ "$exitstatus" == "1" ]; then
+	        	clear
+	        	echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+	        	sleep 5
+	        	clear
+	        	trap "bash menu-onion; exit 0" EXIT
+	        	exit 1
+					fi
 					# Using the Anchor in torrc
           REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
 					#This is necessary to work with special characters in sed

@@ -25,6 +25,7 @@ ControlPort 127.0.0.1:9051
 #ControlPort 192.168.43.1:9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
 DisableDebuggerAttachment 0
+#%include /etc/tor/torrc.exclude-slow
 
 ## THE CONFIGURATION OF THE ONION SERVICES STARTS HERE!
 #######################################################

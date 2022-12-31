@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2064
+# shellcheck disable=SC2001,SC2034,SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -122,6 +122,16 @@ else
   EXITID="EXITID=0"
   sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 fi
+}
+
+# This function checks if a variable is an integer
+# Syntax is_integer [<variable_to_check>]
+is_integer()
+{
+ printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
+ if [ "$ERROR" == "1" ]; then
+   exit 1
+ fi
 }
 
 # Currently not in use - only for documentation

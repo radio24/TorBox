@@ -54,7 +54,6 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-BACKUP_DIR="$HOME/backup"
 
 ##############################
 ######## FUNCTIONS ########
@@ -95,15 +94,6 @@ sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
 sNICK=$(cut -d ' ' -f2 <<< $NICK)
 sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
 }
-
-# Is the Countermeasure against a tightly configured firewall active?
-MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
-clear
-if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
-	FIREWALL="ON"
-else
-	FIREWALL="OFF"
-fi
 
 # This function changes the configuration and, if necessary, restarts tor
 change_config()
@@ -213,8 +203,32 @@ case "$CHOICE" in
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       nORPORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (ENTER -> $sORPORT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nORPORT" ] && nORPORT=$sORPORT
+			is_integer "${nORPORT}"
+			exitstatus=$?
+			# exitstatus == 1 means that $nORPORT is not an integer
+			if [ "$exitstatus" == "1" ]; then
+				clear
+				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+				sleep 5
+				clear
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
+			fi
       nOBFS4PORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (ENTER -> $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nOBFS4PORT" ] && nOBFS4PORT=$sOBFS4PORT
+			is_integer "${nOBFS4PORT}"
+			exitstatus=$?
+			# exitstatus == 1 means that $nOBFS4PORT is not an integer
+			if [ "$exitstatus" == "1" ]; then
+				clear
+				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+				sleep 5
+				clear
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
+			fi
       nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
       nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)

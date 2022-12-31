@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001
+# shellcheck disable=SC2001,SC2004
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -102,7 +102,6 @@ update_firmware()
   clear
   online_check
   if [ $OCHECK == 1 ]; then
-    trap "screen bash update; exit 0" SIGINT
     clear
     sudo apt-get install rpi-eeprom
     sleep 2
@@ -298,9 +297,7 @@ update_tor()
       echo ""
       read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
       clear
-      trap "screen bash update; exit 0" EXIT
       return 0
-      exit 0
     fi
   else
     return 0
@@ -372,10 +369,7 @@ select_and_install_tor()
         echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
         echo ""
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        trap "screen bash update; exit 0" SIGINT
         return 0
-        exit 0
-        clear
       fi
     else
       clear
@@ -383,10 +377,7 @@ select_and_install_tor()
       echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
       echo ""
       sleep 5
-      trap "screen bash update; exit 0" SIGINT
       return 0
-      exit 0
-      clear
     fi
   else
     clear
@@ -394,10 +385,7 @@ select_and_install_tor()
     echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
     echo ""
     sleep 5
-    sleep 5
     return 0
-    exit 0
-    clear
   fi
 }
 
@@ -492,17 +480,11 @@ update_torbox_menu()
     INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu branch do you like to install?\n\nType in the branch name exactly maching with GitHub (default = master):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "master" 3>&1 1>&2 2>&3)
 		exitstatus=$?
 		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
-			trap "screen bash update; exit 0" EXIT
-			exit 1
-		fi
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 1 ; fi
     if [ ! -z "$INPUT" ]; then TORBOXMENU_BRANCHNAME=$INPUT; else TORBOXMENU_BRANCHNAME="master"; fi
 		INPUT=$(whiptail --title "Update TorBox menu for experts" --inputbox "\n\nWhich TorBox menu fork do you like to install?\n\nType in the fork owner name exactly maching with GitHub (default = radio24):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX "radio24" 3>&1 1>&2 2>&3)
 		exitstatus=$?
-		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then
-			trap "screen bash update; exit 0" EXIT
-			exit 1
-		fi
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 1 ; fi
 		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; else TORBOXMENU_FORKNAME=radio24; fi
   fi
 	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
@@ -574,6 +556,84 @@ update_torbox_menu()
   fi
 }
 
+# This function re-installs obfs4proxy
+# Syntax re_installing_obfs4proxy
+re_installing_obfs4proxy()
+{
+	echo -e "${RED}[+] Re-installing obfs4proxy...${NOCOLOR}"
+	# NEW v.0.5.2 - new installation method for obfs4proxy
+	cd ~
+	git clone $OBFS4PROXY_USED
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ]; then
+		export GO111MODULE="on"
+		cd obfs4proxy
+		go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+		sudo cp ./obfs4proxy/obfs4proxy /usr/bin
+		cd ~
+		sudo rm -rf obfs4proxy
+		sudo rm -rf go*
+	else
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+		echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		check_install_packages obfs4proxy
+		clear
+	fi
+	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+}
+
+# This function re-installs snowflake
+# Syntax re_installing_snowflake
+re_installing_snowflake()
+{
+	echo -e "${RED}[+] Re-installing Snowflake...${NOCOLOR}"
+	cd ~
+	git clone $SNOWFLAKE_USED
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ]; then
+		export GO111MODULE="on"
+		cd ~/snowflake/proxy
+		go get
+		go build
+		sudo cp proxy /usr/bin/snowflake-proxy
+		cd ~/snowflake/client
+		go get
+		go build
+		sudo cp client /usr/bin/snowflake-client
+		cd ~
+		sudo rm -rf snowflake
+		sudo rm -rf go*
+	else
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
+		echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	fi
+}
+
+# This function configures the tor system service
+# Syntax configure_system_service
+configure_system_service()
+{
+	echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
+	sudo systemctl stop tor
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+	sudo systemctl enable tor
+	sudo systemctl daemon-reload
+	sudo systemctl start tor
+}
+
 ######## PREPARATIONS ########
 # Resetting
 shopt -s checkwinsize
@@ -631,9 +691,8 @@ case "$CHOICE" in
 			sudo apt-get -y update
 			sudo apt-get -y dist-upgrade
 			sleep 10
-			clear
-			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
 			echo ""
+			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
 			sudo pip3 install --upgrade pytesseract
 			sudo pip3 install --upgrade mechanize==0.4.7
 			sudo pip3 install --upgrade PySocks
@@ -653,10 +712,9 @@ case "$CHOICE" in
 			# NEW v.0.5.2
 			sudo pip3 install --upgrade opencv-python-headless
 			sudo pip3 install --upgrade numpy
-			sleep 10
-			clear
-			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
+			sleep 5
 			echo ""
+			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
 			if uname -m | grep -q -E "arm64|aarch64"; then
 			  wget $GO_DL_PATH$GO_VERSION_64
 			  DLCHECK=$?
@@ -696,22 +754,24 @@ case "$CHOICE" in
 			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			  fi
 			fi
-			sleep 10
-			clear
+			sleep 5
+			echo ""
 			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
 			sudo systemctl unmask hostapd
 			sudo systemctl enable hostapd
 			sudo systemctl enable isc-dhcp-server
-			echo -e "${RED}[+] Configuring Tor with its pluggable transports....${NOCOLOR}"
 			# Copy not moving!
-			sudo cp /usr/share/tor/geoip* /usr/bin
-			sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-			sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-			sudo systemctl enable tor
-			sudo systemctl daemon-reload
+			(sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+			sudo chmod a+x /usr/bin/geoip*
+			echo ""
+			re_installing_obfs4proxy
+			echo ""
+			re_installing_snowflake
+			echo ""
+			configure_system_service
       echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+			echo -e "${RED}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			recommended_reboot update
@@ -811,69 +871,12 @@ case "$CHOICE" in
         # Copy not moving!
         (sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
         sudo chmod a+x /usr/bin/geoip*
-        sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-        sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 				echo ""
-				echo -e "${RED}[+] Re-installing obfs4proxy...${NOCOLOR}"
-				# NEW v.0.5.2 - new installation method for obfs4proxy
-				cd ~
-				git clone $OBFS4PROXY_USED
-				DLCHECK=$?
-				if [ $DLCHECK -eq 0 ]; then
-					export GO111MODULE="on"
-					cd obfs4proxy
-					go build -o obfs4proxy/obfs4proxy ./obfs4proxy
-					sudo cp ./obfs4proxy/obfs4proxy /usr/bin
-					cd ~
-					sudo rm -rf obfs4proxy
-					sudo rm -rf go*
-				else
-					echo ""
-					echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
-					echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
-					echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-					echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-					echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
-					echo ""
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					check_install_packages obfs4proxy
-					clear
-				fi
-				sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+				re_installing_obfs4proxy
 				echo ""
-				echo -e "${RED}[+] Re-installing Snowflake...${NOCOLOR}"
-				cd ~
-				git clone $SNOWFLAKE_USED
-				DLCHECK=$?
-				if [ $DLCHECK -eq 0 ]; then
-					export GO111MODULE="on"
-					cd ~/snowflake/proxy
-					go get
-					go build
-					sudo cp proxy /usr/bin/snowflake-proxy
-					cd ~/snowflake/client
-					go get
-					go build
-					sudo cp client /usr/bin/snowflake-client
-					cd ~
-					sudo rm -rf snowflake
-					sudo rm -rf go*
-				else
-					echo ""
-					echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
-					echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
-					echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-					echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-					echo ""
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-					clear
-				fi
-				echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
-        sudo systemctl stop tor
-        sudo systemctl enable tor
-        sudo systemctl daemon-reload
-        sudo systemctl start tor
+				re_installing_snowflake
+				echo ""
+				configure_system_service
         TOR_VERS=""
         TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
         echo ""

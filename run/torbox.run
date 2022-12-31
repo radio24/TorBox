@@ -91,6 +91,11 @@ MAC_wlan1=random
 # 1 - TorBox's Web SSH is enabled
 TWEBSSH=1
 
+# Exclude slow tor relays (Important: DO NOT ACTIVATE IF YOUR ANONYMITY HAS THE HIGHEST PRIORITY!)
+# 0 - Not excluded
+# 1 - Excluded
+EX_SLOW=0
+
 # TFS starting commands
 # Syntax: TFS-<service_name>=<tfs command>
 # This will configure the TFS program (do not remove or change that line - this is an anchor)

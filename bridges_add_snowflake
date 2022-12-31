@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
+# shellcheck disable=SC2001,SC2004,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2022 Patrick Truffer
@@ -198,14 +198,17 @@ case "$CHOICE" in
     clear
     whiptail --title "TorBox - ADD BRIDGES" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
     number_bridges=$(whiptail --title "TorBox - ADD BRIDGES" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-    if ! [[ "$number_bridges" =~ ^[0-9]+$  ]]; then
-      trap "bash bridges_add_snowflake $MODE_BRIDGES $STANDALONE; exit 0" EXIT
-      echo ""
-      echo -e "${WHITE}[!] I asked you for a number and you gave me... what??? ${NOCOLOR}"
-      echo " "
-      sleep 5
-      exit 1
-    fi
+		is_integer "${number_bridges}"
+		exitstatus=$?
+		# exitstatus == 1 means that $number_bridges is not an integer
+		if [ "$exitstatus" == "1" ]; then
+			clear
+			echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+			echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+			sleep 5
+			clear
+			exit 1
+		fi
     if [ $number_bridges -gt 0 ]; then
       i=1
       while [ $i -le $number_bridges ]
