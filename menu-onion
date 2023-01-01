@@ -200,7 +200,7 @@ client_auth_on()
 	[ "${ONION_HOSTNAME_WITHOUT_ONION%%*[^a-z2-7]*}" ] || error_onion_invalid 1
 	[ "${#ONION_HOSTNAME_WITHOUT_ONION}" = "56" ] || error_onion_invalid 2
 	echo -e "${RED}[+] Activating client Onion Service authorization... ${SERVICE_NAME}...${NOCOLOR}"
-	(sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/g" ${TORRC}) 2> /dev/null
+	(sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/g" ${TORRC}) 2>/dev/null
 	[ -d "${CLIENT_ONION_AUTH_DIR}" ] || sudo -u "${TOR_USER}" mkdir -p "${CLIENT_ONION_AUTH_DIR}"
 	if [ -z "${CLIENT_PRIV_KEY}" ]; then
 		## Generate pem and derive pub and priv keys
@@ -646,10 +646,10 @@ case "$CHOICE" in
         if grep "#HiddenServiceDir" ${TORRC}; then
 					clear
           echo -e "${RED}[+] Activating Onion Service Mode... ${SERVICE_NAME}...${NOCOLOR}"
-          (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) 2> /dev/null
-          (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) 2> /dev/null
-          (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
-          (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
+          (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+          (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) 2>/dev/null
+          (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+          (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
           if grep "HiddenServiceDir" ${TORRC}; then
 						# This produces WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
 						create_web_service_list 0
@@ -689,10 +689,10 @@ case "$CHOICE" in
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Deactivating Onion Service Mode...${NOCOLOR}"
-        (sudo sed -i "s/^#HiddenServiceDir/##HiddenServiceDir/g" ${TORRC}) 2> /dev/null
-        (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2> /dev/null
-        (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
-        (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
+        (sudo sed -i "s/^#HiddenServiceDir/##HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+        (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2>/dev/null
+        (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+        (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
 				# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
 				TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 				if [ ! -z "$TFS_NAME_LIST" ]; then
@@ -758,9 +758,9 @@ case "$CHOICE" in
               #This is necessary to work with special characters in sed
               DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
               SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
-              sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2> /dev/null
-              sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2> /dev/null
-              sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC} 2> /dev/null
+              sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2>/dev/null
+              sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2>/dev/null
+              sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC} 2>/dev/null
 							# This gives VIRTPORT, HIDDENSSERVICEPORT
 							find_virtport $SERVICE_NAME
               #This is necessary to work with special characters in sed
@@ -1343,7 +1343,7 @@ case "$CHOICE" in
 				done
 				ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "${CLIENT_ONION_AUTH_DIR}"/ | cut -d "." -f1)
 				[ -z "$ONION_AUTH_LIST" ] && error_no_client_authorization
-				(sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/g" ${TORRC}) 2> /dev/null
+				(sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/g" ${TORRC}) 2>/dev/null
 				echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
 				sudo systemctl restart tor
 				echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"

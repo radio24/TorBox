@@ -76,12 +76,12 @@ read_config()
 	# List all available network interfaces
 	AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}')
 	# Read interfaces from run/torbox.run
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2> /dev/null
-	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2> /dev/null
-	MAC_eth0=$(grep "^MAC_eth0=" ${RUNFILE} | sed "s/MAC_eth0=//g") 2> /dev/null
-	MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2> /dev/null
-	MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2> /dev/null
-	MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2> /dev/null
+	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2>/dev/null
+	MAC_eth0=$(grep "^MAC_eth0=" ${RUNFILE} | sed "s/MAC_eth0=//g") 2>/dev/null
+	MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2>/dev/null
+	MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2>/dev/null
+	MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2>/dev/null
 }
 
 # This function randomize, resets or changes the MAC address of an interface.

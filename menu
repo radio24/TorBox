@@ -64,10 +64,10 @@ MMENUSTRING=""
 INTERNETSELECTION=$1
 
 #Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 
 #Check freshinstalled
-FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2> /dev/null
+FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 
 ##############################
 ######## FUNCTIONS ###########
@@ -103,15 +103,15 @@ check_bridge_relay()
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC})
     sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
     sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
-    (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+    (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
     RULE_CHECK=$?
     if [ $RULE_CHECK = 1 ]; then
-      (sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
-      (sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+      (sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
+      (sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null
     fi
   else
-    (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
-    (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+    (sudo iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
+    (sudo iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null
   fi
 }
 
@@ -326,7 +326,7 @@ case "$CHOICE" in
         sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
       fi
       if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+      (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
     fi
   ;;
 
@@ -400,7 +400,7 @@ case "$CHOICE" in
           sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
       else
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
@@ -550,7 +550,7 @@ case "$CHOICE" in
           sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
       else
         if pgrep -f "pppd"; then
           if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -634,7 +634,7 @@ case "$CHOICE" in
             sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
           fi
           if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         else
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
         fi
@@ -711,7 +711,7 @@ case "$CHOICE" in
           sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
       else
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
@@ -745,7 +745,7 @@ case "$CHOICE" in
           echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
           echo ""
           add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
           sleep 2
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
           if wget -q --spider $CHECK_URL; then
@@ -810,7 +810,7 @@ case "$CHOICE" in
           sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2> /dev/null
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
       else
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi

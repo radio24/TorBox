@@ -211,7 +211,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
       echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
       echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
-      (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
+      (sudo rm -r /etc/ssh/ssh_host_*) 2>/dev/null
       sudo ssh-keygen -A
       echo ""
       echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
@@ -317,12 +317,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
 				sleep 2
 			fi
-      (sudo systemctl unmask tor) 2> /dev/null
-			(sudo systemctl unmask tor@default.service) 2> /dev/null
+      (sudo systemctl unmask tor) 2>/dev/null
+			(sudo systemctl unmask tor@default.service) 2>/dev/null
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
       sleep 2
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
-      (sudo systemctl enable tor) 2> /dev/null
+      (sudo systemctl enable tor) 2>/dev/null
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload

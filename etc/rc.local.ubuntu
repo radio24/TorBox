@@ -105,13 +105,13 @@ sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 if grep "^BridgeRelay" /etc/tor/torrc ; then
   ORPORT=$(grep "^ORPort" /etc/tor/torrc | cut -d " " -f2)
   OBFS4PORT=$(grep "^ServerTransportListenAddr" /etc/tor/torrc | cut -d " " -f2)
-  (sudo /sbin/iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+  (sudo /sbin/iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
   RULE_CHECK=$?
   if [ $RULE_CHECK = 1 ]; then
-    (sudo /sbin/iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
-    (sudo /sbin/iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null
+    (sudo /sbin/iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
+    (sudo /sbin/iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null
   fi
 else
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $sORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null ; fi
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2> /dev/null ; fi
+	if iptables-save | grep -e "-A INPUT -p tcp --dport $sORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null ; fi
+	if iptables-save | grep -e "-A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi

@@ -62,7 +62,7 @@ RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 LOOP_NUMBER=0
 i=0
-PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2> /dev/null
+PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2>/dev/null
 
 
 ###########################
@@ -503,7 +503,7 @@ case "$CHOICE" in
           echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
           echo ""
           add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
           sleep 2
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
           if wget -q --spider "$CHECK_URL"; then

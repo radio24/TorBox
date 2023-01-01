@@ -716,14 +716,14 @@ else
 	clear
 fi
 setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-(mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-(chmod a+x /usr/share/tor/geoip*) 2> /dev/null
+(mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
+(chmod a+x /usr/share/tor/geoip*) 2>/dev/null
 # Debian specific
-(chmod a+x /usr/local/share/tor/geoip*) 2> /dev/null
+(chmod a+x /usr/local/share/tor/geoip*) 2>/dev/null
 # Copy not moving!
-(cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+(cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
 # Debian specific
-(cp /usr/local/share/tor/geoip* /usr/bin) 2> /dev/null
+(cp /usr/local/share/tor/geoip* /usr/bin) 2>/dev/null
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
@@ -836,11 +836,11 @@ if [ $DLCHECK -eq 0 ] ; then
 	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
 	echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
-	(rm -r torbox) 2> /dev/null
+	(rm -r torbox) 2>/dev/null
 	echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
 	mv TorBox-$TORBOXMENU_BRANCHNAME torbox
 	echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
-	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2> /dev/null
+	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2>/dev/null
 	echo ""
 else
 	echo ""
@@ -867,32 +867,32 @@ cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
 # NEW v.0.5.2: vanguards removed
-(cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
+(cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
-(cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
+(cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
 cp etc/default/isc-dhcp-server /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
-(cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
+(cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
 cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
-(cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
+(cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
 cp etc/dhcp/dhcpd.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
-(cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
+(cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
 cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
-(cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
+(cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
 cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
-(cp /etc/motd /etc/motd.bak) 2> /dev/null
+(cp /etc/motd /etc/motd.bak) 2>/dev/null
 cp etc/motd /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-(cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
+(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-(cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
+(cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
@@ -901,12 +901,12 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
-(cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
+(cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
 cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-(cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+(cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
 cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 
@@ -987,14 +987,14 @@ echo""
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 systemctl stop nginx
-(rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(rm /etc/nginx/sites-available/default) 2> /dev/null
-(rm -r /var/www/html) 2> /dev/null
+(rm /etc/nginx/sites-enabled/default) 2>/dev/null
+(rm /etc/nginx/sites-available/default) 2>/dev/null
+(rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (chown torbox:torbox /var/www)
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
-(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2> /dev/null
+(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
 systemctl start nginx
 systemctl daemon-reload
 
@@ -1057,15 +1057,15 @@ echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
 adduser torbox
 adduser torbox netdev
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www) 2> /dev/null
+(sudo chown torbox:torbox /var/www) 2>/dev/null
 mv /root/* /home/torbox/
-(mv /root/.profile /home/torbox/) 2> /dev/null
+(mv /root/.profile /home/torbox/) 2>/dev/null
 mkdir /home/torbox/openvpn
-(rm .bash_history) 2> /dev/null
+(rm .bash_history) 2>/dev/null
 chown -R torbox:torbox /home/torbox/
 if !  grep "# Added by TorBox" /etc/sudoers ; then
   printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" |  tee -a /etc/sudoers
-  (visudo -c) 2> /dev/null
+  (visudo -c) 2>/dev/null
 fi
 cd /home/torbox/
 
@@ -1100,8 +1100,8 @@ echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(rm -r debian-packages) 2> /dev/null
-(rm -r WiringPi) 2> /dev/null
+(rm -r debian-packages) 2>/dev/null
+(rm -r WiringPi) 2>/dev/null
 # Find the bigest space waster packages: dpigs -H
 apt-get -y remove libgl1-mesa-dri texlive* lmodern
 apt-get -y clean
@@ -1122,14 +1122,14 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
 # To start TACA notices.log has to be present
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
+(chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname TorBox051) 2> /dev/null
-(cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-(cp torbox/etc/hosts /etc/) 2> /dev/null
+(hostnamectl set-hostname TorBox051) 2>/dev/null
+(cp /etc/hosts /etc/hosts.bak) 2>/dev/null
+(cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3

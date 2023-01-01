@@ -144,29 +144,29 @@ sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 echo -e "${RED}[+] Deactivating the bridge relay${NOCOLOR}"
 deactivating_bridge_relay
 echo -e "${RED}[+] Removing permanently OBFS4 Bridge Relay data${NOCOLOR}"
-(sudo rm -r /var/lib/tor/keys) 2> /dev/null
-(sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-(sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-(sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
+(sudo rm -r /var/lib/tor/keys) 2>/dev/null
+(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
+(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
+(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
 echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node ${NOCOLOR}"
-(sudo rm -r /var/lib/tor/cached-certs) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-consensus) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-descriptors) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-descriptors.new) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-microdescs) 2> /dev/null
-(sudo rm -r /var/lib/tor/cached-microdescs.new) 2> /dev/null
-(sudo rm -r /var/lib/tor/diff-cache) 2> /dev/null
-(sudo rm -r /var/lib/tor/lock) 2> /dev/null
-(sudo rm -r /var/lib/tor/state) 2> /dev/null
+(sudo rm -r /var/lib/tor/cached-certs) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-consensus) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-descriptors) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-descriptors.new) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-microdesc-consensus) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-microdescs) 2>/dev/null
+(sudo rm -r /var/lib/tor/cached-microdescs.new) 2>/dev/null
+(sudo rm -r /var/lib/tor/diff-cache) 2>/dev/null
+(sudo rm -r /var/lib/tor/lock) 2>/dev/null
+(sudo rm -r /var/lib/tor/state) 2>/dev/null
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
-(sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2> /dev/null
-(sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2> /dev/null
+(sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
+(sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
 echo -e "${RED}[+] Copy /etc/iptables.ipv4.nat${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
-(sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2> /dev/null
+(sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove

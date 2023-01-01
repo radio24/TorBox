@@ -763,10 +763,10 @@ else
 	clear
 fi
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-(sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
+(sudo mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
 sudo chmod a+x /usr/share/tor/geoip*
 # Copying not moving!
-(sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+(sudo cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
@@ -877,11 +877,11 @@ if [ $DLCHECK -eq 0 ] ; then
 	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
 	echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
-	(rm -r torbox) 2> /dev/null
+	(rm -r torbox) 2>/dev/null
 	echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
 	mv TorBox-$TORBOXMENU_BRANCHNAME torbox
 	echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
-	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2> /dev/null
+	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2>/dev/null
 	echo ""
 else
 	echo ""
@@ -908,40 +908,40 @@ cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
 # NEW v.0.5.2: Vanguards removed
-(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
+(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
-(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
+(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
-(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
+(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
-(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
+(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
-(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
+(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
-(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 sudo mkdir /etc/update-motd.d/bak
-(sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2> /dev/null
+(sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2>/dev/null
 sudo rm /etc/legal
 # Comment out with sed
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/login
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/sshd
 echo -e "${RED}[+]${NOCOLOR}         Disabled Ubuntu's update-motd feature -- backup done"
-(sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
+(sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
 sudo cp etc/motd /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
-(sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
+(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 sudo cp etc/rc.local.ubuntu /etc/rc.local
 sudo chmod u+x /etc/rc.local
 # We will enable rc-local further below
@@ -949,7 +949,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 # Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).
 # To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
 # LLMNR=yes / MulticastDNS=yes / Chache=no
-(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
+(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>/dev/null
 sudo cp etc/systemd/resolved.conf /etc/systemd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
@@ -957,12 +957,12 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
-(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
+(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
@@ -1057,11 +1057,11 @@ echo""
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 sudo systemctl stop nginx
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
+(sudo rm /etc/nginx/sites-enabled/default) 2>/dev/null
+(sudo rm /etc/nginx/sites-available/default) 2>/dev/null
+(sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www) 2> /dev/null
+(sudo chown torbox:torbox /var/www) 2>/dev/null
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
 sudo systemctl start nginx
@@ -1128,7 +1128,7 @@ sudo adduser torbox netdev
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
-  (sudo visudo -c) 2> /dev/null
+  (sudo visudo -c) 2>/dev/null
 fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1155,11 +1155,11 @@ echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(sudo rm -r debian-packages) 2> /dev/null
-(sudo rm -r WiringPi) 2> /dev/null
-(sudo rm -r Downloads) 2> /dev/null
-(sudo rm -r get-pip.py) 2> /dev/null
-(sudo rm -r python-urwid*) 2> /dev/null
+(sudo rm -r debian-packages) 2>/dev/null
+(sudo rm -r WiringPi) 2>/dev/null
+(sudo rm -r Downloads) 2>/dev/null
+(sudo rm -r get-pip.py) 2>/dev/null
+(sudo rm -r python-urwid*) 2>/dev/null
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
@@ -1169,15 +1169,15 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox051) 2> /dev/null
-(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-(sudo cp torbox/etc/hosts /etc/) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox051) 2>/dev/null
+(sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
+(sudo cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
 sudo mv /home/ubuntu/* /home/torbox/
-(sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+(sudo mv /home/ubuntu/.profile /home/torbox/) 2>/dev/null
 sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
+(sudo rm .bash_history) 2>/dev/null
 sudo chown -R torbox:torbox /home/torbox/
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
@@ -1190,8 +1190,8 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
 # To start TACA notices.log has to be present
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
+(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3

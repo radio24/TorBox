@@ -95,7 +95,7 @@ case "$CHOICE" in
 		if [ $OCHECK == 1 ]; then
     	echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
     	trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
-    	(rm -r /tmp/captcha.*) 2> /dev/null
+    	(rm -r /tmp/captcha.*) 2>/dev/null
     	if [ $CLEARNET_DECISSION == 1 ]; then
 				if [ "$COUNTRY" == "00" ]; then
 					bridge_address=$(python3 bridges_get.py)
@@ -227,7 +227,7 @@ case "$CHOICE" in
             bridge_address="#Bridge $bridge_address"
           fi
           echo -e "${RED}[+] Saved bridge number $i!${NOCOLOR}"
-          (printf %s"$bridge_address\n" | sudo tee -a $TORRC) 2> /dev/null
+          (printf %s"$bridge_address\n" | sudo tee -a $TORRC) 2>/dev/null
           i=$((i+1))
         fi
       done

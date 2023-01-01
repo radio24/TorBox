@@ -98,10 +98,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		else
 			echo -e "${RED}[+] Unpacking backup file ${OS_BK_TAR}${NOCOLOR}"
 			#if [ -d "restore" ]; then
-				(sudo rm -r restore) 2> /dev/null
+				(sudo rm -r restore) 2>/dev/null
 			#fi
-			(sudo mkdir restore) 2> /dev/null
-			(sudo tar -xpzf $OS_BK_TAR -C restore) 2> /dev/null
+			(sudo mkdir restore) 2>/dev/null
+			(sudo tar -xpzf $OS_BK_TAR -C restore) 2>/dev/null
 			sleep 2
 
 			# OBFS4 Bridge Relay data exist?
@@ -240,50 +240,50 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $TCS_NAME_LIST; fi
 
 			# These variables in the TORRC have to be kept
-			MODE_BRIDGES=$(grep "UseBridges" ${TORRC}) 2> /dev/null
-			UpdateBridgesFromAuthority=$(grep "UpdateBridgesFromAuthority" ${TORRC}) 2> /dev/null
-			MEEK_CONF=$(grep "ClientTransportPlugin meek_lite" ${TORRC}) 2> /dev/null
-			SNOW_CONF=$(grep "ClientTransportPlugin snowflake" ${TORRC}) 2> /dev/null
-			MEEK_BRIDGE=$(grep "Bridge meek_lite" ${TORRC}) 2> /dev/null
-			SNOW_BRIDGE=$(grep "Bridge snowflake" ${TORRC}) 2> /dev/null
+			MODE_BRIDGES=$(grep "UseBridges" ${TORRC}) 2>/dev/null
+			UpdateBridgesFromAuthority=$(grep "UpdateBridgesFromAuthority" ${TORRC}) 2>/dev/null
+			MEEK_CONF=$(grep "ClientTransportPlugin meek_lite" ${TORRC}) 2>/dev/null
+			SNOW_CONF=$(grep "ClientTransportPlugin snowflake" ${TORRC}) 2>/dev/null
+			MEEK_BRIDGE=$(grep "Bridge meek_lite" ${TORRC}) 2>/dev/null
+			SNOW_BRIDGE=$(grep "Bridge snowflake" ${TORRC}) 2>/dev/null
 
 			# Removing old configuration...
 			echo -e "${RED}[+] Removing old configuration...${NOCOLOR}"
-			(sudo rm -r ${DATA_DIR_OS}) 2> /dev/null
-			(sudo rm -r ${NGINX_DIR}/sites-available/*) 2> /dev/null
-			(sudo rm -r ${NGINX_DIR}/sites-enabled/*) 2> /dev/null
+			(sudo rm -r ${DATA_DIR_OS}) 2>/dev/null
+			(sudo rm -r ${NGINX_DIR}/sites-available/*) 2>/dev/null
+			(sudo rm -r ${NGINX_DIR}/sites-enabled/*) 2>/dev/null
 			sleep 1
 
 			# Restoring TORRC
 			echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
-			(sudo mv ${TORRC} ${TORRC}.bak) 2> /dev/null
-			(sudo mv restore${TORRC} ${TORRC}) 2> /dev/null
+			(sudo mv ${TORRC} ${TORRC}.bak) 2>/dev/null
+			(sudo mv restore${TORRC} ${TORRC}) 2>/dev/null
 
 			# Restoring TFS and TCS configuration
-			TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2> /dev/null
-			(sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2> /dev/null
-			TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2> /dev/null
-			(sudo sed -i "s/^TCS-.*/$TCS_STRING/" ${RUNFILE}) 2> /dev/null
+			TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
+			(sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
+			TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
+			(sudo sed -i "s/^TCS-.*/$TCS_STRING/" ${RUNFILE}) 2>/dev/null
 
 			# Configure restored RUNFILE and TORRC
 			deactivating_bridge_relay
-			(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/UseBridges.*/${MODE_BRIDGES}/" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/UpdateBridgesFromAuthority.*/${UpdateBridgesFromAuthority}/" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/ClientTransportPlugin meek_lite.*/${MEEK_CONF}/" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/ClientTransportPlugin snowflake.*/${SNOW_CONF}/" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/Bridge meek_lite.*/${MEEK_BRIDGE}/" ${TORRC}) 2> /dev/null
-			(sudo sed -i "s/Bridge snowflake.*/${SNOW_BRIDGE}/" ${TORRC}) 2> /dev/null
+			(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/UseBridges.*/${MODE_BRIDGES}/" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/UpdateBridgesFromAuthority.*/${UpdateBridgesFromAuthority}/" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/ClientTransportPlugin meek_lite.*/${MEEK_CONF}/" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/ClientTransportPlugin snowflake.*/${SNOW_CONF}/" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/Bridge meek_lite.*/${MEEK_BRIDGE}/" ${TORRC}) 2>/dev/null
+			(sudo sed -i "s/Bridge snowflake.*/${SNOW_BRIDGE}/" ${TORRC}) 2>/dev/null
 			sleep 1
 
 			# Restoring OBFS4 Bridge Relay data
 			if [ "$OBFS4RELAY" == "1" ]; then
 				echo -e "${RED}[+] Removing old Bridge Relay data...${NOCOLOR}"
-				(sudo rm -r /var/lib/tor/keys) 2> /dev/null
-				(sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-				(sudo rm ${HASHED_FINGERPRINT_DIR}) 2> /dev/null
-				(sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
+				(sudo rm -r /var/lib/tor/keys) 2>/dev/null
+				(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
+				(sudo rm ${HASHED_FINGERPRINT_DIR}) 2>/dev/null
+				(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
 				sleep 1
 				echo -e "${RED}[+] Restoring Bridge Relay data...${NOCOLOR}"
 				sudo mv restore/var/lib/tor/keys ${DATA_DIR}
@@ -304,7 +304,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			# Restoring server access authorization
 			if [ "$ONIONAUTH" == "1" ]; then
 				echo -e "${RED}[+] Removing old server access authorization...${NOCOLOR}"
-				(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2> /dev/null
+				(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2>/dev/null
 				echo -e "${RED}[+] Restoring server access authorization...${NOCOLOR}"
 				sudo mv restore${CLIENT_ONION_AUTH_DIR} ${DATA_DIR}
 				sleep 1
@@ -317,14 +317,14 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				echo -e "${WHITE}[!] Old existing folder will be kept and have to be removed manually!${NOCOLOR}"
 				FOLDER_LIST=$(sudo ls "restore${WEBSITE_DIR}")
 				for FOLDER in $FOLDER_LIST; do
-					[ -d "${WEBSITE_DIR}/${FOLDER}" ] && (sudo mv "${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}/$FOLDER.BAK") 2> /dev/null
-					(sudo mv "restore${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2> /dev/null
-					(sudo chown torbox:torbox "$WEBSITE_DIR/$FOLDER") 2> /dev/null
+					[ -d "${WEBSITE_DIR}/${FOLDER}" ] && (sudo mv "${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}/$FOLDER.BAK") 2>/dev/null
+					(sudo mv "restore${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2>/dev/null
+					(sudo chown torbox:torbox "$WEBSITE_DIR/$FOLDER") 2>/dev/null
 				done
 				if [ "$ONIONSERVICES" == "1" ]; then
 					echo -e "${RED}[+] Restoring Nginx configuration...${NOCOLOR}"
-					(sudo mv "restore${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2> /dev/null
-					(sudo mv "restore${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2> /dev/null
+					(sudo mv "restore${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2>/dev/null
+					(sudo mv "restore${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2>/dev/null
 				fi
 				echo ""
 				sleep 1

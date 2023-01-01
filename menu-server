@@ -177,7 +177,7 @@ case "$CHOICE" in
           sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
           sudo sed -i "s/^#Nickname/Nickname/g" ${TORRC}
           sudo sed -i "s/^#BridgeDistribution/BridgeDistribution/g" ${TORRC}
-          (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+          (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
           RULE_CHECK=$?
           if [ $RULE_CHECK = 1 ]; then
             sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
@@ -320,7 +320,7 @@ case "$CHOICE" in
       sleep 2
       if [ "$MODE_BR" = "BridgeRelay 1" ]; then
         echo -e "${RED}[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
-        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
         RULE_CHECK=$?
         if [ $RULE_CHECK = 1 ]; then
           sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
@@ -341,10 +341,10 @@ case "$CHOICE" in
 		 	echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
 		 	deactivating_bridge_relay
 		 	echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
-		 	(sudo rm -r /var/lib/tor/keys) 2> /dev/null
-		 	(sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-		 	(sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
+		 	(sudo rm -r /var/lib/tor/keys) 2>/dev/null
+		 	(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
+		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
+		 	(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
 		 	echo -e "${RED}[+] Done!${NOCOLOR}"
 		 	sleep 4
 		 	restarting_tor menu-server
