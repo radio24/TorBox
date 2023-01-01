@@ -69,6 +69,7 @@ BAK="/etc/tor/torrc.bak"
 RUNFILE="run/torbox.run"
 TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
+# shellcheck disable=SC2001,SC2016
 TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
 ##############################
@@ -268,6 +269,12 @@ case "$CHOICE" in
         echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
         echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
         sleep 5
+			elif ${#INPUT} -lt 8 || ${#INPUT} -gt 63 ; then
+				clear
+				echo " "
+				echo -e "${WHITE}[!] The password has to be between 8 and 63 charcters.${NOCOLOR}"
+				echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
+				sleep 5
       else
         clear
         echo -e "${RED}[+] Changing password...${NOCOLOR}"
