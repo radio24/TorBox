@@ -156,36 +156,37 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		clear
 		echo -e "${RED}[+] Start backup...${NOCOLOR}"
 		echo -e "${RED}[+] Calculating size...${NOCOLOR}"
-		NEEDED_SIZE=$(sudo tar -cz ${BACKUPSTRING} | wc -c)
+		NEEDED_SIZE=$(sudo tar -cz --absolute-names ${BACKUPSTRING} | wc -c)
 
 		# Useful, if we will implement the mounting of an USB drive under BACKUP_DIR
 		AVAILABLE_SIZE=$(df -a | grep "$BACKUP_DIR" | awk '{print $4}')
 		if [ -z "$AVAILABLE_SIZE" ]; then AVAILABLE_SIZE=$(df -k / | tail -1 | awk '{print $4}'); fi
 		AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
 		if [ $NEEDED_SIZE -lt $AVAILABLE_SIZE ]; then
-			echo ""
+
 			echo -e "${RED}[+] Backup in progress...${NOCOLOR}"
 			if [ ! -d "$BACKUP_DIR" ]; then
 				mkdir $BACKUP_DIR
 			fi
-			(sudo tar -cpzf "$OS_BK_TAR" ${BACKUPSTRING}) >/dev/null
-			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders")
+			(sudo tar -cpzf "$OS_BK_TAR" --absolute-names ${BACKUPSTRING}) 2>/dev/null
+			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders") 2>/dev/null
 			if [ -z "$LINK_EXIST" ]; then
-				echo ""
 				echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
-				(sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") >/dev/null
+				(sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") 2>/dev/null
 			fi
 			echo ""
 			echo -e "${WHITE}[+] Backup is done!${NOCOLOR}"
 			echo -e "${RED}[+] You will find it here: ${OS_BK_TAR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
 		else
 			clear
 			echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
 			echo -e "${WHITE}[+] Did you include shared folders? Please, try again without them!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
 			exit 1
 		fi
 	fi
