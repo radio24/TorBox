@@ -241,7 +241,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Configuring the source of the Internet
     	check_interface_with_internet
-    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     	"==" "===============================================================" \
     	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
     	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -275,7 +275,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-			if (whiptail --title "TorBox v.0.5.1 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat text/no_antifirewall-please-text)
 					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then

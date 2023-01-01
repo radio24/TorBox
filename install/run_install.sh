@@ -91,7 +91,7 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
-# NEW v.0.5.1: new go versions
+# NEW v.0.5.2: new go versions
 # Used go version
 GO_VERSION="go1.18.4.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.18.4.linux-arm64.tar.gz"
@@ -114,7 +114,7 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.1 - version 2.3.0
+# NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # NEW v.0.5.2
@@ -575,7 +575,7 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
-# NEW v.0.5.1: not nice, but working
+# NEW v.0.5.2: not nice, but working
 sudo apt -y --fix-broken install
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
@@ -601,7 +601,7 @@ sudo pip3 install requests
 sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
-# NEW v.0.5.1
+# NEW v.0.5.2
 sudo pip3 install paramiko
 sudo pip3 install tornado
 sudo pip3 install APScheduler
@@ -981,7 +981,7 @@ sudo systemctl stop systemd-journald.service
 sudo systemctl mask systemd-journald.service
 echo""
 
-# NEW v.0.5.1
+# NEW v.0.5.2
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 sudo systemctl stop nginx
@@ -990,7 +990,7 @@ sudo systemctl stop nginx
 (sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2>/dev/null
-# NEW v.0.5.1: configure webssh
+# NEW v.0.5.2: configure webssh
 sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
@@ -1085,13 +1085,13 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
-# NEW v.0.5.1: Disable auto-login
+# NEW v.0.5.2: Disable auto-login
 echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox051) 2>/dev/null
+(sudo hostnamectl set-hostname TorBox052) 2>/dev/null
 (sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
 (sudo cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

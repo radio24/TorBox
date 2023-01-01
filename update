@@ -518,7 +518,7 @@ update_torcfg()
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
 
   # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox051
+  sudo hostnamectl set-hostname TorBox052
   (sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
   sudo cp torbox/etc/hosts /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
@@ -700,7 +700,7 @@ stty intr ^c
 trap
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
@@ -763,7 +763,7 @@ case "$CHOICE" in
 			sudo pip3 install --upgrade Django
 			sudo pip3 install --upgrade click
 			sudo pip3 install --upgrade gunicorn
-			# NEW v.0.5.1
+			# NEW v.0.5.2
 			sudo pip3 install --upgrade paramiko
 			sudo pip3 install --upgrade tornado
 			sudo pip3 install --upgrade APScheduler
@@ -1057,7 +1057,7 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# NEW v.0.5.1
+	# NEW v.0.5.2
 	# Restart nginx, webssh, TFS and TCS
 	11)
 		clear

@@ -107,7 +107,7 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.1 - version 2.3.0
+# NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # NEW v.0.5.2
@@ -595,7 +595,7 @@ pip3 install requests
 pip3 install Django
 pip3 install click
 pip3 install gunicorn
-# NEW v.0.5.1
+# NEW v.0.5.2
 sudo pip3 install click
 sudo pip3 install paramiko
 sudo pip3 install tornado
@@ -976,7 +976,7 @@ echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
 systemctl disable rsyslog
 systemctl mask rsyslog
-# NEW v.0.5.1
+# NEW v.0.5.2
 systemctl stop systemd-journald-dev-log.socket
 systemctl stop systemd-journald-audit.socket
 systemctl stop systemd-journald.socket
@@ -1127,7 +1127,7 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname TorBox051) 2>/dev/null
+(hostnamectl set-hostname TorBox052) 2>/dev/null
 (cp /etc/hosts /etc/hosts.bak) 2>/dev/null
 (cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
