@@ -80,6 +80,9 @@ Please bear the following coding guidelines in mind:
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
   ```
 
+	However, when assigning to a variable, the redirection should be inside the sub shell:
+	`LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders" 2>/dev/null)`
+
 - `! -z` for non zero/not null and `-z` for zero/null. ATTENTION: zero/null means `""` or `0`, but not `"0"` because this is a string!
 
   **Examples for a short menu**

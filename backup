@@ -169,7 +169,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				mkdir $BACKUP_DIR
 			fi
 			(sudo tar -cpzf "$OS_BK_TAR" --absolute-names ${BACKUPSTRING}) 2>/dev/null
-			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders") 2>/dev/null
+			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders" 2>/dev/null)
 			if [ -z "$LINK_EXIST" ]; then
 				echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
 				(sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") 2>/dev/null
