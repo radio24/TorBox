@@ -144,6 +144,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE 
 "==" "================================================[Dangerous!]===" \
 " 8" "Remove permanently OBFS4 Bridge Relay data" \
 3>&1 1>&2 2>&3)
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

@@ -176,6 +176,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - COUNTERMEASUR
 "16" "Countermeasure against a disconnection when idle feature - $PING" \
 "17" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
 3>&1 1>&2 2>&3)
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -387,12 +390,13 @@ case "$CHOICE" in
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
       CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.1 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
-      "1" "Protection against entry guard failing and overloaded tor network" ON \
-      "2" "Protection against interrupted WiFi connection with the Internet" ON \
-      "3" "Protection against excessive number of failing tor circuits" ON \
-      "4" "Protection against excessive connection failing with tor circuits" ON \
-      "5" "Protection against tor bootstrapping problems" ON  \
-      "6" "Protection against out of sync time" ON 3>&1 1>&2 2>&3)
+      "1" "Protection against out of sync time" ON \
+      "2" "Protection against entry guard failing and overloaded tor network" ON \
+      "3" "Protection against interrupted WiFi connection with the Internet" ON \
+      "4" "Protection against excessive number of failing tor circuits" ON \
+      "5" "Protection against excessive connection failing with tor circuits" ON \
+      "6" "Protection against tor bootstrapping problems" ON  \
+      3>&1 1>&2 2>&3)
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"

@@ -624,10 +624,10 @@ else
 	"18" "Start/stop upload or/and download files (TorBox File Sharing)"  \
 	"19" "Start/stop TorBox Chat Secure" \
   3>&1 1>&2 2>&3)
+	exitstatus=$?
+	# exitstatus == 255 means that the ESC key was pressed
+	[ "$exitstatus" == "255" ] && exit 0
 fi
-exitstatus=$?
-# exitstatus == 255 means that the ESC key was pressed
-if [ "$exitstatus" == "255" ]; then exit 0; fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

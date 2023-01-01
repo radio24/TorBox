@@ -661,6 +661,9 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - UPDATE & MAINTENANCE MENU
 "13" "Erase all log files" \
 "14" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
