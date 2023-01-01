@@ -1,12 +1,11 @@
 Would you like to reset your TorBox configuration files?
 
 IMPORTANT
-- If not already done, we recommend updating TorBox's menu first by using
-	menu entry 6. This will also provide you with the newest configuration
-	files, stored in /home/torbox/torbox/etc.
-- If you want to preserve the configuration for your OBFS4 bridge relay and
-  for your Onion Services, you have to make these backups before. You can
-	find the menu entries in the OBFS4 Bridge Relay and the Onion Service
-	sub-menus.
-- ALL configuration files will be overwritten, and ALL your custom
-	configuration will be lost!!
+- THIS WILL DELETE ALL YOUR CONFIGURATION!! ALSO THE DEFAULT PASSWORDS
+  WILL BE SET: CHANGE-IT
+- We recommend to make first a backup with menu entry 6, and also to
+  update the TorBox's menu entry 5. This will also provide you with the
+  newest configuration files, stored in /home/torbox/torbox/etc.
+- After the reset, we recommend to re-run the "First Start-up" script
+  with menu entry 12, and to change the essential passwords with entry 1
+  and 2 in the Configuration sub-menu.

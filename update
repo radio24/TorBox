@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2004
+# shellcheck disable=SC2001,SC2004,SC2016
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -82,7 +82,13 @@ TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 
 #Other variables
+TOR_DIR="/etc/tor/"
+TORRC="${TOR_DIR}torrc"
 TMP_DIR="/home/torbox/tmp"
+TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
+# This is necessary to work with special characters in sed
+# shellcheck disable=SC2001,SC2016
+TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 RECOMPILE=0
 i=0
 n=0
@@ -441,11 +447,63 @@ update_torcfg()
     sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
     echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
   fi
-  (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
+
+	# These variables in the TORRC have to be kept
+	deactivating_bridge_relay
+	(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
+	(sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
+	[ -f etc/tor/torrc.exclude-slow ] && sudo rm /etc/tor/torrc.exclude-slow
+	sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+	MODE_BRIDGES=$(grep "^UseBridges" ${TORRC}) 2>/dev/null
+	UpdateBridgesFromAuthority=$(grep "^UpdateBridgesFromAuthority" ${TORRC}) 2>/dev/null
+	MEEK_CONF=$(grep "^ClientTransportPlugin meek_lite" ${TORRC}) 2>/dev/null
+	SNOW_CONF=$(grep "^ClientTransportPlugin snowflake" ${TORRC}) 2>/dev/null
+	MEEK_BRIDGE=$(grep "^Bridge meek_lite" ${TORRC}) 2>/dev/null
+	SNOW_BRIDGE=$(grep "^Bridge snowflake" ${TORRC}) 2>/dev/null
+	OBFS4_BRIDGE=$(grep "^Bridge obfs4" ${TORRC}) 2>/dev/null
+	CLIENTONIONAUTHDIR=$(grep "^ClientOnionAuthDir" $TORRC) 2>/dev/null
+	HIDDENSERVICE=$(grep -A 1 "^#HiddenServiceDir" $TORRC) 2>/dev/null
+
+	# Backup and copy torrc
+	(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
   sudo cp etc/tor/torrc /etc/tor/
 	sudo chown -R debian-tor:debian-tor /etc/tor
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/tor/torrc -- backup done"
-  echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
+
+	# Restore the essential variables in TORRC
+	if [ -z $MODE_BRIDGES ] ; then (sudo sed -i "s/^UseBridges/#UseBridges/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#UseBridges/UseBridges/" ${TORRC}) 2>/dev/null ; fi
+	if [ -z $UpdateBridgesFromAuthority ] ; then (sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/" ${TORRC}) 2>/dev/null ; fi
+	if [ -z $MEEK_CONF ] ; then (sudo sed -i "s/^ClientTransportPlugin meek_lite/#ClientTransportPlugin meek_lite/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#ClientTransportPlugin meek_lite/ClientTransportPlugin meek_lite/" ${TORRC}) 2>/dev/null ; fi
+	if [ -z $SNOW_CONF ] ; then (sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#ClientTransportPlugin snowflake/ClientTransportPlugin snowflake/" ${TORRC}) 2>/dev/null ; fi
+	if [ -z $MEEK_BRIDGE ] ; then (sudo sed -i "s/^Bridge meek_lite/#Bridge meek_lite/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#Bridge meek_lite/Bridge meek_lite/" ${TORRC}) 2>/dev/null ; fi
+
+	if [ -z $SNOW_BRIDGE ] ; then
+		(sudo sed -i "s/^Bridge snowflake/#Bridge snowflake" ${TORRC}) 2>/dev/null
+	else
+		#This is necessary to work with special characters in sed
+		SNOW_BRIDGE="$(<<< "$SNOW_BRIDGE" sed -e 's`[][\\/.*^$]`\\&`g')"
+		# Using the Anchor in torrc
+		REPLACE_STRING=$(grep -m 1 "^## Snowflake (do not remove or change that line - this is an anchor)" ${TORRC})
+		#This is necessary to work with special characters in sed
+		REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+		REPLACE_STRING="$REPLACE_STRING\n$SNOW_BRIDGE"
+		sudo sed -E -i "s/^## Snowflake .*/$REPLACE_STRING/g" "${TORRC}"
+	fi
+
+	if [ -z $OBFS4_BRIDGE ] ; then (sudo sed -i "s/^Bridge obfs4/#Bridge obfs4" ${TORRC}) 2>/dev/null ; else (printf %s"$OBFS4_BRIDGE\n" | sudo tee -a $TORRC) 2>/dev/null ; fi
+	if [ -z $CLIENTONIONAUTHDIR ] ; then (sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; fi
+	sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+
+	# Using the Anchor in torrc
+	REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
+	#This is necessary to work with special characters in sed
+	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+	HIDDENSERVICE="$(<<< "$HIDDENSERVICE" sed -e 's`[][\\/.*^$]`\\&`g')"
+	HIDDENSERVICE="\n$HIDDENSERVICE"
+	#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
+	sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$NEW_STRING/g" "${TORRC}"
+
+	echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
   echo -e "${RED}[+]${NOCOLOR} Changing .profile if necessary"
   if ! grep "# Added by TorBox" ../.profile ; then

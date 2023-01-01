@@ -230,11 +230,14 @@ case "$CHOICE" in
             bridge_address="#Bridge $bridge_address"
           fi
           echo -e "${RED}[+] Saved bridge number $i!${NOCOLOR}"
+					#This is necessary to work with special characters in sed
+					NEW_STRING="$(<<< "${bridge_address[$i]}" sed -e 's`[][\\/.*^$]`\\&`g')"
 					# Using the Anchor in torrc
 					REPLACE_STRING=$(grep -m 1 "^## Snowflake (do not remove or change that line - this is an anchor)" ${TORRC})
 					#This is necessary to work with special characters in sed
 					REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-					sudo sed -E -i "s/$REPLACE_STRING/$REPLACE_STRING\n${bridge_address[$i]}\n/g" "${RUNFILE}"
+					REPLACE_STRING="$REPLACE_STRING\n$NEW_STRING"
+					sudo sed -E -i "s/^## Snowflake .*/$REPLACE_STRING/g" "${TORRC}"
           i=$((i+1))
         fi
       done
