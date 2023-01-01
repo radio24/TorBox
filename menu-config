@@ -243,6 +243,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - CONFIGURATION
 "21" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -881,11 +883,12 @@ case "$CHOICE" in
 					fi
 					clear
 					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+					sudo ./exclude-slow-tor-relays-ng -b $INPUT
 				else
 					clear
 					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+					sudo ./exclude-slow-tor-relays-ng
 				fi
-				sudo ./exclude-slow-tor-relays-ng -b $INPUT
 				sleep 5
 				clear
 				sudo mv torrc.exclude-slow /etc/tor
