@@ -972,8 +972,9 @@ cd
 if ! grep "# Added by TorBox (002)" .profile ; then
   sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
+cd torbox
 
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
 sudo mkdir /var/lib/tor/services
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
@@ -1064,7 +1065,7 @@ sudo systemctl stop nginx
 (sudo chown torbox:torbox /var/www) 2>/dev/null
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
-sudo systemctl start nginx
+#sudo systemctl start nginx
 sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

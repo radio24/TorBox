@@ -40,10 +40,10 @@ NOCOLOR='\033[0m'
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
 # Other Variables
 EXECUTED=$1
-
 
 ######## PREPARATIONS ########
 cd ~

@@ -625,7 +625,7 @@ if uname -m | grep -q -E "arm64|aarch64"; then
   if [ $DLCHECK -eq 0 ] ; then
   	tar -C /usr/local -xzvf $GO_VERSION_64
   	if ! grep "# Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
   	fi
   	export PATH=$PATH:/usr/local/go/bin
   	rm $GO_VERSION_64
@@ -652,7 +652,7 @@ else
   if [ $DLCHECK -eq 0 ] ; then
   	tar -C /usr/local -xzvf $GO_VERSION
   	if ! grep "# Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
+  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
   	fi
   	export PATH=$PATH:/usr/local/go/bin
   	rm $GO_VERSION
@@ -909,14 +909,16 @@ sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 (cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
 cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+echo ""
 
 #Back to the home directory
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
+cd torbox
 
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
 mkdir /var/lib/tor/services
 chown -R debian-tor:debian-tor /var/lib/tor/services
 chmod -R go-rwx /var/lib/tor/services
@@ -995,7 +997,7 @@ systemctl stop nginx
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
-systemctl start nginx
+#systemctl start nginx
 systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

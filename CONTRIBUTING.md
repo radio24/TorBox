@@ -15,6 +15,7 @@ Please bear the following coding guidelines in mind:
   **Identify the Operation System**
   ```shell
   CHECK_OS="$(lsb_release -si)"
+	if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
   ```
 
   **Check if it is a Raspberry Pi**

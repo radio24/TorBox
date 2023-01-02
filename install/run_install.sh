@@ -907,15 +907,15 @@ sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 (sudo cp etc/nginx/nginx.conf /etc/nginx/) 2>/dev/null
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
-clear
 
 #Back to the home directory
 cd
 if ! grep "# Added by TorBox (002)" .profile ; then
 	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
+cd torbox
 
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
 (sudo mkdir /var/lib/tor/services) 2>/dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
@@ -995,7 +995,7 @@ sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
-sudo systemctl start nginx
+#sudo systemctl start nginx
 sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
