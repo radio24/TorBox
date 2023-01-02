@@ -93,8 +93,8 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # NEW v.0.5.2: new go versions
 # Used go version
-GO_VERSION="go1.18.4.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.18.4.linux-arm64.tar.gz"
+GO_VERSION="go1.19.4.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.19.4.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
