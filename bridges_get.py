@@ -31,7 +31,7 @@
 #
 # Options:
 #   -n, --network TEXT  Force to get bridges over specific network
-#   -c, --country TEXT  Circumvention country setting
+#   -c, --country TEXT  Circumvention country setting - <TEXT> has to be in lowercase
 #   --snowflake         Get snowflake bridges instead of obfs4 (circumvention
 #                       country need to be set)
 #   --help              Show this message and exit.
@@ -184,7 +184,7 @@ def get_circumvention_bridges(country, network, snowflake):
 # fmt: off
 @click.command()
 @click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network. Example: -n <tor|inet>")
-@click.option('--country', '-c', default='', type=str, help="Circumvention country setting")
+@click.option('--country', '-c', default='', type=str, help="Circumvention country setting in lowercase")
 @click.option('--snowflake', is_flag=True, default=False, show_default=True, help="Get snowflake bridges instead of obfs4 (circumvention country need to be set)")
 # fmt: on
 def main(network, country, snowflake):

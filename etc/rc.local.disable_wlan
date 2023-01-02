@@ -55,11 +55,19 @@ sudo systemctl start hostapd
 # NEW v.0.5.2
 # grep "state DOWN" removed
 # Let's check if we can auto-connect to a wireless network
-if [ ip link | grep wlan0 ] && [ grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ] ; then exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a) ; fi
+if ip link | grep wlan0 ; then
+ if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
+	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a)
+ fi
+fi
 
 # NEW v.0.5.2
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
-if [ ip link | grep wlan1 ] && [ grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ] ; then exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a) ; fi
+if ip link | grep wlan1 ; then
+ if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
+	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a)
+ fi
+fi
 
 # NEW v.0.5.2
 # If a cellular device is available, and previously used then let's check if we can auto-connect

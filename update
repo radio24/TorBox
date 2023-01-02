@@ -1076,7 +1076,7 @@ case "$CHOICE" in
     if [ ! -z "$TCS_NAME_LIST" ]; then
       for TCS_NAME in $TCS_NAME_LIST; do
         echo -e "${RED}[+] Stopping TCS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-        PID=$(cat lib/chatsecure/pid/${TFS_NAME}.pid)
+        PID=$(cat lib/chatsecure/pid/${TCS_NAME}.pid)
         (sudo kill $PID) &>/dev/null
       done
       echo ""
