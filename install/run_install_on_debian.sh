@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2181,SC2001
+# shellcheck disable=SC2004,SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -56,11 +56,10 @@
 #  9. Installing all configuration files
 # 10. Disabling Bluetooth
 # 11. Configure the system services
-# 12. Installing additional network drivers
-# 13. Updating run/torbox.run
-# 14. Adding and implementing the user torbox
-# 15. Setting/changing root password
-# 16. Finishing, cleaning and booting
+# 12. Updating run/torbox.run
+# 13. Adding and implementing the user torbox
+# 14. Setting/changing root password
+# 15. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -74,10 +73,6 @@ MENU_HEIGHT_25=25
 RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
-
-# Include/Exclude parts of the installations
-# "YES" will install additional network drivers / "NO" will not install them -> these driver can be installed later from the Update and Reset sub-menu
-ADDITIONAL_NETWORK_DRIVER="YES"
 
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
@@ -201,11 +196,6 @@ do
 		NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
 	fi
 done
-
-#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
-if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
-if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
-
 
 ##############################
 ######## FUNCTIONS ###########
@@ -1010,19 +1000,7 @@ else
 	sleep 10
 fi
 
-# 12. Installing additional network drivers
-if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
-	bash torbox/install/install_network_drivers install
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
-	fi
-fi
-
-#13. Updating run/torbox.run
+# 12. Updating run/torbox.run
 clear
 echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
@@ -1034,7 +1012,7 @@ sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  echo ""
@@ -1044,7 +1022,7 @@ else
  sleep 10
 fi
 
-# 14. Adding the user torbox
+# 13. Adding the user torbox
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1081,14 +1059,14 @@ else
 	sleep 10
 fi
 
-# 15. Setting/changing root password
+# 14. Setting/changing root password
 clear
 echo -e "${RED}[+] Step 16: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
 echo ""
 passwd
 
-# 16. Finishing, cleaning and booting
+# 15. Finishing, cleaning and booting
 sleep 10
 clear
 echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"

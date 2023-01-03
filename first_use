@@ -164,6 +164,7 @@ finish_bridge_start1()
 			 echo
 			 echo
 			 read -n 1 -s -r -p "Press any key to continue"
+			 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 			 trap "bash menu-bridges; trap; exit 0" EXIT
 			 exit 0
 		 fi
@@ -186,11 +187,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
   case $FRESHINSTALLED in
 
     1)
+      clear
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 			# IMPORTANT: Check if this is still necessary with Ubuntu
 			# This will completely remove pi. The parameter
 			# will be set at the end of the run_install.sh
-      clear
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
       if [ -d "/home/pi" ]; then
         sudo killall systemd
         sleep 5
@@ -199,8 +200,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
 				sudo sed -i "/^pi:/d" /etc/shadow
       fi
-      clear
-      echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
+			# DON'T REMOVE IT! This is necessary because of possible kernel updates
+			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
       sleep 5
       sudo reboot
     ;;
@@ -326,7 +327,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
       FRESHINSTALLED=0
       sleep 5
       clear
@@ -341,6 +342,17 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
 			stty intr ^c
+    ;;
+
+		# This will install additional network drivers
+    4)
+			clear
+			INPUT=$(cat text/install_network_drivers-text)
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+				bash torbox/install/install_network_drivers install
+				recommended_reboot update
+			fi
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
     ;;
 
     *) exit 1
