@@ -972,7 +972,6 @@ cd
 if ! grep "# Added by TorBox (002)" .profile ; then
   sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
-cd torbox
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
 sudo mkdir /var/lib/tor/services
@@ -1063,6 +1062,9 @@ sudo systemctl stop nginx
 (sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2>/dev/null
+# NEW v.0.5.2: configure webssh
+sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
 #sudo systemctl start nginx
@@ -1078,7 +1080,7 @@ fi
 
 # 12. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
-	bash install/install_network_drivers install
+	bash torbox/install/install_network_drivers install
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
