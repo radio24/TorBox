@@ -1032,15 +1032,6 @@ sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
-# Only for testing!!!!! Has to be removed
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPLEASE CHECK IF A CHANGE OF /ETC/SUDOERS IS STILL NECESSARY!! \e[0m'
-	clear
-else
-	sleep 10
-fi
-
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn
 sudo chown -R torbox:torbox /home/torbox/
