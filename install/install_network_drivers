@@ -46,6 +46,7 @@ if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbia
 EXECUTED=$1
 
 ######## PREPARATIONS ########
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 cd ~
 
 # For a Raspberry Pi OS installation

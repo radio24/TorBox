@@ -264,7 +264,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       # Ask for TACA support
       clear
       INPUT=$(cat text/first_use-TACA-text)
-			if (whiptail --title "TorBox - FIRST START UP!" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
   			sudo ./log_check.py &
         clear
@@ -327,8 +327,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
-      FRESHINSTALLED=0
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+      FRESHINSTALLED=4
       sleep 5
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
@@ -348,11 +348,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     4)
 			clear
 			INPUT=$(cat text/install_network_drivers-text)
-			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
-				bash torbox/install/install_network_drivers install
+			FRESHINSTALLED=0
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				bash install/install_network_drivers install
 				recommended_reboot update
 			fi
-			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
     ;;
 
     *) exit 1
