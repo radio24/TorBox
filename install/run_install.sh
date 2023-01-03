@@ -1030,7 +1030,16 @@ sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFI
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+
+# Only for testing!!!!! Has to be removed
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPLEASE CHECK IF A CHANGE OF /ETC/SUDOERS IS STILL NECESSARY!! \e[0m'
+	clear
+else
+	sleep 10
+fi
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn
@@ -1095,13 +1104,8 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 (sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
 (sudo cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-# IMPORTANT: check if this is still necessary. If not --> delete the rows, change FRESHINSTALL to 3 and edit torbox.run/first_use
-# echo -e "${RED}[+]Disable the user pi...${NOCOLOR}"
-# This can be undone by sudo chage -E-1 pi
-# Later, you can also delete the user pi with "sudo userdel -r pi"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 15.${NOCOLOR}"
 echo ""

@@ -182,13 +182,13 @@ if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${
 
 
 ######## MAIN ########
-# IMPORTANT: Check if this is still necessary with Raspberry Pi
-# This will completely remove pi (only for Raspbian OS). The parameter
-# will be set at the end of the run_install.sh
 while [ $FRESHINSTALLED -gt 0 ]; do
   case $FRESHINSTALLED in
 
     1)
+			# IMPORTANT: Check if this is still necessary with Ubuntu
+			# This will completely remove pi. The parameter
+			# will be set at the end of the run_install.sh
       clear
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
       if [ -d "/home/pi" ]; then
