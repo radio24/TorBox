@@ -15,6 +15,7 @@ Please bear the following coding guidelines in mind:
   **Identify the Operation System**
   ```shell
   CHECK_OS="$(lsb_release -si)"
+	if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
   ```
 
   **Check if it is a Raspberry Pi**
@@ -40,7 +41,7 @@ Please bear the following coding guidelines in mind:
   **Example for a short menu**
   ```shell
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "==" "===============================================================" \
   " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
   " 2" "Add OBFS4 bridges manually"  \
@@ -74,11 +75,14 @@ Please bear the following coding guidelines in mind:
   sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
   ```
 
-- To suppress undesired terminal outputs, '&>/dev/null' or '2> /dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
+- To suppress undesired terminal outputs, '&>/dev/null' or '2>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
 
   ```shell
   (printf "[$DATE] - Log file created!\n" | sudo -u debian-tor tee $LOG) &>/dev/null
   ```
+
+	However, when assigning to a variable, the redirection should be inside the sub shell:
+	`LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders" 2>/dev/null)`
 
 - `! -z` for non zero/not null and `-z` for zero/null. ATTENTION: zero/null means `""` or `0`, but not `"0"` because this is a string!
 
@@ -109,7 +113,7 @@ Please bear the following coding guidelines in mind:
   ```shell
   # This function is used for check_fresh_install() as a trap for CTRL-C
   # Syntax finish_default_obfs4
-  # Used predefined variables: DEFAULT_OBFS4_SUPPORT, RED, NOCOLOR, RUNFILE
+  # Used predefined variables: DEFAULT_BRIDGE_SUPPORT, RED, NOCOLOR, RUNFILE
   ```
 
 - It has to be noted if the function expects predefined variables and also if the function returns something specific. The same is also essential with executable files:

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -185,7 +185,7 @@ $IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 #$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
-# NEW v.0.5.1
+# NEW v.0.5.2
 # TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
 # However, Meek and Snowflake need local DNS resolution
 do_we_use_bridges
@@ -224,29 +224,32 @@ $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
 else
-	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2> /dev/null
+	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
 fi
 
 ###### HTTP plain text traffic blocker ######
 if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
-	$IPTABLES -t nat -I PREROUTING 1 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options
-	$IPTABLES -t nat -I PREROUTING 2 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
-	$IPTABLES -t nat -I PREROUTING 3 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0
-	$IPTABLES -t nat -I PREROUTING 4 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0
+	($IPTABLES -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 else
-	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2> /dev/null
-	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2> /dev/null
-	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
-	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2> /dev/null
+	($IPTABLES -t nat -I PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 fi
 
 ###### FINISH ######
-# NEW v.0.5.1
+# NEW v.0.5.2
 # TEST: Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
+# REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
-	(sudo ifdown $O_DEVICE) 2> /dev/null
+	(sudo ifdown $O_DEVICE) 2>/dev/null
 	sleep 2
-	(sudo ifup $O_DEVICE) 2> /dev/null
+	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 2
 fi
 # ==========

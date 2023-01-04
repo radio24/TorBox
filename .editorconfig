@@ -9,6 +9,14 @@ insert_final_newline = true
 indent_style = tab
 indent_size = 2
 
-[*.py]
+[*.{js,html,py}]
+indent_style = space
+indent_size = 4
+
+[tcs]
+indent_style = space
+indent_size = 4
+
+[tfs]
 indent_style = space
 indent_size = 4

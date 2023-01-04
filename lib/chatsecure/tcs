@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import click
+import sys
 import os
 import django
+import subprocess
 from django.core.management import call_command
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
@@ -11,46 +13,125 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chatsecure.settings")
 
 # fmt: off
 @click.command()
+@click.option('--name', '-n',
+                            default=None,
+                            type=str,
+                            help="Onion Service Name")
+@click.option('--onion-domain', '-od',
+                            default=None,
+                            type=str,
+                            help="Onion domain where TFS will be published")
 @click.option('--msg', '-m',
-              default='',
-              type=str,
-              help="Message to show in header of web")
+                            default='',
+                            type=str,
+                            help="Message to show in header of web")
 @click.option('--dev',
-              default=False,
-              type=bool,
-              help="Run in development mode (Default: 0)")
+                            default=False,
+                            type=bool,
+                            help="Run in development mode (Default: 0)")
+@click.option('--debug',
+                            default=False,
+                            type=bool,
+                            help="Run in debug mode (--dev must be true) (Default: 0)")
 # fmt: on
-def main(msg, dev):
+def main(name, onion_domain, msg, dev, debug):
+    if not name:
+        click.echo("Error: You must specify a name.")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
+
+    if not onion_domain:
+        click.echo("Error: Onion domain is required")
+        click.echo(f"run {sys.argv[0]} --help for more info.")
+        sys.exit(1)
+
+    instance_name = name
+    os.environ["INSTANCE_NAME"] = instance_name
+    os.environ["ONION_DOMAIN"] = onion_domain
+
+    from pathlib import Path
+
+    base_dir = Path(__file__).resolve().parent
+    if os.path.exists(base_dir / f"pid/{instance_name}.pid"):
+        click.echo(
+            'Error: Another instance is already using name "%s"' % instance_name
+        )
+        sys.exit(1)
+
     # Set environment vars for django settings
     os.environ["MSG_HEADER"] = msg
-    os.environ["DEBUG"] = "1" if dev else "0"
+    if dev:
+        os.environ["DEBUG"] = "1"
+    else:
+        os.environ["DEBUG"] = "1" if debug else "0"
 
     # Start django
     django.setup()
 
     from django.conf import settings
 
-    clean_database(settings.BASE_DIR)
+    clean_database(settings.BASE_DIR, instance_name)
 
-    run_webserver(dev)
+    run_webserver(instance_name=instance_name, dev=dev)
 
 
-def clean_database(base_dir):
+def clean_database(base_dir, instance_name):
     """Remove old database and create new one"""
     try:
-        os.remove(base_dir / "db.sqlite3")
+        os.remove(base_dir / f"db/{instance_name}.sqlite3")
     except:  # noqa
         pass
 
     call_command("migrate", interactive=False)
 
 
-def run_webserver(dev=True):
-    from django.core.wsgi import get_wsgi_application
+def run_webserver(instance_name, dev=True):
+    if dev:
+        # Dev
+        import eventlet
+        from chatsecure.wsgi import application
+        eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 8010)), application)
+        sys.exit()
+    else:
+        # Production
+        from django.conf import settings
+        import eventlet
+        import socket
+        import signal
+        from chatsecure.wsgi import application
 
-    application = get_wsgi_application()
-    call_command("runserver", "127.0.0.1:8010", "--noreload")
-    quit()
+        def stop_webserver(signum, frame):
+            # Remove database at exit
+            os.remove(settings.BASE_DIR / f"db/{instance_name}.sqlite3")
+
+            # Remove pid file
+            os.remove(settings.BASE_DIR / f"pid/{instance_name}.pid")
+
+            # Remove unix socket
+            os.remove(f"/var/run/tcs_{instance_name}.sock")
+
+            sys.exit()
+
+        signal.signal(signal.SIGTERM, stop_webserver)
+
+        # Create pid file
+        pidfile = open(settings.BASE_DIR / f"pid/{instance_name}.pid", "w+")
+        pidfile.write("%s" % os.getpid())
+        pidfile.close()
+
+        # Unix socket file path
+        socket_path = f"/var/run/tcs_{settings.INSTANCE_NAME}.sock"
+        # app_socket = f"/tmp/tcs_{settings.INSTANCE_NAME}.sock"  # dev
+
+        green_sock = eventlet.listen(socket_path, family=socket.AF_UNIX)
+        os.chmod(socket_path, 0o777)
+
+        eventlet.wsgi.server(
+                sock=green_sock,
+                site=application
+            )
+
+    sys.exit()
 
 
 if __name__ == "__main__":

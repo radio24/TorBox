@@ -1,4 +1,4 @@
-This menu entry will block HTTP plain text traffic by blocking port 80.
+This menu entry will block HTTP plain text traffic by blocking port 80. Nevertheless, WEBSSH to access the TorBox menu and .onion sites, which are using port 80 but are encrypted, will not be affected by this block. I'm sure this is what you want!
 
 WARNING!
 - This is only a very superficial block, which could help if, for example,
@@ -6,7 +6,6 @@ WARNING!
   NOT block plain text traffic in general (for example, Telnet).
 - HTTP plain text traffic from clients using TorBox's SOCKS 5 functionality
   or the Tor Browser CANNOT be blocked.
-- CHROM and CHROMIUM: .onion addresses using "http://" will be blocked.
 - It is possible because not only unencrypted Webpages but also other
   traffic on port 80 are blocked, that some application will not work
   correctly anymore.

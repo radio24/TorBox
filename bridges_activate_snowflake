@@ -1,0 +1,186 @@
+#!/bin/bash
+# shellcheck disable=SC2001,SC2016,SC2154
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file activates already configured bridges in /etc/tor/torrc.
+#
+# SYNTAX
+# ./bridges_activate_obfs4 <norestart>
+#
+#
+###### SET VARIABLES ######
+#
+#Set the the variables for the menu
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+BRIDGE_DB_URL="https://onionoo.torproject.org"
+TORRC="/etc/tor/torrc"
+RUNFILE="run/torbox.run"
+BAK="/etc/tor/torrc.bak"
+EXITID=$(grep "^EXITID=" ${RUNFILE})
+bridge_address_list=""
+NORESTART=$1
+i=0
+
+###########################
+######## FUNCTIONS ########
+
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+######## PREPARATIONS ########
+#
+# number_of_snowflake_bridges()
+# How many Snowflake bridges do we have? readarray reads into an array beginning with index 0
+# Following variables can be used:
+# $configured_snowflake_bridges_deactivated -> An array with all deactivated Snowflake bridges
+# $configured_snowflake_bridges_activated -> An array with all activated Snowflake bridges
+# $number_configured_snowflake_bridges_deactivated -> Number of deactivated bridges
+# $number_configured_snowflake_bridges_activated -> Number of activated bridges
+# $number_configured_snowflake_bridges_total -> Total number of bridges
+number_of_snowflake_bridges
+
+###########################
+
+if [ $EXITID = "EXITID=1" ]; then
+  sudo sed -i "s/^EXITID=.*/EXITID=0/" ${RUNFILE}
+  exit 0
+fi
+
+if [ $number_configured_snowflake_bridges_deactivated = 0 ]; then
+  clear
+  echo -e "${WHITE}[!] There are no deactivated Snowflake bridges. ${NOCOLOR}"
+  echo -e "${RED}[+] You may use the menu entry \"Deactivate Snowflake...\". ${NOCOLOR}"
+  echo " "
+  read -n 1 -s -r -p "Press any key to continue"
+  clear
+  exit 0
+fi
+
+# IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
+#            In case that changes, the support of multiple Snowflake bridges can be found in the code archive
+online_check $BRIDGE_DB_URL 1 1
+clear
+if [ $OCHECK == 1 ]; then
+	if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+		echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+		echo " "
+		sleep 2
+		STATUS=1
+	else
+		STATUS=0
+	fi
+else
+	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+	sleep 2
+fi
+if [ "$number_configured_snowflake_bridges_deactivated" == "0" ]; then
+	echo ""
+	echo -e "${WHITE}[!] There is no deactivated bridge, which can be activated!${NOCOLOR}"
+	echo " "
+	read -n 1 -s -r -p "Press any key to continue"
+	clear
+	exit 0
+fi
+trap break SIGINT
+echo ""
+i=0
+while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
+do
+	n=$((i+1))
+	echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_deactivated bridges${NOCOLOR}"
+	bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
+	bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
+	COUNTRY_LINE=""
+	COUNTRY_LINE=$(grep -B 1 "${configured_snowflake_bridges_deactivated[$i]}" ${TORRC})
+	COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for " <<< "$COUNTRY_LINE")
+	COUNTRY_LINE=$(sed "s/#Specific Snowflake bridge for //g" <<< "$COUNTRY_LINE")
+	if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
+		bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+		if [ $CLEARNET_DECISSION == 1 ]; then
+			bridge_status=$(./bridges_check.py -f $bridge_hash)
+		else
+			bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+		fi
+		if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
+	elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+	elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
+		fi
+	else bridge_status=""
+	fi
+	i=$((i+1))
+	bridge_address="$bridge_address$bridge_status"
+	if [ -z $COUNTRY_LINE ]; then bridge_address_display="$bridge_ip$bridge_status"
+	else bridge_address_display=$bridge_ip"_for_$COUNTRY_LINE$bridge_status"
+	fi
+	bridge_address=$(sed "s/ /_/g" <<< "$bridge_address")
+	bridge_address_display=$(sed "s/ /_/g" <<< "$bridge_address_display")
+	if [ "$bridge_address_list" == "" ]; then
+		bridge_address_list="$(printf "%s\n" "${bridge_address}")"
+		bridge_address_display_list="$(printf "%s\n" "${bridge_address_display}")"
+	else
+		bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address}")"
+		bridge_address_display_list="$(printf "%s\n%s\n" "${bridge_address_display_list}" "${bridge_address_display}")"
+	fi
+done
+trap
+service_menu menu "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\n\nImportant: If available, the bridge status is not always accurate!" 5
+clear
+sudo cp ${TORRC} ${BAK}
+i=0
+for bridge_address in $bridge_address_list; do
+	i=$((i+1))
+	for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+		if [ "$i" == "$SERVICE_NUMBER" ]; then
+			echo -e "${RED}[+] Activate bridge number $i${NOCOLOR}"
+			sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+			bridge_address=$(sed "s/_-_ONLINE//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_-_OFFLINE//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_-_REMOVED//g" <<< "$bridge_address")
+			bridge_address=$(sed "s/_/ /g" <<< "$bridge_address")
+			ORIGINAL_STR="#Bridge snowflake $bridge_address"
+			#This is necessary to work with special characters in sed
+			ORIGINAL_STR="$(<<< "$ORIGINAL_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+			ORIGINAL_STR="^$ORIGINAL_STR"
+			REPLACEMENT_STR="Bridge snowflake $bridge_address"
+			#This is necessary to work with special characters in sed
+			REPLACEMENT_STR="$(<<< "$REPLACEMENT_STR" sed -e 's`[][\\/.*^$]`\\&`g')"
+			sudo sed -i "s/${ORIGINAL_STR}/${REPLACEMENT_STR}/g" ${TORRC}
+		fi
+	done
+done
+echo ""
+echo -e "${RED}[+] DONE!${NOCOLOR}"
+sleep 5
+clear
+if [ "$NORESTART" == "norestart" ]; then exit 0; fi
+#Not sure if this is necassary. If the script exit sometimes without explanation then remove the lines below
+if [ $i -gt 0 ]; then
+	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+	activate_snowflake_bridges bridges_activate_snowflake
+	exit 0
+fi

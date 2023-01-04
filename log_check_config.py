@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -25,6 +25,13 @@ config = {
 matches = [
     {
         "file": '/var/log/tor/notices.log',
+        "match": "*Tor needs an accurate clock to work correctly*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 5',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
         "match": "*Most likely this means the Tor network is overloaded*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
@@ -36,6 +43,13 @@ matches = [
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*died due to an invalid selected path*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
     },
     {
         "file": '/var/log/tor/notices.log',
@@ -54,7 +68,7 @@ matches = [
     {
         "file": '/var/log/tor/notices.log',
         "match": "*Tried for * seconds to get a connection to * Giving up*",  # use * as wildcard
-        "match_count": 40,  # min matches to execute command
+        "match_count": 30,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 3',
     },
@@ -64,12 +78,5 @@ matches = [
         "match_count": 25,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/automat 2 1',
-    },
-    {
-        "file": '/var/log/tor/notices.log',
-        "match": "*Tor needs an accurate clock to work correctly*",  # use * as wildcard
-        "match_count": 1,  # min matches to execute command
-        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash /home/torbox/torbox/automat 4',
     },
 ]

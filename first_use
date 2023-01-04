@@ -1,7 +1,8 @@
 #!/bin/bash
+# shellcheck disable=SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -25,19 +26,23 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use <NUMBER>
+# ./first_use <NUMBER> <SOURCE SCRIPT>
 #
 # Following NUMBERs are supported:
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
-# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
+# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
+#
+# If SOURCE SCRIPT is empty, the default is menu
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
+MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
@@ -50,6 +55,8 @@ CHECK_OS="$(lsb_release -si)"
 # Other variables
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
+FRESHINSTALLED=$1
+[ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 
 ##############################
 ######## FUNCTIONS ###########
@@ -57,14 +64,60 @@ RUNFILE="run/torbox.run"
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
-# This function is used for the main program as a trap for CTRL-C
-# Syntax finish_default_obfs4_step1
+# This function is used for the step 1 as a trap for CTRL-C
+# Syntax finish_bridge_start2 <DEFAULT_BRIDGE_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
-finish_default_obfs4_step1()
+finish_bridge_start2()
 {
- DEFAULT_OBFS4_SUPPORT=$1
- if [ $DEFAULT_OBFS4_SUPPORT = 1 ]; then
-   # Did OBFS4 start up?
+	DEFAULT_BRIDGE_SUPPORT=$1
+	trap
+	if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
+   	# Did tor with bridge-support start up?
+		REPLY=""
+		while true
+		do
+			read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+			# The following line is for the prompt to appear on a new line.
+			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+				echo
+				echo
+				break
+			fi
+		done
+		if [[ $REPLY =~ ^[Yy]$ ]] ; then
+			echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+			echo
+			echo
+			sleep 5
+			trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
+			exit 0
+		else
+			clear
+			whiptail --textbox text/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
+			CHECK=$(grep "^#ReachableAddresses" ${TORRC})
+			if [ -z ${CHECK} ] ; then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			else
+				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			fi
+			clear
+			trap "bash menu-bridges; trap; exit 0" EXIT
+			exit 0
+		fi
+	else
+		exit 0
+	fi
+}
+
+# This function is used for the main program as a trap for CTRL-C
+# Syntax finish_bridge_start1 <DEFAULT_BRIDGE_SUPPORT>
+# Used predefined variables: RED, NOCOLOR, TORRC
+finish_bridge_start1()
+{
+ DEFAULT_BRIDGE_SUPPORT=$1
+ trap
+ if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
+   # Did tor with bridge-support start up?
    echo ""
  	 while true
  	 do
@@ -81,84 +134,64 @@ finish_default_obfs4_step1()
  		 echo
  		 echo
  		 sleep 5
- 		 trap "bash menu; exit 0" EXIT
+ 		 trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
  		 exit 0
  	 else
      INPUT=$(cat text/first_use-anti-firewall-text)
      if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-       sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			 CHECK=$(grep "^#ReachableAddresses" ${TORRC})
+			 if [ -z ${CHECK} ] ; then
+				 sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			 else
+				 sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+			 fi
        clear
        echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
        echo -e "    Ignore any error messages, this can take minutes just wait..."
        echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-       echo -e "    You can leave the progress report with CTRL-C."
+       echo -e "    You can leave the progress report by pressing q."
        echo ""
+			 # shellcheck disable=SC2064
+			 trap "finish_bridge_start2 $DEFAULT_BRIDGE_SUPPORT" SIGINT
+			 stty intr q
        sudo systemctl restart tor &
        sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
-
-       # Did OBFS4 start up?
-       REPLY=""
-       while true
-       do
-        read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
-        # The following line is for the prompt to appear on a new line.
-        if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-       	 echo
-       	 echo
-       	 break
-        fi
-       done
-       if [[ $REPLY =~ ^[Yy]$ ]] ; then
-        echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
-        echo
-        echo
-        sleep 5
-        trap "bash menu; exit 0" EXIT
-        exit 0
-       else
-        clear
-        whiptail --textbox text/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-        trap "bash menu-bridges; exit 0" EXIT
-        exit 0
-       fi
-     else
-       clear
-       echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
-   		 echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
-   		 echo
-   		 echo
-   		 read -n 1 -s -r -p "Press any key to continue"
-   		 trap "bash menu-bridges; exit 0" EXIT
-   		 exit 0
-     fi
- 	 fi
- else
-# 	 trap "bash menu; exit 0" EXIT
- 	 exit 0
+			 stty intr ^c
+		 else
+			 clear
+			 echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
+			 echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+			 echo
+			 echo
+			 read -n 1 -s -r -p "Press any key to continue"
+			 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+			 trap "bash menu-bridges; trap; exit 0" EXIT
+			 exit 0
+		 fi
+	 fi
  fi
 }
 
 
-######## MAIN ########
-
-#Check freshinstalled
+######## PREPARATIONS ########
+# Resetting
 shopt -s checkwinsize
 
-#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+# Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-
-FRESHINSTALLED=$1
 if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g"); fi
 
-# This will completely remove pi (only for Raspbian OS). The parameter
-# will be set at the end of the run_install.sh
+
+######## MAIN ########
 while [ $FRESHINSTALLED -gt 0 ]; do
   case $FRESHINSTALLED in
 
     1)
       clear
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+			# IMPORTANT: Check if this is still necessary with Ubuntu
+			# This will completely remove pi. The parameter
+			# will be set at the end of the run_install.sh
       if [ -d "/home/pi" ]; then
         sudo killall systemd
         sleep 5
@@ -167,8 +200,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
 				sudo sed -i "/^pi:/d" /etc/shadow
       fi
-      clear
-      echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
+			# DON'T REMOVE IT! This is necessary because of possible kernel updates
+			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
       sleep 5
       sudo reboot
     ;;
@@ -179,7 +212,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
       echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
       echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
-      (sudo rm -r /etc/ssh/ssh_host_*) 2> /dev/null
+      (sudo rm -r /etc/ssh/ssh_host_*) 2>/dev/null
       sudo ssh-keygen -A
       echo ""
       echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
@@ -187,7 +220,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 10
     ;;
 
-    # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask), if TACA and Vanguards should be activated.
+    # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA should be activated.
     3)
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
@@ -202,14 +235,14 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat text/first_use-firewall-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				sleep 1
+				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 
 			# Configuring the source of the Internet
     	check_interface_with_internet
-    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     	"==" "===============================================================" \
     	" 1" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
     	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
@@ -228,82 +261,99 @@ while [ $FRESHINSTALLED -gt 0 ]; do
           ./menu $CHOICE
         fi
       fi
-      # Ask for TACA and Vanguards support
+      # Ask for TACA support
       clear
       INPUT=$(cat text/first_use-TACA-text)
-      ##### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - FIRST START UP" --checklist --separate-output "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
-      " 1" "Activate TACA to avoid connection downtime on lower bandwith" ON \
-      " 2" "Activate Vanguards to protect against Guard discovery" ON \
-      3>&1 1>&2 2>&3)
-
-      CHOICE=$(echo "$CHOICE" | tr -d ' ')
-      if [ ! -z "$CHOICE" ]; then
-        mapfile -t CHOICE <<< "$CHOICE"
-        for ARGUMENT in "${CHOICE[@]}"; do
-
-          #This activates TACA
-          if [ $ARGUMENT = 1 ]; then
-						(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
-  					sudo ./log_check.py &
-            clear
-            echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
-            sleep 2
-
-          #This activates Vanguards
-          elif [ $ARGUMENT = 2 ]; then
-            (sudo systemctl enable vanguards@default.service) &>/dev/null
-            (sudo systemctl restart vanguards@default.service) &>/dev/null
-            (sudo systemctl daemon-reload) &>/dev/null
-            echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-            sleep 2
-          fi
-        done
+			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+  			sudo ./log_check.py &
+        clear
+        echo -e "${RED}[+] TorBox's automatic countermeasures are activated!${NOCOLOR}"
+        sleep 2
       fi
 
-      # Ask for OBFS4 support
-      clear
-      DEFAULT_OBFS4_SUPPORT=0
+      # Ask for bridge support
+			clear
+      DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-      if (whiptail --title "TorBox v.0.5.1 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
-        sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
-        sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
-        sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
-        sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
-        sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-        sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-        sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
-        DEFAULT_OBFS4_SUPPORT=1
-        clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} OBFS4 bridge support...${NOCOLOR}"
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				if grep "^ReachableAddresses" ${TORRC} ; then
+					INPUT=$(cat text/no_antifirewall-please-text)
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+					fi
+				fi
+				if (whiptail --title "TorBox - INFO" --no-button "SNOWFLAKE" --yes-button "OBFS4" --yesno "Do you want to use OBFS4 or SNOWFLAKE bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+					sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+					sudo sed -i "s/^#ClientTransportPlugin meek_lite,obfs4/ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+					sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+					sudo sed -i "s/^#Bridge obfs4 /Bridge obfs4 /g" ${TORRC}
+					sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				else
+					sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
+					sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}
+					sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+					sudo sed -i "s/^#ClientTransportPlugin snowflake /ClientTransportPlugin snowflake /g" ${TORRC}
+					sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+					clear
+					sudo bash bridges_activate_snowflake norestart
+				fi
+	      DEFAULT_BRIDGE_SUPPORT=1
+				clear
+        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} bridge support...${NOCOLOR}"
         sleep 2
-      else
-        clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
-        sleep 2
-      fi
-      (sudo systemctl unmask tor) 2> /dev/null
-			(sudo systemctl unmask tor@default.service) 2> /dev/null
+			else
+				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
+				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
+				sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
+				sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
+				sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
+				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+				DEFAULT_BRIDGE_SUPPORT=0
+				clear
+				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
+				sleep 2
+			fi
+      (sudo systemctl unmask tor) 2>/dev/null
+			(sudo systemctl unmask tor@default.service) 2>/dev/null
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
       sleep 2
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
-      (sudo systemctl enable tor) 2> /dev/null
+      (sudo systemctl enable tor) 2>/dev/null
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      FRESHINSTALLED=0
+      FRESHINSTALLED=4
       sleep 5
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report with CTRL-C."
+      echo -e "    You can leave the progress report by pressing q."
       echo ""
-      trap "finish_default_obfs4_step1 $DEFAULT_OBFS4_SUPPORT" SIGINT
+			# shellcheck disable=SC2064
+      trap "finish_bridge_start1 $DEFAULT_BRIDGE_SUPPORT" SIGINT
+			stty intr q
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+			stty intr ^c
+    ;;
+
+		# This will install additional network drivers
+    4)
+			clear
+			INPUT=$(cat text/install_network_drivers-text)
+			FRESHINSTALLED=0
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				bash install/install_network_drivers install
+				recommended_reboot update
+			fi
     ;;
 
     *) exit 1

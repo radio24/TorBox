@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -75,16 +75,12 @@ case $MEEKSTRING in
 
   "OFF")
 		clear
-		if grep "^#ReachableAddresses" ${TORRC} ; then
+		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat text/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-		echo -e "${WHITE}[!] MEEK-AZURE runs only with local clearnet DNS resolution!${NOCOLOR}"
-		echo -e "${RED}[+] This is not a problem because all clients DNS resquests are still handled through Tor.${NOCOLOR}"
-		echo ""
-		local_clearnet_dns_resolution_on
 		trap "bash meek-azure; exit 0" SIGINT
 		echo -e "${WHITE}[!] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
@@ -173,7 +169,6 @@ case $MEEKSTRING in
       sudo sed -i "s/^ClientTransport/#ClientTransport/g" ${TORRC}
       sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
       sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-			local_clearnet_dns_resolution_off
       restarting_tor meek-azure
     fi
   ;;

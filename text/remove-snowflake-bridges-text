@@ -1,0 +1,4 @@
+This menu entry DELETES all or specific SNOWFLAKE BRIDGES from TorBox. However, Snowflake Bridges are necessary for TorBox to bypass Tor blocking in a country. To use this feature of TorBox, you need to have at least one Snowflake bridge.
+
+IMPORTANT
+If you delete ALL Snowflake bridges, TorBox will directly connect to the Tor network, which is the default. However, instead of deleting Snowflake bridges, we recommend simply to deactivate Snowflake.

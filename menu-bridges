@@ -2,7 +2,7 @@
 # shellcheck disable=SC2154
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -50,8 +50,9 @@ MENU_HEIGHT_25=25
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
-#Colors
+#Colors (don't change it!)
 RED='\033[1;31m'
+GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -59,11 +60,9 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
-BRIDGESTRING=""
 LOOP_NUMBER=0
 i=0
-PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2> /dev/null
-
+PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2>/dev/null
 
 
 ###########################
@@ -115,21 +114,11 @@ read_config()
     PING="OFF"
   fi
 
-  # Is the Countermeasure against attacks to deanonymize server location active?
-  VANGUARDSSTATUS=$(sudo systemctl is-active vanguards@default.service)
-  if [ "${VANGUARDSSTATUS}" == "active" ]; then
-    VANGUARDS="Deactivate"
-    VANGUARDSSTATUSb="ON"
-  else
-    VANGUARDS="Activate"
-    VANGUARDSSTATUSb="OFF"
-  fi
-
 	# Is the OBFS4 Bridge Relay running?
 	MODE_BR=$(grep "^BridgeRelay" ${TORRC})
 	if [ "$MODE_BR" = "BridgeRelay 1" ]; then TOGGLE07b="ON"; else TOGGLE07b="OFF"; fi
 
-  # number_of_bridges()
+  # number_of_obfs4_bridges()
   # How many OBFS4 bridges do we have? readarray reads into an array beginning with index 0
   # Following variables can be used:
   # $configured_bridges_deactivated -> An array with all deactivated OBFS4 bridges
@@ -137,36 +126,59 @@ read_config()
   # $number_configured_bridges_deactivated -> Number of deactivated bridges
   # $number_configured_bridges_activated -> Number of activated bridges
   # $number_configured_bridges_total -> Total number of bridges
-  number_of_bridges
+  number_of_obfs4_bridges
+
+	# number_of_snowflake_bridges()
+	# How many Snowflake bridges do we have? readarray reads into an array beginning with index 0
+	# Following variables can be used:
+	# $configured_snowflake_bridges_deactivated -> An array with all deactivated Snowflake bridges
+	# $configured_snowflake_bridges_activated -> An array with all activated Snowflake bridges
+	# $number_configured_snowflake_bridges_deactivated -> Number of deactivated bridges
+	# $number_configured_snowflake_bridges_activated -> Number of activated bridges
+	# $number_configured_snowflake_bridges_total -> Total number of bridges
+	number_of_snowflake_bridges
 }
 
 ######## PREPARATIONS ########
 do_we_use_bridges
 read_config
 
+# Resetting
+shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
+
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "==" "=============================================[OBFS4 bridges]==="  \
-" 2" "Activate configured OBFS4 bridges to circumvent censorship"  \
+" 2" "Activate configured OBFS4 bridges"  \
 " 3" "Add additional OBFS4 bridges"  \
 " 4" "List all $number_configured_bridges_total OBFS4 bridges"  \
 " 5" "Delete configured OBFS4 bridges"  \
-" 6" "Deactivate OBFS4 and/or configured OBFS4 bridges"  \
-" 7" "Enter the advanced tor configuration editor"  \
-"==" "==============================================[More bridges]===" \
-" 8" "$SNOWSTRINGb SNOWFLAKE to circumvent censorship"  \
-" 9" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
+" 6" "Deactivate configured OBFS4 bridges"  \
+"==" "=========================================[SNOWFLAKE bridges]===" \
+" 7" "Activate configured SNOWFLAKE bridges"  \
+" 8" "Add additional SNOWFLAKE bridges"  \
+" 9" "List all $number_configured_snowflake_bridges_total SNOWFLAKE bridges"  \
+"10" "Delete configured SNOWFLAKE bridges"  \
+"11" "Deactivate configured SNOWFLAKE bridges"  \
+"==" "==============================================[MEEK bridges]===" \
+"12" "$MEEKSTRINGb MEEK-AZURE to circumvent censorship" \
 "==" "======================================[More Countermeasures]===" \
-"10" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
-"11" "$VANGUARDS Guard discovery and traffic analysis protection - $VANGUARDSSTATUSb" \
-"12" "Countermeasure against a tightly configured firewall - $FIREWALL" \
-"13" "Countermeasure against a disconnection when idle feature - $PING" \
-"14" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
+"13" "Enter the advanced tor configuration editor"  \
+"14" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
+"15" "Countermeasure against a tightly configured firewall - $FIREWALL" \
+"16" "Countermeasure against a disconnection when idle feature - $PING" \
+"17" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
 3>&1 1>&2 2>&3)
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -177,58 +189,61 @@ case "$CHOICE" in
     whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
   ;;
 
-  # Activate bridges
+  # Activate OBFS4 bridges to circumvent censorship
   2)
-    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+		if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+    	whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+  	fi
+		if grep "^ReachableAddresses" ${TORRC} ; then
+			INPUT=$(cat text/no_antifirewall-please-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+		fi
+  	if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
+    	INPUT=$(cat text/add-bridges-first-text)
+    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      	sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 0
+    	else
+      	deactivate_obfs4_bridges
+      	trap "bash menu-bridges; exit 0" EXIT
+      	exit 0
+    	fi
+		fi
+		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+    	INPUT=$(cat text/activate-obfs4-bridges-text)
+    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    		sudo bash bridges_activate_obfs4
+    	else
+    		trap "bash menu-bridges; exit 0" EXIT
+    		exit 0
+			fi
+		else
+			sudo bash bridges_activate_obfs4
     fi
-    if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
-      INPUT=$(cat text/add-bridges-first-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add_old "$MODE_BRIDGES" 0
-      else
-        deactivate_obfs4_bridges
-        trap "bash menu-bridges; exit 0" EXIT
-        exit 0
-      fi
-    fi
-    if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-      INPUT=$(cat text/activate-bridges-text)
-      if (whiptail --title "TorBox - INFO" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_activate_old
-      else
-        trap "bash menu-bridges; exit 0" EXIT
-        exit 0
-      fi
-    else
-      sudo bash bridges_activate_old
-    fi
-    read_config
+  	read_config
   ;;
 
-  # Add bridges
+  # Add OBFS4 bridges
   3)
-    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-    fi
-    sudo bash bridges_add_old "$MODE_BRIDGES" 1
+    sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 1
     read_config
   ;;
 
-  # List all bridges configured in torrc and if online display the status of the bridges
+  # List all OBFS4 bridges configured in torrc and if online display the status of the bridges
   4)
     list_all_obfs4_bridges
   ;;
 
-  # Delete bridges
+  # Delete OBFS4 bridges
   5)
     if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
-      whiptail --title "TorBox - INFO" --textbox text/remove-bridges-text $MENU_HEIGHT_25 $MENU_WIDTH
-      sudo bash bridges_remove_old "$MODE_BRIDGES"
+      whiptail --title "TorBox - INFO" --textbox text/remove-obfs4-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
+      sudo bash bridges_remove_obfs4 "$MODE_BRIDGES"
       read_config
     fi
   ;;
@@ -246,15 +261,103 @@ case "$CHOICE" in
         echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
         sleep 5
       else
-        whiptail --title "TorBox - INFO" --textbox text/deactivate-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo bash bridges_deactivate_old
+        whiptail --title "TorBox - INFO" --textbox text/deactivate-obfs4-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+        sudo bash bridges_deactivate_obfs4
         read_config
       fi
     fi
   ;;
 
-  # Enter the advanced configuration editor
+  # Activate/deactivate Snowflake bridges to circumvent censorship
   7)
+    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+		if grep "^ReachableAddresses" ${TORRC} ; then
+			INPUT=$(cat text/no_antifirewall-please-text)
+			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+			fi
+		fi
+		if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
+      INPUT=$(cat text/add-bridges-first-text)
+      if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        sudo bash bridges_add_snowflake "$MODE_BRIDGES" 0
+      else
+        deactivate_snowflake_bridges
+        trap "bash menu-bridges; exit 0" EXIT
+        exit 0
+      fi
+		fi
+		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+    	INPUT=$(cat text/activate-snowflake-bridges-text)
+    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      	sudo bash bridges_activate_snowflake
+    	else
+      	trap "bash menu-bridges; exit 0" EXIT
+      	exit 0
+    	fi
+		else
+			sudo bash bridges_activate_snowflake
+		fi
+    read_config
+  ;;
+
+	# Add Snowflake bridges
+  8)
+    sudo bash bridges_add_snowflake "$MODE_BRIDGES" 1
+    read_config
+  ;;
+
+  # List all Snowflake bridges configured in torrc and if online display the status of the bridges
+  9)
+	  list_all_snowflake_bridges
+	;;
+
+	# Delete Snowflake bridges
+  10)
+    if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
+      clear
+      echo -e "${WHITE}[!] There are no configured Snowflake bridges -> nothing to delete!${NOCOLOR}"
+      sleep 5
+    else
+      whiptail --title "TorBox - INFO" --textbox text/remove-snowflake-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
+      sudo bash bridges_remove_snowflake "$MODE_BRIDGES"
+      read_config
+    fi
+  ;;
+
+	# Deactivate Snowflake bridges
+  11)
+    if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
+      clear
+      echo -e "${WHITE}[!] There are no configured Snowflake bridges -> nothing to deactivate!${NOCOLOR}"
+      sleep 5
+    else
+      if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
+        clear
+        echo -e "${WHITE}[!] No Snowflake bridges are activated!${NOCOLOR}"
+        echo -e "${RED}[+] If you want to use Snowflake bridges, you have to activate them first with menu entry 7 or 8.${NOCOLOR}"
+        sleep 5
+      else
+        whiptail --title "TorBox - INFO" --textbox text/deactivate-snowflake-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+				deactivate_snowflake_bridges menu-bridges
+        read_config
+      fi
+    fi
+  ;;
+
+  # Use Meek-Azure to circumvent censorship
+  12)
+    if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
+      whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    fi
+    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
+    read_config
+  ;;
+
+  # Enter the advanced configuration editor
+  13)
     INPUT=$(cat text/advanced-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -268,39 +371,11 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Use Snowflake to circumvent censorship
-  8)
-    if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-    fi
-    sudo bash snowflake $SNOWSTRING $MEEKSTRING
-    read_config
-  ;;
-
-  # Use Meek-Azure to circumvent censorship
-  9)
-    if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-    fi
-    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
-    read_config
-  ;;
-
   # Activate/deactivate TorBox's automatic counteractions
-  10)
+  14)
     if [ "$LOGCHECK" = "Deactivate" ]; then
       echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
-      PID=$(pgrep -f -n "log_check.py")
-      echo -e "${RED}[+] ...killing first process...${NOCOLOR}"
-      (sudo kill "$PID") &>/dev/null
-      sleep 2
-      (sudo kill -9 "$PID") &>/dev/null
-      unset PID
-      PID=$(pgrep -f -n "log_check.py")
-      echo -e "${RED}[+] ...killing second process...${NOCOLOR}"
-      [ ! -z "$PID" ] && (sudo kill "$PID") &>/dev/null
-      sleep 2
-      [ ! -z "$PID" ] && (sudo kill -9 "$PID") &>/dev/null
+      sudo pkill -f "log_check.py"
       echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
       (sudo rm log_check_config.py) &>/dev/null
       echo -e "${RED}[+] ...log removed!${NOCOLOR}"
@@ -314,13 +389,14 @@ case "$CHOICE" in
     if [ "$LOGCHECK" = "Activate" ]; then
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.1 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
-      "1" "Protection against entry guard failing and overloaded tor network" ON \
-      "2" "Protection against interrupted WiFi connection with the Internet" ON \
-      "3" "Protection against excessive number of failing tor circuits" ON \
-      "4" "Protection against excessive connection failing with tor circuits" ON \
-      "5" "Protection against tor bootstrapping problems" ON  \
-      "6" "Protection against out of sync time" ON 3>&1 1>&2 2>&3)
+      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
+      "1" "Protection against out of sync time" ON \
+      "2" "Protection against entry guard failing and overloaded tor network" ON \
+      "3" "Protection against interrupted WiFi connection with the Internet" ON \
+      "4" "Protection against excessive number of failing tor circuits" ON \
+      "5" "Protection against excessive connection failing with tor circuits" ON \
+      "6" "Protection against tor bootstrapping problems" ON  \
+      3>&1 1>&2 2>&3)
 
       if [ ! -z "$CHOICE2" ]; then
         mapfile -t CHOICE2 <<< "$CHOICE2"
@@ -346,88 +422,53 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Activate/deactivate Vanguards to Guard discovery and related traffic analysis protection
-  11)
-    if [ "$VANGUARDS" = "Deactivate" ]; then
-      echo -e "${RED}[+] Deactivating Vanguards...${NOCOLOR}"
-      sudo systemctl stop vanguards@default.service
-      sudo systemctl disable vanguards@default.service
-      sudo systemctl daemon-reload
-      echo -e "${RED}[+] ...log removed!${NOCOLOR}"
-      sudo find /var/log/tor/ | grep "vanguards" | xargs -d"\n" sudo rm
-      sleep 1
-      clear
-      echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is deactivated!${NOCOLOR}"
-      echo -e "${RED}[+] Waiting on Vanguards to shut down...${NOCOLOR}"
-      i=1
-      while [ "$(sudo systemctl is-active vanguards@default.service)" == "active" ]
-      do
-        sleep 1
-        echo -e "${RED}$i${NOCOLOR}"
-      done
-    fi
-    if [ "$VANGUARDS" = "Activate" ]; then
-      INPUT=$(cat text/vanguards-explanation-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo systemctl enable vanguards@default.service
-        sudo systemctl restart vanguards@default.service
-        sudo systemctl daemon-reload
-        clear
-        echo
-        echo -e "${RED}[+] Vanguards' Guard discovery and related traffic analysis protection is activated!${NOCOLOR}"
-        sleep 5
+  # Countermeasure against a tightly configured firewall
+  15)
+    if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
+			if [ "$TOGGLE07b" = "ON" ]; then
+				INPUT="\n\nTo activate the countermeasure against tightly configured firewalls, you have first to DEACTIVATE OBFS4 Bridge Relay Mode in the OBFS4 Bridge Relay sub-menu. You can not run both settings simultaneously!"
+				whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+				trap "bash menu-bridges; exit 0" EXIT
+				exit 1
+			fi
+      INPUT=$(cat text/firewall-text-on)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+        INPUT=$(cat text/restart-tor-text)
+        if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
+          restarting_tor menu-bridges
+          clear
+          echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
+          sleep 2
+        else
+          clear
+          echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet activated!${NOCOLOR}"
+          sleep 2
+        fi
       fi
     fi
-    read_config
+    if [ "$FIREWALL" = "ON" ]; then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+        INPUT=$(cat text/restart-tor-text)
+        if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+          clear
+          restarting_tor menu-bridges
+          clear
+          echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
+          sleep 2
+        else
+          clear
+          echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactivated!${NOCOLOR}"
+          sleep 2
+        fi
+      fi
+    fi
   ;;
 
-    # Countermeasure against a tightly configured firewall
-    12)
-      if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
-				if [ "$TOGGLE07b" = "ON" ]; then
-					INPUT="\n\nTo activate the countermeasure against tightly configured firewalls, you have first to DEACTIVATE OBFS4 Bridge Relay Mode in the OBFS4 Bridge Relay sub-menu. You can not run both settings simultaneously!"
-					whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
-					trap "bash menu-bridges; exit 0" EXIT
-					exit 1
-				fi
-        INPUT=$(cat text/firewall-text-on)
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-          sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
-          INPUT=$(cat text/restart-tor-text)
-          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            clear
-            restarting_tor menu-bridges
-            clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall activated!${NOCOLOR}"
-            sleep 2
-          else
-            clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall set but not yet activated!${NOCOLOR}"
-            sleep 2
-          fi
-        fi
-      fi
-      if [ "$FIREWALL" = "ON" ]; then
-        if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-          sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-          INPUT=$(cat text/restart-tor-text)
-          if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            clear
-            restarting_tor menu-bridges
-            clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall deactivated!${NOCOLOR}"
-            sleep 2
-          else
-            clear
-            echo -e "${RED}[+] Countermeasure against a tightly configured firewall unset but not yet deactivated!${NOCOLOR}"
-            sleep 2
-          fi
-        fi
-      fi
-    ;;
-
   # Countermeasure against a disconnection when idle feature
-  13)
+  16)
     if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
       INPUT=$(cat text/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -447,7 +488,7 @@ case "$CHOICE" in
   ;;
 
   # Connect/Disconnect TorBox to/from VPN
-  14)
+  17)
     if [ -z "$tun0up" ] ; then
       INPUT=$(cat text/connecting-VPN-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -462,7 +503,7 @@ case "$CHOICE" in
           echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
           echo ""
           add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2> /dev/null
+          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
           sleep 2
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
           if wget -q --spider "$CHECK_URL"; then

@@ -12,36 +12,36 @@ from django.core.management import call_command
 # fmt: off
 @click.command()
 @click.option('--name', '-n',
-							default=None,
-							type=str,
-							help="Onion Service Name")
+                            default=None,
+                            type=str,
+                            help="Onion Service Name")
 @click.option('--onion-domain', '-od',
-							default=None,
-							type=str,
-							help="Onion domain where TFS will be published")
+                            default=None,
+                            type=str,
+                            help="Onion domain where TFS will be published")
 @click.option('--file-path', '-fp',
-							default=None,
-							type=str,
-							help="Path to save uploaded files")
+                            default=None,
+                            type=str,
+                            help="Path to save uploaded files")
 @click.option('--allow-download', '-ad',
-							default=True,
-							type=bool,
-							help="Allow download from file-path (Default: 1)")
+                            default=True,
+                            type=bool,
+                            help="Allow download from file-path (Default: 1)")
 @click.option('--allow-upload', '-au',
-							default=True,
-							type=bool,
-							help="Allow upload to file-path (Default: 1)")
+                            default=True,
+                            type=bool,
+                            help="Allow upload to file-path (Default: 1)")
 @click.option('--msg', '-m',
-							default='',
-							type=str,
-							help="Message to show in header of web")
+                            default='',
+                            type=str,
+                            help="Message to show in header of web")
 @click.option('--scan', '-s',
-							is_flag=True,
-							help="Scan for new files in file-path (Instance must be running without --dev flag).")
+                            is_flag=True,
+                            help="Scan for new files in file-path (Instance must be running without --dev flag).")
 @click.option('--dev',
-							default=False,
-							type=bool,
-							help="Run in development mode (Default: 0)")
+                            default=False,
+                            type=bool,
+                            help="Run in development mode (Default: 0)")
 # fmt: on
 def main(name, onion_domain, file_path, allow_download, allow_upload, msg, scan, dev):
     if not name:

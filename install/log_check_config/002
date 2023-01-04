@@ -1,7 +1,21 @@
     {
         "file": '/var/log/tor/notices.log',
-        "match": "*Tor has not observed any network activity for the past*",  # use * as wildcard
+        "match": "*Most likely this means the Tor network is overloaded*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
-        "command": 'sudo bash /home/torbox/torbox/automat 2',
+        "command": 'sudo bash /home/torbox/torbox/automat 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*This could indicate a route manipulation attack*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*died due to an invalid selected path*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/automat 4',
     },

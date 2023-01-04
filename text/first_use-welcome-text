@@ -4,13 +4,11 @@ TorBox didn't connect the Tor network yet, but it will do so after the
 next start-up dialogue boxes, which will ask you the following:
 - if you want to use a (default) firewall circumvention method;
 - from where the Internet is coming;
-- if you want to activate the TorBox automatic counter actions and/or
-  Vanguards;
-- and if you want to use OBFS4 bridges.
+- if you want to activate the TorBox automatic counter actions;
+- if you want to use OBFS4 or SNOWFLAKE bridges;
+- and if you want to install additional network drivers.
 
-Leaving now, for security reasons, tor will stay blocked to communicate
-with the Internet. However, if needed, you can restart the script with
-the following command prompt: ./first_use 3
+Leaving now, for security reasons, tor will stay BLOCKED to communicate with the Internet. However, if needed, you can rerun the script using the Update and Maintenance sub-menu.
 
 If you need additional help, please visit https://www.torbox.ch or contact us on our Github page (https://github.com/radio24/TorBox). You can also skip the next dialogue boxes if you know what you are doing.
 

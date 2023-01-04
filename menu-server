@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=10
+NO_ITEMS=8
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -54,7 +54,6 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-BACKUP_DIR="$HOME/backup"
 
 ##############################
 ######## FUNCTIONS ########
@@ -96,15 +95,6 @@ sNICK=$(cut -d ' ' -f2 <<< $NICK)
 sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
 }
 
-# Is the Countermeasure against a tightly configured firewall active?
-MODE_FIREWALL=$(grep -o "^ReachableAddresses " ${TORRC} | head -1)
-clear
-if [ "$MODE_FIREWALL" = "ReachableAddresses " ]; then
-	FIREWALL="ON"
-else
-	FIREWALL="OFF"
-fi
-
 # This function changes the configuration and, if necessary, restarts tor
 change_config()
 {
@@ -132,10 +122,16 @@ fi
 ######## PREPARATIONS ########
 read_config
 
+# Resetting
+shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
+
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "RUN AN OBFS4BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
@@ -144,13 +140,13 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - OBFS4 BRIDGE 
 " 4" "Reset configuration to default"  \
 " 5" "Show me my personal OBFS4 bridge address"  \
 " 6" "Enter the advanced tor configuration editor"  \
-" 7" "Restart Tor - check if it is working (press CTRL-C to leave)"  \
-"==" "==========================================[Backup & Restore]===" \
-" 8" "Backup the OBFS4 Bridge Relay configuration"  \
-" 9" "Restore the OBFS4 Bridge Relay configuration" \
+" 7" "Restart Tor - check if it is working (press q to quit)"  \
 "==" "================================================[Dangerous!]===" \
-"10" "Remove permanently OBFS4 Bridge Relay data" \
+" 8" "Remove permanently OBFS4 Bridge Relay data" \
 3>&1 1>&2 2>&3)
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in
@@ -164,13 +160,13 @@ case "$CHOICE" in
   # Toggle Bridge Relay Mode ON or OFF
   2)
     if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-      if [ "$FIREWALL" = "ON" ]; then
-				INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the countermeasure against tightly configured firewalls in the countermeasure sub-menu. You can not run both settings simultaneously!"
-        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
-				trap "bash menu-server; exit 0" EXIT
-				exit 1
-			fi
 			if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
+				if grep "^ReachableAddresses" ${TORRC} ; then
+					INPUT=$(cat text/no_antifirewall-please-text)
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
+					fi
+				fi
         INPUT=$(cat text/activate-bridge_server-text)
         if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
           sudo sed -i "s/^#BridgeRelay/BridgeRelay/g" ${TORRC}
@@ -181,7 +177,7 @@ case "$CHOICE" in
           sudo sed -i "s/^#ContactInfo/ContactInfo/g" ${TORRC}
           sudo sed -i "s/^#Nickname/Nickname/g" ${TORRC}
           sudo sed -i "s/^#BridgeDistribution/BridgeDistribution/g" ${TORRC}
-          (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+          (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
           RULE_CHECK=$?
           if [ $RULE_CHECK = 1 ]; then
             sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
@@ -210,8 +206,32 @@ case "$CHOICE" in
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       nORPORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of ORPort" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port.\n\nEnter the port number of the ORPort (ENTER -> $sORPORT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nORPORT" ] && nORPORT=$sORPORT
+			is_integer "${nORPORT}"
+			exitstatus=$?
+			# exitstatus == 1 means that $nORPORT is not an integer
+			if [ "$exitstatus" == "1" ]; then
+				clear
+				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+				sleep 5
+				clear
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
+			fi
       nOBFS4PORT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Port number of OBFS4" --inputbox "\n\nThis port must be externally reachable. Avoid port 9001 because it's commonly associated with Tor and censors may be scanning the Internet for this port. It have to differ from the port number of ORPort\n\nEnter the port number of the OBFS4 (ENTER -> $sOBFS4PORT):" 20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nOBFS4PORT" ] && nOBFS4PORT=$sOBFS4PORT
+			is_integer "${nOBFS4PORT}"
+			exitstatus=$?
+			# exitstatus == 1 means that $nOBFS4PORT is not an integer
+			if [ "$exitstatus" == "1" ]; then
+				clear
+				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+				sleep 5
+				clear
+				trap "bash menu-server; exit 0" EXIT
+				exit 1
+			fi
       nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
       nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -236,7 +256,7 @@ case "$CHOICE" in
       nORPORT="4235"
       nOBFS4PORT="443"
       nCONTACT="<address@email.com>"
-      nNICK="TorBox051"
+      nNICK="TorBox052"
       nBRIDGEDISTRIBUTION="any"
       change_config
       read_config
@@ -300,7 +320,7 @@ case "$CHOICE" in
       sleep 2
       if [ "$MODE_BR" = "BridgeRelay 1" ]; then
         echo -e "${RED}[+] Opening port ORPort $sORPORT and OBFS4Port $sOBFS4PORT${NOCOLOR}"
-        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2> /dev/null
+        (sudo iptables -C INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null
         RULE_CHECK=$?
         if [ $RULE_CHECK = 1 ]; then
           sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
@@ -313,102 +333,18 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Backup the configuration
-  8)
-		if sudo [ ! -f "/var/lib/tor/hashed-fingerprint" ]; then
-			clear
-			echo -e "${WHITE}[!] NO OBFS4 Bridge Relay configuration to backup!!${NOCOLOR}"
-			sleep 5
-			clear
-			trap "bash menu-server; exit 0" EXIT
-			exit 1
-		fi
-    INPUT=$(cat text/backup-bridge_relay_conf-text)
-    if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      clear
-      echo -e "${RED}[+] Backup bridge relay configuration to ~/torbox_bridge_relay_${sNICK}.tgz ${NOCOLOR}"
-      echo ""
-      if [ ! -d "$BACKUP_DIR" ]; then
-        mkdir $BACKUP_DIR
-      fi
-      (sudo tar -cpzf ${BACKUP_DIR}/torbox_bridge_relay_${sNICK}.tgz /var/lib/tor/fingerprint /var/lib/tor/hashed-fingerprint /var/lib/tor/keys /var/lib/tor/pt_state /etc/tor/torrc) 2> /dev/null
-      sleep 2
-    fi
-  ;;
-
-  # Restore the configuration
-  9)
-    INPUT=$(cat text/restore-bridge_relay_conf-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      INPUT=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_bridge_relay_${sNICK}.tgz):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-      cd
-      if [ -e "$INPUT" ]; then
-        clear
-        echo -e "${RED}[+] Unpacking backup...${NOCOLOR}"
-        sudo mkdir restore.tbx
-        sudo tar -xpzvf $INPUT -C restore.tbx
-        sleep 1
-        echo -e "${RED}[+] Removing old Bridge Relay data${NOCOLOR}"
-        (sudo rm -r /var/lib/tor/keys) 2> /dev/null
-        (sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-        (sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-        (sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
-        sleep 1
-        echo -e "${RED}[+] Moving new Bridge Relay data to its place${NOCOLOR}"
-        sudo mv restore.tbx/var/lib/tor/* /var/lib/tor/
-        sleep 1
-        echo -e "${RED}[+] Moving configuration...${NOCOLOR}"
-        MODE_BR_BAK=$(grep "BridgeRelay" restore.tbx/etc/tor/torrc)
-        if [ "$MODE_BR_BAK" = "BridgeRelay 1" ]; then
-          ORPORT_BAK=$(grep "^ORPort" restore.tbx/etc/tor/torrc)
-          OBFS4PORT_BAK=$(grep "^ServerTransportListenAddr" restore.tbx/etc/tor/torrc)
-          CONTACT_BAK=$(grep "^ContactInfo" restore.tbx/etc/tor/torrc)
-          NICK_BAK=$(grep "^Nickname" restore.tbx/etc/tor/torrc)
-          BRIDGEDISTRIBUTION_BACK=$(grep "^BridgeDistribution" restore.tbx/etc/tor/torrc)
-        else
-          ORPORT_BAK=$(grep "^#ORPort" restore.tbx/etc/tor/torrc)
-          OBFS4PORT_BAK=$(grep "^#ServerTransportListenAddr" restore.tbx/etc/tor/torrc)
-          CONTACT_BAK=$(grep "^#ContactInfo" restore.tbx/etc/tor/torrc)
-          NICK_BAK=$(grep "^#Nickname" restore.tbx/etc/tor/torrc)
-          BRIDGEDISTRIBUTION_BACK=$(grep "^#BridgeDistribution" restore.tbx/etc/tor/torrc)
-        fi
-        nORPORT=$(cut -d ' ' -f2 <<< $ORPORT_BAK)
-        nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT_BAK)
-        nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT_BAK)
-        nNICK=$(cut -d ' ' -f2 <<< $NICK_BAK)
-        nBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION_BACK)
-        sleep 1
-        echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-        sudo rm -r restore.tbx
-        cd torbox
-        sleep 1
-        change_config
-      else
-				cd torbox
-				clear
-				echo -e "${WHITE}[!] File not found or not specified!!"
-				echo -e "${RED}[+] Did you put the backup-file into the home directory?${NOCOLOR}"
-        echo -e "${RED}[+] Did you enter the right filename with the right extension?${NOCOLOR}"
-				sleep 5
-				clear
-				trap "bash menu-server; exit 0" EXIT
-				exit 1
-      fi
-    fi
-  ;;
-
 	#This permanently removes Bridge Relay data
-	10)
+	8)
 	   INPUT=$(cat text/remove-brdata-text)
 		 if (whiptail --title "TorBox - INFO" --defaultno  --yesno "$INPUT" 18 $MENU_WIDTH); then
 		 	clear
 		 	echo -e "${RED}[+] Deactivating Bridge mode or Bridge Relay...${NOCOLOR}"
 		 	deactivating_bridge_relay
 		 	echo -e "${RED}[+] Removing Bridge Relay data${NOCOLOR}"
-		 	(sudo rm -r /var/lib/tor/keys) 2> /dev/null
-		 	(sudo rm /var/lib/tor/fingerprint) 2> /dev/null
-		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2> /dev/null
-		 	(sudo rm -r /var/lib/tor/pt_state) 2> /dev/null
+		 	(sudo rm -r /var/lib/tor/keys) 2>/dev/null
+		 	(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
+		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
+		 	(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
 		 	echo -e "${RED}[+] Done!${NOCOLOR}"
 		 	sleep 4
 		 	restarting_tor menu-server

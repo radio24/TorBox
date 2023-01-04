@@ -1,8 +1,8 @@
 #!/bin/bash
-# shellcheck disable=SC2181,SC2001
+# shellcheck disable=SC2004,SC2181,SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -56,16 +56,14 @@
 #  4. Install Tor
 #  5. Configuring Tor with its pluggable transports
 #  6. Install Snowflake
-#  7. Install Vanguards
-#  8. Re-checking Internet connectivity
-#  9. Downloading and installing the latest version of TorBox
-# 10. Installing all configuration files
-# 11. Disabling Bluetooth
-# 12. Configure the system services
-# 13. Installing additional network drivers
-# 14. Updating run/torbox.run
-# 15. Adding and implementing the user torbox
-# 16. Finishing, cleaning and booting
+#  7. Re-checking Internet connectivity
+#  8. Downloading and installing the latest version of TorBox
+#  9. Installing all configuration files
+# 10. Disabling Bluetooth
+# 11. Configure the system services
+# 12. Updating run/torbox.run
+# 13. Adding and implementing the user torbox
+# 14. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -80,12 +78,6 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
-# Include/Exclude parts of the installations
-# "YES" will install Vanguards / "NO" will not install it -> the related entry in the countermeasure menu will have no effect
-VANGUARDS_INSTALL="YES"
-# "YES" will install additional network drivers / "NO" will not install them -> these driver can be installed later from the Update and Reset sub-menu
-ADDITIONAL_NETWORK_DRIVER="YES"
-
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
 # change the values until zou precisely know what you are doing)
@@ -93,8 +85,8 @@ ADDITIONAL_NETWORK_DRIVER="YES"
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
-GO_VERSION="go1.18.4.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.18.4.linux-arm64.tar.gz"
+GO_VERSION="go1.19.4.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.19.4.linux-arm64.tar.gz"
 GO_DL_PATH="https://golang.org/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -114,19 +106,14 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 SNOWFLAKE_ORIGINAL="https://git.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.1 - version 2.3.0
+# NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# Vanguards Repository
-VANGUARDS_USED="https://github.com/mikeperry-tor/vanguards"
-VANGUARDS_COMMIT_HASH=10942de
-VANGUARDS_LOG_FILE="/var/log/tor/vanguards.log"
+# NEW v.0.5.2
+OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi
 WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
-
-# WiFi drivers from Fars Robotics
-FARS_ROBOTICS_DRIVERS="http://downloads.fars-robotics.net/wifi-drivers/"
 
 # above values will be saved into run/torbox.run #######
 
@@ -150,7 +137,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2022 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install_ubuntu.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
@@ -213,11 +200,6 @@ do
 		NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
 	fi
 done
-
-#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
-if grep -q --text 'Raspberry Pi' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi" ; fi
-if grep -q "Raspberry Pi" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi" ; fi
-
 
 ##############################
 ######## FUNCTIONS ###########
@@ -582,8 +564,8 @@ sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs"
-# NEW v.0.5.1: New packages: macchanger and shellinabox removed
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx obfs4proxy apt-transport-tor qrencode nginx basez macchanger"
+# NEW v.0.5.2: (Re)moved: obfs4proxy
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -647,7 +629,7 @@ sudo pip3 install requests
 sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
-# NEW v.0.5.1
+# NEW v.0.5.2
 sudo pip3 install click
 sudo pip3 install paramiko
 sudo pip3 install tornado
@@ -655,6 +637,9 @@ sudo pip3 install APScheduler
 sudo pip3 install backports.zoneinfo
 sudo pip3 install eventlet
 sudo pip3 install python-socketio
+# NEW v.0.5.2
+sudo pip3 install opencv-python-headless
+sudo pip3 install numpy
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -743,11 +728,35 @@ fi
 # 5. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
-(sudo mv /usr/local/bin/tor* /usr/bin) 2> /dev/null
-sudo chmod a+x /usr/share/tor/geoip*
-# Copy not moving!
-(sudo cp /usr/share/tor/geoip* /usr/bin) 2> /dev/null
+# NEW v.0.5.2 - new installation method for obfs4proxy
+cd ~
+git clone $OBFS4PROXY_USED
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ]; then
+	export GO111MODULE="on"
+	cd obfs4proxy
+	go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	sudo cp ./obfs4proxy/obfs4proxy /usr/bin
+	cd ~
+	sudo rm -rf obfs4proxy
+	sudo rm -rf go*
+else
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+	echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	check_install_packages obfs4proxy
+	clear
+fi
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+(sudo mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
+sudo chmod a+x /usr/share/tor/geoip*
+# Copying not moving!
+(sudo cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 
@@ -766,7 +775,18 @@ cd ~
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
-	sleep 1
+	export GO111MODULE="on"
+	cd ~/snowflake/proxy
+	go get
+	go build
+	sudo cp proxy /usr/bin/snowflake-proxy
+	cd ~/snowflake/client
+	go get
+	go build
+	sudo cp client /usr/bin/snowflake-client
+	cd ~
+	sudo rm -rf snowflake
+	sudo rm -rf go*
 else
 	echo ""
 	echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
@@ -777,19 +797,6 @@ else
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
 fi
-export GO111MODULE="on"
-cd ~/snowflake/proxy
-go get
-go build
-sudo cp proxy /usr/bin/snowflake-proxy
-cd ~/snowflake/client
-go get
-go build
-sudo cp client /usr/bin/snowflake-client
-cd ~
-sudo rm -rf snowflake
-sudo rm -rf go*
-
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -798,52 +805,7 @@ else
 	sleep 10
 fi
 
-# 7. Install Vanguards
-if [ "$VANGUARDS_INSTALL" = "YES" ]; then
-	clear
-	cd
-	echo -e "${RED}[+] Step 7: Installing Vanguards...${NOCOLOR}"
-	(sudo rm -rf vanguards) 2> /dev/null
-	(sudo rm -rf /var/lib/tor/vanguards) 2> /dev/null
-	sudo git clone $VANGUARDS_USED
-	DLCHECK=$?
-	if [ $DLCHECK -eq 0 ]; then
-	  sleep 1
-	else
-		echo ""
-		echo -e "${WHITE}[!] COULDN'T CLONE THE VANGUARDS REPOSITORY!${NOCOLOR}"
-		echo -e "${RED}[+] The Vanguards repository may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	fi
-	sudo chown -R debian-tor:debian-tor vanguards
-	cd vanguards
-	sudo -u debian-tor git reset --hard ${VANGUARDS_COMMIT_HASH}
-	cd
-	sudo mv vanguards /var/lib/tor/
-	sudo cp /var/lib/tor/vanguards/vanguards-example.conf /etc/tor/vanguards.conf
-	sudo sed -i "s/^control_pass =.*/control_pass = ${DEFAULT_PASS}/" /etc/tor/vanguards.conf
-	#This is necessary to work with special characters in sed
-	sudo sed -i "s|^logfile =.*|logfile = ${VANGUARDS_LOG_FILE}|" /etc/tor/vanguards.conf
-	# Because of TorBox's automatic counteractions, Vanguard cannot interfere with tor's log file
-	sudo sed -i "s/^enable_logguard =.*/enable_logguard = False/" /etc/tor/vanguards.conf
-	sudo sed -i "s/^log_protocol_warns =.*/log_protocol_warns = False/" /etc/tor/vanguards.conf
-	sudo chown -R debian-tor:debian-tor /var/lib/tor/vanguards
-	sudo chmod -R go-rwx /var/lib/tor/vanguards
-
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
-	fi
-fi
-
-# 8. Again checking connectivity
+# 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity...${NOCOLOR}"
 wget -q --spider $CHECK_URL1
@@ -891,7 +853,7 @@ else
   fi
 fi
 
-# 9. Downloading and installing the latest version of TorBox
+# 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
 echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
@@ -905,11 +867,11 @@ if [ $DLCHECK -eq 0 ] ; then
 	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
 	echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
-	(rm -r torbox) 2> /dev/null
+	(rm -r torbox) 2>/dev/null
 	echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
 	mv TorBox-$TORBOXMENU_BRANCHNAME torbox
 	echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
-	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2> /dev/null
+	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2>/dev/null
 	echo ""
 else
 	echo ""
@@ -930,51 +892,46 @@ else
 	sleep 10
 fi
 
-# 10. Installing all configuration files
+# 9. Installing all configuration files
 clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.1: shellinabox removed
-# Configuring Vanguards
-if [ "$VANGUARDS_INSTALL" = "YES" ]; then
-  (sudo cp etc/systemd/system/vanguards@default.service /etc/systemd/system/) 2> /dev/null
-  echo -e "${RED}[+]${NOCOLOR}         Copied vanguards@default.service"
-fi
-(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2> /dev/null
+# NEW v.0.5.2: Vanguards removed
+(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
-(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2> /dev/null
+(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
 sudo cp etc/default/isc-dhcp-server /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
-(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2> /dev/null
+(sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
-(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2> /dev/null
+(sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
 sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
-(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2> /dev/null
+(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
 sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
-(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2> /dev/null
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
 sudo cp etc/iptables.ipv4.nat /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 sudo mkdir /etc/update-motd.d/bak
-(sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2> /dev/null
+(sudo mv /etc/update-motd.d/* /etc/update-motd.d/bak/) 2>/dev/null
 sudo rm /etc/legal
 # Comment out with sed
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/login
 sudo sed -ri "s/^session[[:space:]]+optional[[:space:]]+pam_motd\.so[[:space:]]+motd=\/run\/motd\.dynamic$/#\0/" /etc/pam.d/sshd
 echo -e "${RED}[+]${NOCOLOR}         Disabled Ubuntu's update-motd feature -- backup done"
-(sudo cp /etc/motd /etc/motd.bak) 2> /dev/null
+(sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
 sudo cp etc/motd /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2> /dev/null
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
-(sudo cp /etc/rc.local /etc/rc.local.bak) 2> /dev/null
+(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 sudo cp etc/rc.local.ubuntu /etc/rc.local
 sudo chmod u+x /etc/rc.local
 # We will enable rc-local further below
@@ -982,7 +939,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 # Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).
 # To work correctly in a captive portal environement, we have to set the following options in /etc/systemd/resolved.conf:
 # LLMNR=yes / MulticastDNS=yes / Chache=no
-(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2> /dev/null
+(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>/dev/null
 sudo cp etc/systemd/resolved.conf /etc/systemd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
@@ -990,12 +947,12 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
-(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2> /dev/null
+(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2> /dev/null
+(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
 sudo cp etc/nginx/nginx.conf /etc/nginx/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
 echo ""
@@ -1006,7 +963,7 @@ if ! grep "# Added by TorBox (002)" .profile ; then
   sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
 fi
 
-echo -e "${RED}[+]          Make Tor ready for Onion Services${NOCOLOR}"
+echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
 sudo mkdir /var/lib/tor/services
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
@@ -1022,7 +979,7 @@ else
 	sleep 10
 fi
 
-# 11. Disabling Bluetooth
+# 10. Disabling Bluetooth
 clear
 echo -e "${RED}[+] Step 11: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
@@ -1037,7 +994,7 @@ else
 	sleep 10
 fi
 
-# 12. Configure the system services
+# 11. Configure the system services
 sleep 10
 clear
 echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
@@ -1072,9 +1029,7 @@ sudo systemctl start ssh
 sudo systemctl restart systemd-resolved
 # We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 # --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
-# However, we don't want to start dnsmasq automatically after booting the system
 sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
-sudo systemctl disable dnsmasq
 sudo systemctl unmask rc-local
 sudo systemctl enable rc-local
 echo ""
@@ -1092,14 +1047,17 @@ echo""
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 sudo systemctl stop nginx
-(sudo rm /etc/nginx/sites-enabled/default) 2> /dev/null
-(sudo rm /etc/nginx/sites-available/default) 2> /dev/null
-(sudo rm -r /var/www/html) 2> /dev/null
+(sudo rm /etc/nginx/sites-enabled/default) 2>/dev/null
+(sudo rm /etc/nginx/sites-available/default) 2>/dev/null
+(sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www) 2> /dev/null
+(sudo chown torbox:torbox /var/www) 2>/dev/null
+# NEW v.0.5.2: configure webssh
+sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 # (sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx)
-sudo systemctl start nginx
+#sudo systemctl start nginx
 sudo systemctl daemon-reload
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1110,168 +1068,9 @@ else
 	sleep 10
 fi
 
-# 13. Installing additional network drivers
+# 11. Installing additional network drivers
 if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-
-	# Update kernel headers - important: this has to be done every time after upgrading the kernel
-	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
-	sudo apt-get install -y linux-headers-$(uname -r)
-	# firmware-realtek is missing on ubuntu, but it should work without it
-	sudo apt-get install -y dkms libelf-dev build-essential
-	cd
-	sleep 2
-
-	# Installing the RTL8188EU
-	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
-	# clear
-	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
-	# echo -e " "
-	# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-	# cd ~
-	# git clone https://github.com/lwfinger/rtl8188eu.git
-	# cd rtl8188eu
-	# make all
-	# sudo make install
-	# cd ~
-	# sudo rm -r rtl8188eu
-	# sleep 2
-
-	# Installing the RTL8188FU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
-	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
-	sudo dkms add ./rtl8188fu-arm
-	sudo dkms build rtl8188fu/1.0
-	sudo dkms install rtl8188fu/1.0
-	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-	sudo rm -r rtl8188fu*
-	sleep 2
-
-	# Installing the RTL8192EU
-	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
-	# clear
-	# echo -e "${RED}[+] Step 12: Installing additional network drivers...${NOCOLOR}"
-	# echo -e " "
-	# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
-	# git clone https://github.com/clnhub/rtl8192eu-linux.git
-	# cd rtl8192eu-linux
-	# sudo dkms add .
-	# sudo dkms install rtl8192eu/1.0
-	# cd ~
-	# sudo rm -r rtl8192eu-linux
-	# sleep 2
-
-	# Installing the RTL8812AU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8812au-20210629.git
-	cd 8812au-20210629
-	cp torbox/install/Network/install-rtl8812au.sh .
-	sudo chmod a+x install-rtl8812au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			./ARM64_RPI.sh
-		else
-	 	./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl8812au.sh
-	cd ~
-	sudo rm -r 8812au-20210629
-	sleep 2
-
-	# Installing the RTL8814AU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8814au.git
-	cd 8814au
-	cp torbox/install/Network/install-rtl8814au.sh .
-	sudo chmod a+x install-rtl8814au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			./ARM64_RPI.sh
-		else
-	 	./ARM_RPI.sh
- 		fi
-	fi
-	sudo ./install-rtl8814au.sh
-	cd ~
-	sudo rm -r 8814au
-	sleep 2
-
-	# Installing the RTL8821AU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821au-20210708.git
-	cd 8821au-20210708
-	cp torbox/install/Network/install-rtl8821au.sh .
-	sudo chmod a+x install-rtl8821au.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			./ARM64_RPI.sh
-		else
-	 	./ARM_RPI.sh
- 	fi
-	fi
-	sudo ./install-rtl8821au.sh
-	cd ~
-	sudo rm -r 8821au-20210708
-	sleep 2
-
-	# Installing the RTL8821CU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821cu-20210118.git
-	cd 8821cu-20210118
-	cp torbox/install/Network/install-rtl8821cu.sh .
-	sudo chmod a+x install-rtl8821cu.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			./ARM64_RPI.sh
-		else
-	 	./ARM_RPI.sh
- 	fi
-	fi
-	sudo ./install-rtl8821cu.sh
-	cd ~
-	sudo rm -r 8821cu-20210118
-	sleep 2
-
-	# Installing the RTL88x2BU
-	clear
-	echo -e "${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/88x2bu-20210702.git
-	cd 88x2bu-20210702
-	cp torbox/install/Network/install-rtl88x2bu.sh .
-	sudo chmod a+x install-rtl88x2bu.sh
-	if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-		if uname -m | grep -q -E "arm64|aarch64"; then
-			./ARM64_RPI.sh
-		else
-	 	./ARM_RPI.sh
- 	fi
-	fi
-	sudo ./install-rtl88x2bu.sh
-	cd
-	sudo rm -r 88x2bu-20210702
-	sleep 2
-
+	bash torbox/install/install_network_drivers install
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1279,10 +1078,9 @@ if [ "$ADDITIONAL_NETWORK_DRIVER" = "YES" ]; then
 	else
 		sleep 10
 	fi
-
 fi
 
-# 14. Updating run/torbox.run
+# 12. Updating run/torbox.run
 clear
 echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
@@ -1290,13 +1088,12 @@ sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
 sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
+sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_ORIGINAL=.*|SNOWFLAKE_ORIGINAL=${SNOWFLAKE_ORIGINAL}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-sudo sed -i "s|^VANGUARDS_USED=.*|VANGUARDS_USED=${VANGUARDS_USED}|g" ${RUNFILE}
-sudo sed -i "s/^VANGUARDS_COMMIT_HASH=.*/VANGUARDS_COMMIT_HASH=${VANGUARDS_COMMIT_HASH}/g" ${RUNFILE}
-sudo sed -i "s|^VANGUARD_LOG_FILE=.*|VANGUARD_LOG_FILE=${VANGUARDS_LOG_FILE}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sudo sed -i "s|^FARS_ROBOTICS_DRIVERS=.*|FARS_ROBOTICS_DRIVERS=${FARS_ROBOTICS_DRIVERS}|g" ${RUNFILE}
+# Is this right? Shouldn't it be FRESH_INSTALLED=3 ?
+# If removed, FRESH_INSTALLED=1 is obsolet and can be deleted in first_use
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1307,7 +1104,7 @@ else
 	sleep 10
 fi
 
-# 15. Adding the user torbox
+# 13. Adding the user torbox
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1326,7 +1123,7 @@ sudo adduser torbox netdev
 if ! sudo grep "# Added by TorBox" /etc/sudoers ; then
   sudo printf "\n# Added by TorBox\ntorbox  ALL=NOPASSWD:ALL\n" | sudo tee -a /etc/sudoers
   # or: sudo printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" | sudo tee -a /etc/sudoers --- HAST TO BE CHECKED AND COMPARED WITH THE USER "UBUNTU"!!
-  (sudo visudo -c) 2> /dev/null
+  (sudo visudo -c) 2>/dev/null
 fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1337,7 +1134,7 @@ else
 	sleep 10
 fi
 
-# 16. Finishing, cleaning and booting
+# 14. Finishing, cleaning and booting
 echo ""
 echo ""
 echo -e "${RED}[+] Step 16: We are finishing and cleaning up now!${NOCOLOR}"
@@ -1353,11 +1150,11 @@ echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(sudo rm -r debian-packages) 2> /dev/null
-(sudo rm -r WiringPi) 2> /dev/null
-(sudo rm -r Downloads) 2> /dev/null
-(sudo rm -r get-pip.py) 2> /dev/null
-(sudo rm -r python-urwid*) 2> /dev/null
+(sudo rm -r debian-packages) 2>/dev/null
+(sudo rm -r WiringPi) 2>/dev/null
+(sudo rm -r Downloads) 2>/dev/null
+(sudo rm -r get-pip.py) 2>/dev/null
+(sudo rm -r python-urwid*) 2>/dev/null
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
@@ -1367,15 +1164,15 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox051) 2> /dev/null
-(sudo cp /etc/hosts /etc/hosts.bak) 2> /dev/null
-(sudo cp torbox/etc/hosts /etc/) 2> /dev/null
+(sudo hostnamectl set-hostname TorBox052) 2>/dev/null
+(sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
+(sudo cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
 sudo mv /home/ubuntu/* /home/torbox/
-(sudo mv /home/ubuntu/.profile /home/torbox/) 2> /dev/null
+(sudo mv /home/ubuntu/.profile /home/torbox/) 2>/dev/null
 sudo mkdir /home/torbox/openvpn
-(sudo rm .bash_history) 2> /dev/null
+(sudo rm .bash_history) 2>/dev/null
 sudo chown -R torbox:torbox /home/torbox/
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
@@ -1388,11 +1185,8 @@ echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 #.bash_history is already deleted
 history -c
 # To start TACA notices.log has to be present
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/notices.log) 2> /dev/null
-# To ensure the correct permissions
-(sudo -u debian-tor touch /var/log/tor/vanguards.log) 2> /dev/null
-(sudo chmod -R go-rwx /var/log/tor/vanguards.log) 2> /dev/null
+(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
+(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3

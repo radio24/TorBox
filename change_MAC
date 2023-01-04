@@ -2,7 +2,7 @@
 # shellcheck disable=SC2120,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -76,12 +76,12 @@ read_config()
 	# List all available network interfaces
 	AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}')
 	# Read interfaces from run/torbox.run
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2> /dev/null
-	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2> /dev/null
-	MAC_eth0=$(grep "^MAC_eth0=" ${RUNFILE} | sed "s/MAC_eth0=//g") 2> /dev/null
-	MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2> /dev/null
-	MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2> /dev/null
-	MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2> /dev/null
+	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2>/dev/null
+	MAC_eth0=$(grep "^MAC_eth0=" ${RUNFILE} | sed "s/MAC_eth0=//g") 2>/dev/null
+	MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2>/dev/null
+	MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2>/dev/null
+	MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2>/dev/null
 }
 
 # This function randomize, resets or changes the MAC address of an interface.
@@ -91,7 +91,7 @@ change_mac_address()
 	O_DEVICE=$1
 	exitstatus=0
 	if [ -z "$CHOICE2" ]; then
-		INPUT="TorBox v.0.5.1 - Change the MAC address for $O_DEVICE"
+		INPUT="TorBox v.0.5.2 - Change the MAC address for $O_DEVICE"
 		CHOICE2=$(whiptail --nocancel --title "$INPUT" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" 9 $MENU_WIDTH 3 \
 		"1" "Randomize the MAC addresse(s)" ON \
 		"2" "Use the permanent, unique MAC address of the interface(s)" OFF \
@@ -117,7 +117,7 @@ change_mac_address()
 				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE up
 				echo " "
-				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				sleep 5
 			;;
 			2)
 				MAC_ADDRESS="permanent"
@@ -133,7 +133,7 @@ change_mac_address()
 				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 				sudo ip link set dev $O_DEVICE up
 				echo " "
-				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				sleep 5
 			;;
 			3)
 				OLD_MAC_ADDRESS="MAC_${O_DEVICE}"
@@ -159,7 +159,7 @@ change_mac_address()
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE up
 					echo " "
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					sleep 5
 				else
 					clear
 					echo -e "${WHITE}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"
@@ -195,7 +195,7 @@ change_mac_address_finish()
 read_config
 
 if [ -z "$CHOICE2" ]; then
-	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.1 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Change/randomize the MAC adresses of TorBox's interfaces"  \
 	" 2" "List the MAC adresses of TorBox's interfaces"  \
@@ -211,7 +211,7 @@ case "$CHOICE3" in
   1)
 		if [ -z "$CHOICE2" ]; then
 			###### DISPLAY THE AVAILABLE INTERFACES ######
-			CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.1 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+			CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
 			"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 			"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 			"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \

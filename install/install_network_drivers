@@ -1,0 +1,399 @@
+#!/bin/bash
+# shellcheck disable=SC2046
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file installs additional network drivers
+#
+# SYNTAX
+# ./install_network_drivers <install/update>
+#
+# <install> executed during the installation of TorBox
+# <update> exectued during the update of TorBox
+#
+# IMPORTANT
+# Don't execute this script as root.
+#
+#
+##### SET VARIABLES ######
+#
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+# Identify the Operation System
+CHECK_OS="$(lsb_release -si)"
+if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
+
+# Other Variables
+EXECUTED=$1
+
+######## PREPARATIONS ########
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+cd ~
+
+# For a Raspberry Pi OS installation
+if [ "$CHECK_OS" == "Raspbian" ]; then
+	clear
+	if [ "$EXECUTED" == "install" ]; then INSTALLSTRING="${RED}[+] Step 14: Installing additional network drivers...${NOCOLOR}"; else INSTALLSTRING="${RED}[+] Installing additional network drivers...${NOCOLOR}"; fi
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	# Update kernel headers - important: this has to be done every time after upgrading the kernel
+	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+	sleep 2
+
+	# Installing the RTL8188EU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	cd ~
+	git clone https://github.com/lwfinger/rtl8188eu.git
+	cd rtl8188eu
+	make all
+	sudo make install
+	cd ~
+	sudo rm -r rtl8188eu
+	sleep 2
+
+	# Installing the RTL8188FU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	sudo dkms add ./rtl8188fu-arm
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu*
+	sleep 2
+
+	# Installing the RTL8192EU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/clnhub/rtl8192eu-linux.git
+	cd rtl8192eu-linux
+	sudo dkms add .
+	sudo dkms install rtl8192eu/1.0
+	cd ~
+	sudo rm -r rtl8192eu-linux
+	sleep 2
+
+	# Installing the RTL8812AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au-20210629.git
+	cd 8812au-20210629
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8812au-20210629
+	sleep 2
+
+	# Installing the RTL8814AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8814au
+	sleep 2
+
+# Installing the RTL8821AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au-20210708.git
+	cd 8821au-20210708
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821au-20210708
+	sleep 2
+
+	# Installing the RTL8821CU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821cu-20210118.git
+	cd 8821cu-20210118
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821cu-20210118
+	sleep 2
+
+	# Installing the RTL88x2BU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu-20210702.git
+	cd 88x2bu-20210702
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 88x2bu-20210702
+	sleep 2
+
+# For a Debian installation
+elif [ "$CHECK_OS" == "Debian" ]; then
+	if [ "$EXECUTED" == "install" ]; then INSTALLSTRING="${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"; else INSTALLSTRING="${RED}[+] Installing additional network drivers...${NOCOLOR}"; fi
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	# Update kernel headers - important: this has to be done every time after upgrading the kernel
+	sudo apt-get install -y linux-headers-$(uname -r)
+	sudo apt-get install -y firmware-realtek dkms libelf-dev build-essential
+	sleep 2
+
+	# Installing the RTL8188EU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	cd ~
+	git clone https://github.com/lwfinger/rtl8188eu.git
+	cd rtl8188eu
+	make all
+	sudo make install
+	cd ~
+	sudo rm -r rtl8188eu
+	sleep 2
+
+	# Installing the RTL8188FU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/kelebek333/rtl8188fu
+	sudo dkms add ./rtl8188fu
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu
+	sleep 2
+
+	# Installing the RTL8192EU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/clnhub/rtl8192eu-linux.git
+	cd rtl8192eu-linux
+	sudo dkms add .
+	sudo dkms install rtl8192eu/1.0
+	cd ~
+	sudo rm -r rtl8192eu-linux
+	sleep 2
+
+	# Installing the RTL8812AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au-20210629.git
+	cd 8812au-20210629
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8812au-20210629
+	sleep 2
+
+	# Installing the RTL8814AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8814au
+	sleep 2
+
+	# Installing the RTL8821AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au-20210708.git
+	cd 8821au-20210708
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821au-20210708
+	sleep 2
+
+	# Installing the RTL8821CU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821cu-20210118.git
+	cd 8821cu-20210118
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821cu-20210118
+	sleep 2
+
+	# Installing the RTL88x2BU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu-20210702.git
+	cd 88x2bu-20210702
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 88x2bu-20210702
+	sleep 2
+
+# For a Ubuntu installation
+elif [ "$CHECK_OS" == "Ubuntu" ]; then
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	if [ "$EXECUTED" == "install" ]; then INSTALLSTRING="${RED}[+] Step 13: Installing additional network drivers...${NOCOLOR}"; else INSTALLSTRING="${RED}[+] Installing additional network drivers...${NOCOLOR}"; fi
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	# Update kernel headers - important: this has to be done every time after upgrading the kernel
+	sudo apt-get install -y linux-headers-$(uname -r)
+	# firmware-realtek is missing on ubuntu, but it should work without it
+	sudo apt-get install -y dkms libelf-dev build-essential
+	cd ~
+	sleep 2
+
+	# Installing the RTL8188EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "$INSTALLSTRING"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
+	# cd ~
+	# git clone https://github.com/lwfinger/rtl8188eu.git
+	# cd rtl8188eu
+	# make all
+	# sudo make install
+	# cd ~
+	# sudo rm -r rtl8188eu
+	# sleep 2
+
+	# Installing the RTL8188FU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	sudo dkms add ./rtl8188fu-arm
+	sudo dkms build rtl8188fu/1.0
+	sudo dkms install rtl8188fu/1.0
+	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	sudo rm -r rtl8188fu
+	sleep 2
+
+	# Installing the RTL8192EU
+	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
+	# clear
+	# echo -e "$INSTALLSTRING"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8192EU Wireless Network Driver ${NOCOLOR}"
+	# git clone https://github.com/clnhub/rtl8192eu-linux.git
+	# cd rtl8192eu-linux
+	# sudo dkms add .
+	# sudo dkms install rtl8192eu/1.0
+	# cd ~
+	# sudo rm -r rtl8192eu-linux
+	# sleep 2
+
+	# Installing the RTL8812AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8812au-20210629.git
+	cd 8812au-20210629
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8812au-20210629
+	sleep 2
+
+	# Installing the RTL8814AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8814AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8814au.git
+	cd 8814au
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8814au
+	sleep 2
+
+	# Installing the RTL8821AU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821AU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821au-20210708.git
+	cd 8821au-20210708
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821au-20210708
+	sleep 2
+
+	# Installing the RTL8821CU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/8821cu-20210118.git
+	cd 8821cu-20210118
+	sudo ./install-driver.sh NoPrompt
+	cd ~
+	sudo rm -r 8821cu-20210118
+	sleep 2
+
+	# Installing the RTL88x2BU
+	clear
+	echo -e "$INSTALLSTRING"
+	echo -e " "
+	echo -e "${RED}[+] Installing the Realtek RTL88x2BU Wireless Network Driver ${NOCOLOR}"
+	git clone https://github.com/morrownr/88x2bu-20210702.git
+	cd 88x2bu-20210702
+	sudo ./install-driver.sh NoPrompt
+	sudo rm -r 88x2bu-20210702
+	sleep 2
+
+elif [ "$CHECK_OS" == "OTHER" ]; then
+	clear
+	echo -e "${WHITE}[+] It seems that your Operation System is not supported, yet!!${NOCOLOR}"
+	echo -e "${WHITE}[+] Please, contact anonym@torbox.ch for help! ${NOCOLOR}"
+	read -n 1 -s -r -p "Press any key to continue"
+	exit 1
+fi

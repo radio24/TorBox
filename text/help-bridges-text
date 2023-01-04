@@ -18,34 +18,36 @@ TYPE OF PLUGGABLE TRANSPORTS:
   active-probing attacks, where the censor discovers bridges by trying to
   connect to them. obfs3 and scramblesuit are similar in nature to obfs4
   but less successful and therefore not integrated into TorBox.
+- SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
+  built-in NAT punching. For censored users: If the Snowflake proxy gets
+  blocked, the broker will find a new proxy automatically.
 - MEEK-AZURE makes Tor traffic look like a connection to an HTTPS website.
   Unlike the other transports, it doesn't connect directly to a bridge.
   Instead, Meek first connects to a real HTTPS web server (in the Microsoft
   Azure cloud) and from there connects to the actual bridge. Censors cannot
   easily block Meek connections because the HTTPS servers also provide many
-  other useful services.
-- SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
-  built-in NAT punching. For censored users: If the Snowflake proxy gets
-  blocked, the broker will find a new proxy automatically.
+  other useful services. However, because it has a bandwidth limitation,
+	this it will be quite slow.
 
 WHICH PLUGGABLE TRANSPORT SHOULD I USE?
 - Countries with moderate internet censorship: OBFS4
-- China or countries with similar internet censorship: SNOWFLAKE or MEEK
+- For China, Iran, Russia or Turkmenistan, we recommend to use SNOWFLAKE
+  (see also here: https://github.com/radio24/TorBox/discussions/179).
 
 HOW TO ACTIVATE OBFS4?
 Just use menu entry 2 or 3.
 
 HOW TO ACTIVATE SNOWFLAKE?
-Just use menu entry 8.
+Just use menu entry 7 or 8.
 
 HOW TO ACTIVATE MEEK-AZURE?
-Just use menu entry 9.
+Just use menu entry 12.
 
 WHICH PLUGGABLE TRANSPORT I'M CURRENTLY USING?
 Check the top right corner of the menu. It should display "Bridge mode OFF!" if no bridges and pluggable transports are used or the name of the currently used pluggable transport.
 
-HOW CAN I CHECK THE VALIDITY OF AN OBFS4BRIDGE?
-Use menu entry 4 or go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number between the ip:port and cert=). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
+HOW CAN I CHECK THE VALIDITY OF A BRIDGE?
+Use menu entry 4 or 9. You can also go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number after the ip:port). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid. Often Snowflake bridges are labeled as OFFLINE, which is not the case.
 
 HOW DO I KNOW IF IT IS WORKING?
 Check the terminal output when tor is restarting. PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network! At the end, you should see "Bootstrapped 100%: Done".

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -32,6 +32,7 @@
 # IMPORTANT: rc.local needs absolute paths, it is not recommended to use the torbox.lib!
 ARGUMENT=$1
 ARGUMENT2=$2
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 LOG=""
 RETURN=0
 i=0
@@ -101,7 +102,7 @@ elif [ $ARGUMENT = 2 ]; then
 		fi
   fi
 
-# Entry 3: Restart Tor, if needed.
+# Entry 3: Restart Tor, an reconect wifi, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
@@ -127,12 +128,12 @@ elif [ $ARGUMENT = 3 ]; then
   sudo systemctl stop tor
   sudo systemctl restart tor
 
-# Entry 4: Synchronize time
+# Entry 4: Restart Tor
 # This should work in every configuration
 elif [ $ARGUMENT = 4 ]; then
-	local_clearnet_dns_resolution_on
-	sleep 2
-	(sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null
-	sleep 2
-	local_clearnet_dns_resolution_off
-fi
+	(printf %s"[$DATE] - TACA TRIGGER #4  - Restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
+	sudo systemctl restart tor
+
+# Entry 5: Synchronize time
+# This should work in every configuration
+elif [ $ARGUMENT = 5 ]; then (sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null; fi

@@ -1,0 +1,14 @@
+This menu entry restores TorBox's configuration, which was saved with TorBox's backup script. If available, it includes the settings for the OBFS4 Bridge Relay or Onion Services.
+
+Please upload the backup file using a SFTP client (the same login and password as your SSH client) in TorBox's home directory. Alternatively, you can transfer the backup file by connecting an USB stick to your TorBox. You can probably mount the USB stick by "sudo mount /dev/sda /mnt" and then copy the backup file from the stick to TorBox's home directory.
+
+Moving your TorBox from one installation to another is easy with that backup and restore scripts. Regarding OBFS4 Bridge Relays and Onion Services, upgrading or moving it to a different computer with keeping all the configuration, keys, and data is possible. Maintaining backups of the identity keys to restore a relay in the future is the recommended way to ensure the reputation of the relay/server won't be wasted and to ensure the availability of your data in case of a system crash.
+
+IMPORTANT
+- An already existing configuration (including OBFS4 Bridge Relay and
+  Onion Services) will be overwritten without confirmation!!!
+- By default, after the backup is restored, all services (OBFS4 Bridge
+  Relay, Onion Services and Shared Folders) are deactivated and have to
+  be activated manually.
+
+Do you want to restore TorBox's configuration from a backup file?

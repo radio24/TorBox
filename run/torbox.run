@@ -1,5 +1,5 @@
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2022 Patrick Truffer
+# Copyright (C) 2023 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -28,21 +28,19 @@ PING_SERVER=http://google.com
 
 # Used URLs (pre-filled with the default values)
 # Used go version
-GO_VERSION=go1.18.4.linux-armv6l.tar.gz
-GO_VERSION_64=go1.18.4.linux-arm64.tar.gz
+GO_VERSION=go1.19.4.linux-armv6l.tar.gz
+GO_VERSION_64=go1.19.4.linux-arm64.tar.gz
 GO_DL_PATH=https://golang.org/dl/
+
+# obfs4proxy repositories
+OBFS4PROXY_USED=https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git
 
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL=https://git.torproject.org/pluggable-transports/snowflake.git
 SNOWFLAKE_USED=https://github.com/keroserene/snowflake.git
-# Vanguards Repository
-VANGUARDS_USED=https://github.com/mikeperry-tor/vanguards
-VANGUARDS_COMMIT_HASH=10942de
-VANGUARD_LOG_FILE="/var/log/tor/vanguards.log
+
 # Wiringpi
 WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
-# WiFi drivers from Fars Robotics
-FARS_ROBOTICS_DRIVERS=http://downloads.fars-robotics.net/wifi-drivers/
 
 # Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing
@@ -93,9 +91,18 @@ MAC_wlan1=random
 # 1 - TorBox's Web SSH is enabled
 TWEBSSH=1
 
+# Exclude slow tor relays (Important: DO NOT ACTIVATE IF YOUR ANONYMITY HAS THE HIGHEST PRIORITY!)
+# 0 - Not excluded
+# 1 - Excluded
+EX_SLOW=0
+
 # TFS starting commands
 # Syntax: TFS-<service_name>=<tfs command>
 # This will configure the TFS program (do not remove or change that line - this is an anchor)
+
+# TCS starting commands
+# Syntax: TCS-<service_name>=<tcs command>
+# This will configure the TCS program (do not remove or change that line - this is an anchor)
 
 # Exit controll variable
 EXITID=0
