@@ -1138,6 +1138,7 @@ case "$CHOICE" in
   	echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   	sudo apt --fix-broken install
   	sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+		go clean -cache
   	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
   	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service

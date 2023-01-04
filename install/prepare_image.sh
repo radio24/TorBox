@@ -39,11 +39,6 @@ NOCOLOR='\033[0m'
 # include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
-# Is the Snowflake client installed?
-if command -v snowflake-client &> /dev/null
-then SNOWFLAKE="exists";
-else SNOWFLAKE="is missing"; fi
-
 # Is the automatic counteractions feature activated?
 if pgrep -f "log_check.py" ; then
   clear
@@ -105,7 +100,7 @@ echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc
 echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
 echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
 echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                                    :${WHITE} $SNOWFLAKE ${NOCOLOR}"
+echo -e "${RED}Snowflake                                    :${WHITE} $(snowflake-proxy --version)${NOCOLOR}"
 echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
 echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
@@ -170,6 +165,7 @@ echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+go clean -cache
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
