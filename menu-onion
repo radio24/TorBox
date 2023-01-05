@@ -907,8 +907,8 @@ case "$CHOICE" in
 							find_virtport $SERVICE_NAME
               if [ "$exitstatus" == "0" ]; then
 								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
-								TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)
-								TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)
+								(TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)) >/dev/null
+								(TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)) >/dev/null
 								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $SERVICE_NAME; fi
 								if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $SERVICE_NAME; fi
                 echo -e "${RED}[+] Delete Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
