@@ -256,9 +256,17 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			sleep 1
 
 			# Restoring TORRC
-			echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
-			(sudo mv ${TORRC} ${TORRC}.bak) 2>/dev/null
-			(sudo mv restore${TORRC} ${TORRC}) 2>/dev/null
+			echo ""
+			read -r -p $'\e[1;37mDo you really want to overwrite the basic torbox configration (/etc/torrc)?" [Y/n]? -> \e[0m'
+			# The following line is for the prompt to appear on a new line.
+			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+				echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
+				(sudo mv ${TORRC} ${TORRC}.bak) 2>/dev/null
+				(sudo mv restore${TORRC} ${TORRC}) 2>/dev/null
+				(sudo rm /etc/tor/torrc.exclude-slow) 2>/dev/null
+				sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+			fi
 
 			# Restoring TFS and TCS configuration
 			TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
