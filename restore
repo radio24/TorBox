@@ -43,6 +43,7 @@ NOCOLOR='\033[0m'
 #Other variables
 TOR_DIR="/etc/tor/"
 TORRC="${TOR_DIR}torrc"
+TORRC_RESTORE="restore${TOR_DIR}"
 TOR_USER="debian-tor"
 DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
@@ -52,9 +53,69 @@ HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
+TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
+# This is necessary to work with special characters in sed
+# shellcheck disable=SC2001,SC2016
+TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
 ##############################
 ######## FUNCTIONS ########
+
+# This function imports the configuration and makes some preparations
+# TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
+read_config()
+{
+MODE_BR=$(grep "^BridgeRelay" ${TORRC_RESTORE})
+MODE_BRIDGES=$(grep "^UseBridges" ${TORRC_RESTORE})
+if [ "$MODE_BR" = "BridgeRelay 1" ]; then
+    TOGGLE07="Bridge relay ON!"
+    TOGGLE07b="ON"
+    TOGGLE08b="OFF"
+    ACTIVATED="Bridge Relay Mode is ACTIVATED"
+    ORPORT=$(grep "^ORPort" ${TORRC_RESTORE})
+    OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC_RESTORE})
+    CONTACT=$(grep "^ContactInfo" ${TORRC_RESTORE})
+    NICK=$(grep "^Nickname" ${TORRC_RESTORE}})
+    BRIDGEDISTRIBUTION=$(grep "BridgeDistribution" ${TORRC_RESTORE})
+else
+    TOGGLE07="Bridge relay OFF!"
+    TOGGLE07b="OFF"
+    TOGGLE08b="ON"
+    ACTIVATED="Bridge Relay Mode is DEACTIVATED"
+    ORPORT=$(grep "^#ORPort" ${TORRC_RESTORE})
+    OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC_RESTORE})
+    CONTACT=$(grep "^#ContactInfo" ${TORRC_RESTORE})
+    NICK=$(grep "^#Nickname" ${TORRC_RESTORE})
+    BRIDGEDISTRIBUTION=$(grep "#BridgeDistribution" ${TORRC_RESTORE})
+fi
+sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
+sNICK=$(cut -d ' ' -f2 <<< $NICK)
+sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
+}
+
+change_config()
+{
+if [ "$MODE_BR" != "BridgeRelay 1" ]; then
+  sudo sed -i "s/^$ORPORT/#ORPort $nORPORT/" ${TORRC}
+  sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+  sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
+  sudo sed -i "s/^$NICK/#Nickname $nNICK/" ${TORRC}
+  sudo sed -i "s/^$BRIDGEDISTRIBUTION/#BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
+else
+  sudo sed -i "s/^$ORPORT/ORPort $nORPORT/" ${TORRC}
+  sudo sed -i "s/^$OBFS4PORT/ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+  sudo sed -i "s/^$CONTACT/ContactInfo $nCONTACT/" ${TORRC}
+  sudo sed -i "s/^$NICK/Nickname $nNICK/" ${TORRC}
+  sudo sed -i "s/^$BRIDGEDISTRIBUTION/BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
+#  INPUT=$(cat text/restart-bridge_server-text)
+#  if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+#    clear
+#    restarting_tor menu-server
+#  fi
+fi
+}
 
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
@@ -260,12 +321,14 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			read -r -p $'\e[1;37mDo you really want to overwrite the basic torbox configration (/etc/torrc)?" [Y/n]? -> \e[0m'
 			# The following line is for the prompt to appear on a new line.
 			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-				echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
-				(sudo mv ${TORRC} ${TORRC}.bak) 2>/dev/null
-				(sudo mv restore${TORRC} ${TORRC}) 2>/dev/null
-				(sudo rm /etc/tor/torrc.exclude-slow) 2>/dev/null
-				sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
-				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+				if [[ $REPLY =~ ^[Yy]$ ]] ; then
+					echo -e "${RED}[+] Restoring the basic TorBox configuration...${NOCOLOR}"
+					(sudo mv ${TORRC} ${TORRC}.bak) 2>/dev/null
+					(sudo mv ${TORRC_RESTORE} ${TORRC}) 2>/dev/null
+					(sudo rm /etc/tor/torrc.exclude-slow) 2>/dev/null
+					sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+					sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+				fi
 			fi
 
 			# Restoring TFS and TCS configuration
@@ -312,6 +375,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				sudo mv restore/var/lib/tor/fingerprint ${DATA_DIR}
 				sudo mv restore${HASHED_FINGERPRINT_DIR} ${DATA_DIR}
 				sudo mv restore/var/lib/tor/pt_state ${DATA_DIR}
+				echo -e "${RED}[+] Restoring torrc...${NOCOLOR}"
+				# read_config / change_config - rename function to read_config_obfs4_relay / change_config_obfs4_relay and centralize in library.
+				read_config
+				change_config
 				# We will not start the OBFS4 Bridge Relay
 				sleep 1
 			fi
@@ -320,6 +387,17 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			if [ "$ONIONSERVICES" == "1" ]; then
 				echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
 				sudo mv restore${DATA_DIR_OS} ${DATA_DIR}
+				(sudo sed -i "s/HiddenServiceDir/d" ${TORRC}) 2>/dev/
+				(sudo sed -i "s/HiddenServicePort/d" ${TORRC}) 2>/dev/null
+				HIDDENSERVICES=$(grep -A 1 "HiddenServiceDir" $TORRC_RESTORE) 2>/dev/null
+				#This is necessary to work with special characters in sed
+				HIDDENSERVICES="$(<<< "$HIDDENSERVICES" sed -e 's`[][\\/.*^$]`\\&`g')"
+				# Using the Anchor in torrc
+				REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
+				#This is necessary to work with special characters in sed
+				REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+				#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
+				sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$HIDDENSERVICES/g" "${TORRC}"
 				sleep 1
 			fi
 
@@ -329,6 +407,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				(sudo rm -r ${CLIENT_ONION_AUTH_DIR}) 2>/dev/null
 				echo -e "${RED}[+] Restoring server access authorization...${NOCOLOR}"
 				sudo mv restore${CLIENT_ONION_AUTH_DIR} ${DATA_DIR}
+				CLIENT_ONION_AUTH=$(grep -A 1 "ClientOnionAuthDir" $TORRC_RESTORE) 2>/dev/null
+				#This is necessary to work with special characters in sed
+				CLIENT_ONION_AUTH="$(<<< "$CLIENT_ONION_AUTH" sed -e 's`[][\\/.*^$]`\\&`g')"
+				sudo sed -E -i "s/.*ClientOnionAuthDir.*/$CLIENT_ONION_AUTH/g" "${TORRC}"
 				sleep 1
 			fi
 

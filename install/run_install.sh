@@ -589,14 +589,12 @@ sudo pip3 install requests
 sudo pip3 install Django
 sudo pip3 install click
 sudo pip3 install gunicorn
-# NEW v.0.5.2
 sudo pip3 install paramiko
 sudo pip3 install tornado
 sudo pip3 install APScheduler
 sudo pip3 install backports.zoneinfo
 sudo pip3 install eventlet
 sudo pip3 install python-socketio
-# NEW v.0.5.2
 sudo pip3 install opencv-python-headless
 sudo pip3 install numpy
 

@@ -583,17 +583,15 @@ pip3 install requests
 pip3 install Django
 pip3 install click
 pip3 install gunicorn
-# NEW v.0.5.2
-sudo pip3 install click
-sudo pip3 install paramiko
-sudo pip3 install tornado
-sudo pip3 install APScheduler
-sudo pip3 install backports.zoneinfo
-sudo pip3 install eventlet
-sudo pip3 install python-socketio
-# NEW v.0.5.2
-sudo pip3 install opencv-python-headless
-sudo pip3 install numpy
+pip3 install click
+pip3 install paramiko
+pip3 install tornado
+pip3 install APScheduler
+pip3 install backports.zoneinfo
+pip3 install eventlet
+pip3 install python-socketio
+pip3 install opencv-python-headless
+pip3 install numpy
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -982,8 +980,8 @@ systemctl stop nginx
 # This is necessary for Nginx / TFS
 (chown torbox:torbox /var/www)
 # NEW v.0.5.2: configure webssh
-sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
 sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
@@ -1036,7 +1034,7 @@ echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
 adduser torbox
 adduser torbox netdev
 # This is necessary for Nginx / TFS
-(sudo chown torbox:torbox /var/www) 2>/dev/null
+(chown torbox:torbox /var/www) 2>/dev/null
 mv /root/* /home/torbox/
 (mv /root/.profile /home/torbox/) 2>/dev/null
 mkdir /home/torbox/openvpn
