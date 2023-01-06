@@ -28,16 +28,16 @@ A **Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2022/07/TorBox-A5-RPI4-051-e1658300633301.png)](https://www.torbox.ch/wp-content/uploads2022/07/TorBox-A5-RPI4-051.png)
+[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2023/01/TorBox-A5-RPI4-052-e1672996368110.png)](https://www.torbox.ch/wp-content/uploads/2023/01/TorBox-A5-RPI4-052.png)
 
 ### Features
-* TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage.
+* TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. It also can block insecure HTTP requests.
 * With a menu system that can be accessed by a [SSH client](https://www.torbox.ch/?page_id=112#which-ssh-client-do-you-prefer) or a web browser, TorBox provides a user-friendly interface.
 * TorBox supports Internet access via cable (Ethernet), WiFi, tethering devices, [cellular links](https://www.torbox.ch/?page_id=1030), USB dongles (`wlan1`/`eth1`/`ppp0`/`usb0`), and VPN connections (`tun0`).
 * The clients can connect TorBox via WiFi (in most cases, **an additional USB WiFi adapter is necessary**) and cable (simultaneously; see [here](https://www.torbox.ch/?page_id=775)).
 * It easily overcomes [captive portals](https://en.wikipedia.org/wiki/Captive_portal) and offers, if necessary, measures against “disconnect when idle features” (sometimes seen with WiFis in airports, hotels, coffee houses).
 * TorBox supports [OBFS4](https://2019.www.torproject.org/docs/pluggable-transports.html), [Meek-Azure and Snowflake](https://tb-manual.torproject.org/circumvention/) bridges, which help overcome censorship ([with an easy to use interface](https://www.torbox.ch/?page_id=797)).
-* Also, TorBox supports [Onion Services](https://community.torproject.org/onion-services/) which allow easily and securely sharing of data through Tor, even if TorBox is located behind firewalls, network address translators or placed in a censoring country while preserving the security and anonymity of both parties.
+* Also, TorBox supports [Onion Services](https://community.torproject.org/onion-services/) which allow easily and securely sharing of data through Tor and chatting securely accessing an .onion domain, even if TorBox is located behind firewalls, network address translators or placed in a censoring country while preserving the security and anonymity of both parties.
 * If you have a public IP address, 24/7 Internet connectivity over a long time, and a bandwidth of at least 1 Mbps, TorBox can provide a bridge relay, easily configurable via a user-friendly interface [to allow censored users access to the open Internet](https://blog.torproject.org/run-tor-bridges-defend-open-internet).
 * It provides [SOCKS v5 proxy functionality](https://en.wikipedia.org/wiki/SOCKS) on ports 9050 (standard) and 9052 (with [destination address stream isolation](https://tails.boum.org/contribute/design/stream_isolation/)).
 * It allows easy access to .onion websites without client configuration (Chrome and Chromium), with [a minor change in the settings](https://www.torbox.ch/?page_id=112#when-i-start-the-tor-bowser-or-when-i-open-a-window-with-tor-on-brave-both-running-on-a-client-device-of-the-torbox-they-cannot-connect-to-the-tor-network-the-same-happens-if-im-using-tails-behind-a-torbox) (Brave) or [via SOCKS v5 proxy (Firefox)](https://www.torbox.ch/?page_id=112#SOCKS).
