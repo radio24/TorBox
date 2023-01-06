@@ -876,6 +876,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 sudo cp etc/rc.local /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
@@ -957,7 +958,7 @@ sudo systemctl disable dhcpcd
 echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog
-sudo systemctl disable
+sudo systemctl disable rsyslog
 sudo systemctl mask rsyslog
 sudo systemctl stop systemd-journald-dev-log.socket
 sudo systemctl stop systemd-journald-audit.socket
