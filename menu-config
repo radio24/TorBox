@@ -1022,10 +1022,10 @@ case "$CHOICE" in
           if [ $INPUT == 0 ] || [ $INPUT == 90 ] || [ $INPUT == 180 ] || [ $INPUT == 270 ] ; then
             sudo ./LCD35-show $INPUT
           else
-            sudo ./LCD35-show
+            sudo ./LCD35-show 0
           fi
         else
-          sudo ./LCD35-show
+          sudo ./LCD35-show 0
         fi
         cd
         if (whiptail --defaultno --yesno "Do you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then

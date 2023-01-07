@@ -14,9 +14,8 @@
 # rotation angles of 0 degrees, 90 degrees, 180 degrees, 270 degrees.
 #
 ###### SET VARIABLES ######
-# How many degrees should the display output be rotated? We set a prefix of 90 degrees
-# because using 0 means that we will have it landscape, not portrait.
-ROTATE=$((90+$1))
+# How many degrees should the display output be rotated?
+ROTATE=$(($1))
 CONFIGFILE="/boot/config.txt"
 
 sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
@@ -26,7 +25,7 @@ sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
 if ! grep "# Added by LCD-show" ${CONFIGFILE} ; then
   sudo printf "\n# Added by LCD-show\nhdmi_force_hotplug=1\ndtparam=i2c_arm=on\ndtparam=spi=on\nenable_uart=1\ndtoverlay=tft35a:rotate=$ROTATE\nhdmi_group=2\nhdmi_mode=1\nhdmi_mode=87\nhdmi_cvt 480 320 60 6 0 0 0\nhdmi_drive=2\n" | sudo tee -a ${CONFIGFILE}
 else
-	sudo sed -i "s/^dtoverlay=tft35a:rotate=.*/dtoverlay=tft35a:rotate=$ROTATE/g" ${TORRC}
+	sudo sed -i "s/^dtoverlay=tft35a:rotate=.*/dtoverlay=tft35a:rotate=$ROTATE/g" ${CONFIGFILE}
 fi
 
 if ! grep "fbcon=map:10" /boot/cmdline.txt ; then
