@@ -155,7 +155,7 @@ finish_bridge_start1()
 			 trap "finish_bridge_start2 $DEFAULT_BRIDGE_SUPPORT" SIGINT
 			 stty intr q
        sudo systemctl restart tor &
-       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			 stty intr ^c
 		 else
 			 clear
@@ -272,6 +272,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         sleep 2
       fi
 
+			# NEW v.0.5.2 post-release
+			# Synchronize time to avoid problems with bridges
+			if sudo timeout 5 sudo route | grep -m 1 default ; then
+				sudo /usr/sbin/ntpdate pool.ntp.org
+			fi
+
       # Ask for bridge support
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
@@ -340,7 +346,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       trap "finish_bridge_start1 $DEFAULT_BRIDGE_SUPPORT" SIGINT
 			stty intr q
       sudo systemctl restart tor &
-      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from"
+      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
     ;;
 
