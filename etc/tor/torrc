@@ -67,7 +67,7 @@ ReachableAddresses accept *:443, accept *:80
 ## If you like to use bridges to overcome censorship, EDIT THE LINES BELOW!
 ## To use bridges, uncomment the three lines below...
 #UseBridges 1
-#UpdateBridgesFromAuthority 1
+#UpdateBridgesFromAuthority 0
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
 #ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 
