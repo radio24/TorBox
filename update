@@ -33,7 +33,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=14
+NO_ITEMS=15
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=3
@@ -718,7 +718,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU
 "11" "Restart Nginx, webssh and TFS" \
 "12" "Rerun the \"First Start-up\" script" \
 "13" "Erase all log files" \
-"14" "Just fixing and cleaning" \
+"14" "Time synchronisation"  \
+"15" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -1123,18 +1124,14 @@ case "$CHOICE" in
     sleep 5
 	;;
 
-	# Fixing and cleaning - just to be sure that all works properly.
+	# Time synchonistaion
 	14)
+		settime
+	;;
+
+	# Fixing and cleaning - just to be sure that all works properly.
+	15)
 		clear
-		sleep 2
-  	check_interface_with_internet
-  	clear
-  	if [ $CONNECTED == 1 ]; then
-    	echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
-    	sudo /usr/sbin/ntpdate pool.ntp.org
-    	sleep 3
-    	echo " "
-  	fi
   	echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   	sudo apt --fix-broken install
   	sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
