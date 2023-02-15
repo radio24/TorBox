@@ -57,17 +57,17 @@ CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 # This function checks the status on https://check.torproject.org/api/ip
 check_tor()
 {
-clear
-echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
-sleep 1
-IS_TOR=$(curl -x socks5h://127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
+	clear
+	echo -e "${RED}[+] Checking connectivity to the Tor network - please wait...${NOCOLOR}"
+	sleep 1
+	IS_TOR=$(curl -x socks5h://127.0.0.1:9050 -m 5 -s https://check.torproject.org/api/ip | grep -oP '"IsTor"\s*:\s*\K\w+')
 
-if [ $IS_TOR = true ]; then
-  TOR_STATUS="TOR is working"
-else
-  TOR_STATUS=""
-fi
-clear
+	if [ $IS_TOR = true ]; then
+  	TOR_STATUS="TOR is working"
+	else
+  	TOR_STATUS=""
+	fi
+	clear
 }
 
 # check_interface_with_internet()
@@ -76,32 +76,91 @@ clear
 # Following variables can be used: FLASH_*, CONNECTED
 check_interface_with_internet()
 {
-CONNECTED=0
-clear
-echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
-sleep 1
-IINTERFACE=""
-IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ ! -z "$IINTERFACE" ] ; then
-  VPN_STATUS="VPN is up"
-  IIPTABLES=""
-  IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
-else
-  VPN_STATUS=""
-fi
-if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then
-  FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
-  CONNECTED=1
-else
-  IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
-  if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
-  if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; fi
-fi
+	CONNECTED=0
+	clear
+	echo -e "${RED}[+] Checking connectivity to the Internet - please wait...${NOCOLOR}"
+	sleep 1
+	IINTERFACE=""
+	IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+	if [ ! -z "$IINTERFACE" ] ; then
+  	VPN_STATUS="VPN is up"
+  	IIPTABLES=""
+  	IIPTABLES=$(sudo iptables -t nat -L -v | grep MASQUERADE | grep tun0)
+	else
+  	VPN_STATUS=""
+	fi
+	if [ "$IINTERFACE" = "0.0.0.0" ] && [ ! -z "$IIPTABLES" ] ; then
+  	FLASH_TUN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
+  	CONNECTED=1
+	else
+  	IINTERFACE=$(sudo timeout 5 sudo route | grep -m 1 default | tr -s " " | cut -d " " -f8)
+  	if [ "$IINTERFACE" = "eth0" ] ; then FLASH_ETH0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "eth1" ] ; then FLASH_ETH1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "wlan0" ] ; then FLASH_WLAN0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "wlan1" ] ; then FLASH_WLAN1="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "usb0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}; CONNECTED=1; fi
+  	if [ "$IINTERFACE" = "ppp0" ] ; then FLASH_USB0="<--" ; sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}; CONNECTED=1; fi
+	fi
+}
+
+# settime()
+# Automatically synchronize the time with ntpdate and, if necessary, fall back to manual mode
+# Syntax settime
+# Used predefined variables: RED, WHITE, NOCOLOR
+# Used predefined function: check_interface_with_internet()
+settime()
+{
+	check_interface_with_internet
+	clear
+	MANUAL=0
+	if [ $CONNECTED == 1 ]; then
+		if curl -m 6 -s "https://www.ntp.org" >/dev/null; then
+			echo -e "${RED}[+] Set the correct time...${NOCOLOR}"
+			sudo /usr/sbin/ntpdate pool.ntp.org
+			echo
+			echo -e "${RED}[+] Date and time set successfully!"
+			sleep 3
+			clear
+		else
+			MANUAL=1
+		fi
+	else
+		MANUAL=1
+	fi
+	if [ $MANUAL == 1 ]; then
+		echo -e "${WHITE}[!] CANNOT SYNCHRONIZE DATE/TIME AUTOMATICALLY${NOCOLOR}"
+		echo ""
+		read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
+		echo ""
+		echo -e "${RED}Please enter the UTC time (HH:MM)${NOCOLOR}"
+		read -r -p $'You can find the correct time here: https://time.is/UTC: ' TIMESTRING
+		# Check and set date
+		if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
+			echo ""
+			sudo date -s "$DATESTRING"
+			echo -e "${RED}[+] Date set successfully!${NOCOLOR}"
+			if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+				echo ""
+				sudo date -s "$TIMESTRING"
+				echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
+				sleep 3
+				clear
+			else
+				echo ""
+				echo -e "${WHITE}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+				echo ""
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				clear
+			fi
+		else
+			echo ""
+			echo -e "${WHITE}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		fi
+	fi
 }
 
 # finish()
@@ -109,29 +168,29 @@ fi
 # This function displays, if we have a working connection to the Tor network
 finish()
 {
-EXITID=$(grep "^EXITID=" ${RUNFILE})
-if [ $EXITID = "EXITID=0" ]; then
-  sleep 4
-  check_tor
-  if [ "$TOR_STATUS" = "TOR is working" ]; then
-    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
-  else
-    whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
-  fi
-else
-  EXITID="EXITID=0"
-  sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-fi
+	EXITID=$(grep "^EXITID=" ${RUNFILE})
+	if [ $EXITID = "EXITID=0" ]; then
+  	sleep 4
+  	check_tor
+  	if [ "$TOR_STATUS" = "TOR is working" ]; then
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
+  	else
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
+  	fi
+	else
+  	EXITID="EXITID=0"
+  	sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
+	fi
 }
 
 # This function checks if a variable is an integer
 # Syntax is_integer [<variable_to_check>]
 is_integer()
 {
- printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
- if [ "$ERROR" == "1" ]; then
-   exit 1
- fi
+	printf %d "${1}" >/dev/null 2>&1 || ERROR="1";
+ 	if [ "$ERROR" == "1" ]; then
+   	exit 1
+ 	fi
 }
 
 # Currently not in use - only for documentation
