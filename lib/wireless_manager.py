@@ -156,16 +156,14 @@ class WirelessManagerScanner:
 
             # Net Channel
             try:
-                channel	= [
-                        k for k, v in self.channel_freq.items()\
-                            if v == int(c[1])
-                        ][0]
+                channel	= next(
+                    [k for k, v in self.channel_freq.items() if v == int(c[1])]
+                )
             except:
                 try:
-                    channel = [
-                            k for k, v in self.channel_freq_5ghz.items()\
-                                if v == int(c[1])
-                            ][0]
+                    channel = next(
+                        [k for k, v in self.channel_freq_5ghz.items() if v == int(c[1])]
+                    )
                 except:
                     channel = '?'
 
@@ -859,7 +857,7 @@ class WirelessManager:
                     "set_network",
                     "{}".format(network_id),
                     "ssid",
-                    '"{}"'.format(essid)
+                    'P"{}"'.format(essid)
                 ]
             r = subprocess.check_call(cmd,
                                       stdout=subprocess.DEVNULL,
