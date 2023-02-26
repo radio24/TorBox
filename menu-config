@@ -195,10 +195,10 @@ read_config()
 	fi
 
 	# TOGGLE18 shows if slow tor relays are excluded or not
-	if grep "EX_SLOW=1" ${RUNFILE} ; then
-		TOGGLE18="Stop"
-	else
+	if grep "EX_SLOW=0" ${RUNFILE} ; then
 		TOGGLE18="Start"
+	else
+		TOGGLE18="Stop"
 	fi
 }
 
@@ -871,14 +871,14 @@ case "$CHOICE" in
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				INPUT=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed
 				[ "$exitstatus" == "255" ] && exit 1
-				if [ "$INPUT" != "" ] ; then
-					is_integer "${INPUT}"
+				if [ "$SPEED" != "" ] ; then
+					is_integer "${SPEED}"
 					exitstatus=$?
-					# exitstatus == 1 means that $INPUT is not an integer
+					# exitstatus == 1 means that $SPEED is not an integer
 					if [ "$exitstatus" == "1" ]; then
 						clear
 						echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
@@ -890,17 +890,18 @@ case "$CHOICE" in
 					fi
 					clear
 					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $INPUT
+					sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				else
 					clear
+					SPEED=4000
 					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng
+					sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				fi
 				sleep 5
 				clear
 				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
-				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=1/" ${RUNFILE}
+				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor menu-config
 			fi
 		fi

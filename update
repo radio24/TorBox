@@ -81,6 +81,7 @@ SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g"
 TORBOXMENU_FORKNAME="radio24"
 TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
+SPEED=$(grep "^EX_SLOW=" ${RUNFILE} | sed "s/EX_SLOW=//g") 2>/dev/null
 
 #Other variables
 TOR_DIR="/etc/tor/"
@@ -449,7 +450,7 @@ update_torcfg()
     echo -e "${RED}[+]${NOCOLOR} Changed /etc/sysctl.conf -- backup done"
   fi
 
-	# These variables in the TORRC have to be kept
+	# Preparing TORRC
 	deactivating_bridge_relay
 	(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
 	(sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
@@ -715,11 +716,12 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU
 " 8" "Reset TorBox's configuration files (dangerous!)" \
 " 9" "Reset TWM and erase all wifi passwords (reboot required!)" \
 "10" "Reset Tor and force a change of the permanent entry node" \
-"11" "Restart Nginx, webssh and TFS" \
-"12" "Rerun the \"First Start-up\" script" \
-"13" "Erase all log files" \
-"14" "Time synchronisation"  \
-"15" "Just fixing and cleaning" \
+"11" "Renew the list of excluded slow tor relays" \
+"12" "Restart Nginx, webssh and TFS" \
+"13" "Rerun the \"First Start-up\" script" \
+"14" "Erase all log files" \
+"15" "Time synchronisation"  \
+"16" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -1059,9 +1061,68 @@ case "$CHOICE" in
 	  fi
 	;;
 
+	# NEW post-v.0.5.2
+	# Renew the list of excluded slow tor relays
+	11)
+		clear
+		if [ "$SPEED" == "0" ]; then
+			INPUT=$(cat text/exclude_slow_tor_relays-update-text)
+			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				exitstatus=$?
+				# exitstatus == 255 means that the ESC key was pressed
+				[ "$exitstatus" == "255" ] && exit 1
+				if [ "$SPEED" != "" ] ; then
+					is_integer "${SPEED}"
+					exitstatus=$?
+					# exitstatus == 1 means that $SPEED is not an integer
+					if [ "$exitstatus" == "1" ]; then
+						clear
+						echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+						sleep 5
+						clear
+						trap "bash update; exit 0" EXIT
+						exit 1
+					fi
+					clear
+					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+					sudo ./exclude-slow-tor-relays-ng -b $SPEED
+				else
+					clear
+					SPEED=4000
+					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+					sudo ./exclude-slow-tor-relays-ng -b $SPEED
+				fi
+				sleep 5
+				clear
+				sudo mv torrc.exclude-slow /etc/tor
+				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
+				restarting_tor update
+			else
+				trap "bash update; exit 0" EXIT
+				exit 1
+			fi
+		else
+			echo -e "${RED}[+] Updating the list of excluded slow tor relays...${NOCOLOR}"
+			sudo rm /etc/tor/torrc.exclude-slow
+			sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
+			echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+			sudo ./exclude-slow-tor-relays-ng -b $SPEED
+			sleep 5
+			clear
+			sudo mv torrc.exclude-slow /etc/tor
+			sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
+			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
+			restarting_tor update
+		fi
+	;;
+
 	# NEW v.0.5.2
 	# Restart nginx, webssh, TFS and TCS
-	11)
+	12)
 		clear
 		# shellcheck disable=SC2012
 		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
@@ -1109,14 +1170,14 @@ case "$CHOICE" in
 	;;
 
 	# Rerun the "First Start-up" script
-	12)
+	13)
   	clear
 		./first_use 3 update
 		exit 0
 	;;
 
 	# This erases all log files
-	13)
+	14)
   	clear
     erase_logs
     echo ""
@@ -1125,12 +1186,12 @@ case "$CHOICE" in
 	;;
 
 	# Time synchonistaion
-	14)
+	15)
 		settime
 	;;
 
 	# Fixing and cleaning - just to be sure that all works properly.
-	15)
+	16)
 		clear
   	echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   	sudo apt --fix-broken install

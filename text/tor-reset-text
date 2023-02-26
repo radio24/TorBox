@@ -3,10 +3,12 @@ We will...
 ...delete the Tor statistics.
 
 We will NOT...
-...deactivate the use of bridges (go to the countermeasure sub-menu);
-...deactivate the use of bridge relay (go to defend the open internet);
+...deactivate the use of bridges (-> countermeasure sub-menu);
+...deactivate the use of bridge relay (-> OBFS4 Bridge Relay sub-menu);
+...deactivate the use of Onion Services (-> Onion Service sub-menu);
 ...delete or reset the configuration files;
 ...delete your bridges;
-...delete your bridge relay, (hashed) fingerprints etc.
+...delete your bridge relay, (hashed) fingerprints etc.;
+...delete your Onion Services.
 
 Are you sure to reset Tor?

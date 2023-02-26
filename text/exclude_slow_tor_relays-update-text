@@ -1,0 +1,9 @@
+We cannot update the list of excluded slow tor relays because this feature is not activated yet -- you have to start it first.
+
+By activating, TorBox will generate a list of tor relays which are slower than the given speed threshold. You can set the threshold, but if unsure, we will set it to 4000 KB/s by default, which currently will block less than half of the relays.
+
+Excluding slow tor relays will give you a higher and more stable average speed and, therefore, a better user experience. This measure is, therefore, useful if you notice an annoying slow or unstable Internet performance. However, this comes with a price --> a higher risk of deanonymization due to fewer relays. To illustrate possible concerns, take the example of a hypothetical adversary, which adds a lot of excellent performing relays to the tor network to anonymize tor users. In this case, you would be more likely to use the adversary's relays, which could deanonymize users by a correlation attack.
+
+DO NOT ACTIVATE THIS MENU ENTRY IF YOUR ANONYMITY HAS THE HIGHEST PRIORITY
+
+Would you like to exclude slow tor relays?
