@@ -91,8 +91,8 @@ MAC_wlan1=random
 TWEBSSH=1
 
 # Exclude slow tor relays (Important: DO NOT ACTIVATE IF YOUR ANONYMITY HAS THE HIGHEST PRIORITY!)
-# 0 - Not excluded
-# 1 - Excluded
+#  0 - Not excluded
+# >0 - Exclude tor relays with less bandwith than this number in kb/s
 EX_SLOW=0
 
 # TFS starting commands
