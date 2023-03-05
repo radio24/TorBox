@@ -53,6 +53,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# The minimum bandwidth a relay should have, in kilobytes. Relays with less
+# than this amount of bandwidth will be added to the ExcludeNodes line and
+# therefore not used by your Tor client. (default: 4000 KB/s)
+DEFAULT_SPEED=4000
+
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
@@ -888,15 +893,12 @@ case "$CHOICE" in
 						trap "bash menu-config; exit 0" EXIT
 						exit 1
 					fi
-					clear
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				else
-					clear
-					SPEED=4000
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
+					SPEED=$DEFAULT_SPEED
 				fi
+				clear
+				echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+				sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
 				sudo mv torrc.exclude-slow /etc/tor

@@ -96,6 +96,7 @@ if [ $OCHECK == 1 ]; then
 	fi
 else
 	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+  echo " "
 	sleep 2
 fi
 if [ "$number_configured_snowflake_bridges_deactivated" == "0" ]; then
@@ -107,7 +108,6 @@ if [ "$number_configured_snowflake_bridges_deactivated" == "0" ]; then
 	exit 0
 fi
 trap break SIGINT
-echo ""
 i=0
 while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
 do

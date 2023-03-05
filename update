@@ -71,6 +71,11 @@ TOR_HREF_FOR_SED2="\" data-view-component=.*"
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
+# The minimum bandwidth a relay should have, in kilobytes. Relays with less
+# than this amount of bandwidth will be added to the ExcludeNodes line and
+# therefore not used by your Tor client. (default: 4000 KB/s)
+DEFAULT_SPEED=4000
+
 # Read configuration from run/torbox.run
 RUNFILE="run/torbox.run"
 GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2>/dev/null
@@ -1085,24 +1090,18 @@ case "$CHOICE" in
 						trap "bash update; exit 0" EXIT
 						exit 1
 					fi
-					clear
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				else
-					clear
-					SPEED=4000
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
+					SPEED=$DEFAULT_SPEED
 				fi
+				clear
+				echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+				sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
 				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor update
-			else
-				trap "bash update; exit 0" EXIT
-				exit 1
 			fi
 		else
 			echo -e "${RED}[+] Updating the list of excluded slow tor relays...${NOCOLOR}"

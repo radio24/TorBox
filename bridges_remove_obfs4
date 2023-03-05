@@ -227,11 +227,11 @@ case "$CHOICE" in
 				fi
 			else
 				echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+        echo " "
 				sleep 2
 			fi
 			number_of_obfs4_bridges
 			trap break SIGINT
-			echo ""
 			i=0
 			while [ $i -lt $number_configured_bridges_deactivated ]
 			do
