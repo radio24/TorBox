@@ -194,7 +194,7 @@ case "$CHOICE" in
 		if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
     	whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
   	fi
-		if grep "^ReachableAddresses" ${TORRC} ; then
+		if [ "$FIREWALL" = "ON" ]; then
 			INPUT=$(cat text/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
@@ -273,7 +273,7 @@ case "$CHOICE" in
     if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
       whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     fi
-		if grep "^ReachableAddresses" ${TORRC} ; then
+		if [ "$FIREWALL" = "ON" ]; then
 			INPUT=$(cat text/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
