@@ -859,7 +859,7 @@ class WirelessManager:
                     "set_network",
                     "{}".format(network_id),
                     "ssid",
-                    '"{}"'.format(essid)
+                    'P"{}"'.format(essid)
                 ]
             r = subprocess.check_call(cmd,
                                       stdout=subprocess.DEVNULL,
