@@ -156,14 +156,16 @@ class WirelessManagerScanner:
 
             # Net Channel
             try:
-                channel	= next(
-                    [k for k, v in self.channel_freq.items() if v == int(c[1])]
-                )
+                channel	= [
+                        k for k, v in self.channel_freq.items()\
+                            if v == int(c[1])
+                        ][0]
             except:
                 try:
-                    channel = next(
-                        [k for k, v in self.channel_freq_5ghz.items() if v == int(c[1])]
-                    )
+                    channel = [
+                            k for k, v in self.channel_freq_5ghz.items()\
+                                if v == int(c[1])
+                            ][0]
                 except:
                     channel = '?'
 
