@@ -19,8 +19,6 @@
 -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 -A OUTPUT -m state --state INVALID -j DROP
 -A OUTPUT ! -s 127.0.0.1/32 ! -d 127.0.0.1/32 ! -o lo -p tcp -m tcp --tcp-flags RST,ACK RST,ACK -j DROP
--A OUTPUT -o eth0 -p tcp -m tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-tcp-options --log-ip-options
--A OUTPUT -o eth0 -p udp -m udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
 COMMIT
 #
 #
@@ -37,7 +35,5 @@ COMMIT
 -A PREROUTING -i eth1 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
 -A PREROUTING -i wlan0 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i eth1 -p udp -j REDIRECT --to-ports 9040
--A OUTPUT -p udp -m udp --dport 53 -j DNAT --to-destination 127.0.0.1:9053
--A OUTPUT -p tcp -m tcp --dport 53 -j DNAT --to-destination 127.0.0.1:9053
 -A POSTROUTING -o eth0 -j MASQUERADE
 COMMIT
