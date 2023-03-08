@@ -185,17 +185,10 @@ $IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 #$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
 $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
-# NEW v.0.5.2
-# TEST: Redirect all local DNS requests to tor. That shouldn't be a problem in the TUNNELING mode circumventing Captive Portal because iptables will be flushed and reconfigured first
-# However, Meek and Snowflake need local DNS resolution
-do_we_use_bridges
-if [ "$MODE_MEEK" != "Bridge meek_lite " ] || [ "$MODE_SNOW" != "Bridge snowflake " ]; then
-	$IPTABLES -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053
-	$IPTABLES -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053
-fi
-# I will be absolutely sure that no DNS requests are done outside Tor --> this will be visible in the log (but we don't block it yet)
-$IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
-$IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
+# IMPORTANT: We cannot block local DNS requests!! Meek and Snowflake need local DNS resolution. For more information see here: https://www.torbox.ch/?page_id=112#why-is-the-local-torbox-traffic-not-routed-through-tor-why-is-by-default-googles-andor-cloudflares-service-used-to-circumvent-cheap-censorship-measures-or-to-test-the-connectivity-can-i-change-google-andor-cloudflare-services-with-something-else
+# If activated, the rows below will log local DNS requests, but not block them
+#$IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
+#$IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
 # No other restrictions for OUTPUT
 
 ###### FORWARD chain ######
@@ -243,8 +236,7 @@ else
 fi
 
 ###### FINISH ######
-# NEW v.0.5.2
-# TEST: Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
+# Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
 # REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifdown $O_DEVICE) 2>/dev/null
