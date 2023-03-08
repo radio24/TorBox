@@ -182,6 +182,7 @@ else
   CONTROLPORT_WLAN="s/^ControlPort 192.168.42.1:9051/#ControlPort 192.168.42.1:9051/"
   CONTROLPORT_ETH="s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/"
 fi
+CHOICE=""
 
 #If first_use is at play, only the configuration where the Internet is coming from will be made without displaying the Main Menu
 if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
@@ -245,6 +246,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       clear
       restarting_tor menu
+			exit 0
     fi
   ;;
 
@@ -880,6 +882,4 @@ case "$CHOICE" in
     echo " "
     exit 0
 esac
-
-./menu
-exit 0
+bash menu
