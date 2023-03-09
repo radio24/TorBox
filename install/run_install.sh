@@ -1037,6 +1037,7 @@ read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key.
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 (sudo rm -r debian-packages) 2>/dev/null
+(sudo rm -r tmp) 2>/dev/null
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
