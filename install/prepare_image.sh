@@ -158,8 +158,10 @@ echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node 
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
-echo -e "${RED}[+] Copy /etc/iptables.ipv4.nat${NOCOLOR}"
+echo -e "${RED}[+] Copy default iptables.ipv4.nat${NOCOLOR}"
 sudo cp etc/iptables.ipv4.nat /etc/
+echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
+sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
 (sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
