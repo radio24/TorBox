@@ -94,7 +94,7 @@ fi
 	fi
 
 # Snowflake version
-SNOW_VERS=$(snowflake-proxy --version | grep snowflake) 2>/dev/null
+SNOW_VERS=$(snowflake-client --version | grep snowflake)
 
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
