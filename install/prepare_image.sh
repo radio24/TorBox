@@ -94,7 +94,7 @@ fi
 	fi
 
 # Snowflake version
-SNOW_VERS=$(snowflake-client --version | grep snowflake)
+SNOWFLAKE_VERS=$(snowflake-proxy --version 2>&1 | grep snowflake)
 
 clear
 echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
@@ -103,7 +103,7 @@ echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc
 echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
 echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
 echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                                    :${WHITE} $SNOW_VERS${NOCOLOR}"
+echo -e "${RED}Snowflake                                    :${WHITE} ${SNOWFLAKE_VERS}${NOCOLOR}"
 echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
 echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
