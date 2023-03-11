@@ -125,9 +125,9 @@ check_log_check()
   	clear
   	if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
     	clear
-    	sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
-    	sleep 1
+    	(nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null
 			clear
+    	sleep 1
   	fi
 	fi
 }
