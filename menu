@@ -127,6 +127,7 @@ check_log_check()
     	clear
     	sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &
     	sleep 1
+			clear
   	fi
 	fi
 }
