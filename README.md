@@ -3,6 +3,14 @@
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
+
+- - -
+### Limited time action: More feedback is needed to improve TorBox!
+We just released [an updated version of TorBox v.0.5.2](https://www.torbox.ch/?p=3041). Constantly, we are working in the background to improve TorBox further. However, **we need more feedback from you**, the users.
+
+Giving a small incentive, we will give the people with the three most valuable feedback a [ProtonMail $100 Gift Card](https://shop.proton.me/collections/coming-soon/products/proton-100-gift-card-digital) each. To participate, you must add your feedback as an [issue](https://github.com/radio24/TorBox/issues) or a [discussion](https://github.com/radio24/TorBox/discussions) on our [GitHub page](https://github.com/radio24/TorBox) or send it via [email](mailto:anonym@torbox.ch). **We judge feedback as valuable if it leads to a concrete improvement**.
+- - -
+
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
