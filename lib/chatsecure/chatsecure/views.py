@@ -2,7 +2,6 @@ import pgpy
 import hashlib
 from flask import Blueprint, request, jsonify, Response, current_app
 from flask_restful import Resource, reqparse
-from playhouse.shortcuts import model_to_dict
 from chatsecure.models import User, Group, UserMessage, GroupMessage
 
 
@@ -49,7 +48,7 @@ class LoginResource(Resource):
 
                 # some checks
                 assert name == name_txt
-                assert name == email.split("@")[0]
+                assert name.lower() == email.split("@")[0].lower()
 
                 # if user is already registered, login
                 user = User.filter(fp=fp)
