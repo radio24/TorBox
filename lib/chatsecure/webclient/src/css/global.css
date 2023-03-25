@@ -1,0 +1,12 @@
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
+#root {
+  @apply w-full h-full;
+}
+
+*:focus {
+  box-shadow: none !important;
+}
