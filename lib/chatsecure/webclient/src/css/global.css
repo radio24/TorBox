@@ -10,3 +10,7 @@ body {
 *:focus {
   box-shadow: none !important;
 }
+
+.ui--IdentityIcon {
+  cursor: auto !important;
+}

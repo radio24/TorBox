@@ -5,10 +5,11 @@ import {Identicon} from "@polkadot/react-identicon";
 import Sha256 from "crypto-js/sha256.js";
 import {InputText} from "primereact/inputtext";
 import {classNames} from "primereact/utils";
-import {useState} from "react";
+import {useContext, useState} from "react";
 import {APIClient} from "../../hooks/APIClient.jsx";
 import * as openpgp from "openpgp";
 import {useFormik} from "formik";
+import {UserContext} from "../../context/UserContext.jsx";
 
 export const Login = props => {
   const {
@@ -17,7 +18,7 @@ export const Login = props => {
     pubKeyFp, setPubKeyFp,
     userId, setUserId,
     token, setToken,
-  } = props
+  } = useContext(UserContext)
 
   const doLogin = async (name) => {
     const api = APIClient()
@@ -39,9 +40,10 @@ export const Login = props => {
         curve: 'curve25519',
         userIDs: [{ name: name, email: email }], // you can pass multiple user IDs
         // passphrase: 'super long and hard to guess secret',
-        format: 'object' // output key format, (options: 'binary' or 'object')
+        format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
     });
 
+    // TODO: Set this keys in a context. Hide login when token is set
     setPrivKey(privateKey)
     setPubKey(publicKey)
     setPubKeyFp(publicKey.getFingerprint())

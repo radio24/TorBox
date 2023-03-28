@@ -3,22 +3,30 @@ import {Button} from "primereact/button";
 import {BsEmojiLaughing, BsSendFill} from "react-icons/all.js";
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
-import {useState} from "react";
+import {useContext, useState} from "react";
 import "./MessageBox.css"
 import {Card} from "primereact/card";
 import avatarDemo from "../../assets/avatar.png"
 import {MessageIn} from "./MessageIn.jsx";
 import {MessageOut} from "./MessageOut.jsx";
+import {UserContext} from "../../context/UserContext.jsx";
+import {ChatContext} from "../../context/ChatContext.jsx";
 
 export const MessageBox = props => {
 
   const {
     socket,
-    userId,
-    chatId,
-    chatGroup,
-    chatMessages, setChatMessages,
   } = props
+
+  const {
+    pubKeyFp,
+    userId
+  } = useContext(UserContext)
+
+  const {
+    chatId, chatGroup,
+    chatMessages, setChatMessages,
+  } = useContext(ChatContext)
 
   const [message, setMessage] = useState("")
   const [showEmoji, setShowEmoji] = useState(false)
@@ -55,9 +63,9 @@ export const MessageBox = props => {
 
       {/*messages*/}
       <div className={"relative flex w-full h-[calc(100%-50px)]"} style={{overflow: "none"}}>
-          <div className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}>
+          <div onClick={() => { console.log(userId);console.log(chatMessages) }} className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}>
             {chatMessages.map(m => {
-              if (m.sender_id == userId) {
+              if (m.sender === userId) {
                 return (
                   <MessageOut key={m.key} text={m.msg} />
                 )

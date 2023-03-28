@@ -2,9 +2,12 @@ import avatarDemo from "../../assets/avatar.png";
 import "./ContactList.css"
 import Sha256 from "crypto-js/sha256.js";
 import {Identicon} from "@polkadot/react-identicon";
+import {useContext} from "react";
+import {ChatContext} from "../../context/ChatContext.jsx";
 
 export const ContactList = props => {
-  const { userList, setVisible } = props
+  const { userList } = useContext(ChatContext)
+  const { setVisible } = props
 
   return (
     <div className='flex flex-col w-full h-full overflow-auto

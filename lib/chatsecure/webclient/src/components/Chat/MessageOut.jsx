@@ -1,4 +1,14 @@
+import {useContext} from "react";
+import {UserContext} from "../../context/UserContext.jsx";
+import {Identicon} from "@polkadot/react-identicon";
+import Sha256 from "crypto-js/sha256.js";
+
 export const MessageOut = props => {
+  const {
+    pubKeyFp,
+    userId
+  } = useContext(UserContext)
+
   return (
     <div className='grid gap-4 w-full
     sm:grid-cols-[1fr_2fr_84px]
@@ -13,8 +23,9 @@ export const MessageOut = props => {
       {props.text}
       </div>
       <div className='sm:mr-[40px] mr-[20px] place-self-start'>
-        <img className='h-[44px] w-[44px] object-cover rounded-full'
-          src="https://demos.pixinvent.com/vuexy-nextjs-admin-template/demo-1/images/avatars/1.png" />
+        <div className={"flex w-full h-full object-cover rounded-full bg-slate-600"}>
+          <Identicon className={"mx-auto"} size={44} value={String("0x" + Sha256(pubKeyFp)) } theme={"substrate"} />
+        </div>
       </div>
     </div>
   )

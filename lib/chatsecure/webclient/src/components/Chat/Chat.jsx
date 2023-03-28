@@ -2,24 +2,28 @@ import avatarDemo from '../../assets/avatar.png'
 import { ContactList } from "./ContactList.jsx";
 import { MessageBox } from "./MessageBox.jsx";
 import { Sidebar } from "primereact/sidebar";
-import {useEffect, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 // import { socket } from "./socket"
 import TorBoxLogo from "../../assets/torbox-icon-300x300.png";
 import {APIClient} from "../../hooks/APIClient.jsx";
 
 import {HiMenu, HiOutlineChatAlt} from "react-icons/hi"
 import {io} from "socket.io-client";
+import {UserContext} from "../../context/UserContext.jsx";
+import {ChatContext} from "../../context/ChatContext.jsx";
 
 export const Chat = props => {
   const {
     privKey, pubKey, pubKeyFp, token, userId
-  } = props
+  } = useContext(UserContext)
 
-  const [userList, setUserList] = useState([])
-  const [chatName, setChatName] = useState("Default")
-  const [chatId, setChatId] = useState(1)  // Default group
-  const [chatGroup, setChatGroup] = useState(true)  // Start showing group
-  const [chatMessages, setChatMessages] = useState([])
+  const {
+    setUserList,
+    chatName, setChatName,
+    chatId, setChatId,
+    chatGroup, setChatGroup,
+    chatMessages, setChatMessages,
+  } = useContext(ChatContext)
 
   const api = APIClient(token)
 
@@ -70,17 +74,20 @@ export const Chat = props => {
         <div className={"flex w-full h-[calc(100%-60px)]"}>
           {/*Contact list*/}
           <div className={"hidden lg:flex xl:flex 2xl:flex w-1/3"}>
-            <ContactList {...{userList, setVisible}} />
+            <ContactList {...{
+              setVisible,
+            }} />
           </div>
 
           <Sidebar className={"flex lg:hidden xl:hidden 2xl:hidden"} visible={visible} onHide={() => setVisible(false)} showCloseIcon={true}>
-            <ContactList {...{userList, setVisible}} />
+            <ContactList {...{
+              setVisible,
+            }} />
           </Sidebar>
 
           {/*Messages*/}
           <MessageBox {...{
-            userId, chatId, chatGroup, socket,
-            chatMessages, setChatMessages,
+            socket,
           }} />
         </div>
 
