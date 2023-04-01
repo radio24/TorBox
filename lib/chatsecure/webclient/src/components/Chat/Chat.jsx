@@ -33,7 +33,7 @@ export const Chat = props => {
 
   const init = async () => {
     // await api.getGroupList().then(r => { console.log(r) })
-    await api.getUserList().then(r => { setUserList(r); console.log(r); })
+    await api.getUserList().then(r => { setUserList(r); })
     await api.getGroupMessageList().then(r => { setChatMessages(r) })
     setLoading(false)
   }

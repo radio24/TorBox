@@ -21,25 +21,14 @@ export const MessageBox = props => {
 
   const {
     chatId, chatGroup,
-    chatMessages, setChatMessages,
-    socket,
+    chatMessages, sendMessage
   } = useContext(ChatContext)
 
   const [message, setMessage] = useState("")
   const [showEmoji, setShowEmoji] = useState(false)
 
-  const sendMessage = (msg) => {
-    const data = {
-      sender: userId,
-      recipient: chatId,
-      msg: msg,
-      is_group: chatGroup,
-    }
-    console.log("send msg: ", data)
-    socket.emit("msg", data)
-
-    data.id = new Date().getTime()
-    setChatMessages([...chatMessages, data])
+  const sendMsg = (msg) => {
+		sendMessage(msg)
     setMessage("")
   }
 
@@ -47,7 +36,7 @@ export const MessageBox = props => {
     if (e.keyCode == 13 && e.shiftKey == false) {
       // Send message
       e.preventDefault();
-      sendMessage(message)
+      sendMsg(message)
     }
     else {
       setMessage(e.target.value)
@@ -97,7 +86,12 @@ export const MessageBox = props => {
               icon={<BsEmojiLaughing size={"25"} />}
               onClick={(e) => { setShowEmoji(!showEmoji) }}
             />
-            <Button className={"my-auto mr-2 p-button-rounded"} icon={<BsSendFill />} disabled={(!message.length)} />
+            <Button
+							className={"my-auto mr-2 p-button-rounded"}
+							icon={<BsSendFill />}
+							disabled={(!message.length)}
+							onClick={e => { sendMsg(message) }}
+						/>
           </div>
         </div>
       </div>

@@ -22,23 +22,31 @@ def on_msg(data):
     if not sender:
         return
 
+    # msg for socket
+    msg = {
+        "sender": sender.id,
+        "msg": data["msg"]
+    }
+
     is_group = bool(data["is_group"])
     recipient = None
     if is_group:
         # recipient = Group.get(Group.id == data["recipient"])
         recipient = Group.get(Group.id == 1)
+        msg["recipient"] = recipient.name
     else:
         recipient = User.get(User.id == data["recipient"])
+        msg["recipient"] = recipient.id
 
     if not recipient:
         return
 
     # msg for socket
-    msg = {
-        "sender": sender.id,
-        "recipient": recipient,
-        "msg": data["msg"]
-    }
+    # msg = {
+    #     "sender": sender.id,
+    #     "recipient": recipient,
+    #     "msg": data["msg"]
+    # }
 
     # msg for db
     msg_db = msg.copy()
@@ -47,12 +55,22 @@ def on_msg(data):
 
     if is_group:
         # send message to group
+        gm = GroupMessage.create(**msg_db)
+        msg["id"] = gm.id
+        msg["ts"] = gm.ts
+        # FIXME: datetime handle
+        msg = json.dumps(msg, default=str)
+        msg = json.loads(msg)
         send(msg, to="default")
-        GroupMessage.create(**msg_db)
     else:
         # Send message to user inbox
+        um = UserMessage.create(**msg_db)
+        msg["id"] = um.id
+        msg["ts"] = um.ts
+        # FIXME: datetime handle
+        msg = json.dumps(msg, default=str)
+        msg = json.loads(msg)
         send(msg, to=recipient.fp)
-        UserMessage.create(**msg_db)
 
 
 # --------------------------------------------------------------------------------------
