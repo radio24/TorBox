@@ -1,3 +1,4 @@
+import json
 import pgpy
 import hashlib
 from flask import Blueprint, request, jsonify, Response, current_app
@@ -90,6 +91,10 @@ class UserListResource(Resource):
         except Exception as e:  # noqa
             users = []
 
+        # FIXME: datetime handle
+        users = json.dumps(users, default=str)
+        users = json.loads(users)
+
         return jsonify(users)
 
 
@@ -141,7 +146,7 @@ class GroupMessageResource(Resource):
                 .select()
                 .where(
                     (GroupMessage.recipient == 1)
-                    & (GroupMessage.ts >= user.ts_join)
+                    # & (GroupMessage.ts >= user.ts_join)
                 )
                 .order_by("-ts")
                 .dicts()

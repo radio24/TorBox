@@ -53,8 +53,8 @@ export const APIClient = (token=false) => {
   const getUserMessageList = async (sender_id) => {
     if (token == false) return false
 
-    const r = await axios.get(USERMSGLIST_URL, {
-      params: {sender_id: sender_id},
+    const r = await axios.get(USERMSGLIST_URL + "/" + sender_id, {
+      // params: {sender_id: sender_id},
       headers: await getHeaders()
     })
     if (r.status==200) {

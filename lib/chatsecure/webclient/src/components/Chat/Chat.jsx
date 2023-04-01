@@ -25,32 +25,35 @@ export const Chat = props => {
     chatMessages, setChatMessages,
   } = useContext(ChatContext)
 
-  const api = APIClient(token)
+  const [loading, setLoading] = useState(true)
 
-  // const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5000';
-  const URL = 'http://127.0.0.1:5000';
-  const socket = io(URL, {auth: {token: token}});
+  const api = APIClient(token)
 
   const [visible, setVisible] = useState(false)
 
   const init = async () => {
-    api.getGroupList().then(r => { console.log(r) })
-    api.getUserList().then(r => { setUserList(r); console.log(r); })
-
-    // api.getGroupMessageList().then(r => { setChatMessages(r) })
+    // await api.getGroupList().then(r => { console.log(r) })
+    await api.getUserList().then(r => { setUserList(r); console.log(r); })
+    await api.getGroupMessageList().then(r => { setChatMessages(r) })
+    setLoading(false)
   }
+
+  useEffect(() => {
+    if (chatId !== "default") {
+      api.getUserMessageList(chatId).then(r => { setChatMessages(r) } )
+      setChatGroup(false)
+    }
+    else {
+      setChatGroup(true)
+      api.getGroupMessageList().then(r => { setChatMessages(r) })
+    }
+  }, [chatId])
 
   useEffect(() => {
     // no-op if the socket is already connected
     if (token !== null && token !== "") {
-      socket.connect();
       init()
-      console.log("--- GO ---")
     }
-
-    return () => {
-      socket.disconnect();
-    };
   }, []);
 
   return (
@@ -72,23 +75,25 @@ export const Chat = props => {
         </div>
 
         <div className={"flex w-full h-[calc(100%-60px)]"}>
-          {/*Contact list*/}
-          <div className={"hidden lg:flex xl:flex 2xl:flex w-1/3"}>
-            <ContactList {...{
-              setVisible,
-            }} />
-          </div>
+          {(loading)? "LOADING":
+          <>
+            {/*Contact list*/}
+            <div className={"hidden lg:flex xl:flex 2xl:flex w-1/3"}>
+              <ContactList {...{
+                setVisible,
+              }} />
+            </div>
 
-          <Sidebar className={"flex lg:hidden xl:hidden 2xl:hidden"} visible={visible} onHide={() => setVisible(false)} showCloseIcon={true}>
-            <ContactList {...{
-              setVisible,
-            }} />
-          </Sidebar>
+            <Sidebar className={"flex lg:hidden xl:hidden 2xl:hidden"} visible={visible} onHide={() => setVisible(false)} showCloseIcon={true}>
+              <ContactList {...{
+                setVisible,
+              }} />
+            </Sidebar>
 
-          {/*Messages*/}
-          <MessageBox {...{
-            socket,
-          }} />
+            {/*Messages*/}
+            <MessageBox />
+          </>
+          }
         </div>
 
       </div>

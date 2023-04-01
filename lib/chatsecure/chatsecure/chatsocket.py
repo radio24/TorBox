@@ -25,7 +25,8 @@ def on_msg(data):
     is_group = bool(data["is_group"])
     recipient = None
     if is_group:
-        recipient = Group.get(Group.id == data["recipient"])
+        # recipient = Group.get(Group.id == data["recipient"])
+        recipient = Group.get(Group.id == 1)
     else:
         recipient = User.get(User.id == data["recipient"])
 
@@ -35,6 +36,7 @@ def on_msg(data):
     # msg for socket
     msg = {
         "sender": sender.id,
+        "recipient": recipient,
         "msg": data["msg"]
     }
 
@@ -66,7 +68,17 @@ def on_connect(auth=None):
     if not user.name:
         return False
 
-    emit("new_user", {'data': user.fp}, broadcast=True)
+    user_data = {
+        'fp': user.fp,
+        'id': user.id,
+        'last_update': user.last_update,
+        'name': user.name,
+        'pubkey': user.pubkey,
+    }
+    user_data = json.dumps(user_data, default=str)
+
+    # emit("new_user", {'data': user.fp}, broadcast=True)
+    emit("new_user", user_data, broadcast=True)
 
     # Group chat
     join_room("default")

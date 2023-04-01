@@ -15,10 +15,6 @@ import {ChatContext} from "../../context/ChatContext.jsx";
 export const MessageBox = props => {
 
   const {
-    socket,
-  } = props
-
-  const {
     pubKeyFp,
     userId
   } = useContext(UserContext)
@@ -26,6 +22,7 @@ export const MessageBox = props => {
   const {
     chatId, chatGroup,
     chatMessages, setChatMessages,
+    socket,
   } = useContext(ChatContext)
 
   const [message, setMessage] = useState("")
@@ -41,7 +38,7 @@ export const MessageBox = props => {
     console.log("send msg: ", data)
     socket.emit("msg", data)
 
-    data.key = new Date().getTime()
+    data.id = new Date().getTime()
     setChatMessages([...chatMessages, data])
     setMessage("")
   }
@@ -63,30 +60,20 @@ export const MessageBox = props => {
 
       {/*messages*/}
       <div className={"relative flex w-full h-[calc(100%-50px)]"} style={{overflow: "none"}}>
-          <div onClick={() => { console.log(userId);console.log(chatMessages) }} className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}>
+          <div onClick={() => { }} className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}>
             {chatMessages.map(m => {
               if (m.sender === userId) {
                 return (
-                  <MessageOut key={m.key} text={m.msg} />
+                  <MessageOut key={m.id} text={m.msg} messageData={m} />
                 )
               }
               else {
                 return(
-                  <MessageIn key={m.key} text={m.msg} />
+                  <MessageIn key={m.id} text={m.msg} messageData={m} />
                 )
               }
             })
             }
-            {/*<MessageIn text={"Hi"} />*/}
-            {/*<MessageOut text={"Hi, how are you?"} />*/}
-            {/*<MessageIn text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, possimus?"} />*/}
-            {/*<MessageOut text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, possimus?"} />*/}
-            {/*<MessageIn text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis dicta iste laborum officiis placeat quos. Alias aliquid autem dolore dolores doloribus eaque est explicabo hic, inventore iure libero magnam magni minima molestiae nihil officiis optio, perspiciatis repellat reprehenderit repudiandae saepe sit sunt totam ullam ut vitae voluptatibus? Eligendi, esse non."} />*/}
-            {/*<MessageOut text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, possimus?"} />*/}
-            {/*<MessageIn text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, possimus?"} />*/}
-            {/*<MessageOut text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis dicta iste laborum officiis placeat quos. Alias aliquid autem dolore dolores doloribus eaque est explicabo hic, inventore iure libero magnam magni minima molestiae nihil officiis optio, perspiciatis repellat reprehenderit repudiandae saepe sit sunt totam ullam ut vitae voluptatibus? Eligendi, esse non."} />*/}
-            {/*<MessageIn text={"Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, possimus?"} />*/}
-
           </div>
       </div>
 
