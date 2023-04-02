@@ -1,7 +1,8 @@
-import {createContext, useContext, useEffect, useState} from "react";
+import {createContext, useContext, useEffect, useRef, useState} from "react";
 import {io} from "socket.io-client";
 import {UserContext} from "./UserContext.jsx";
 import {APIClient} from "../hooks/APIClient.jsx";
+import { config } from "../utils/constants"
 
 let socket;
 
@@ -18,11 +19,11 @@ export const ChatProvider = (props) => {
   const [chatGroup, setChatGroup] = useState(true)  // Start showing group
   const [chatMessages, setChatMessages] = useState([])
 
-  // const URL = process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:5000';
-  const URL = 'http://127.0.0.1:5000';
-	const api = APIClient(token)
+	const chatIdRef = useRef(chatId)
+	const chatMessagesRef = useRef(chatMessages)
+	const userListRef = useRef(userList)
 
-  // let socket = io(URL, {auth: {token: token}})
+	const api = APIClient(token)
 
   const sendMessage = (msg) => {
     const data = {
@@ -31,65 +32,69 @@ export const ChatProvider = (props) => {
       msg: msg,
       is_group: chatGroup,
     }
-    console.log("send msg: ", data)
     socket.emit("msg", data)
 
     data.id = new Date().getTime()
     setChatMessages([...chatMessages, data])
   }
 
+	function selectChat(id) {
+		console.log("setChatId(): ", id)
+		setChatId(id)
+	}
+
 	function onMessage(value) {
 		if (value.sender !== userId) {
-			console.log(chatMessages)
 			console.log("onMessage: ", value)
-			setChatMessages([...chatMessages, value])
+			console.log("chatId: ", chatIdRef.current)
+			if (chatIdRef.current === "default" && value.recipient === "default") {
+				setChatMessages([...chatMessagesRef.current, value])
+			}
+			if (chatIdRef.current !== "default" && value.sender === chatIdRef.current && value.recipient === userId) {
+				setChatMessages([...chatMessagesRef.current, value])
+			}
 		}
 	}
 
-	function onNewUser(value) {
-			const v = JSON.parse(value)
-			if (v.id !== userId) {
-				console.log(userList)
-				console.log("new_user: ", v)
-				setUserList([...userList, value])
-			}
-    }
+	function onUserConnected(value) {
+		const v = JSON.parse(value)
+		if (v.id !== userId) {
+			setUserList([...userListRef.current, v])
+		}
+	}
 
-		useEffect(() => {
-			if (chatMessages.length) {
-				socket.on('new_user', onNewUser);
-			}
-		}, [chatMessages])
+	function onUserDisconnected () {}
+
+	const initSocket = () => {
+		socket = io(config.url.API_URL, {auth: {token: token}})
+		socket.connect()
+		initSocketEvents()
+	}
+	const initSocketEvents = () => {
+		// socket.on('connect', onConnect)
+		// socket.on('disconnect', onDisconnect)
+		socket.on('message', onMessage)
+		socket.on('user_connected', onUserConnected)
+	}
 
   useEffect(() => {
     if (token !== null && token !== "") {
-			socket = io(URL, {auth: {token: token}})
-      socket.connect();
-
-			// api.getUserList().then(r => { setUserList(r); })
+			initSocket()
     }
-    function onConnect() {
-      console.log("Socketio connected")
-    }
-    //
-    function onDisconnect() {
-      console.log("Socketio ** DISCONNECT **")
-    }
-
-
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    socket.on('message', onMessage);
-    socket.on('new_user', onNewUser);
-
-    return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      socket.off('message', onMessage);
-      socket.off('new_user', onNewUser);
-    };
   }, [token])
 
+	useEffect(() => {
+		// console.log("ChatID CHANGED TO: ",chatId)
+		chatIdRef.current = chatId
+	}, [chatId])
+
+	useEffect(() => {
+		chatMessagesRef.current = chatMessages
+	}, [chatMessages])
+
+	useEffect(() => {
+		userListRef.current = userList
+	}, [userList])
 
   return (
     <ChatContext.Provider
@@ -99,7 +104,7 @@ export const ChatProvider = (props) => {
         chatId, setChatId,
         chatGroup, setChatGroup,
         chatMessages, setChatMessages,
-        sendMessage
+        sendMessage, selectChat
       }}
     >
       {props.children}

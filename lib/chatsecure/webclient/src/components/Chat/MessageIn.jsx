@@ -21,7 +21,6 @@ export const MessageIn = props => {
   const getFp = () => {
     const user_id = messageData.sender
     const user = userList.filter(u => u.id === user_id )
-		console.log(user)
     return user[0].fp
   }
 

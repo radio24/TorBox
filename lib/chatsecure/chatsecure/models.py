@@ -20,6 +20,7 @@ class User(BaseModel):
     pubkey = pw.TextField(unique=True)
     fp = pw.CharField(max_length=48, unique=True)
     token = pw.CharField(max_length=48, unique=True)
+    sid = pw.CharField(max_length=32, unique=True, null=True)
     ts_join = pw.DateTimeField(default=datetime.now)
     last_update = pw.DateTimeField(default=datetime.now)
 
@@ -33,9 +34,11 @@ class Group(BaseModel):
 
 class UserMessage(BaseModel):
     """Messages between users"""
-    sender = pw.ForeignKeyField(User, on_delete="CASCADE", backref="message_sent_users")
+    sender = pw.ForeignKeyField(
+        User, on_delete="SET NULL", backref="message_sent_users", null=True
+    )
     recipient = pw.ForeignKeyField(
-        User, on_delete="CASCADE", backref="message_received_users"
+        User, on_delete="SET NULL", backref="message_received_users", null=True
     )
     msg = pw.TextField()
     ts = pw.DateTimeField(default=datetime.now)
@@ -44,9 +47,11 @@ class UserMessage(BaseModel):
 class GroupMessage(BaseModel):
     """Messages to the group"""
     sender = pw.ForeignKeyField(
-        User, on_delete="CASCADE", backref="message_sent_groups"
+        User, on_delete="SET NULL", backref="message_sent_groups"
     )
-    recipient = pw.ForeignKeyField(Group, on_delete="CASCADE", backref="messages")
+    recipient = pw.ForeignKeyField(
+        Group, on_delete="CASCADE", backref="messages"
+    )
     msg = pw.TextField()
     ts = pw.DateTimeField(default=datetime.now)
 

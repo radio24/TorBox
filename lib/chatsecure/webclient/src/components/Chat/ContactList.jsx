@@ -8,17 +8,17 @@ import {ChatContext} from "../../context/ChatContext.jsx";
 export const ContactList = props => {
   const {
     userList,
-    chatId, setChatId,
+    chatId, selectChat,
     chatName } = useContext(ChatContext)
   const { setVisible } = props
 
-	const Message = props => {
+	const UserContact = props => {
 		const { chat } = props
 		return (
 			<div
-				key={chat.id}
+				// key={chat.id}
 				className={'grid grid-cols-[55px_1fr] py-3 pl-8 pr-10 border-b border-slate-600 hover:bg-slate-600 cursor-pointer ' + (chatId===chat.id?" bg-slate-500":"")}
-				onClick={e => { setChatId(chat.id) }}
+				onClick={e => { selectChat(chat.id) }}
 			>
 				<div className='w-full'>
 					<div className={"flex w-full h-full object-cover rounded-full bg-slate-600"}>
@@ -43,7 +43,7 @@ export const ContactList = props => {
       </div>
       <div
         className={'grid grid-cols-[55px_1fr] py-3 pl-8 pr-10 border-b border-slate-600 hover:bg-slate-600 cursor-pointer ' + (chatId==="default"?" bg-slate-500":"")}
-        onClick={e => { setChatId("default") }}
+        onClick={e => { selectChat("default") }}
       >
         <div className='w-full'>
           <div className={"flex w-full h-full object-cover rounded-full bg-lime-500"}>
@@ -57,7 +57,7 @@ export const ContactList = props => {
       </div>
       {
         userList.map((chat) => (
-          <Message chat={chat} />
+          <UserContact key={chat.id} chat={chat} />
         ))
       }
     </div>

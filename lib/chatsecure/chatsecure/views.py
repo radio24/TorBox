@@ -1,9 +1,14 @@
 import json
 import pgpy
 import hashlib
-from flask import Blueprint, request, jsonify, Response, current_app
+from flask import Blueprint, request, jsonify, Response, current_app, render_template
 from flask_restful import Resource, reqparse
 from chatsecure.models import User, Group, UserMessage, GroupMessage
+
+bp = Blueprint("index", __name__)
+@bp.route("/")
+def index():
+    return render_template("index.html")
 
 
 def token_required(func):
@@ -125,7 +130,7 @@ class UserMessageResource(Resource):
                     ((UserMessage.sender == sender_id) & (UserMessage.recipient == recipient_id))
                     | ((UserMessage.sender == recipient_id) & (UserMessage.recipient == sender_id))
                 )
-                .order_by("-ts")
+                .order_by(UserMessage.ts)
                 .dicts()
             )
         except Exception as e:  # noqa

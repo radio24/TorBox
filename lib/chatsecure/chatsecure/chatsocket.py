@@ -1,7 +1,7 @@
 import json
 import pgpy
 import hashlib
-from flask import jsonify, Response, current_app
+from flask import jsonify, Response, current_app, request, session
 from flask_socketio import emit, join_room, send
 
 from chatsecure.app import socketio
@@ -41,13 +41,6 @@ def on_msg(data):
     if not recipient:
         return
 
-    # msg for socket
-    # msg = {
-    #     "sender": sender.id,
-    #     "recipient": recipient,
-    #     "msg": data["msg"]
-    # }
-
     # msg for db
     msg_db = msg.copy()
     msg_db["sender"] = sender
@@ -86,6 +79,10 @@ def on_connect(auth=None):
     if not user.name:
         return False
 
+    # Store sid for reference
+    user.sid = request.sid
+    user.save()
+
     user_data = {
         'fp': user.fp,
         'id': user.id,
@@ -96,13 +93,20 @@ def on_connect(auth=None):
     user_data = json.dumps(user_data, default=str)
 
     # emit("new_user", {'data': user.fp}, broadcast=True)
-    emit("new_user", user_data, broadcast=True)
+    emit("user_connected", user_data, broadcast=True)
 
     # Group chat
     join_room("default")
 
     # Personal inbox
     join_room(user.fp)
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    user = User.get(sid=request.sid)
+    user.delete_instance()
+    emit("user_disconnected")
 
 
 

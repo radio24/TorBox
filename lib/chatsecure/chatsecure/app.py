@@ -1,3 +1,4 @@
+import os
 import secrets
 from flask import Flask, Blueprint, request, render_template
 from flask_socketio import SocketIO
@@ -8,20 +9,28 @@ from chatsecure.views import (
     UserListResource,
     GroupListResource,
     UserMessageResource,
-    GroupMessageResource
+    GroupMessageResource,
+    bp
 )
 
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins="*", manage_session=True)
 from chatsecure.chatsocket import *
 
 
 def create_app(debug: bool = False):
     """Create Factory application."""
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        static_url_path='/assets',
+        static_folder=os.getcwd() + "/chatsecure/templates/assets/"
+    )
     app.debug = debug
 
     # Random secret key
     app.config['SECRET_KEY'] = secrets.token_hex(128)
+
+    # Blueprints
+    app.register_blueprint(bp)
 
     # Init restful
     api = Api(app)
