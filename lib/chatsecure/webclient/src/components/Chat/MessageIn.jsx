@@ -13,7 +13,7 @@ export const MessageIn = props => {
   } = props
 
 	const [userInfo, setUserInfo] = useState({
-		active: "",
+		active: true,
 		fp: "",
 		id: "",
 		last_update: "",
@@ -38,11 +38,7 @@ export const MessageIn = props => {
   }, [])
 
   return (
-    <div className='grid gap-4 w-full
-    sm:grid-cols-[84px_2fr_1fr]
-    grid-cols-[64px_1fr]
-    place-items-start
-    '>
+    <div className={'grid gap-4 w-full sm:grid-cols-[84px_2fr_1fr] grid-cols-[64px_1fr] place-items-start ' + (userInfo.active===false&&"grayscale hover:grayscale-0")}>
       <div className='sm:ml-[40px] ml-[20px]'>
         <Identicon className={"mx-auto"} size={44} value={ fp } theme={"substrate"} />
       </div>
