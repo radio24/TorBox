@@ -3,7 +3,7 @@ import {Button} from "primereact/button";
 import {BsEmojiLaughing, BsSendFill} from "react-icons/all.js";
 import data from '@emoji-mart/data'
 import Picker from '@emoji-mart/react'
-import {useContext, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import "./MessageBox.css"
 import {Card} from "primereact/card";
 import avatarDemo from "../../assets/avatar.png"
@@ -27,6 +27,8 @@ export const MessageBox = props => {
   const [message, setMessage] = useState("")
   const [showEmoji, setShowEmoji] = useState(false)
 
+	const showEmojiRef = useRef()
+
   const sendMsg = (msg) => {
 		sendMessage(msg)
     setMessage("")
@@ -42,6 +44,14 @@ export const MessageBox = props => {
       setMessage(e.target.value)
     }
   }
+
+	useEffect(() => {
+		showEmojiRef.current = showEmoji
+	}, [showEmoji])
+
+	useEffect(() => {
+		showEmojiRef.current = showEmoji
+	}, [])
 
   return(
     <div className='flex flex-col w-full h-full
@@ -79,12 +89,12 @@ export const MessageBox = props => {
             onKeyDown={onMessageKeyDown}
           />
           <div className={"flex"}>
-            {/*FOR DESKTOP ONLY*/}
+            {/*Emojis for desktop only*/}
             <Button
               className={"emoji-button hidden lg:flex my-auto p-button-text"}
               id={"emoji-button"}
               icon={<BsEmojiLaughing size={"25"} />}
-              onClick={(e) => { setShowEmoji(!showEmoji) }}
+              onClick={(e) => { setShowEmoji(!showEmojiRef.current) }}
             />
             <Button
 							className={"my-auto mr-2 p-button-rounded"}
