@@ -49,6 +49,17 @@ export const ChatProvider = (props) => {
   }
 
 	function selectChat(id) {
+		if (id === "default") {
+			// group
+			setChatGroup(true)
+			setChatName("Group")
+		}
+		else {
+			// user
+			setChatGroup(false)
+			const user = getUserInfo(id)
+			setChatName(user.name)
+		}
 		setChatId(id)
 	}
 

@@ -41,10 +41,8 @@ export const Chat = props => {
   useEffect(() => {
     if (chatId !== "default") {
       api.getUserMessageList(chatId).then(r => { setChatMessages(r) } )
-      setChatGroup(false)
     }
     else {
-      setChatGroup(true)
       api.getGroupMessageList().then(r => { setChatMessages(r) })
     }
   }, [chatId])

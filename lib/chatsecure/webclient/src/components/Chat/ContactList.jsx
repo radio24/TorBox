@@ -17,7 +17,6 @@ export const ContactList = props => {
 		const { chat } = props
 		return (
 			<div
-				// key={chat.id}
 				className={'grid grid-cols-[55px_1fr] py-3 pl-8 pr-10 border-b border-slate-600 hover:bg-slate-600 cursor-pointer ' + (chatId===chat.id?" bg-slate-500":"")}
 				onClick={e => { selectChat(chat.id) }}
 			>
@@ -55,7 +54,7 @@ export const ContactList = props => {
           </div>
         </div>
         <div className='w-full ml-5'>
-          <span className={"text-lg text-slate-300"}>{chatName} Group</span>
+          <span className={"text-lg text-slate-300"}>Group</span>
           <span className={"text-base text-slate-400 font-light line-clamp-1"}>chat.message</span>
         </div>
       </div>
