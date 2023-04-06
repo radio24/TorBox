@@ -25,6 +25,16 @@ export const ChatProvider = (props) => {
 
 	const api = APIClient(token)
 
+	const getUserInfo = id => {
+		return userListRef.current.filter(obj => obj.id === id)[0]
+	}
+
+	const updateUserList = ul => {
+		setUserList(ul.sort((a, b) => {
+			return Number(b.active) - Number(a.active)
+		}))
+	}
+
   const sendMessage = (msg) => {
     const data = {
       sender: userId,
@@ -39,14 +49,11 @@ export const ChatProvider = (props) => {
   }
 
 	function selectChat(id) {
-		console.log("setChatId(): ", id)
 		setChatId(id)
 	}
 
 	function onMessage(value) {
 		if (value.sender !== userId) {
-			console.log("onMessage: ", value)
-			console.log("chatId: ", chatIdRef.current)
 			if (chatIdRef.current === "default" && value.recipient === "default") {
 				setChatMessages([...chatMessagesRef.current, value])
 			}
@@ -56,14 +63,22 @@ export const ChatProvider = (props) => {
 		}
 	}
 
-	function onUserConnected(value) {
-		const v = JSON.parse(value)
-		if (v.id !== userId) {
-			setUserList([...userListRef.current, v])
+	function onUserConnected(data) {
+		if (data.id !== userId) {
+			updateUserList([...userListRef.current, data])
 		}
 	}
 
-	function onUserDisconnected () {}
+	function onUserDisconnected (data) {
+		updateUserList(
+			userListRef.current.map(obj => {
+				if (obj.id === data.id) {
+					obj.active = false
+				}
+				return obj
+			})
+		)
+	}
 
 	const initSocket = () => {
 		socket = io(config.url.API_URL, {auth: {token: token}})
@@ -75,6 +90,7 @@ export const ChatProvider = (props) => {
 		// socket.on('disconnect', onDisconnect)
 		socket.on('message', onMessage)
 		socket.on('user_connected', onUserConnected)
+		socket.on('user_disconnected', onUserDisconnected)
 	}
 
   useEffect(() => {
@@ -99,7 +115,7 @@ export const ChatProvider = (props) => {
   return (
     <ChatContext.Provider
       value={{
-        userList, setUserList,
+        userList, setUserList, updateUserList, getUserInfo,
         chatName, setChatName,
         chatId, setChatId,
         chatGroup, setChatGroup,

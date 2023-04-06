@@ -74,10 +74,14 @@ def on_connect(auth=None):
     if not auth:
         return False
 
+
     # auth is a token. Check against db
     user = User.get(User.token == auth["token"])
     if not user.name:
         return False
+
+    # if not user.active:
+    #     return
 
     # Store sid for reference
     user.sid = request.sid
@@ -89,8 +93,12 @@ def on_connect(auth=None):
         'last_update': user.last_update,
         'name': user.name,
         'pubkey': user.pubkey,
+        'active': user.active,
     }
+
+    # FIXME: handle datetime
     user_data = json.dumps(user_data, default=str)
+    user_data = json.loads(user_data)
 
     # emit("new_user", {'data': user.fp}, broadcast=True)
     emit("user_connected", user_data, broadcast=True)
@@ -105,8 +113,11 @@ def on_connect(auth=None):
 @socketio.on("disconnect")
 def on_disconnect():
     user = User.get(sid=request.sid)
-    user.delete_instance()
-    emit("user_disconnected")
+    emit("user_disconnected", {"id": user.id}, broadcast=True)
+    # user.delete_instance()
+    user.sid = None
+    user.active = False
+    user.save()
 
 
 

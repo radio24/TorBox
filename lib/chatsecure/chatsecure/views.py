@@ -91,7 +91,12 @@ class UserListResource(Resource):
         """Return list of active users"""
         try:
             users = list(User.select(
-                User.id, User.name, User.fp, User.pubkey, User.last_update
+                User.id,
+                User.name,
+                User.fp,
+                User.pubkey,
+                User.last_update,
+                User.active
             ).filter(User.id != kwargs["user"].id).dicts())
         except Exception as e:  # noqa
             users = []

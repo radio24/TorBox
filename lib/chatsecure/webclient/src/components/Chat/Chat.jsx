@@ -18,7 +18,7 @@ export const Chat = props => {
   } = useContext(UserContext)
 
   const {
-    setUserList,
+    updateUserList,
     chatName, setChatName,
     chatId, setChatId,
     chatGroup, setChatGroup,
@@ -33,7 +33,7 @@ export const Chat = props => {
 
   const init = async () => {
     // await api.getGroupList().then(r => { console.log(r) })
-    await api.getUserList().then(r => { setUserList(r); })
+    await api.getUserList().then(r => { updateUserList(r); })
     await api.getGroupMessageList().then(r => { setChatMessages(r) })
     setLoading(false)
   }

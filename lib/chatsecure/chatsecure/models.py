@@ -23,6 +23,7 @@ class User(BaseModel):
     sid = pw.CharField(max_length=32, unique=True, null=True)
     ts_join = pw.DateTimeField(default=datetime.now)
     last_update = pw.DateTimeField(default=datetime.now)
+    active = pw.BooleanField(default=True)
 
 
 class Group(BaseModel):

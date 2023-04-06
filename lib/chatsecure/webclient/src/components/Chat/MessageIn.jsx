@@ -5,17 +5,21 @@ import {Identicon} from "@polkadot/react-identicon";
 
 export const MessageIn = props => {
   const {
-    userList, setUserList,
-    chatName, setChatName,
-    chatId, setChatId,
-    chatGroup, setChatGroup,
-    chatMessages, setChatMessages,
+    userList, getUserInfo,
   } = useContext(ChatContext)
 
   const {
     messageData
   } = props
 
+	const [userInfo, setUserInfo] = useState({
+		active: "",
+		fp: "",
+		id: "",
+		last_update: "",
+		name: "",
+		pubkey: "",
+	})
   const [fp, setFp] = useState("")
 
   const getFp = () => {
@@ -28,6 +32,8 @@ export const MessageIn = props => {
     if (messageData) {
       const fp = String("0x" + Sha256(getFp()))
       setFp(fp)
+			const ui = getUserInfo(messageData.sender)
+			setUserInfo(ui)
     }
   }, [])
 
@@ -44,7 +50,10 @@ export const MessageIn = props => {
       px-5 pt-2 pb-2.5 mr-5 sm:mr-0
       rounded-tr-2xl rounded-bl-2xl rounded-br-2xl
       text-base text-slate-300 font-light">
-      {props.text}
+				<div className={"grid"}>
+					<span className={"text-xs text-blue-500 right-0"}>{userInfo.name}</span>
+				</div>
+				<p>{props.text}</p>
       </div>
       <div className="hidden sm:block"></div>
     </div>
