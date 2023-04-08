@@ -58,6 +58,7 @@ class LoginResource(Resource):
                 assert name == name_txt
                 assert name.lower() == email.split("@")[0].lower()
 
+                # TODO: This block is to use with custom keys
                 # if user is already registered, login
                 user = User.filter(fp=fp)
                 if user:
@@ -91,41 +92,40 @@ class UserListResource(Resource):
 
     def get(self, **kwargs):
         """Return list of active users"""
-        # try:
-        last_message = (
-            UserMessage.select(
-                UserMessage.recipient,
-                UserMessage.sender,
-                UserMessage.msg,
+        try:
+            last_message = (
+                UserMessage.select(
+                    UserMessage.recipient,
+                    UserMessage.sender,
+                    UserMessage.msg,
+                )
+                .filter(UserMessage.recipient == kwargs["user"].id)
+                .order_by(-UserMessage.id)
+                .limit(1)
             )
-            .filter(UserMessage.recipient == kwargs["user"].id)
-            .order_by(-UserMessage.id)
-            .limit(1)
-            # .alias("subquery")
-        )
 
-        users = list(
-            User.select(
-                User.id,
-                User.name,
-                User.fp,
-                User.pubkey,
-                User.last_update,
-                User.active,
-                last_message.c.msg
+            users = list(
+                User.select(
+                    User.id,
+                    User.name,
+                    User.fp,
+                    User.pubkey,
+                    User.last_update,
+                    User.active,
+                    last_message.c.msg
+                )
+                .join(
+                    last_message,
+                    peewee.JOIN.LEFT_OUTER,
+                    on=(User.id == last_message.c.sender_id),
+                )
+                .filter(User.id != kwargs["user"].id)
+                .dicts()
             )
-            .join(
-                last_message,
-                peewee.JOIN.LEFT_OUTER,
-                on=((User.id == last_message.c.sender_id)),
-            )
-            .filter(User.id != kwargs["user"].id)
-            .dicts()
-        )
 
-        # except Exception as e:  # noqa
-        #     print("Exception: {}".format(e))
-        #     users = []
+        except Exception as e:  # noqa
+            print("Exception: {}".format(e))
+            users = []
 
         # FIXME: datetime handle
         users = json.dumps(users, default=str)
@@ -140,7 +140,24 @@ class GroupListResource(Resource):
     def get(self, **kwargs):
         """Return list of active groups"""
         try:
-            groups = list(Group.select().dicts())
+            last_message = (
+                GroupMessage.select(
+                    GroupMessage.recipient,
+                    GroupMessage.sender,
+                    GroupMessage.msg,
+                )
+                .filter(GroupMessage.recipient == kwargs["user"].id)
+                .order_by(-GroupMessage.id)
+                .limit(1)
+            )
+            groups = list(
+                Group.select()
+                .join(
+                    last_message,
+                    peewee.JOIN.LEFT_OUTER,
+                    on=(User.id == last_message.c.sender_id),
+                )
+                .dicts())
         except Exception as e:  # noqa
             groups = []
 

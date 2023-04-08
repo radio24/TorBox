@@ -85,6 +85,10 @@ def on_connect(auth=None):
 
     # Store sid for reference
     user.sid = request.sid
+
+    # User is connecting, so it should be active now
+    user.active = True
+
     user.save()
 
     user_data = {

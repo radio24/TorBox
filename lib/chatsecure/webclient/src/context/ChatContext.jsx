@@ -13,6 +13,7 @@ export const ChatProvider = (props) => {
     privKey, pubKey, pubKeyFp, token, userId
   } = useContext(UserContext)
 
+	const [loading, setLoading] = useState(true)
   const [userList, setUserList] = useState([])
   const [chatName, setChatName] = useState("Default")
   const [chatId, setChatId] = useState("default")  // Default group
@@ -35,19 +36,6 @@ export const ChatProvider = (props) => {
 		}))
 	}
 
-  const sendMessage = (msg) => {
-    const data = {
-      sender: userId,
-      recipient: chatId,
-      msg: msg,
-      is_group: chatGroup,
-    }
-    socket.emit("msg", data)
-
-    data.id = new Date().getTime()
-    setChatMessages([...chatMessages, data])
-  }
-
 	function selectChat(id) {
 		if (id === "default") {
 			// group
@@ -63,6 +51,19 @@ export const ChatProvider = (props) => {
 		setChatId(id)
 	}
 
+  const sendMessage = (msg) => {
+    const data = {
+      sender: userId,
+      recipient: chatId,
+      msg: msg,
+      is_group: chatGroup,
+    }
+    socket.emit("msg", data)
+
+    data.id = new Date().getTime()
+    setChatMessages([...chatMessages, data])
+  }
+
 	function onMessage(value) {
 		if (value.sender !== userId) {
 			if (chatIdRef.current === "default" && value.recipient === "default") {
@@ -76,7 +77,17 @@ export const ChatProvider = (props) => {
 
 	function onUserConnected(data) {
 		if (data.id !== userId) {
-			updateUserList([...userListRef.current, data])
+			// Check if user is already added
+			const contactOnList = userListRef.current.find(obj => obj.id === data.id)
+			console.log("contact exists?:", contactOnList)
+			if (contactOnList) {
+				console.log("YASS add:", data)
+				updateUserList([...userListRef.current.filter(obj => obj.id !== data.id), data])
+			}
+			else {
+				updateUserList([...userListRef.current, data])
+			}
+
 		}
 	}
 
@@ -104,15 +115,29 @@ export const ChatProvider = (props) => {
 		socket.on('user_disconnected', onUserDisconnected)
 	}
 
+	const initData = async () => {
+    // await api.getGroupList().then(r => { console.log(r) })
+    await api.getUserList().then(r => { updateUserList(r); })
+    await api.getGroupMessageList().then(r => { setChatMessages(r) })
+    setLoading(false)
+  }
+
   useEffect(() => {
     if (token !== null && token !== "") {
 			initSocket()
+			initData()
     }
   }, [token])
 
 	useEffect(() => {
-		// console.log("ChatID CHANGED TO: ",chatId)
 		chatIdRef.current = chatId
+
+		if (chatId !== "default") {
+      api.getUserMessageList(chatId).then(r => { setChatMessages(r) } )
+    }
+    else {
+      api.getGroupMessageList().then(r => { setChatMessages(r) })
+    }
 	}, [chatId])
 
 	useEffect(() => {
@@ -126,6 +151,7 @@ export const ChatProvider = (props) => {
   return (
     <ChatContext.Provider
       value={{
+				loading, setLoading,
         userList, setUserList, updateUserList, getUserInfo,
         chatName, setChatName,
         chatId, setChatId,

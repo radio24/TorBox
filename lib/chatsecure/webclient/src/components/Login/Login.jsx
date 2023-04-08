@@ -43,7 +43,6 @@ export const Login = props => {
         format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
     });
 
-    // TODO: Set this keys in a context. Hide login when token is set
     setPrivKey(privateKey)
     setPubKey(publicKey)
     setPubKeyFp(publicKey.getFingerprint())

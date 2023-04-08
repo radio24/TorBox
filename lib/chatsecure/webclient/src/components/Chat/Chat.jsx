@@ -1,58 +1,18 @@
-import avatarDemo from '../../assets/avatar.png'
 import { ContactList } from "./ContactList.jsx";
 import { MessageBox } from "./MessageBox.jsx";
 import { Sidebar } from "primereact/sidebar";
 import {useContext, useEffect, useState} from "react";
-// import { socket } from "./socket"
 import TorBoxLogo from "../../assets/torbox-icon-300x300.png";
-import {APIClient} from "../../hooks/APIClient.jsx";
 
 import {HiMenu, HiOutlineChatAlt} from "react-icons/hi"
-import {io} from "socket.io-client";
-import {UserContext} from "../../context/UserContext.jsx";
 import {ChatContext} from "../../context/ChatContext.jsx";
 
 export const Chat = props => {
   const {
-    privKey, pubKey, pubKeyFp, token, userId
-  } = useContext(UserContext)
-
-  const {
-    updateUserList,
-    chatName, setChatName,
-    chatId, setChatId,
-    chatGroup, setChatGroup,
-    chatMessages, setChatMessages,
+    chatName, loading
   } = useContext(ChatContext)
 
-  const [loading, setLoading] = useState(true)
-
-  const api = APIClient(token)
-
   const [visible, setVisible] = useState(false)
-
-  const init = async () => {
-    // await api.getGroupList().then(r => { console.log(r) })
-    await api.getUserList().then(r => { updateUserList(r); })
-    await api.getGroupMessageList().then(r => { setChatMessages(r) })
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    if (chatId !== "default") {
-      api.getUserMessageList(chatId).then(r => { setChatMessages(r) } )
-    }
-    else {
-      api.getGroupMessageList().then(r => { setChatMessages(r) })
-    }
-  }, [chatId])
-
-  useEffect(() => {
-    // no-op if the socket is already connected
-    if (token !== null && token !== "") {
-      init()
-    }
-  }, []);
 
   return (
     <div className='flex flex-col w-full h-full bg-slate-800 sm:p-10 p-5 overflow-hidden'>
