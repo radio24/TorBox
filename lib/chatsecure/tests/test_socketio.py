@@ -59,8 +59,8 @@ def test_chat_message(app, client, test_db):
 
     # Check new user event of client1
     data = client2.get_received()[0]
-    assert data["name"] == "new_user"
-    assert data["args"][0]["data"] == user2.fp
+    assert data["name"] == "user_connected"
+    assert data["args"][0]['fp'] == user2.fp
 
     # Prepare keys to send encrypted msg
     # client1
