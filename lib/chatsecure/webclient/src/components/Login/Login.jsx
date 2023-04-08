@@ -67,8 +67,8 @@ export const Login = props => {
       else if (data.name.length<5) {
         errors.name = "Min. length 5 characters"
       }
-      else if (!/^[A-Z0-9._-]+$/i.test(data.name)) {
-        errors.name = "Characters not allowed"
+      else if (!/^[A-Z0-9_-]+$/i.test(data.name)) {
+        errors.name = "Only alphanumeric allowed"
       }
 
       return errors;
@@ -124,6 +124,7 @@ export const Login = props => {
               className={classNames({ 'p-invalid': isFormFieldInvalid('name') })}
               onChange={onUsernameChange}
               autoComplete={"off"}
+							maxLength={24}
             />
             <label htmlFor="name">Username</label>
           </div>
