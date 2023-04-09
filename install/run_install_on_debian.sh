@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2004,SC2181,SC2001
+# shellcheck disable=SC2001,SC2004,SC2059,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -103,7 +103,7 @@ SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi - DEBIAN-SPECIFIC
@@ -447,10 +447,13 @@ if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext 
 	clear
 	exit
 fi
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 # 1. Checking for Internet connection
 clear
-echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
+echo -e "${RED}[+] Step 1: Preparing the system: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 if [ -f "/etc/resolv.conf" ]; then
 	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
@@ -491,6 +494,65 @@ else
     fi
   fi
 fi
+sleep 5
+
+
+# NEW v.0.5.3 Check and set the correct time
+# A wrong system type will give errors withe apt-get
+# This has to be integrated, yet into the installation script of Raspberry Pi OS / Ubuntu (if necessary)
+clear
+echo -e "${RED}[+] Step 1: Preparing the system: System-Time check${NOCOLOR}"
+echo -e "${RED}[+]         Tor needs a correctly synchronized time.${NOCOLOR}"
+echo -e "${RED}[+]         The system should display the current UTC time:${NOCOLOR}"
+echo
+echo  "            Date: $(date '+%Y-%m-%d')"
+echo  "						 Time: $(date '+%H:%M')"
+echo
+echo -e "${RED}            You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo
+while true
+do
+	read -r -p $'\e[1;31m            Do you want to adjust the system time [Y/n]? -> \e[0m'
+	# The following line is for the prompt to appear on a new line.
+	if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+		echo
+		echo
+		break
+	fi
+done
+if [[ $REPLY =~ ^[Yy]$ ]] ; then
+	echo ""
+	read -r -p $'\e[1;31m            Please enter the date (YYYY-MM-DD): \e[0m' DATESTRING
+	echo ""
+	echo -e "${RED}            Please enter the UTC time (HH:MM)${NOCOLOR}"
+	read -r -p $'            You can find the correct time here: https://time.is/UTC: ' TIMESTRING
+	# Check and set date
+	if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
+		echo ""
+		sudo date -s "$DATESTRING"
+		echo -e "${RED}[+]            Date set successfully!${NOCOLOR}"
+		if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+			echo ""
+			sudo date -s "$TIMESTRING"
+			echo -e "${RED}[+]            Time set successfully!${NOCOLOR}"
+			sleep 3
+			clear
+		else
+			echo ""
+			echo -e "${WHITE}[!]            INVALIDE TIME FORMAT!${NOCOLOR}"
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31m            Please press any key to continue... \e[0m'
+			clear
+		fi
+	else
+		echo ""
+		echo -e "${WHITE}[!]            INVALIDE DATE FORMAT!${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31m            Please press any key to continue... \e[0m'
+		clear
+	fi
+fi
+sleep 5
 
 # 2. Updating the system
 sleep 10
@@ -519,10 +581,14 @@ systemctl mask tor
 systemctl mask tor@default.service
 
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
+# NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
+check_install_packages "resolvconf"
+sleep 3
+(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
+sleep 5
 check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
-# NEW v.0.5.2: (Re)moved: obfs4proxy
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -575,7 +641,7 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 pip3 install pytesseract
-pip3 install mechanize==0.47
+pip3 install mechanize
 pip3 install PySocks
 pip3 install urwid
 pip3 install Pillow
@@ -610,9 +676,14 @@ if uname -m | grep -q -E "arm64|aarch64"; then
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
   	tar -C /usr/local -xzvf $GO_VERSION_64
-  	if ! grep "# Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  	fi
+		# NEW v.0.5.3: what if .profile doesn't exist?
+		if [ -f ".profile" ]; then
+  		if ! grep "Added by TorBox (001)" .profile ; then
+  			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+  		fi
+		else
+			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+		fi
   	export PATH=$PATH:/usr/local/go/bin
   	rm $GO_VERSION_64
     if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -637,9 +708,14 @@ else
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ] ; then
   	tar -C /usr/local -xzvf $GO_VERSION
-  	if ! grep "# Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  	fi
+		# NEW v.0.5.3: what if .profile doesn't exist?
+		if [ -f ".profile" ]; then
+  		if ! grep "Added by TorBox (001)" .profile ; then
+  			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+  		fi
+		else
+			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+		fi
   	export PATH=$PATH:/usr/local/go/bin
   	rm $GO_VERSION
     if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -724,6 +800,7 @@ fi
 # 6. Install Snowflake
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
+echo -e "$[+]         (This can take some time, please be patient!)"
 cd ~
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
@@ -852,7 +929,6 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.2: vanguards removed
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -877,10 +953,14 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+# With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.
+# URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
+# We have to use rc.local.ubuntu because rfkill is not compatible
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
+systemctl daemon-reload
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   cp /etc/sysctl.conf /etc/sysctl.conf.bak
@@ -899,7 +979,12 @@ echo ""
 
 #Back to the home directory
 cd
-if ! grep "# Added by TorBox (002)" .profile ; then
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (002)" .profile ; then
+		printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+	fi
+else
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
 
@@ -956,8 +1041,9 @@ systemctl start ssh
 systemctl unmask resolvconf
 systemctl enable resolvconf
 systemctl start resolvconf
-systemctl unmask rc-local
-systemctl enable rc-local
+# NEW v.0.5.3: This doesn't work - rc-local will be still masked
+#systemctl unmask rc-local
+#systemctl enable rc-local
 echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
@@ -1007,7 +1093,8 @@ sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+# Debian can directly start with the first-use script
+sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  echo ""
@@ -1017,7 +1104,7 @@ else
  sleep 10
 fi
 
-# 13. Adding the user torbox
+# 13. Adding and implementing the user torbox
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1068,9 +1155,8 @@ echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox will restart.${NOCOLOR}"
+echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""

@@ -189,7 +189,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-			# IMPORTANT: Check if this is still necessary with Ubuntu
+			# IMPORTANT: Check if this is still necessary with Ubuntu (it is not with Raspberry Pi OS and Debian)
 			# This will completely remove pi. The parameter
 			# will be set at the end of the run_install.sh
       if [ -d "/home/pi" ]; then

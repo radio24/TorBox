@@ -21,6 +21,7 @@
 #
 
 sudo dmesg -D
+bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then

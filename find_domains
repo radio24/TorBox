@@ -1,0 +1,288 @@
+#!/bin/bash
+# shellcheck disable=SC2001,SC2076,SC2190
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# Find all used subdomains of a domain
+# The script works like that: First, the script has to be started and then the web browser (or any other program) has to be used to connect the site.
+# The script listens to the clients' interfaces for DNS requests and catches the responses of 50 packets. If that doesn't work out, it does the next iteration.
+# If already connected to the domain once, the client operating system and/or browser will most likely cache the DNS response (the IP address) for a certain amount of time.
+# For clearing the DNS cache on different operating systems, see here: https://pressidium.com/blog/how-do-i-flush-the-dns-cache/
+#
+# SYNTAX
+# ./find_domains <DOMAINNAME> <RESCAN>
+#
+# The <DOMAINNAME> is a domainname, for example: netflix.com
+#
+# The <RESCAN> option is set, if the script was called with the intention to perform a rescan. This means that
+# the result can complement or replace old entries. For that, the script needs additional variables from the
+# 0 -> Display the result, but doesn't alter the existing listes
+# 1 -> Complement or replace old entries
+#
+###### SET VARIABLES ######
+#
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+RUNFILE="run/torbox.run"
+# Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
+CLEARNET_LIST_FILE_OWN="run/clearnet-list.own"
+VPN_LIST_FILE_OWN="run/vpn-list.own"
+DOMAINNAME=$1
+RESCAN=$2
+DUMP=""
+i=0
+
+# Read interfaces from run/torbox.run
+clear
+echo -e "${RED}[+] Starting with the (re)scan${NOCOLOR}"
+echo -e "    It is important that during the rescan, the domain is used as usual"
+echo -e "    on the client because the rescan is listening to DNS requests on"
+echo -e "    the client interface. However, this can be a little bit challenging"
+echo -e "    because your client browser or/and the operating system usually"
+echo -e "    caches the DNS response (the IP address) for a certain amount of"
+echo -e "    time. Using another browser to connect will help."
+echo ""
+
+CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
+
+while [ -z "$DUMP" ]
+do
+  n=$((n+1))
+	# Search for subdomains and IPs
+	if [ "$NUMBER_OF_WORD" -gt "1" ]; then DUMP=$(sudo tcpdump -i any -c 50 -vvAs0 port 53 --immediate-mode | grep -o -E "([0-9]{1}[/]){2}[0-9]{1}.*$DOMAINNAME. A ([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+	elif [ "$NUMBER_OF_WORD" == "1" ]; then DUMP=$(sudo tcpdump -i "${CLIENT_IFACE}" -c 50 -vvAs0 port 53 --immediate-mode | grep -o -E "([0-9]{1}[/]){2}[0-9]{1}.*$DOMAINNAME. A ([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+	else DUMP=$(sudo tcpdump -c 50 -vvAs0 port 53 --immediate-mode | grep -o -E "([0-9]{1}[/]){2}[0-9]{1}.*$DOMAINNAME. A ([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+	fi
+	if [ ! -z "$DUMP" ]; then
+		# Prepar the result
+		NEW_STRING=""
+		readarray -t DUMP_ARRAY < <(awk -F' ' '{print $2, $NF}' <<< "$DUMP")
+
+		# Matching routine start
+		for DUMP_STRING in "${DUMP_ARRAY[@]}"
+		do
+			SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
+			SUBDOMAIN=$(sed -E "s/\.$//g" <<< "$SUBDOMAIN")
+			IP_LIST=$(cut -d' ' -f2- <<< "$DUMP_STRING")
+			# ATTENTION: we need the space before "SUBDOMAIN" as a delimiter!!
+			if grep -q " $SUBDOMAIN" <<< "$NEW_STRING"; then
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
+				for IP in "${IP_ARRAY[@]}"; do
+					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
+					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
+						#REMOVE COMMENT IF NOT NEEDED: NEW_STRING=$(sed "s/[[:space:]]$SUBDOMAIN/[[:space:]]$SUBDOMAIN[[:space:]]$IP/g" <<< "$NEW_STRING");
+						NEW_STRING=$(sed -E "s/[[:space:]]${SUBDOMAIN}/[[:space:]]${SUBDOMAIN}[[:space:]]$IP/g" <<< "$NEW_STRING");
+					fi
+				done
+			else
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
+				for IP in "${IP_ARRAY[@]}"; do
+					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
+					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
+						NEW_STRING="$NEW_STRING $SUBDOMAIN $IP_LIST\n"
+					fi
+				done
+			fi
+		done
+		# Matching routine stop
+
+		readarray -t DUMP_ARRAY< <(printf %s"${NEW_STRING}")
+		# Display the result
+		clear
+		echo -e "${RED}[+] Displaying the result${NOCOLOR}"
+		echo ""
+		echo -e "${WHITE}Domain IP${NOCOLOR}"
+		echo "---------"
+		SAMMEL_IP=""
+		i=0
+		for DUMP_STRING in "${DUMP_ARRAY[@]}"
+		do
+			SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
+			SUBDOMAIN=$(sed -E "s/\.$//g" <<< "$SUBDOMAIN" )
+			IP_LIST=$(awk -F' ' '{print $2}' <<< "$DUMP_STRING")
+			# Add additional IPs
+			# If we have two lines with the same "SUBDOMAIN", so it's because of that command
+			# In this case, we have to implement a matching routine, as we did above
+			if [ ! -z "$SUBDOMAIN" ]; then
+				MORE_IPs=$(nslookup $SUBDOMAIN | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
+				# Avoid doubling IPs
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
+				for IP in "${IP_ARRAY[@]}"; do
+					MORE_IPs=$(sed "s/$IP//g" <<< "$MORE_IPs")
+				done
+				#
+				# Remove doubling spaces
+				IP=$(xargs <<< "$IP");
+				MORE_IPs=$(xargs <<< "$MORE_IPs");
+				echo -e "${WHITE}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
+				SAMMEL_IP_STRING="$SUBDOMAIN $IP $MORE_IPs"
+				SAMMEL_IP_STRING=$(xargs <<< "$SAMMEL_IP_STRING")
+				SAMMEL_IP[i]="$SAMMEL_IP_STRING"
+				i=$((i+1))
+				# We may have to remove spaces at the beginning and the end of the string
+			fi
+		done
+		echo "---------"
+		echo ""
+	else
+		echo "Scan Pass: $n"
+	fi
+done
+
+if [ "$RESCAN" == "1" ]; then
+	DUMP_STRING=""
+	if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
+		readarray -t DOMAIN_EXIST_CLEAR < <(grep "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
+		NUMBER_DOMAIN_EXIST_CLEAR=${#DOMAIN_EXIST_CLEAR[@]}
+		[ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ] && LISTE01="CLEARNET";
+		if ! grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then NUMBER_DOMAIN_EXIST_CLEAR=0; fi
+	else
+		touch "$CLEARNET_LIST_FILE_OWN"
+	fi
+	if [ -f "$VPN_LIST_FILE_OWN" ]; then
+		readarray -t DOMAIN_EXIST_VPN < <(grep "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
+		NUMBER_DOMAIN_EXIST_VPN=${#DOMAIN_EXIST_VPN[@]}
+		[ "$NUMBER_DOMAIN_EXIST_VPN" -gt "0" ] && LISTE01="VPN";
+		if ! grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then NUMBER_DOMAIN_EXIST_VPN=0; fi
+	else
+		touch "$VPN_LIST_FILE_OWN"
+	fi
+	if [ -z "$LISTE01" ]; then
+		echo -e "${WHITE}[!] The domain is not added, yet!${NOCOLOR}"
+		echo -e "${RED}    You have to chose in which exceptionslist you want to add the domain:${NOCOLOR}"
+		echo ""
+		echo "    1 - CLEARNET - direct connection, no protection"
+		echo "    2 - VPN      - works only with VPN connection"
+		echo "    0 - Exit"
+		echo ""
+		while true
+		do
+			read -r -p $'\e[1;37mChoose the desired list -> \e[0m'
+			if [[ $REPLY =~ ^[120]$ ]] ; then
+				echo
+				break
+			fi
+		done
+		if [[ $REPLY =~ ^[120]$ ]]; then
+	    if [ "$REPLY" == "1" ]; then LISTE01="CLEARNET"
+			elif [ "$REPLY" == "2" ]; then LISTE01="VPN"
+			else exit 0
+			fi
+		fi
+	fi
+
+	echo -e "${WHITE}[!] Do you want to complement or replace old entries?${NOCOLOR}"
+	echo -e "${RED}    The old/new entries are in ${WHITE}$LISTE01${NOCOLOR}"
+	echo ""
+	echo "    1 - Complement old entries (recommended)"
+	echo "    2 - Replace old entries"
+	echo "    0 - Exit"
+	echo ""
+	while true
+	do
+  	read -r -p $'\e[1;37mChoose the desired menu entry -> \e[0m'
+		if [[ $REPLY =~ ^[120]$ ]] ; then
+			echo
+			break
+		fi
+	done
+  if [[ $REPLY =~ ^[120]$ ]]; then
+
+		# Complement old entries
+    if [ "$REPLY" == "1" ]; then
+			echo ""
+			echo -e "${RED}[+] Complement old entries..."
+			if [ "$LISTE01" == "CLEARNET" ]; then
+				if [ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ]; then
+					for DUMP_STRING in "${SAMMEL_IP[@]}"; do
+						SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
+						IP_LIST=$(awk -F' ' '{$1=""; print $0}' <<< "$DUMP_STRING")
+						# ATTENTION: NO space before "SUBDOMAIN", because it is at the beginning of each line!!
+						if grep -q "^$SUBDOMAIN" "${CLEARNET_LIST_FILE_OWN}"; then
+							IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
+							for IP in "${IP_ARRAY[@]}"; do
+								if grep "^$SUBDOMAIN" "${CLEARNET_LIST_FILE_OWN}" | grep -q "$IP"; then
+									sleep 1
+								else
+									sed "s/^${SUBDOMAIN}/${SUBDOMAIN} ${IP}/g" "${CLEARNET_LIST_FILE_OWN}"
+								fi
+							done
+						else
+							(printf "%s\n" "${DUMP_STRING}" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
+						fi
+					done
+				else
+					(printf "%s\n" "${SAMMEL_IP[@]}" >> "${CLEARNET_LIST_FILE_OWN}") &>/dev/null
+				fi
+				(sort ${CLEARNET_LIST_FILE_OWN} -o ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
+				sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}
+
+			elif [ "$LISTE01" == "VPN" ]; then
+				if [ "$NUMBER_DOMAIN_EXIST_VPN" -gt "0" ]; then
+					for DUMP_STRING in "${SAMMEL_IP[@]}"; do
+						SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
+						IP_LIST=$(awk -F' ' '{$1=""; print $0}' <<< "$DUMP_STRING")
+						# ATTENTION: NO space before "SUBDOMAIN", because it is at the beginning of each line!!
+						if grep -q " $SUBDOMAIN" "${VPN_LIST_FILE_OWN}"; then
+							IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
+							for IP in "${IP_ARRAY[@]}"; do
+								if grep "^$SUBDOMAIN" "${VPN_LIST_FILE_OWN}" | grep -q "$IP"; then
+									sleep 1
+								else
+									sed "s/^${SUBDOMAIN}/${SUBDOMAIN} ${IP}/g" "${VPN_LIST_FILE_OWN}"
+								fi
+							done
+						else
+							(printf "%s\n" "${DUMP_STRING}" >> ${VPN_LIST_FILE_OWN}) &>/dev/null
+						fi
+					done
+				else
+					(printf "%s\n" "${SAMMEL_IP[@]}" >> "${VPN_LIST_FILE_OWN}") &>/dev/null
+				fi
+				(sort ${VPN_LIST_FILE_OWN} -o ${VPN_LIST_FILE_OWN}) &>/dev/null
+				sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
+			fi
+			sleep 2
+
+		# Replace old entries
+		elif [ "$REPLY" == "2" ]; then
+			echo ""
+			echo -e "${RED}[+] Replace old entries..."
+			if [ "$LISTE01" == "CLEARNET" ]; then
+				readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep -v "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
+				(printf "%s\n" "${DOMAIN_NOT_EXIST_CLEAR[@]}" > ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
+				(printf "%s\n" "${SAMMEL_IP[@]}" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
+			elif [ "$LISTE01" == "VPN" ]; then
+				readarray -t DOMAIN_NOT_EXIST_VPN < <(grep -v "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
+				(printf "%s\n" "${DOMAIN_NOT_EXIST_VPN[@]}" > ${VPN_LIST_FILE_OWN}) &>/dev/null
+				(printf "%s\n" "${SAMMEL_IP[@]}" >> ${VPN_LIST_FILE_OWN}) &>/dev/null
+			fi
+			(sort ${CLEARNET_LIST_FILE_OWN} -o ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
+			sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}
+			sleep 2
+		fi
+	fi
+fi

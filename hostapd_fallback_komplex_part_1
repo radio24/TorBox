@@ -69,16 +69,22 @@ fi
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
 # ps -ax | grep "[d]hclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
-# New: we have also to take down th Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
+# New: we have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 # ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
+# NEW v.0.5.3:
+# ATTENTION: Under Raspberry Pi OS we can grep dhclient, but under Debian that's not possible because dclient is started on
+#            all interfaces. We have to avoid to take down the interface with the AP!
 
 if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	sudo ifdown $INTERFACE1
-	# New - hast to be tested
-	sudo ifdown $INTERFACE3
+	# NEW v.0.5.3 We can only do that, if the interface is not used as AP
+	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
+		sudo ifdown $INTERFACE1
+		INTERFACE1_DOWN=1
+	fi
+	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
+		sudo ifdown $INTERFACE3
 	###
-	INTERFACE1_DOWN=1
 fi
 
 if ps -ax | grep "[d]hclient.$INTERFACE2" ; then

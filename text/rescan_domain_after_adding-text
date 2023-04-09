@@ -1,0 +1,11 @@
+We added the obvious IPs for the given domain to the chosen exclusion list. It means that your requests will be excluded from being routed through tor in a not-very-complex situation.
+
+However, in a more complex case (load-balanced sites, requests from apps, etc.), other IPs of the given domain or subdomains are still routed through tor.
+
+We can start a deeper rescan to find and add these additional sub-domains and IPs. It is important that during the rescan, the domain is used as usual on the client because the rescan is listening to DNS requests on the client interface. However, this can be a bit challenging because your client browser or/and the operating system usually cache the DNS response (the IP address) for some time. Using another browser to connect will help.
+
+After the rescan, which can take some time, the existing domain entries can be replaced or complemented. We recommend to chose the latter.
+
+The rescan automatically stops when it has enough data.
+
+Do you want to start with a deeper rescan?

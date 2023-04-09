@@ -92,6 +92,7 @@ change_crda()
 
   if [ $exitstatus = 0 ]; then
     sudo iw reg set $COUNTRY
+		sudo sed -i "s/^sudo iw reg set*./sudo iw reg set $COUNTRY/g" regset
     INPUT="REGDOMAIN=$COUNTRY"
     sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
   fi
@@ -339,12 +340,20 @@ case "$CHOICE" in
     TLC=$(echo "$REGDOMAIN"|cut -c11-12)
     if [ "$TLC" != "00" ] && [ ! -z "$TLC" ]; then
       COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
-    else
-      COUNTRY=US
-    fi
-    INPUT=$(cat text/wrd-text)
-    if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
-      change_crda
+			INPUT=$(cat text/wrd-text)
+	    if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
+	      change_crda
+	    fi
+    elif [ -z "$TLC" ]; then
+			INPUT=$(cat text/wrd-text)
+			if (whiptail --yesno "The WLAN regulatory domain is not set yet.\n\n$INPUT" 16 $MENU_WIDTH); then
+				change_crda
+			fi
+		elif [ "$TLC" != "00" ]; then
+			INPUT=$(cat text/wrd-text)
+			if (whiptail --yesno "The WLAN regulatory domain is set to GLOBAL.\n\n$INPUT" 16 $MENU_WIDTH); then
+				change_crda
+			fi
     fi
   ;;
 

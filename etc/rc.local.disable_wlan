@@ -20,7 +20,10 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+# This is only for Raspberry Pi OS
 rfkill unblock all
+bash /home/torbox/torbox/regset
+#
 sudo systemctl stop hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then

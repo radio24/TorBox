@@ -1016,3 +1016,25 @@ stopping_tcs()
 		sudo rm "/etc/nginx/sites-available/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 	done
 }
+
+# config_ipset(<filename> <ipset_name> <ipset-save-file>)
+# Configures ipset
+config_ipset()
+{
+	FILENAME=$1
+	IPSET_NAME=$2
+	IPSET_SAVE_FILE=$3
+	if [ -f "$FILENAME" ]; then
+		sudo ipset flush $IPSET_NAME
+		readarray -t LIST_FILE_OWN_ARRAY < "$FILENAME"
+		for LIST_FILE_OWN_STRING in "${LIST_FILE_OWN_ARRAY[@]}"
+		do
+			SUBDOMAIN=$(cut -d ' ' -f1 <<< $LIST_FILE_OWN_STRING)
+			LIST_FILE_OWN_STRING=$(sed "s/$SUBDOMAIN//g <<< $LIST_FILE_OWN_STRING")
+			echo -e "${RED}[+] Importing known IPs for $SUBDOMAIN${NOCOLOR}"
+			IFS=';' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
+			for IP in "${IP_ARRAY[@]}"; do sudo ipset add $IPSET_NAME $IP; done
+		done
+		sudo ipset save $IPSET_NAME > $IPSET_SAVE_FILE
+	fi
+}
