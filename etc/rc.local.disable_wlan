@@ -109,4 +109,8 @@ else
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
 
+# NEW v.0.5.3
+# Starting domain exclusion, if activated
+if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 1 ; fi
+
 exit 0
