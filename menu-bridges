@@ -491,7 +491,7 @@ case "$CHOICE" in
   17)
     if [ -z "$tun0up" ] ; then
       INPUT=$(cat text/connecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         connecting_to_VPN
 				# Is the command below really necessary? I don't think so hmmmm
         sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat

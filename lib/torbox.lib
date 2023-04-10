@@ -1030,11 +1030,12 @@ config_ipset()
 		for LIST_FILE_OWN_STRING in "${LIST_FILE_OWN_ARRAY[@]}"
 		do
 			SUBDOMAIN=$(cut -d ' ' -f1 <<< $LIST_FILE_OWN_STRING)
-			LIST_FILE_OWN_STRING=$(sed "s/$SUBDOMAIN//g <<< $LIST_FILE_OWN_STRING")
-			echo -e "${RED}[+] Importing known IPs for $SUBDOMAIN${NOCOLOR}"
-			IFS=';' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
-			for IP in "${IP_ARRAY[@]}"; do sudo ipset add $IPSET_NAME $IP; done
+			LIST_FILE_OWN_STRING=$(sed "s/${SUBDOMAIN}//g" <<< $LIST_FILE_OWN_STRING)
+			echo -e "${RED}[+] Excluding from tor routing: $SUBDOMAIN${NOCOLOR}"
+			IFS=' ' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
+			for IP in "${IP_ARRAY[@]}"; do sudo ipset -exist add $IPSET_NAME $IP; done
 		done
 		sudo ipset save $IPSET_NAME > $IPSET_SAVE_FILE
+		sleep 1
 	fi
 }
