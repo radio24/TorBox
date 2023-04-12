@@ -339,9 +339,10 @@ case "$CHOICE" in
 									(sort ${VPN_LIST_FILE_OWN} -o ${VPN_LIST_FILE_OWN}) &>/dev/null
 									sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
 								fi
+								echo -e "${RED}[+] Removing done!${NOCOLOR}"
+								echo ""
 								config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
-								echo -e "${RED}[+] Done!${NOCOLOR}"
 								sleep 2
 							fi
 						;;

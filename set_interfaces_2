@@ -245,7 +245,6 @@ else
 fi
 
 ###### Exclusion of domains from tor protection activated ######
-echo -e "${RED}[+] Setting up exclusion of domains from tor protection...${NOCOLOR}"
 if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then ./set_interfaces_3 1; fi
 
 ###### FINISH ######

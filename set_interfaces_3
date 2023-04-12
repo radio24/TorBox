@@ -84,6 +84,7 @@ read_config()
 
 
 ######## MAIN ########
+echo -e "${RED}[+] Setting up exclusion of domains from tor protection...${NOCOLOR}"
 read_config
 
 # This is only needed, if not started by the TorBox menu
