@@ -81,9 +81,9 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
-GO_VERSION="go1.19.4.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.19.4.linux-arm64.tar.gz"
-GO_DL_PATH="https://golang.org/dl/"
+GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+GO_DL_PATH="https://go.dev/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
@@ -605,60 +605,39 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
-if uname -m | grep -q -E "arm64|aarch64"; then
-  wget https://golang.org/dl/$GO_VERSION_64
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ] ; then
-  	tar -C /usr/local -xzvf $GO_VERSION_64
-  	if ! grep "# Added by TorBox (001)" .profile ; then
+if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
+else DOWNLOAD="$GO_VERSION"
+fi
+wget "$GO_DL_PATH$DOWNLOAD"
+DLCHECK=$?
+if [ $DLCHECK -eq 0 ] ; then
+  tar -C /usr/local -xzvf $DOWNLOAD
+	# NEW v.0.5.3: what if .profile doesn't exist?
+	if [ -f ".profile" ]; then
+  	if ! grep "Added by TorBox (001)" .profile ; then
   		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
   	fi
-  	export PATH=$PATH:/usr/local/go/bin
-  	rm $GO_VERSION_64
-    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-    	echo ""
-    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    	clear
-    else
-    	sleep 10
-    fi
-  else
-  	echo ""
-  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
-  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	else
+		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	fi
+  export PATH=$PATH:/usr/local/go/bin
+  rm $DOWNLOAD
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
   	echo ""
   	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	exit 0
+  	clear
+  else
+  	sleep 10
   fi
 else
-  wget https://golang.org/dl/$GO_VERSION
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ] ; then
-  	tar -C /usr/local -xzvf $GO_VERSION
-  	if ! grep "# Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  	fi
-  	export PATH=$PATH:/usr/local/go/bin
-  	rm $GO_VERSION
-    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-    	echo ""
-    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    	clear
-    else
-    	sleep 10
-    fi
-  else
-  	echo ""
-  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	exit 0
-  fi
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+  echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+  echo ""
+  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  exit 0
 fi
 
 # 4. Installing Tor
