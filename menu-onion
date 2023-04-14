@@ -661,12 +661,12 @@ case "$CHOICE" in
             fi
 						create_web_service_list 1
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-							sudo ./run/start_tfs initial
+							sudo ./bin/start_tfs initial
               echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
             fi
 						create_web_service_list 2
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-							sudo ./run/start_tcs initial
+							sudo ./bin/start_tcs initial
               echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
@@ -776,12 +776,12 @@ case "$CHOICE" in
 	            fi
 							create_web_service_list 1
 	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-								sudo ./run/start_tfs initial
+								sudo ./bin/start_tfs initial
 	              echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
 	            fi
 							create_web_service_list 2
 	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-								sudo ./run/start_tcs initial
+								sudo ./bin/start_tcs initial
 	              echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
 	            fi
               echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
@@ -1598,7 +1598,7 @@ case "$CHOICE" in
 					1)
 						clear
 						# Restart
-						sudo ./run/start_tfs
+						sudo ./bin/start_tfs
 						# New Start (always executed!)
 						service_menu menu "$SERVICE_NAME_LIST"
 						if [ "$exitstatus" == "0" ]; then
@@ -1811,7 +1811,7 @@ case "$CHOICE" in
 					1)
 						clear
 						# Restart
-						sudo ./run/start_tcs
+						sudo ./bin/start_tcs
 						# New Start (always executed!)
 						service_menu menu "$SERVICE_NAME_LIST"
 						if [ "$exitstatus" == "0" ]; then

@@ -92,8 +92,8 @@ fi
 
 # NEW v.0.5.2
 # Start TFS and TCS, if configured
-if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tfs initial ; fi
-if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tcs initial ; fi
+if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tfs initial ; fi
+if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tcs initial ; fi
 
 sudo systemctl start dnsmasq
 if sudo timeout 5 sudo route | grep -m 1 default ; then

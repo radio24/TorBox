@@ -108,8 +108,8 @@ fi
 
 # NEW v.0.5.2
 # Start TFS and TCS, if configured
-if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tfs initial ; fi
-if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tcs initial ; fi
+if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tfs initial ; fi
+if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tcs initial ; fi
 
 sleep 5
 sudo systemctl start dnsmasq

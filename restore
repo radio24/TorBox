@@ -445,7 +445,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			else
 				if [ ! -z "$TFS_STRING" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
-					sudo bash /home/torbox/torbox/run/start_tfs
+					sudo bash /home/torbox/torbox/bin/start_tfs
 					sleep 1
 				fi
 			fi
@@ -457,7 +457,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			else
 				if [ ! -z "$TCS_STRING" ]; then
 					echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
-					sudo bash /home/torbox/torbox/run/start_tcs
+					sudo bash /home/torbox/torbox/bin/start_tcs
 					sleep 1
 				fi
 			fi
