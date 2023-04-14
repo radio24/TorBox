@@ -97,8 +97,10 @@ TOR_HREF_FOR_SED2="\" data-view-component=.*"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
+# shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+# shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
@@ -800,7 +802,7 @@ fi
 # 6. Install Snowflake
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
-echo -e "$[+]         (This can take some time, please be patient!)"
+echo -e "[+]         (This can take some time, please be patient!)"
 cd ~
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
@@ -1176,6 +1178,7 @@ timedatectl set-timezone UTC
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
+# shellcheck disable=SC2044
 for logs in $(find /var/log -type f); do
   echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   rm $logs
