@@ -2,8 +2,12 @@ import {useContext, useEffect, useState} from "react";
 import {ChatContext} from "../../context/ChatContext.jsx";
 import Sha256 from "crypto-js/sha256.js";
 import {Identicon} from "@polkadot/react-identicon";
+import {UserContext} from "../../context/UserContext.jsx";
 
 export const MessageIn = props => {
+	const {
+		decryptMessage
+	} = useContext(UserContext)
   const {
     userList, getUserInfo,
   } = useContext(ChatContext)
@@ -12,6 +16,7 @@ export const MessageIn = props => {
     messageData
   } = props
 
+	const [message, setMessage] = useState("")
 	const [userInfo, setUserInfo] = useState({
 		active: true,
 		fp: "",
@@ -35,6 +40,8 @@ export const MessageIn = props => {
 			const ui = getUserInfo(messageData.sender)
 			setUserInfo(ui)
     }
+
+		decryptMessage(props.text).then(r => setMessage(r))
   }, [])
 
   return (
@@ -49,7 +56,7 @@ export const MessageIn = props => {
 				<div className={"grid"}>
 					<span className={"text-xs text-blue-500 right-0"}>{userInfo.name}</span>
 				</div>
-				<p>{props.text}</p>
+				<p>{message}</p>
       </div>
       <div className="hidden sm:block"></div>
     </div>

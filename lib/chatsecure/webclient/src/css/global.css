@@ -14,3 +14,11 @@ body {
 .ui--IdentityIcon {
   cursor: auto !important;
 }
+
+/*Spinner loading colors*/
+@keyframes p-progress-spinner-color {
+    100%,
+    0% {
+        stroke: rgb(163 230 53)
+    }
+}

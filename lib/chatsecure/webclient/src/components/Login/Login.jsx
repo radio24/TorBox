@@ -5,51 +5,20 @@ import {Identicon} from "@polkadot/react-identicon";
 import Sha256 from "crypto-js/sha256.js";
 import {InputText} from "primereact/inputtext";
 import {classNames} from "primereact/utils";
-import {useContext, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import {APIClient} from "../../hooks/APIClient.jsx";
-import * as openpgp from "openpgp";
 import {useFormik} from "formik";
 import {UserContext} from "../../context/UserContext.jsx";
 
 export const Login = props => {
   const {
-    privKey, setPrivKey,
-    pubKey, setPubKey,
-    pubKeyFp, setPubKeyFp,
-    userId, setUserId,
-    token, setToken,
+    pubKeyFp,
+		generateRandomKeys,
+		login,
   } = useContext(UserContext)
 
-  const doLogin = async (name) => {
-    const api = APIClient()
-    const data = await api.login(name, pubKey.armor())
-    if (data) {
-      setUserId(data.id)
-      setToken(data.token)
-    }
-  }
-
-  const generateRandomKeys = async (name) => {
-    if (name === "" || name === null) {
-      setPubKeyFp("")
-      return false
-    }
-    const email = name.replace(" ", "_").toLowerCase() + "@torboxchatsecure.onion"
-
-    const { privateKey, publicKey, revocationCertificate } = await openpgp.generateKey({
-        curve: 'curve25519',
-        userIDs: [{ name: name, email: email }], // you can pass multiple user IDs
-        // passphrase: 'super long and hard to guess secret',
-        format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
-    });
-
-    setPrivKey(privateKey)
-    setPubKey(publicKey)
-    setPubKeyFp(publicKey.getFingerprint())
-  }
-
   const onUsernameChange = async (e) => {
-    generateRandomKeys(e.target.value)
+    // generateRandomKeys(e.target.value)
     formik.setFieldValue('name', e.target.value);
   }
 
@@ -74,7 +43,7 @@ export const Login = props => {
     },
     onSubmit: (data) => {
       // data && show(data);
-      doLogin(data.name)
+      login(data.name)
       formik.resetForm();
     },
   });
@@ -84,6 +53,15 @@ export const Login = props => {
   const getFormErrorMessage = (name) => {
     return isFormFieldInvalid(name) ? <small className="p-error mx-auto">{formik.errors[name]}</small> : <small className="p-error">&nbsp;</small>;
   };
+
+
+	useEffect(() => {
+    const delayRandomKeys = setTimeout(() => {
+			generateRandomKeys(formik.values.name)
+    }, 100)
+
+    return () => clearTimeout(delayRandomKeys)
+  }, [formik.values.name])
 
   return (
     <div className={"flex flex-col h-full"}>
