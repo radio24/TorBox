@@ -1,0 +1,7 @@
+This menu entry will rescan the domain already on the domain exclusion list. The rescan may generate more subdomains and/or IPs for this domain. A rescan could be necessary if subdomains or not added IPs of the domain are occasionally still routed through tor.
+
+After the rescan, which can take some time, the existing domain entries can be replaced or complemented.
+
+It is important that during the rescan, the domain is used as usual on the client because the rescan is listening to DNS requests on the client interface. However, this can be a bit challenging because your client browser or/and the operating system usually cache the DNS response (the IP address) for some time. Using another browser to connect will help.
+
+The rescan automatically stops when it has enough data.

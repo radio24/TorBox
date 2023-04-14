@@ -40,14 +40,8 @@
 #
 ##### SET VARIABLES ######
 
-#Colors
-RED='\033[1;31m'
-WHITE='\033[1;37m'
-NOCOLOR='\033[0m'
-
 #Other variables
 HOSTAPD="/etc/hostapd/hostapd.conf"
-HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 INTERFACE1=$1
 INTERFACE2=$2
 INTERFACE1_DOWN=0
@@ -67,21 +61,28 @@ else
 fi
 
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
-# ps -ax | grep "[d]hclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
+# pgrep -f "dhclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
-# New: we have also to take down th Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
+# New: we have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 # ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
+# NEW v.0.5.3:
+# ATTENTION: Under Raspberry Pi OS we can grep dhclient, but under Debian that's not possible because dclient is started on
+#            all interfaces. We have to avoid to take down the interface with the AP!
 
-if ps -ax | grep "[d]hclient.$INTERFACE1" ; then
+if pgrep -f "dhclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	sudo ifdown $INTERFACE1
-	# New - hast to be tested
-	sudo ifdown $INTERFACE3
+	# NEW v.0.5.3 We can only do that, if the interface is not used as AP
+	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
+		sudo ifdown $INTERFACE1
+		INTERFACE1_DOWN=1
+	fi
+	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
+		sudo ifdown $INTERFACE3
+	fi
 	###
-	INTERFACE1_DOWN=1
 fi
 
-if ps -ax | grep "[d]hclient.$INTERFACE2" ; then
+if pgrep -f "dhclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2
 	# New - hast to be tested
@@ -93,19 +94,19 @@ fi
 sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
 sleep 1
 if [ $INTERFACE1_DOWN = 1 ] ; then
-		sudo ifup $INTERFACE1
-		# New - hast to be tested
-		sudo ifup $INTERFACE3
-		###
-		INTERFACE1_DOWN=0
+	sudo ifup $INTERFACE1
+	# New - hast to be tested
+	sudo ifup $INTERFACE3
+	###
+	INTERFACE1_DOWN=0
 fi
 
 if [ $INTERFACE2_DOWN = 1 ] ; then
-		sudo ifup $INTERFACE2
-		# New - hast to be tested
-		sudo ifup $INTERFACE4
-		###
-		INTERFACE2_DOWN=0
+	sudo ifup $INTERFACE2
+	# New - hast to be tested
+	sudo ifup $INTERFACE4
+	###
+	INTERFACE2_DOWN=0
 fi
 
 # Is INTERFACE1 ready?

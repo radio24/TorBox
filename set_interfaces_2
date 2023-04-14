@@ -24,7 +24,7 @@
 # entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <captive portal> <restarting_tor>
+# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <captive portal> <restarting_tor> <only_reset_ip_tables>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
@@ -43,7 +43,7 @@
 #
 # Both, <incoming interface 1> and <incoming interface 2>, have to be set.
 # If <incoming interface 1> is not used, the default should be "wlan0".
-# If <incoming interface 2> is not used, the default should be "eth0".
+# If <incoming interface 2> is not used, the default should be "eth0", except if the Internet is on "eth0". In this case the default would be "eth1".
 #
 # Possible values for <captive portal>:
 # 0	-> The network connection is open -- no login/password/phone number etc. is required.
@@ -54,6 +54,10 @@
 # 0	->	Don't restart tor.
 # 1	->	Restart tor
 #
+# The <only_reset_ip_tables> is set, if set_interfaces_2 was only called to reset the iptables rules (for example to stop the domains without to exclusion)
+# Possible values for <only_reset_ip_tables>:
+# 0 -> Default, started after changing the Internet source
+# 1 -> Only started to reset the iptables rules
 #
 ###### SET VARIABLES ######
 
@@ -74,6 +78,7 @@ I_DEVICE1=$2
 I_DEVICE2=$3
 CAPTIVE=$4
 RESTARTTOR=$5
+ONLY_RESET=$6
 RUNFILE="run/torbox.run"
 EXITLOOP=0
 
@@ -116,10 +121,10 @@ captive_tunneling()
 
 ###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
 clear
-deactivating_bridge_relay
+[ "$ONLY_RESET" != "1" ] && deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
-while [ $EXITLOOP == 0 ]; do
+while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
 	if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
 		if [ $CAPTIVE = 2 ]; then
 			sudo bash change_MAC $O_DEVICE 3
@@ -200,10 +205,11 @@ $IPTABLES -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 
 ###### NAT rules ######
+echo -e "${RED}[+] Setting up PREROUTING chain...${NOCOLOR}"
 # Access on the box's own IP should be granted (only TCP)
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
-# TCP/UDP/DNS over Tor
+# TCP/UDP/DNS over Tor - Attention: 9053 supports only UDP DNS, the rest goes through 9040!
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp --dport 53 -j REDIRECT --to-ports 9053
@@ -215,14 +221,16 @@ $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 
 ###### SSH access through Internet ######
 if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
 else
 	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
 fi
 
 ###### HTTP plain text traffic blocker ######
-# PREROUTING 3 guaranties that .onion address are not blocked
+# PREROUTING 3 guaranties that .onion address are not blocked --> set it permanent
 if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
+	echo -e "${RED}[+] Setting up HTTP plain text traffic blocker...${NOCOLOR}"
 	($IPTABLES -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
 	($IPTABLES -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
 	($IPTABLES -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
@@ -236,10 +244,14 @@ else
 	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 fi
 
+###### Exclusion of domains from tor protection activated ######
+if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then ./set_interfaces_3 1; fi
+
 ###### FINISH ######
-# Seems to guarantee a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
+# Seems to guarante a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
 # REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
+	echo -e "${RED}[+] Finishing...${NOCOLOR}"
 	(sudo ifdown $O_DEVICE) 2>/dev/null
 	sleep 2
 	(sudo ifup $O_DEVICE) 2>/dev/null

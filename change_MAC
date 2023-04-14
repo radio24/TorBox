@@ -180,7 +180,7 @@ change_mac_address()
 # This function restarts hostapd or asks for reselecting the Internet source in the main menu.
 change_mac_address_finish()
 {
-	if [[ "$CLIENT_IFACE" == "$O_DEVICE" ]]; then
+	if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
 		echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
 		sudo systemctl restart hostapd
 	elif [[ "$INTERNET_IFACE" == "$O_DEVICE" ]]; then
@@ -248,22 +248,30 @@ case "$CHOICE3" in
 		echo ""
 		O_DEVICE="wlan0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			# NEW v.0.5.3 Use ip instead of ifconfig
+			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
  			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_wlan0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="wlan1"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
-			 echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_wlan1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
+			# NEW v.0.5.3 Use ip instead of ifconfig
+			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_wlan1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="eth0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			# NEW v.0.5.3 Use ip instead of ifconfig
+			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_eth0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="eth1"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			# NEW v.0.5.3 Use ip instead of ifconfig
+			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
  			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_eth1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		echo ""

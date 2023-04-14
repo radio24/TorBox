@@ -1,0 +1,5 @@
+This entry will remove a specific domain from the exclusion list. It means that the IP address of this site will be accessed through tor, which is the default.
+
+Next, you will be asked for the domain name. Be aware that, for example, netflix.com will also remove www.netflix.com. However, if you enter www.netflix.com, then netflix.com or www1.netflix.com will still be in the exclusion lists.
+
+Do you want to remove the given domain from the exclusion lists?

@@ -32,8 +32,10 @@
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_15=15
+MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
@@ -57,6 +59,16 @@ TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
 # shellcheck disable=SC2001,SC2016
 TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
+CLEARNET_LIST="clearnet-list"
+CLEARNET_LIST_FILE="run/$CLEARNET_LIST"
+# Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
+CLEARNET_LIST_FILE_OWN="run/clearnet-list.own"
+VPN_LIST="vpn-list"
+VPN_LIST_FILE="run/$VPN_LIST"
+# Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
+VPN_LIST_FILE_OWN="run/vpn-list.own"
+OLD_EXCLUSIONLISTS=0
+RESTORE_EXCLUSIONLISTS=0
 
 ##############################
 ######## FUNCTIONS ########
@@ -65,56 +77,48 @@ TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 # TOGGLE07 / TOGGLE08 represents the status of the Bridge Relay mode
 read_config()
 {
-MODE_BR=$(grep "^BridgeRelay" ${TORRC_RESTORE})
-MODE_BRIDGES=$(grep "^UseBridges" ${TORRC_RESTORE})
-if [ "$MODE_BR" = "BridgeRelay 1" ]; then
-    TOGGLE07="Bridge relay ON!"
-    TOGGLE07b="ON"
-    TOGGLE08b="OFF"
-    ACTIVATED="Bridge Relay Mode is ACTIVATED"
+  MODE_BR=$(grep "^BridgeRelay" ${TORRC_RESTORE})
+  MODE_BRIDGES=$(grep "^UseBridges" ${TORRC_RESTORE})
+  if [ "$MODE_BR" = "BridgeRelay 1" ]; then
     ORPORT=$(grep "^ORPort" ${TORRC_RESTORE})
     OBFS4PORT=$(grep "^ServerTransportListenAddr" ${TORRC_RESTORE})
     CONTACT=$(grep "^ContactInfo" ${TORRC_RESTORE})
     NICK=$(grep "^Nickname" ${TORRC_RESTORE})
     BRIDGEDISTRIBUTION=$(grep "BridgeDistribution" ${TORRC_RESTORE})
-else
-    TOGGLE07="Bridge relay OFF!"
-    TOGGLE07b="OFF"
-    TOGGLE08b="ON"
-    ACTIVATED="Bridge Relay Mode is DEACTIVATED"
+  else
     ORPORT=$(grep "^#ORPort" ${TORRC_RESTORE})
     OBFS4PORT=$(grep "^#ServerTransportListenAddr" ${TORRC_RESTORE})
     CONTACT=$(grep "^#ContactInfo" ${TORRC_RESTORE})
     NICK=$(grep "^#Nickname" ${TORRC_RESTORE})
     BRIDGEDISTRIBUTION=$(grep "#BridgeDistribution" ${TORRC_RESTORE})
-fi
-sORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
-sOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
-sCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
-sNICK=$(cut -d ' ' -f2 <<< $NICK)
-sBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
+  fi
+  nORPORT=$(cut -d ' ' -f2 <<< $ORPORT)
+  nOBFS4PORT=$(cut -d ':' -f2 <<< $OBFS4PORT)
+  nCONTACT=$(cut -d ' ' -f2 <<< $CONTACT)
+  nNICK=$(cut -d ' ' -f2 <<< $NICK)
+ nBRIDGEDISTRIBUTION=$(cut -d ' ' -f2 <<< $BRIDGEDISTRIBUTION)
 }
 
 change_config()
 {
-if [ "$MODE_BR" != "BridgeRelay 1" ]; then
-  sudo sed -i "s/^$ORPORT/#ORPort $nORPORT/" ${TORRC}
-  sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
-  sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
-  sudo sed -i "s/^$NICK/#Nickname $nNICK/" ${TORRC}
-  sudo sed -i "s/^$BRIDGEDISTRIBUTION/#BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
-else
-  sudo sed -i "s/^$ORPORT/ORPort $nORPORT/" ${TORRC}
-  sudo sed -i "s/^$OBFS4PORT/ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
-  sudo sed -i "s/^$CONTACT/ContactInfo $nCONTACT/" ${TORRC}
-  sudo sed -i "s/^$NICK/Nickname $nNICK/" ${TORRC}
-  sudo sed -i "s/^$BRIDGEDISTRIBUTION/BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
+  if [ "$MODE_BR" != "BridgeRelay 1" ]; then
+   sudo sed -i "s/^$ORPORT/#ORPort $nORPORT/" ${TORRC}
+   sudo sed -i "s/^$OBFS4PORT/#ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+   sudo sed -i "s/^$CONTACT/#ContactInfo $nCONTACT/" ${TORRC}
+   sudo sed -i "s/^$NICK/#Nickname $nNICK/" ${TORRC}
+   sudo sed -i "s/^$BRIDGEDISTRIBUTION/#BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
+  else
+   sudo sed -i "s/^$ORPORT/ORPort $nORPORT/" ${TORRC}
+   sudo sed -i "s/^$OBFS4PORT/ServerTransportListenAddr obfs4 0.0.0.0:$nOBFS4PORT/" ${TORRC}
+   sudo sed -i "s/^$CONTACT/ContactInfo $nCONTACT/" ${TORRC}
+   sudo sed -i "s/^$NICK/Nickname $nNICK/" ${TORRC}
+   sudo sed -i "s/^$BRIDGEDISTRIBUTION/BridgeDistribution $nBRIDGEDISTRIBUTION/" ${TORRC}
 #  INPUT=$(cat text/restart-bridge_server-text)
 #  if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO - DON'T RESTART" --yes-button "YES - RESTART" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 #    clear
 #    restarting_tor menu-server
 #  fi
-fi
+ fi
 }
 
 #include lib
@@ -441,7 +445,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			else
 				if [ ! -z "$TFS_STRING" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
-					sudo bash /home/torbox/torbox/run/start_tfs
+					sudo bash /home/torbox/torbox/bin/start_tfs
 					sleep 1
 				fi
 			fi
@@ -453,7 +457,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			else
 				if [ ! -z "$TCS_STRING" ]; then
 					echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
-					sudo bash /home/torbox/torbox/run/start_tcs
+					sudo bash /home/torbox/torbox/bin/start_tcs
 					sleep 1
 				fi
 			fi
@@ -475,6 +479,91 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 			sleep 5
 			sudo systemctl restart nginx
+
+			# Should we activate tor exclusion lists?
+			if grep "UNPROTECTED_DOMAIN=1" ${RUNFILE} || grep "UNPROTECTED_DOMAIN=1" "restore${RUNFILE}"; then
+				if (whiptail --title "TorBox - RESTORE" --yesno "On the source system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are enabled.\n\nDo you want to activate these exclusion lists on the restored system?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					# exitstatus == 255 means that the ESC key was pressed
+					[ "$exitstatus" == "255" ] && exit 0
+					if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then OLD_EXCLUSIONLISTS=1; fi
+					if [ -f "restore$CLEARNET_LIST_FILE_OWN" ] || [ -f "restore$VPN_LIST_FILE_OWN" ]; then RESTORE_EXCLUSIONLISTS=1; fi
+					if [ "$OLD_EXCLUSIONLISTS" == "1" ] && [ "$RESTORE_EXCLUSIONLISTS" == "1" ]; then
+						if (whiptail --title "TorBox - RESTORE" --yesno --no-button "KEEP" --yes-button "RESTORE" "Do you want to KEEP the current exclusion lists or RESTORE the ones in the backup?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+							# exitstatus == 255 means that the ESC key was pressed
+							[ "$exitstatus" == "255" ] && exit 0
+							cp "restore$CLEARNET_LIST_FILE_OWN" /home/torbox/torbox/run
+							cp "restore$VPN_LIST_FILE_OWN" /home/torbox/torbox/run
+							if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
+								(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
+								sudo ipset create $CLEARNET_LIST hash:ip
+								config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
+							fi
+							if [ -f "$VPN_LIST_FILE_OWN" ]; then
+								(sudo ipset destroy $VPN_LIST) 2>/dev/null
+								sudo ipset create $VPN_LIST hash:ip
+								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+							fi
+							sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
+							./set_interfaces_3 0
+						elif [ "$OLD_EXCLUSIONLISTS" == "0" ] && [ "$RESTORE_EXCLUSIONLISTS" == "1" ]; then
+							cp "restore$CLEARNET_LIST_FILE_OWN" /home/torbox/torbox/run
+							cp "restore$VPN_LIST_FILE_OWN" /home/torbox/torbox/run
+							if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
+								(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
+								sudo ipset create $CLEARNET_LIST hash:ip
+								config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
+							fi
+							if [ -f "$VPN_LIST_FILE_OWN" ]; then
+								(sudo ipset destroy $VPN_LIST) 2>/dev/null
+								sudo ipset create $VPN_LIST hash:ip
+								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+							fi
+							sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
+							./set_interfaces_3 0
+						fi
+					fi
+				else
+					# Where is the Internet
+					INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+					# Where are the clients
+					CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+					NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
+					if [ "$NUMBER_OF_WORD" == "1" ]; then
+						I_DEVICE1=$CLIENT_IFACE
+						if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+					else
+						I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+						I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+					fi
+					clear
+					sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}
+					sudo bash set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 0 0 1
+					sudo ipset destroy 2>/dev/null
+				fi
+			else
+				if (whiptail --title "TorBox - RESTORE" --yesno "On the source system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are enabled.\n\nDo you want to keep these exclusion lists on the restored system (we will not activate them)?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					# exitstatus == 255 means that the ESC key was pressed
+					[ "$exitstatus" == "255" ] && exit 0
+					if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then OLD_EXCLUSIONLISTS=1; fi
+					if [ -f "restore$CLEARNET_LIST_FILE_OWN" ] || [ -f "restore$VPN_LIST_FILE_OWN" ]; then RESTORE_EXCLUSIONLISTS=1; fi
+					if [ "$OLD_EXCLUSIONLISTS" == "1" ] && [ "$RESTORE_EXCLUSIONLISTS" == "1" ]; then
+						if (whiptail --title "TorBox - RESTORE" --yesno --no-button "KEEP" --yes-button "RESTORE" "Do you want to KEEP the current exclusion lists or RESTORE the ones in the backup?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+							# exitstatus == 255 means that the ESC key was pressed
+							[ "$exitstatus" == "255" ] && exit 0
+							cp "restore$CLEARNET_LIST_FILE_OWN" /home/torbox/torbox/run
+							cp "restore$VPN_LIST_FILE_OWN" /home/torbox/torbox/run
+						elif [ "$OLD_EXCLUSIONLISTS" == "0" ] && [ "$RESTORE_EXCLUSIONLISTS" == "1" ]; then
+							cp "restore$CLEARNET_LIST_FILE_OWN" /home/torbox/torbox/run
+							cp "restore$VPN_LIST_FILE_OWN" /home/torbox/torbox/run
+						fi
+					fi
+				else
+					[ -f "$CLEARNET_LIST_FILE_OWN" ] && rm "$CLEARNET_LIST_FILE_OWN"
+					[ -f "$VPN_LIST_FILE_OWN" ] && rm "$VPN_LIST_FILE_OWN"
+					[ -f "restore$CLEARNET_LIST_FILE_OWN" ] && rm "restore$CLEARNET_LIST_FILE_OWN"
+					[ -f "restore$VPN_LIST_FILE_OWN" ] && rm "restore$VPN_LIST_FILE_OWN"
+				fi
+			fi
 
 			# We don't need the restore directory anymore
 			echo -e "${RED}[+] Cleaning...${NOCOLOR}"
