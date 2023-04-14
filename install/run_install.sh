@@ -580,6 +580,7 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 sudo pip3 install pytesseract
+# Mit v.0.5.3 zu testen: sudo pip3 install mechanize
 sudo pip3 install mechanize==0.4.7
 sudo pip3 install PySocks
 sudo pip3 install urwid
