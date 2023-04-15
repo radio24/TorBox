@@ -21,6 +21,8 @@
 #
 
 rfkill unblock all
+# To be activated in v.0.5.3
+# bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
@@ -36,24 +38,40 @@ fi
 AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
+		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+		if ip link | grep "$INTERFACE" | grep "state UP" ; then
 			sudo ip link set dev $INTERFACE down
+			INTERFACE1_DOWN=1
+		fi
+		#
 			sleep 2
 			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
 			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
-			sudo ip link set dev $INTERFACE up
+			# NEW v.0.5.3: We have only to put an interface up, if it was up before
+			if [ "$INTERFACE1_DOWN" == 1 ]; then
+				sudo ip link set dev $INTERFACE up
+				INTERFACE1_DOWN=0
+			fi
+			#
 	else
 		MAC_ADDRESS=$(grep "MAC_$INTERFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+		if ip link | grep "$INTERFACE" | grep "state UP" ; then
 			sudo ip link set dev $INTERFACE down
-			sleep 2
-			sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+			INTERFACE1_DOWN=1
+		fi
+		sleep 2
+		sudo ip link set dev $INTERFACE address $MAC_ADDRESS
+		# NEW v.0.5.3: We have only to put an interface up, if it was up before
+		if [ "$INTERFACE1_DOWN" == 1 ]; then
 			sudo ip link set dev $INTERFACE up
+			INTERFACE1_DOWN=0
+		fi
 	fi
 done
 
 sudo systemctl start hostapd
 
-# NEW v.0.5.2
-# grep "state DOWN" removed
 # Let's check if we can auto-connect to a wireless network
 if ip link | grep wlan0 ; then
  if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
@@ -61,7 +79,6 @@ if ip link | grep wlan0 ; then
  fi
 fi
 
-# NEW v.0.5.2
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
  if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
@@ -69,7 +86,6 @@ if ip link | grep wlan1 ; then
  fi
 fi
 
-# NEW v.0.5.2
 # If a cellular device is available, and previously used then let's check if we can auto-connect
 if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
 
@@ -79,18 +95,22 @@ if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   sleep 2
 fi
 
-# NEW v.0.5.2
 # Start TFS and TCS, if configured
 if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tfs initial ; fi
 if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tcs initial ; fi
 
+sleep 5
 sudo systemctl start dnsmasq
 if sudo timeout 5 sudo route | grep -m 1 default ; then
-	sudo /usr/sbin/ntpdate pool.ntp.org
+	sudo wget -q --spider "pool.ntp.org"
+	OCHECK=$?
+	echo "$OCHECK"
+	if [ $OCHECK -eq 0 ]; then
+		sudo /usr/sbin/ntpdate pool.ntp.org
+	fi
 fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 
-# NEW v.0.5.2
 # This function opens the ports, after a restart if bridge relay is on
 if grep "^BridgeRelay" /etc/tor/torrc ; then
   ORPORT=$(grep "^ORPort" /etc/tor/torrc | cut -d " " -f2)
@@ -105,5 +125,9 @@ else
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $sORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sORPORT -j ACCEPT) 2>/dev/null ; fi
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
+
+# NEW v.0.5.3
+# Starting domain exclusion, if activated
+if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 1 ; fi
 
 exit 0
