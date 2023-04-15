@@ -114,9 +114,10 @@ captive_tunneling()
 	fi
 }
 
+# NEW v.0.5.3 - Not necessary
 ###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
-clear
-deactivating_bridge_relay
+#clear
+#deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 while [ $EXITLOOP == 0 ]; do
