@@ -512,6 +512,8 @@ re-connect
 sleep 10
 clear
 echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
+# NEW v.0.5.3: Using backport for go
+if [ grep -q "^#deb http://deb.debian.org/debian bullseye backports main" /etc/apt/sources.list ]; then sed -i "s'^#deb http://deb.debian.org/debian bullseye backports main'deb http://deb.debian.org/debian bullseye backports main'g" /etc/apt/sources.list ; fi
 apt-get -y update
 apt-get -y dist-upgrade
 apt-get -y clean
@@ -638,10 +640,10 @@ if [ ! -z "$GO_VERSION_NR" ] && [ "$GO_VERSION_NR" -lt "17" ]; then
 		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 		echo
-		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
-		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
-		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
-		echo ""
+#		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
+#		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
+#		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
+#		echo ""
 		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 			echo ""
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -650,7 +652,7 @@ if [ ! -z "$GO_VERSION_NR" ] && [ "$GO_VERSION_NR" -lt "17" ]; then
 			sleep 10
 		fi
 		re-connect
-		check_install_packages "golang"
+		apt-get -y -t bullseye-backports install golang
 	else
   	tar -C /usr/local -xzvf $DOWNLOAD
 		rm $DOWNLOAD
