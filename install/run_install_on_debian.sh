@@ -261,7 +261,7 @@ check_install_packages()
 	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
 	 	echo ""
 	 	apt-get -y install $packagename
-		check=$(dpkg-query -s mozilla | grep "Status" | grep -o "installed")
+		check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
 		if [ "$check" == "installed" ]; then check_installed=1
 		else re-connect
 		fi
