@@ -198,6 +198,54 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
+# NEW v.0.5.3: New function re-connect
+# This function tries to restor a connection to the Internet after failing to install a package
+# Syntax: re-connect()
+re-connect()
+{
+	if [ -f "/etc/resolv.conf" ]; then
+		(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	fi
+	(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
+	sleep 5
+	# On some Debian systems, wget is not installed, yet
+	ping -c 1 -q $CHECK_URL1 >&/dev/null
+	OCHECK=$?
+	echo ""
+	if [ $OCHECK -eq 0 ]; then
+	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
+	else
+	  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
+	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  sleep 30
+	  echo ""
+	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  ping -c 1 -q $CHECK_URL2 >&/dev/null
+	  if [ $? -eq 0 ]; then
+	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	  else
+	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+	    ( dhclient -r) 2>&1
+	    sleep 5
+	     dhclient &>/dev/null &
+	    sleep 30
+	    echo ""
+	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    ping -c 1 -q $CHECK_URL1 >&/dev/null
+	    if [ $? -eq 0 ]; then
+	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	    else
+				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
+				exit 1
+	    fi
+	  fi
+	fi
+}
+
+# NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax install_network_drivers <packagenames>
@@ -205,14 +253,19 @@ check_install_packages()
 {
  packagenames=$1
  for packagename in $packagenames; do
-	 clear
-	 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	 echo ""
-	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
-	 echo ""
-	 apt-get -y install $packagename
-#   echo ""
-#   read -n 1 -s -r -p "Press any key to continue"
+	 check_installed=0
+	 while [ $check_installed == "0" ]; do
+	 	clear
+	 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+	 	echo ""
+	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 	echo ""
+	 	apt-get -y install $packagename
+		check=$(dpkg-query -s mozilla | grep "Status" | grep -o "installed")
+		if [ "$check" == "installed" ]; then check_installed=1
+		else re-connect
+		fi
+	done
  done
 }
 
@@ -452,45 +505,8 @@ fi
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-if [ -f "/etc/resolv.conf" ]; then
-	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-fi
-(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
-sleep 5
-# On some Debian systems, wget is not installed, yet
-ping -c 1 -q $CHECK_URL1 >&/dev/null
-OCHECK=$?
-echo ""
-if [ $OCHECK -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
-  sleep 30
-  echo ""
-  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  ping -c 1 -q $CHECK_URL2 >&/dev/null
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    ( dhclient -r) 2>&1
-    sleep 5
-     dhclient &>/dev/null &
-    sleep 30
-    echo ""
-    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    ping -c 1 -q $CHECK_URL1 >&/dev/null
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-			exit 1
-    fi
-  fi
-fi
+# NEW v.0.5.3
+re-connect
 
 # 2. Updating the system
 sleep 10
@@ -741,51 +757,8 @@ fi
 # 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider http://$CHECK_URL1
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
-  sleeo 30
-  echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider https://$CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]          We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-     dhclient -r
-    sleep 5
-     dhclient &>/dev/null &
-    sleep 30
-    echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider http://$CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-      echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
-			if [ -f "/etc/resolv.conf" ]; then
-				(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-			fi
-			(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
-      sleep 5
-      echo ""
-      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider http://$CHECK_URL1
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
-    fi
-  fi
-fi
+# # NEW v.0.5.3
+re-connect
 
 # 8. Downloading and installing the latest version of TorBox
 sleep 10
