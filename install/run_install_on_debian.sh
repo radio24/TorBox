@@ -226,7 +226,7 @@ re-connect()
 	  else
 	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    ( dhclient -r) 2>&1
+	    (dhclient -r) 2>&1
 	    sleep 5
 	     dhclient &>/dev/null &
 	    sleep 30
@@ -560,13 +560,13 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
-cd ~
+cd
 git clone $WIRINGPI_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	cd WiringPi
 	./build
-	cd ~
+	cd
 	rm -r WiringPi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -621,30 +621,40 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
-if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-else DOWNLOAD="$GO_VERSION"
-fi
-wget "$GO_DL_PATH$DOWNLOAD"
-DLCHECK=$?
-# NEW v.0.5.3: if the download failed, install the package from the distribution
-if [ "$DLCHECK" != "0" ] ; then
-	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-	echo ""
-	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	else
-		sleep 10
+# NEW v.0.5.3: Check if go is already installed and has the right version
+[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+if [ ! -z "$GO_VERSION_NR" ] && [ "$GO_VERSION_NR" -lt "17" ]; then
+	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
+	else DOWNLOAD="$GO_VERSION"
 	fi
-	re-connect
-	check_install_packages "golang"
-else
-  tar -C /usr/local -xzvf $DOWNLOAD
-	rm $DOWNLOAD
+	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
+	DLCHECK=$?
+	# NEW v.0.5.3: if the download failed, install the package from the distribution
+	# ATTENTION: This will only work with Debian 12 because in Debian 11 go is to old.
+	if [ "$DLCHECK" != "0" ] ; then
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+		echo
+		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
+		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
+		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
+		echo ""
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		else
+			sleep 10
+		fi
+		re-connect
+		check_install_packages "golang"
+	else
+  	tar -C /usr/local -xzvf $DOWNLOAD
+		rm $DOWNLOAD
+	fi
 fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?
@@ -681,7 +691,7 @@ fi
 # 5. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
-cd ~
+cd
 git clone $OBFS4PROXY_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
@@ -729,21 +739,22 @@ fi
 # 6. Install Snowflake
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
-cd ~
+cd
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
-	cd ~/snowflake/proxy
+	cd snowflake/proxy
 	# NEW v.0.5.3 - without the path (/usr/local/go/bin/)
 	$GO_PROGRAM get
 	$GO_PROGRAM build
 	cp proxy /usr/bin/snowflake-proxy
-	cd ~/snowflake/client
+	cd
+	cd snowflake/client
 	$GO_PROGRAM get
 	$GO_PROGRAM build
 	cp client /usr/bin/snowflake-client
-	cd ~
+	cd
 	rm -rf snowflake
 	rm -rf go*
 else
