@@ -657,7 +657,6 @@ else
 fi
 export PATH=$PATH:/usr/local/go/bin
 
-
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -682,16 +681,17 @@ fi
 # 5. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
-# NEW v.0.5.2 - new installation method for obfs4proxy
 cd ~
 git clone $OBFS4PROXY_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
-	/usr/local/go/bin/go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	# NEW v.0.5.3 - with or without the path
+	[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	cp ./obfs4proxy/obfs4proxy /usr/bin
-	cd ~
+	cd
 	rm -rf obfs4proxy
 	rm -rf go*
 else
@@ -735,13 +735,13 @@ DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd ~/snowflake/proxy
-	#These paths to go are Debian specific
-	/usr/local/go/bin/go get
-	/usr/local/go/bin/go build
+	# NEW v.0.5.3 - without the path (/usr/local/go/bin/)
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	cp proxy /usr/bin/snowflake-proxy
 	cd ~/snowflake/client
-	/usr/local/go/bin/go get
-	/usr/local/go/bin/go build
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	cp client /usr/bin/snowflake-client
 	cd ~
 	rm -rf snowflake
