@@ -40,14 +40,7 @@
 #
 ##### SET VARIABLES ######
 
-#Colors
-RED='\033[1;31m'
-WHITE='\033[1;37m'
-NOCOLOR='\033[0m'
-
 #Other variables
-HOSTAPD="/etc/hostapd/hostapd.conf"
-HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 INTERFACE1=$1
 INTERFACE2=$2
 
@@ -110,11 +103,13 @@ else
 fi
 
 # This last part resets the dhcp server and opens the iptables to access TorBox
-# This fundtion has to be used after an ifup command
+# This function has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
 sudo systemctl restart isc-dhcp-server
-sudo /sbin/iptables -F
-sudo /sbin/iptables -t nat -F
-sudo /sbin/iptables -P FORWARD DROP
-sudo /sbin/iptables -P INPUT ACCEPT
-sudo /sbin/iptables -P OUTPUT ACCEPT
+
+# NEW v.0.5.3 - not necessary - all iptables config should only be done in set_interfaces_x
+#sudo /sbin/iptables -F
+#sudo /sbin/iptables -t nat -F
+#sudo /sbin/iptables -P FORWARD DROP
+#sudo /sbin/iptables -P INPUT ACCEPT
+#sudo /sbin/iptables -P OUTPUT ACCEPT
