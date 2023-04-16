@@ -633,7 +633,13 @@ if [ "$DLCHECK" != "0" ] ; then
 	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 	echo ""
-	sleep 5
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
 	re-connect
 	check_install_packages "golang"
 else
