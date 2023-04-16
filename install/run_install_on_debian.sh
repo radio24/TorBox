@@ -513,7 +513,7 @@ sleep 10
 clear
 echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
 # NEW v.0.5.3: Using backport for go
-if [ grep -q "^#deb http://deb.debian.org/debian bullseye backports main" /etc/apt/sources.list ]; then sed -i "s'^#deb http://deb.debian.org/debian bullseye backports main'deb http://deb.debian.org/debian bullseye backports main'g" /etc/apt/sources.list ; fi
+if grep -q "^#deb http://deb.debian.org/debian bullseye backports main" /etc/apt/sources.list ; then sed -i "s'^#deb http://deb.debian.org/debian bullseye backports main'deb http://deb.debian.org/debian bullseye backports main'g" /etc/apt/sources.list ; fi
 apt-get -y update
 apt-get -y dist-upgrade
 apt-get -y clean
