@@ -1034,6 +1034,10 @@ fi
 clear
 echo -e "${RED}[+] Step 16: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
+echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
+echo
+echo -e "${WHITE}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
 echo ""
 passwd
 
