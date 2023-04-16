@@ -741,6 +741,7 @@ fi
 # 6. Install Snowflake
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
+echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
 cd
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
