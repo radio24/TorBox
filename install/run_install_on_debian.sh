@@ -626,34 +626,38 @@ else DOWNLOAD="$GO_VERSION"
 fi
 wget "$GO_DL_PATH$DOWNLOAD"
 DLCHECK=$?
-if [ $DLCHECK -eq 0 ] ; then
-  tar -C /usr/local -xzvf $DOWNLOAD
-	# NEW v.0.5.3: what if .profile doesn't exist?
-	if [ -f ".profile" ]; then
-  	if ! grep "Added by TorBox (001)" .profile ; then
-  		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  	fi
-	else
-		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-	fi
-  export PATH=$PATH:/usr/local/go/bin
-  rm $DOWNLOAD
-  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	clear
-  else
-  	sleep 10
-  fi
-else
+# NEW v.0.5.3: if the download failed, install the package from the distribution
+if [ "$DLCHECK" != "0" ] ; then
 	echo ""
 	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
 	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-  echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-  echo ""
-  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  exit 0
+	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo ""
+	sleep 5
+	re-connect
+	check_install_packages "golang"
+else
+  tar -C /usr/local -xzvf $DOWNLOAD
+	rm $DOWNLOAD
+fi
+
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (001)" .profile ; then
+		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	fi
+else
+	printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+fi
+export PATH=$PATH:/usr/local/go/bin
+
+
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
 fi
 
 # 4. Installing Tor
