@@ -46,6 +46,7 @@ INTERFACE1=$1
 INTERFACE2=$2
 INTERFACE1_DOWN=0
 INTERFACE2_DOWN=0
+INTERFACE3_DOWN=0
 
 # INTERFACE1 and INTERFACE2 are clients - INTERFACE3 and INTERFACE4 are potential Internet sources
 if [ "$INTERFACE1" == "wlan1" ] ; then
@@ -63,6 +64,8 @@ fi
 # First, we have to shutdown the interface with running dhcpclients, before we copy the interfaces file
 # pgrep -f "dhclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
+#
+# NEW v.0.5.0
 # New: we have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 # ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
 # NEW v.0.5.3:
@@ -77,7 +80,9 @@ if pgrep -f "dhclient.$INTERFACE1" ; then
 		INTERFACE1_DOWN=1
 	fi
 	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
+		# New v.0.5.0 hast to be tested
 		sudo ifdown $INTERFACE3
+		INTERFACE3_DOWN=1
 	fi
 	###
 fi
@@ -85,7 +90,7 @@ fi
 if pgrep -f "dhclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2
-	# New - hast to be tested
+	# New v.0.5.0 hast to be tested
 	sudo ifdown $INTERFACE4
 	###
 	INTERFACE2_DOWN=1
@@ -93,20 +98,25 @@ fi
 
 sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
 sleep 1
+
 if [ $INTERFACE1_DOWN = 1 ] ; then
-	sudo ifup $INTERFACE1
-	# New - hast to be tested
-	sudo ifup $INTERFACE3
-	###
-	INTERFACE1_DOWN=0
+		sudo ifup $INTERFACE1
+		INTERFACE1_DOWN=0
+fi
+
+if [ $INTERFACE3_DOWN = 1 ] ; then
+		# New v.0.5.0 hast to be tested
+		sudo ifup $INTERFACE3
+		INTERFACE3_DOWN=0
+		###
 fi
 
 if [ $INTERFACE2_DOWN = 1 ] ; then
-	sudo ifup $INTERFACE2
-	# New - hast to be tested
-	sudo ifup $INTERFACE4
-	###
-	INTERFACE2_DOWN=0
+		sudo ifup $INTERFACE2
+		# New v.0.5.0 hast to be tested
+		sudo ifup $INTERFACE4
+		###
+		INTERFACE2_DOWN=0
 fi
 
 # Is INTERFACE1 ready?

@@ -81,9 +81,9 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Used go version
-GO_VERSION="go1.20.2.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.20.2.linux-arm64.tar.gz"
-GO_DL_PATH="https://golang.org/dl/"
+GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
+GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+GO_DL_PATH="https://go.dev/dl/"
 
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
@@ -200,6 +200,54 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
+# NEW v.0.5.3: New function re-connect
+# This function tries to restor a connection to the Internet after failing to install a package
+# Syntax: re-connect()
+re-connect()
+{
+	if [ -f "/etc/resolv.conf" ]; then
+		(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	fi
+	(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
+	sleep 5
+	# On some Debian systems, wget is not installed, yet
+	ping -c 1 -q $CHECK_URL1 >&/dev/null
+	OCHECK=$?
+	echo ""
+	if [ $OCHECK -eq 0 ]; then
+	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
+	else
+	  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
+	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  sleep 30
+	  echo ""
+	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  ping -c 1 -q $CHECK_URL2 >&/dev/null
+	  if [ $? -eq 0 ]; then
+	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	  else
+	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+	    (dhclient -r) 2>&1
+	    sleep 5
+	     dhclient &>/dev/null &
+	    sleep 30
+	    echo ""
+	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    ping -c 1 -q $CHECK_URL1 >&/dev/null
+	    if [ $? -eq 0 ]; then
+	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	    else
+				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
+				exit 1
+	    fi
+	  fi
+	fi
+}
+
+# NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax install_network_drivers <packagenames>
@@ -207,14 +255,19 @@ check_install_packages()
 {
  packagenames=$1
  for packagename in $packagenames; do
-	 clear
-	 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	 echo ""
-	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
-	 echo ""
-	 apt-get -y install $packagename
-#   echo ""
-#   read -n 1 -s -r -p "Press any key to continue"
+	 check_installed=0
+	 while [ $check_installed == "0" ]; do
+	 	clear
+	 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+	 	echo ""
+	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 	echo ""
+	 	apt-get -y install $packagename
+		check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
+		if [ "$check" == "installed" ]; then check_installed=1
+		else re-connect
+		fi
+	done
  done
 }
 
@@ -457,109 +510,16 @@ exitstatus=$?
 clear
 echo -e "${RED}[+] Step 1: Preparing the system: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-if [ -f "/etc/resolv.conf" ]; then
-	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-fi
-(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
-sleep 5
-# On some Debian systems, wget is not installed, yet
-ping -c 1 -q $CHECK_URL1 >&/dev/null
-OCHECK=$?
-echo ""
-if [ $OCHECK -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
-  sleep 30
-  echo ""
-  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  ping -c 1 -q $CHECK_URL2 >&/dev/null
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    ( dhclient -r) 2>&1
-    sleep 5
-     dhclient &>/dev/null &
-    sleep 30
-    echo ""
-    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    ping -c 1 -q $CHECK_URL1 >&/dev/null
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-			exit 1
-    fi
-  fi
-fi
-sleep 5
 
-
-# NEW v.0.5.3 Check and set the correct time
-# A wrong system type will give errors withe apt-get
-# This has to be integrated, yet into the installation script of Raspberry Pi OS / Ubuntu (if necessary)
-clear
-echo -e "${RED}[+] Step 1: Preparing the system: System-Time check${NOCOLOR}"
-echo -e "${RED}[+]         Tor needs a correctly synchronized time.${NOCOLOR}"
-echo -e "${RED}[+]         The system should display the current UTC time:${NOCOLOR}"
-echo
-echo  "            Date: $(date '+%Y-%m-%d')"
-echo  "						 Time: $(date '+%H:%M')"
-echo
-echo -e "${RED}            You can find the correct time here: https://time.is/UTC${NOCOLOR}"
-echo
-while true
-do
-	read -r -p $'\e[1;31m            Do you want to adjust the system time [Y/n]? -> \e[0m'
-	# The following line is for the prompt to appear on a new line.
-	if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-		echo
-		echo
-		break
-	fi
-done
-if [[ $REPLY =~ ^[Yy]$ ]] ; then
-	echo ""
-	read -r -p $'\e[1;31m            Please enter the date (YYYY-MM-DD): \e[0m' DATESTRING
-	echo ""
-	echo -e "${RED}            Please enter the UTC time (HH:MM)${NOCOLOR}"
-	read -r -p $'            You can find the correct time here: https://time.is/UTC: ' TIMESTRING
-	# Check and set date
-	if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
-		echo ""
-		sudo date -s "$DATESTRING"
-		echo -e "${RED}[+]            Date set successfully!${NOCOLOR}"
-		if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
-			echo ""
-			sudo date -s "$TIMESTRING"
-			echo -e "${RED}[+]            Time set successfully!${NOCOLOR}"
-			sleep 3
-			clear
-		else
-			echo ""
-			echo -e "${WHITE}[!]            INVALIDE TIME FORMAT!${NOCOLOR}"
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31m            Please press any key to continue... \e[0m'
-			clear
-		fi
-	else
-		echo ""
-		echo -e "${WHITE}[!]            INVALIDE DATE FORMAT!${NOCOLOR}"
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31m            Please press any key to continue... \e[0m'
-		clear
-	fi
-fi
-sleep 5
+# NEW v.0.5.3
+re-connect
 
 # 2. Updating the system
 sleep 10
 clear
 echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
+# NEW v.0.5.3: Using backport for go
+if grep "^# deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then sed -i "s'# deb http://deb.debian.org/debian bullseye-backports main'deb http://deb.debian.org/debian bullseye-backports main'g" /etc/apt/sources.list ; fi
 apt-get -y update
 apt-get -y dist-upgrade
 apt-get -y clean
@@ -612,13 +572,13 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
-cd ~
+cd
 git clone $WIRINGPI_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	cd WiringPi
 	./build
-	cd ~
+	cd
 	rm -r WiringPi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -673,70 +633,59 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
-if uname -m | grep -q -E "arm64|aarch64"; then
-  wget https://golang.org/dl/$GO_VERSION_64
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ] ; then
-  	tar -C /usr/local -xzvf $GO_VERSION_64
-		# NEW v.0.5.3: what if .profile doesn't exist?
-		if [ -f ".profile" ]; then
-  		if ! grep "Added by TorBox (001)" .profile ; then
-  			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  		fi
+
+# NEW v.0.5.3: Check if go is already installed and has the right version
+[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+if [ ! -z "$GO_VERSION_NR" ] || [ "$GO_VERSION_NR" -lt "17" ]; then
+	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
+	else DOWNLOAD="$GO_VERSION"
+	fi
+	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
+	DLCHECK=$?
+	# NEW v.0.5.3: if the download failed, install the package from the distribution
+	# ATTENTION: This will only work with Debian 12 because in Debian 11 go is to old.
+	if [ "$DLCHECK" != "0" ] ; then
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+		echo
+#		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
+#		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
+#		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
+#		echo ""
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
 		else
-			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+			sleep 10
 		fi
-  	export PATH=$PATH:/usr/local/go/bin
-  	rm $GO_VERSION_64
-    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-    	echo ""
-    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    	clear
-    else
-    	sleep 10
-    fi
-  else
-  	echo ""
-  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
-  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	exit 0
-  fi
+		re-connect
+		apt-get -y -t bullseye-backports install golang
+	else
+  	tar -C /usr/local -xzvf $DOWNLOAD
+		rm $DOWNLOAD
+	fi
+fi
+
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (001)" .profile ; then
+		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	fi
 else
-  wget https://golang.org/dl/$GO_VERSION
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ] ; then
-  	tar -C /usr/local -xzvf $GO_VERSION
-		# NEW v.0.5.3: what if .profile doesn't exist?
-		if [ -f ".profile" ]; then
-  		if ! grep "Added by TorBox (001)" .profile ; then
-  			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  		fi
-		else
-			printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-		fi
-  	export PATH=$PATH:/usr/local/go/bin
-  	rm $GO_VERSION
-    if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-    	echo ""
-    	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    	clear
-    else
-    	sleep 10
-    fi
-  else
-  	echo ""
-  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	exit 0
-  fi
+	printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+fi
+export PATH=$PATH:/usr/local/go/bin
+
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
 fi
 
 # 4. Installing Tor
@@ -755,16 +704,17 @@ fi
 # 5. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
-# NEW v.0.5.2 - new installation method for obfs4proxy
-cd ~
+cd
 git clone $OBFS4PROXY_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
-	/usr/local/go/bin/go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	# NEW v.0.5.3 - with or without the path
+	[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	cp ./obfs4proxy/obfs4proxy /usr/bin
-	cd ~
+	cd
 	rm -rf obfs4proxy
 	rm -rf go*
 else
@@ -802,22 +752,23 @@ fi
 # 6. Install Snowflake
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
-echo -e "[+]         (This can take some time, please be patient!)"
-cd ~
+echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
+cd
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
-	cd ~/snowflake/proxy
-	#These paths to go are Debian specific
-	/usr/local/go/bin/go get
-	/usr/local/go/bin/go build
+	cd snowflake/proxy
+	# NEW v.0.5.3 - without the path (/usr/local/go/bin/)
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	cp proxy /usr/bin/snowflake-proxy
-	cd ~/snowflake/client
-	/usr/local/go/bin/go get
-	/usr/local/go/bin/go build
+	cd
+	cd snowflake/client
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	cp client /usr/bin/snowflake-client
-	cd ~
+	cd
 	rm -rf snowflake
 	rm -rf go*
 else
@@ -841,51 +792,8 @@ fi
 # 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider http://$CHECK_URL1
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
-  sleeo 30
-  echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider https://$CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]          We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-     dhclient -r
-    sleep 5
-     dhclient &>/dev/null &
-    sleep 30
-    echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider http://$CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-      echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
-			if [ -f "/etc/resolv.conf" ]; then
-				(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-			fi
-			(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
-      sleep 5
-      echo ""
-      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider http://$CHECK_URL1
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
-    fi
-  fi
-fi
+# # NEW v.0.5.3
+re-connect
 
 # 8. Downloading and installing the latest version of TorBox
 sleep 10
@@ -1147,6 +1055,10 @@ fi
 clear
 echo -e "${RED}[+] Step 16: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
+echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
+echo
+echo -e "${WHITE}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${WHITE}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
 echo ""
 passwd
 

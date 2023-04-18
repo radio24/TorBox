@@ -65,7 +65,6 @@ RUNFILE="run/torbox.run"
 O_DEVICE=$1
 CHOICE2=""
 CHOICE2=$2
-if [ ! -z "$O_DEVICE" ] && [ ! -z "$CHOICE2" ]; then SKIP=1; else SKIP=0; fi
 
 ##############################
 ######## FUNCTIONS ########
@@ -107,32 +106,52 @@ change_mac_address()
 				MAC_ADDRESS="random"
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
-				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
-				sudo ip link set dev $O_DEVICE down
-				sleep 2
+				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+				if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+					sudo ip link set dev $O_DEVICE down
+					INTERFACE1_DOWN=1
+					sleep 2
+				fi
+				#
 				echo -e "${RED}[+] Randomizing MAC address...${NOCOLOR}"
 				echo
 				sudo macchanger -r $O_DEVICE
 				echo
-				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
-				sudo ip link set dev $O_DEVICE up
-				echo " "
+				# NEW v.0.5.3: We have only to put an interface up, if it was up before
+				if [ "$INTERFACE1_DOWN" == 1 ]; then
+					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+					sudo ip link set dev $O_DEVICE up
+					INTERFACE1_DOWN=0
+					echo
+				fi
+				#
 				sleep 5
 			;;
 			2)
 				MAC_ADDRESS="permanent"
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
-				echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
-				sudo ip link set dev $O_DEVICE down
-				sleep 2
+				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+				if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+					sudo ip link set dev $O_DEVICE down
+					INTERFACE1_DOWN=1
+					sleep 2
+				fi
+				#
 				echo -e "${RED}[+] Resetting MAC address...${NOCOLOR}"
 				echo
 				sudo macchanger -p $O_DEVICE
 				echo
-				echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
-				sudo ip link set dev $O_DEVICE up
-				echo " "
+				# NEW v.0.5.3: We have only to put an interface up, if it was up before
+				if [ "$INTERFACE1_DOWN" == 1 ]; then
+					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+					sudo ip link set dev $O_DEVICE up
+					INTERFACE1_DOWN=0
+					echo
+				fi
+				#
 				sleep 5
 			;;
 			3)
@@ -151,14 +170,24 @@ change_mac_address()
 				 	fi
 				 	sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 					clear
-					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
-			 	 	sudo ip link set dev $O_DEVICE down
-					sleep 2
+					# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+					if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+						echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
+			 	 		sudo ip link set dev $O_DEVICE down
+						INTERFACE1_DOWN=1
+						sleep 2
+					fi
+					#
 					echo -e "${RED}[+] Setting MAC address to $MAC_ADDRESS ${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
-					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
-			 		sudo ip link set dev $O_DEVICE up
-					echo " "
+					# NEW v.0.5.3: We have only to put an interface up, if it was up before
+					if [ "$INTERFACE1_DOWN" == 1 ]; then
+						echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
+			 			sudo ip link set dev $O_DEVICE up
+						INTERFACE1_DOWN=0
+					fi
+					#
+					echo
 					sleep 5
 				else
 					clear
