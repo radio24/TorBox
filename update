@@ -587,13 +587,13 @@ update_torbox_menu()
     echo -e "${RED}[+] Cleaning up...${NOCOLOR}"
     rm -r TorBox-$TORBOXMENU_BRANCHNAME
     rm -r $TORBOXMENU_BRANCHNAME.zip
-    cd
 
     # Restore configuration
 		echo -e "${RED}[+] Writing configuration...${NOCOLOR}"
+		cd
 		# Move the run-files back
 		if [ -d "torbox/run" ]; then
-			sudo rm -r run
+			sudo rm -r torbox/run
 		fi
 		mv $TMP_DIR/torbox/run torbox
   	# Restore TACA configuration
