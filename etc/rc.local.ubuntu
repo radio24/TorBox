@@ -21,8 +21,7 @@
 #
 
 sudo dmesg -D
-# To be activated in v.0.5.3
-# bash /home/torbox/torbox/regset
+bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
@@ -106,8 +105,8 @@ if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
 fi
 
 # Start TFS and TCS, if configured
-if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tfs initial ; fi
-if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tcs initial ; fi
+if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tfs initial ; fi
+if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tcs initial ; fi
 
 sleep 5
 sudo systemctl start dnsmasq

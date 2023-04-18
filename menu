@@ -206,12 +206,13 @@ else
   "12" "Go to the configuration sub-menu..." \
 	"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
 	"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
-  "15" "Go to the update and maintenance sub-menu..." \
+	"15" "Go to the Danger Zone..." \
+  "16" "Go to the update and maintenance sub-menu..." \
 	"==" "============================================[Informational]===" \
-	"16" "HOW CAN I SUPPORT THE TOR PROJECT!" \
-	"17" "HOW CAN I HELP WITH TORBOX?" \
+	"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+	"18" "HOW CAN I HELP WITH TORBOX?" \
   "===" "========================================[Reboot & Shutdown]===" \
-  "18" "Reboot / Shutdown TorBox" \
+  "19" "Reboot / Shutdown TorBox" \
   3>&1 1>&2 2>&3)
 	exitstatus=$?
 	# exitstatus == 255 means that the ESC key was pressed
@@ -336,7 +337,6 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
-        # (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
         (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
 				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
@@ -822,7 +822,12 @@ case "$CHOICE" in
   12) bash menu-config;;
 	13) bash menu-server;;
 	14) bash menu-onion;;
-  15)
+	15)
+		INPUT=$(cat text/menu_danger-text)
+		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+		bash menu-danger
+	;;
+  16)
     screen bash update
     clear
     # shellcheck disable=SC2164
@@ -832,19 +837,19 @@ case "$CHOICE" in
   ;;
 
 	# How to support Tor
-	16)
+	17)
 		INPUT=$(cat text/support-tor-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
 	# How to support TorBox
-	17)
+	18)
 		INPUT=$(cat text/support-torbox-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
   # Reboot or Shotdown TorBox
-  18)
+  19)
     CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \

@@ -16,7 +16,7 @@ TYPE OF PLUGGABLE TRANSPORTS:
 - OBFS4 is a randomizing transport. It adds an extra layer of specialized
   encryption that makes Tor traffic look like random bytes. It also resists
   active-probing attacks, where the censor discovers bridges by trying to
-  connect to them. obfs3 and scramblesuit are similar in nature to obfs4
+  connect to them. Obfs3 and scramblesuit are similar in nature to obfs4
   but less successful and therefore not integrated into TorBox.
 - SNOWFLAKE sends your traffic through WebRTC, a peer-to-peer protocol with
   built-in NAT punching. For censored users: If the Snowflake proxy gets

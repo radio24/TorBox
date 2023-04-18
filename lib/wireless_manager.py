@@ -153,7 +153,7 @@ class WirelessManagerScanner:
 
             # Net MAC
             bssid = c[0].decode('utf-8')
-            
+
             # Net Channel
             try:
                 channel	= [
@@ -187,7 +187,7 @@ class WirelessManagerScanner:
                 essid		= c[4].decode('utf-8')
             except:
                 essid		= '?'
-            
+
             output.append([essid, quality, security, bssid, channel, dbm_signal])
             #0        essid,
             #1        quality,
@@ -585,7 +585,7 @@ class WirelessManager:
                              shell=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.DEVNULL)
-        
+
         _str = n.communicate()[0]
 
         # Check if we have network id from wpa_cli
@@ -598,7 +598,7 @@ class WirelessManager:
 
         # If no network id, the network is not saved, we open connect
         # dialog (ask password) if it's not ESS (free wifi)
-        if network_id is False and security != '[ESS]':
+        if network_id is False and security not in ['[ESS]', '[WPS]']:
             self.__connect_dialog(network)
         # Otherwise, we try to connect without asking password
         # (free wifi and saved networks)
@@ -859,7 +859,7 @@ class WirelessManager:
                     "set_network",
                     "{}".format(network_id),
                     "ssid",
-                    '"{}"'.format(essid)
+                    'P"{}"'.format(essid)
                 ]
             r = subprocess.check_call(cmd,
                                       stdout=subprocess.DEVNULL,
@@ -979,7 +979,7 @@ class WirelessManager:
             f.seek(0)
             if 'CTRL-EVENT-ASSOC-REJECT' in f.read():
                 wpa_supplicant_event = 'DISCONNECTED'
-            
+
             # Limit 10 seconds to wait for a connection, otherwise cancel
             if connect_count == 10 and wpa_supplicant_event is False:
                 wpa_supplicant_event = 'DISCONNECTED'
@@ -1006,7 +1006,7 @@ class WirelessManager:
                                       stdout=subprocess.DEVNULL,
                                       stderr=subprocess.DEVNULL)
 
-            
+
             """Popup can't connect"""
             # Can't connect (connection without password)
             if password is False:
@@ -1162,10 +1162,10 @@ class WirelessManager:
                 if '\\x00' in essid or '?' in essid or essid == '':
                     network[0] = '-HIDDEN-'
                     self.network_list_hidden.append(network)
-            
+
             for network in self.network_list_hidden:
                 self.network_list.remove(network)
-            
+
             self.loop.set_alarm_in(0.1, self.__network_scan_list, user_data=[False])
 
     def start(self):
@@ -1184,7 +1184,7 @@ class WirelessManager:
                 )
         else:
             _text = urwid.Text('\nScanning. Please wait...', align='center')
-        
+
         _text = urwid.AttrMap(_text, 'scanning')
         _body = urwid.Pile([
             _text

@@ -1,0 +1,11 @@
+This entry will move the domain and its IPs from one exclusion list to another.
+
+CLEARNET -> The connection to the domain's IPs is established directly
+            and unprotected. However, if available, the domain is accessed
+						through VPN.
+
+VPN      -> The connection to the domain's IPs are established through
+            VPN. However, if VPN is unavailable, the domain is still
+						accessed through tor.
+
+Do you want to move the domain and its IP from one list to another?

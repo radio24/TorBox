@@ -133,7 +133,7 @@ clear
 
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
-" 1" "RUN AN OBFS4BRIDGE RELAY - READ ME FIRST"  \
+" 1" "RUN AN OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
 " 2" "Toggle OBFS4 Bridge Relay Mode from $TOGGLE07b to $TOGGLE08b"  \
 " 3" "Check and/or change the configuration"  \
@@ -275,6 +275,14 @@ case "$CHOICE" in
         MYIP=$(curl -s http://ifconfig.me)
       fi
       FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
+			if [ -z "$FINGERPRINT" ]; then
+				clear
+				echo -e "${WHITE}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
+				echo -e "${RED}[+] Did you forget to restart tor? Please use entry 7.${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p "Press any key to continue"
+				exit 1
+			fi
       FINGERPRINT=$(cut -d ' ' -f2 <<< $FINGERPRINT)
       CERT=$(sudo grep -oP "cert=.*" /var/lib/tor/pt_state/obfs4_bridgeline.txt)
       BRIDGELINE="$MYIP:$sOBFS4PORT $FINGERPRINT $CERT"
@@ -289,7 +297,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
       echo " "
     else
-      echo -e "${RED}[+] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
+      echo -e "${WHITE}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
       echo -e "${RED}[+] There is no personal bridge address, yet. You have to activate the Bridge Relay first (menu entry 2).${NOCOLOR}"
       echo " "
     fi

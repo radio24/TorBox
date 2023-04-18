@@ -95,6 +95,7 @@ case $MEEKSTRING in
 			echo -e "${WHITE}[!] MEEK-AZURE is configured and ready!${NOCOLOR}"
 			number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
 			sleep 5
+      clear
 		fi
 		echo " "
 		online_check $BRIDGE_DB_URL 1 1

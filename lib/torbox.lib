@@ -688,7 +688,6 @@ list_all_obfs4_bridges()
   number_of_obfs4_bridges
   if [ $number_configured_bridges_deactivated -gt 0 ]; then
     echo " "
-    echo " "
     echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
@@ -718,7 +717,6 @@ list_all_obfs4_bridges()
     done
   fi
   if [ $number_configured_bridges_activated -gt 0 ]; then
-    echo " "
     echo " "
     echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
@@ -777,7 +775,6 @@ list_all_snowflake_bridges()
   number_of_snowflake_bridges
   if [ $number_configured_snowflake_bridges_deactivated -gt 0 ]; then
     echo " "
-    echo " "
     echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
 		echo -e "${RED}[+] For Snowflake bridges, the status is not always accurate!${NOCOLOR}"
@@ -808,7 +805,6 @@ list_all_snowflake_bridges()
     done
   fi
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
-    echo " "
     echo " "
     echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
@@ -1019,4 +1015,27 @@ stopping_tcs()
 		sudo rm "/etc/nginx/sites-enabled/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 		sudo rm "/etc/nginx/sites-available/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 	done
+}
+
+# config_ipset(<filename> <ipset_name> <ipset-save-file>)
+# Configures ipset
+config_ipset()
+{
+	FILENAME=$1
+	IPSET_NAME=$2
+	IPSET_SAVE_FILE=$3
+	if [ -f "$FILENAME" ]; then
+		sudo ipset flush $IPSET_NAME
+		readarray -t LIST_FILE_OWN_ARRAY < "$FILENAME"
+		for LIST_FILE_OWN_STRING in "${LIST_FILE_OWN_ARRAY[@]}"
+		do
+			SUBDOMAIN=$(cut -d ' ' -f1 <<< $LIST_FILE_OWN_STRING)
+			LIST_FILE_OWN_STRING=$(sed "s/${SUBDOMAIN}//g" <<< $LIST_FILE_OWN_STRING)
+			echo -e "${RED}[+] Excluding from tor routing: $SUBDOMAIN${NOCOLOR}"
+			IFS=' ' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
+			for IP in "${IP_ARRAY[@]}"; do sudo ipset -exist add $IPSET_NAME $IP; done
+		done
+		sudo ipset save $IPSET_NAME > $IPSET_SAVE_FILE
+		sleep 1
+	fi
 }

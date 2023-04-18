@@ -1,0 +1,7 @@
+This entry will exclude a specific domain (for example, netflix.com) from being routed through tor. It means that the IP address of this site will be accessed directly or through a VPN. You have to assume that everyone will see that you access this site and may even see the content of the communication.
+
+Next, you will be asked for the domain name. Be aware that in the first phase, we search only for obvious IP addresses for the exact domain name (in our example, we search only for netflix.com, not for www.netflix.com). Only the deeper rescan will look for subdomains and alternative IPs.
+
+We will also ask if you want to connect the domain directly and/or via VPN. Directly means that the domain will be excluded from tor routing whether you have a local VPN connection or not. VPN means the domain will only be excluded from tor routing if the TorBox has a local VPN connection.
+
+Are you ready to start?
