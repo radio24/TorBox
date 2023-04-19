@@ -201,6 +201,53 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
+# NEW v.0.5.3: New function re-connect
+# This function tries to restor a connection to the Internet after failing to install a package
+# Syntax: re-connect()
+re-connect()
+{
+	if [ -f "/etc/resolv.conf" ]; then
+		(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	fi
+	(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+	sleep 5
+	wget -q --spider $CHECK_URL1
+	OCHECK=$?
+	echo ""
+	if [ $OCHECK -eq 0 ]; then
+	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
+	else
+	  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
+	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  sleep 30
+	  echo ""
+	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  wget -q --spider $CHECK_URL2
+	  if [ $? -eq 0 ]; then
+	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	  else
+	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+	    (sudo dhclient -r) 2>&1
+	    sleep 5
+	    sudo dhclient &>/dev/null &
+	    sleep 30
+	    echo ""
+	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    wget -q --spider $CHECK_URL1
+	    if [ $? -eq 0 ]; then
+	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	    else
+				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
+				exit 1
+	    fi
+	  fi
+	fi
+}
+
+# NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax check_install_packages <packagenames>
@@ -208,14 +255,19 @@ check_install_packages()
 {
  packagenames=$1
  for packagename in $packagenames; do
-	 clear
-	 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	 echo ""
-	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
-	 echo ""
-	 sudo apt-get -y install $packagename
-#   echo ""
-#   read -n 1 -s -r -p "Press any key to continue"
+	 check_installed=0
+	 while [ $check_installed == "0" ]; do
+	 	clear
+	 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+	 	echo ""
+	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 	echo ""
+	 	sudo apt-get -y install $packagename
+		check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
+		if [ "$check" == "installed" ]; then check_installed=1
+		else re-connect
+		fi
+	done
  done
 }
 
@@ -458,43 +510,9 @@ exitstatus=$?
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-# Needs a sudo!
-(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-sleep 5
-wget -q --spider $CHECK_URL1
-OCHECK=$?
-echo ""
-if [ $OCHECK -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
-  sleep 30
-  echo ""
-  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider $CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    (sudo dhclient -r) 2>&1
-    sleep 5
-    sudo dhclient &>/dev/null &
-    sleep 30
-    echo ""
-    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider $CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-			exit 1
-    fi
-  fi
-fi
+
+# NEW v.0.5.3
+re-connect
 
 # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
 sleep 10
@@ -583,8 +601,9 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 sudo pip3 install pytesseract
-# Mit v.0.5.3 zu testen: sudo pip3 install mechanize
-sudo pip3 install mechanize==0.4.7
+# Mit v.0.5.3 zu testen
+# sudo pip3 install mechanize==0.4.7
+sudo pip3 install mechanize
 sudo pip3 install PySocks
 sudo pip3 install urwid
 sudo pip3 install Pillow
@@ -613,39 +632,44 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
-if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-else DOWNLOAD="$GO_VERSION"
-fi
-wget "$GO_DL_PATH$DOWNLOAD"
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ] ; then
-  sudo tar -C /usr/local -xzvf $DOWNLOAD
-	# NEW v.0.5.3: what if .profile doesn't exist?
-	if [ -f ".profile" ]; then
-  	if ! grep "Added by TorBox (001)" .profile ; then
-  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+# NEW v.0.5.3: Check if go is already installed and has the right version
+[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
+	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
+	else DOWNLOAD="$GO_VERSION"
+	fi
+	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ] ; then
+  	sudo tar -C /usr/local -xzvf $DOWNLOAD
+		# NEW v.0.5.3: what if .profile doesn't exist?
+		if [ -f ".profile" ]; then
+  		if ! grep "Added by TorBox (001)" .profile ; then
+  			sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+  		fi
+		else
+			sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+		fi
+  	export PATH=$PATH:/usr/local/go/bin
+  	sudo rm $DOWNLOAD
+  	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+  		echo ""
+  		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  		clear
+  	else
+  	sleep 10
   	fi
 	else
-		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		exit 0
 	fi
-  export PATH=$PATH:/usr/local/go/bin
-  sudo rm $DOWNLOAD
-  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	clear
-  else
-  	sleep 10
-  fi
-else
-	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	exit 0
 fi
 
 # 5. Install Tor
@@ -664,16 +688,17 @@ fi
 # 6. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 6: Configuring Tor with its pluggable transports....${NOCOLOR}"
-# NEW v.0.5.2 - new installation method for obfs4proxy
-cd ~
+cd
 git clone $OBFS4PROXY_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
-	go build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	# NEW v.0.5.3 - with or without the path
+	[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	sudo cp ./obfs4proxy/obfs4proxy /usr/bin
-	cd ~
+	cd
 	sudo rm -rf obfs4proxy
 	sudo rm -rf go*
 else
@@ -707,20 +732,22 @@ fi
 # 7. Install Snowflake
 clear
 echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
-cd ~
+echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
+cd
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
-	cd ~/snowflake/proxy
-	go get
-	go build
+	cd snowflake/proxy
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	sudo cp proxy /usr/bin/snowflake-proxy
-	cd ~/snowflake/client
-	go get
-	go build
+	cd
+	cd snowflake/client
+	$GO_PROGRAM get
+	$GO_PROGRAM build
 	sudo cp client /usr/bin/snowflake-client
-	cd ~
+	cd
 	sudo rm -rf snowflake
 	sudo rm -rf go*
 else
@@ -744,49 +771,8 @@ fi
 # 8. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 9: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider $CHECK_URL1
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
-  sleeo 30
-  echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider $CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]          We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    sudo dhclient -r
-    sleep 5
-    sudo dhclient &>/dev/null &
-    sleep 30
-    echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider $CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-      echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
-			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-      sleep 5
-      echo ""
-      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider $CHECK_URL1
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
-    fi
-  fi
-fi
+# NEW v.0.5.3
+re-connect
 
 # 9. Downloading and installing TorBox
 sleep 10
@@ -833,7 +819,6 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 11: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.2: Vanguards removed
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -879,8 +864,14 @@ echo ""
 
 #Back to the home directory
 cd
-if ! grep "# Added by TorBox (002)" .profile ; then
-	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (002)" .profile ; then
+		sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+	fi
+else
+	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
@@ -949,7 +940,6 @@ sudo systemctl stop systemd-journald.service
 sudo systemctl mask systemd-journald.service
 echo""
 
-# NEW v.0.5.2
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 sudo systemctl stop nginx
@@ -958,7 +948,6 @@ sudo systemctl stop nginx
 (sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2>/dev/null
-# NEW v.0.5.2: configure webssh
 sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
@@ -985,6 +974,8 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+# Is this right? Shouldn't it be FRESH_INSTALLED=3 ?
+# If removed, FRESH_INSTALLED=1 is obsolet and can be deleted in first_use
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
@@ -1013,7 +1004,7 @@ echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox052) ${NOCOLOR}"
+echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
@@ -1028,6 +1019,7 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
+# shellcheck disable=SC2044
 for logs in $(sudo find /var/log -type f); do
   echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   sudo rm $logs
@@ -1040,7 +1032,6 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
-# NEW v.0.5.2: Disable auto-login
 echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""

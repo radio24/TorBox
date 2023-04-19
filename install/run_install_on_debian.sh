@@ -230,7 +230,7 @@ re-connect()
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
 	    (dhclient -r) 2>&1
 	    sleep 5
-	     dhclient &>/dev/null &
+	    dhclient &>/dev/null &
 	    sleep 30
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
@@ -637,24 +637,19 @@ echo ""
 # NEW v.0.5.3: Check if go is already installed and has the right version
 [ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
 GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-if [ ! -z "$GO_VERSION_NR" ] || [ "$GO_VERSION_NR" -lt "17" ]; then
+if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
 	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
 	else DOWNLOAD="$GO_VERSION"
 	fi
 	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
 	DLCHECK=$?
 	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	# ATTENTION: This will only work with Debian 12 because in Debian 11 go is to old.
 	if [ "$DLCHECK" != "0" ] ; then
 		echo ""
 		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
 		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 		echo
-#		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
-#		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
-#		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
-#		echo ""
 		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 			echo ""
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -759,7 +754,6 @@ DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd snowflake/proxy
-	# NEW v.0.5.3 - without the path (/usr/local/go/bin/)
 	$GO_PROGRAM get
 	$GO_PROGRAM build
 	cp proxy /usr/bin/snowflake-proxy
@@ -792,7 +786,7 @@ fi
 # 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
-# # NEW v.0.5.3
+# NEW v.0.5.3
 re-connect
 
 # 8. Downloading and installing the latest version of TorBox
@@ -940,7 +934,6 @@ systemctl unmask isc-dhcp-server
 systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server
 systemctl stop tor
-systemctl stop tor
 systemctl mask tor
 # Both tor services have to be masked to block outgoing tor connections
 systemctl mask tor@default.service
@@ -959,7 +952,6 @@ echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
 systemctl disable rsyslog
 systemctl mask rsyslog
-# NEW v.0.5.2
 systemctl stop systemd-journald-dev-log.socket
 systemctl stop systemd-journald-audit.socket
 systemctl stop systemd-journald.socket
@@ -975,11 +967,9 @@ systemctl stop nginx
 (rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (chown torbox:torbox /var/www)
-# NEW v.0.5.2: configure webssh
 cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
 #systemctl start nginx
 systemctl daemon-reload
@@ -1088,7 +1078,6 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 timedatectl set-timezone UTC
 
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 # shellcheck disable=SC2044
 for logs in $(find /var/log -type f); do
@@ -1105,7 +1094,7 @@ history -c
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname TorBox052) 2>/dev/null
+(hostnamectl set-hostname TorBox053) 2>/dev/null
 (cp /etc/hosts /etc/hosts.bak) 2>/dev/null
 (cp torbox/etc/hosts /etc/) 2>/dev/null
 echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"

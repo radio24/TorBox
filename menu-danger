@@ -377,11 +377,11 @@ case "$CHOICE" in
 						if [ "$LISTE01" == "CLEARNET" ]; then
 							(printf "%s\n" "$MORE_IPs" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
 							(sort ${CLEARNET_LIST_FILE_OWN} -o ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
-							sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}
+							(sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
 						elif [ "$LISTE01" == "VPN" ]; then
 							(printf "%s\n" "$MORE_IPs" >> ${VPN_LIST_FILE_OWN}) &>/dev/null
 							(sort ${VPN_LIST_FILE_OWN} -o ${VPN_LIST_FILE_OWN}) &>/dev/null
-							sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
+							(sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}) &>/dev/null
 						fi
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
