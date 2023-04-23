@@ -846,6 +846,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 sudo cp etc/rc.local /etc/
+sudo chmod a+x /etc/rc.local
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
