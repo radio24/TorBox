@@ -770,7 +770,7 @@ case "$CHOICE" in
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
 			sudo pip3 install --upgrade pytesseract
-			sudo pip3 install --upgrade mechanize==0.4.7
+			sudo pip3 install --upgrade mechanize
 			sudo pip3 install --upgrade PySocks
 			sudo pip3 install --upgrade urwid
 			sudo pip3 install --upgrade Pillow
