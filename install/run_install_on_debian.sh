@@ -652,7 +652,11 @@ if [ ! -z "$GO_VERSION_NR" ] || [ "$GO_VERSION_NR" -lt "17" ]; then
 			sleep 10
 		fi
 		re-connect
-		apt-get -y -t bullseye-backports install golang
+		if grep "^deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then
+			apt-get -y -t bullseye-backports install golang
+		else
+			apt-get -y install golang
+		fi
 	else
   	tar -C /usr/local -xzvf $DOWNLOAD
 		rm $DOWNLOAD
