@@ -111,10 +111,9 @@ captive_tunneling()
 			echo ""
 		fi
 		(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-		echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-		echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+		echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 		(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
-		echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+		echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 	fi
 }

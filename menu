@@ -265,10 +265,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
-			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
       if ip link | grep wlan0 | grep "state UP" ; then
@@ -338,10 +337,9 @@ case "$CHOICE" in
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
         (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
         ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
@@ -415,10 +413,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup ./hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup ./hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
       if ip link | grep wlan1 | grep "state UP" ; then
@@ -487,10 +484,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
       if ip link | grep usb0 ; then
@@ -649,10 +645,9 @@ case "$CHOICE" in
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
 				(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-				echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-				echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-				echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
 				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
@@ -724,10 +719,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The first part is done - the next step needs${NOCOLOR}"
-			echo -e "${WHITE}    a little bit longer - please be patient.${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] The second part is done!${NOCOLOR}"
+			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
       tun0up=$(ip link | grep tun0)
