@@ -107,7 +107,8 @@ change_mac_address()
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
 				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
-				if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
+				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -133,7 +134,8 @@ change_mac_address()
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
 				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
-				if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
+				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -171,7 +173,8 @@ change_mac_address()
 				 	sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 					clear
 					# NEW v.0.5.3: We have only to put an interface down, if it is not already down
-					if ip link | grep "$O_DEVICE" | grep "state UP" ; then
+					# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
+					if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 						echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 			 	 		sudo ip link set dev $O_DEVICE down
 						INTERFACE1_DOWN=1
