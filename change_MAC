@@ -120,7 +120,7 @@ change_mac_address()
 				sudo macchanger -r $O_DEVICE
 				echo
 				# NEW v.0.5.3: We have only to put an interface up, if it was up before
-				if [ "$INTERFACE1_DOWN" == 1 ]; then
+				if [ "$INTERFACE1_DOWN" == "1" ]; then
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE up
 					INTERFACE1_DOWN=0
@@ -147,7 +147,7 @@ change_mac_address()
 				sudo macchanger -p $O_DEVICE
 				echo
 				# NEW v.0.5.3: We have only to put an interface up, if it was up before
-				if [ "$INTERFACE1_DOWN" == 1 ]; then
+				if [ "$INTERFACE1_DOWN" == "1" ]; then
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE up
 					INTERFACE1_DOWN=0
@@ -184,7 +184,7 @@ change_mac_address()
 					echo -e "${RED}[+] Setting MAC address to $MAC_ADDRESS ${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
 					# NEW v.0.5.3: We have only to put an interface up, if it was up before
-					if [ "$INTERFACE1_DOWN" == 1 ]; then
+					if [ "$INTERFACE1_DOWN" == "1" ]; then
 						echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 			 			sudo ip link set dev $O_DEVICE up
 						INTERFACE1_DOWN=0

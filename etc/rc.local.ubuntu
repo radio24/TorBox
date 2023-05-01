@@ -48,7 +48,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
 		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" == 1 ]; then
+		if [ "$INTERFACE1_DOWN" == "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi
@@ -64,7 +64,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		fi
 		sudo ip link set dev $INTERFACE address $MAC_ADDRESS
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" == 1 ]; then
+		if [ "$INTERFACE1_DOWN" == "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi
