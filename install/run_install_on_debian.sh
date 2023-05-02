@@ -632,10 +632,11 @@ echo ""
 # NEW v.0.5.3: Check if go is already installed and has the right version
 if [ -f /usr/local/go/bin/go ]; then
 	GO_PROGRAM=/usr/local/go/bin/go
+	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 else
 	GO_PROGRAM=go
+	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 fi
-GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
 	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
 	else DOWNLOAD="$GO_VERSION"
