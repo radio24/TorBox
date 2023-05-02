@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2004,SC2181,SC2001
+# shellcheck disable=SC2001,SC2004,SC2059,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -97,13 +97,15 @@ TOR_HREF_FOR_SED2="\" data-view-component=.*"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
+# shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+# shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi - DEBIAN-SPECIFIC
@@ -228,7 +230,7 @@ re-connect()
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
 	    (dhclient -r) 2>&1
 	    sleep 5
-	     dhclient &>/dev/null &
+	    dhclient &>/dev/null &
 	    sleep 30
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
@@ -500,11 +502,15 @@ if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext 
 	clear
 	exit
 fi
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
 
 # 1. Checking for Internet connection
 clear
-echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
+echo -e "${RED}[+] Step 1: Preparing the system: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
+
 # NEW v.0.5.3
 re-connect
 
@@ -531,16 +537,15 @@ fi
 # 3. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-systemctl stop tor
-systemctl mask tor
-# Both tor services have to be masked to block outgoing tor connections
-systemctl mask tor@default.service
-
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
+# NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
+check_install_packages "resolvconf"
+sleep 3
+(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
+sleep 5
 check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
-# NEW v.0.5.2: (Re)moved: obfs4proxy
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # tor-geoipdb installiert auch tor
@@ -623,27 +628,27 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
+
 # NEW v.0.5.3: Check if go is already installed and has the right version
-[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+if [ -f /usr/local/go/bin/go ]; then
+	GO_PROGRAM=/usr/local/go/bin/go
+else
+	GO_PROGRAM=go
+fi
 GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-if [ ! -z "$GO_VERSION_NR" ] || [ "$GO_VERSION_NR" -lt "17" ]; then
+if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
 	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
 	else DOWNLOAD="$GO_VERSION"
 	fi
 	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
 	DLCHECK=$?
 	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	# ATTENTION: This will only work with Debian 12 because in Debian 11 go is to old.
 	if [ "$DLCHECK" != "0" ] ; then
 		echo ""
 		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
 		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 		echo
-#		echo -e "${WHITE}[!] This will only work with Debian 12 because of the version of go!${NOCOLOR}"
-#		echo -e "${RED}[+] If you use a Debian version <12, press CTRL-C, install go manually${NOCOLOR}"
-#		echo -e "${RED}[+] (version 1.17 or higher) and restart the installation again.${NOCOLOR}"
-#		echo ""
 		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 			echo ""
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -704,7 +709,11 @@ if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
 	# NEW v.0.5.3 - with or without the path
-	[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+	if [ -f /usr/local/go/bin/go ]; then
+		GO_PROGRAM=/usr/local/go/bin/go
+	else
+		GO_PROGRAM=go
+	fi
 	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	cp ./obfs4proxy/obfs4proxy /usr/bin
 	cd
@@ -752,7 +761,6 @@ DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd snowflake/proxy
-	# NEW v.0.5.3 - without the path (/usr/local/go/bin/)
 	$GO_PROGRAM get
 	$GO_PROGRAM build
 	cp proxy /usr/bin/snowflake-proxy
@@ -785,7 +793,7 @@ fi
 # 7. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
-# # NEW v.0.5.3
+# NEW v.0.5.3
 re-connect
 
 # 8. Downloading and installing the latest version of TorBox
@@ -832,7 +840,6 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.2: vanguards removed
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -857,10 +864,14 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+# With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.
+# URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
+# We have to use rc.local.ubuntu because rfkill is not compatible
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
+systemctl daemon-reload
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   cp /etc/sysctl.conf /etc/sysctl.conf.bak
@@ -879,7 +890,12 @@ echo ""
 
 #Back to the home directory
 cd
-if ! grep "# Added by TorBox (002)" .profile ; then
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (002)" .profile ; then
+		printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+	fi
+else
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
 
@@ -925,7 +941,6 @@ systemctl unmask isc-dhcp-server
 systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server
 systemctl stop tor
-systemctl stop tor
 systemctl mask tor
 # Both tor services have to be masked to block outgoing tor connections
 systemctl mask tor@default.service
@@ -936,14 +951,14 @@ systemctl start ssh
 systemctl unmask resolvconf
 systemctl enable resolvconf
 systemctl start resolvconf
-systemctl unmask rc-local
-systemctl enable rc-local
+# NEW v.0.5.3: This doesn't work - rc-local will be still masked
+#systemctl unmask rc-local
+#systemctl enable rc-local
 echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 systemctl stop rsyslog
 systemctl disable rsyslog
 systemctl mask rsyslog
-# NEW v.0.5.2
 systemctl stop systemd-journald-dev-log.socket
 systemctl stop systemd-journald-audit.socket
 systemctl stop systemd-journald.socket
@@ -959,11 +974,9 @@ systemctl stop nginx
 (rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (chown torbox:torbox /var/www)
-# NEW v.0.5.2: configure webssh
 cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-sleep 5
 (sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
 #systemctl start nginx
 systemctl daemon-reload
@@ -987,7 +1000,8 @@ sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+# Debian can directly start with the first-use script
+sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  echo ""
@@ -997,7 +1011,7 @@ else
  sleep 10
 fi
 
-# 13. Adding the user torbox
+# 13. Adding and implementing the user torbox
 clear
 echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1052,9 +1066,8 @@ echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox will restart.${NOCOLOR}"
+echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
@@ -1072,8 +1085,8 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 timedatectl set-timezone UTC
 
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
+# shellcheck disable=SC2044
 for logs in $(find /var/log -type f); do
   echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   rm $logs
