@@ -537,11 +537,6 @@ fi
 # 3. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-systemctl stop tor
-systemctl mask tor
-# Both tor services have to be masked to block outgoing tor connections
-systemctl mask tor@default.service
-
 # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
 # NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
 check_install_packages "resolvconf"
@@ -635,7 +630,11 @@ echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: Check if go is already installed and has the right version
-[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+if [ -f /usr/local/go/bin/go ]; then
+	GO_PROGRAM=/usr/local/go/bin/go
+else
+	GO_PROGRAM=go
+fi
 GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
 	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
@@ -710,7 +709,11 @@ if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
 	# NEW v.0.5.3 - with or without the path
-	[ -f /usr/local/go/bin/go ] && GO_PROGRAM=/usr/local/go/bin/go || GO_PROGRAM=go
+	if [ -f /usr/local/go/bin/go ]; then
+		GO_PROGRAM=/usr/local/go/bin/go
+	else
+		GO_PROGRAM=go
+	fi
 	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	cp ./obfs4proxy/obfs4proxy /usr/bin
 	cd

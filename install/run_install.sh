@@ -552,12 +552,6 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-(sudo systemctl stop tor) 2>/dev/null
-(sudo systemctl mask tor) 2>/dev/null
-# Both tor services have to be masked to block outgoing tor connections
-(sudo systemctl mask tor@default.service) 2>/dev/null
-
-# NEW v.0.5.2: (Re)moved: obfs4proxy
 # Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
