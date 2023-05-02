@@ -142,11 +142,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821cu-20210118.git
-	cd 8821cu-20210118
+	git clone https://github.com/morrownr/8821cu-20210916.git
+	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
 	cd ~
-	sudo rm -r 8821cu-20210118
+	sudo rm -r 8821cu-20210916
 	sleep 2
 
 	# Installing the RTL88x2BU
@@ -254,11 +254,11 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821cu-20210118.git
-	cd 8821cu-20210118
+	git clone https://github.com/morrownr/8821cu-20210916.git
+	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
 	cd ~
-	sudo rm -r 8821cu-20210118
+	sudo rm -r 8821cu-20210916
 	sleep 2
 
 	# Installing the RTL88x2BU
@@ -372,11 +372,11 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8821CU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8821cu-20210118.git
-	cd 8821cu-20210118
+	git clone https://github.com/morrownr/8821cu-20210916.git
+	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
 	cd ~
-	sudo rm -r 8821cu-20210118
+	sudo rm -r 8821cu-20210916
 	sleep 2
 
 	# Installing the RTL88x2BU
