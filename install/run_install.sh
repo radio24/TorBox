@@ -86,6 +86,9 @@ NOCOLOR='\033[0m'
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# Default hostname
+HOSTNAME="TorBox053"
+
 # Used go version
 GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
@@ -1042,11 +1045,13 @@ echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+# NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox052) 2>/dev/null
-(sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-(sudo cp torbox/etc/hosts /etc/) 2>/dev/null
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+systemctl restart systemd-hostnamed
+echo $HOSTNAME | sudo tee /etc/hostname
+sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+#
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"

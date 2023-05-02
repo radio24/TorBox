@@ -80,6 +80,9 @@ NOCOLOR='\033[0m'
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# Default hostname
+HOSTNAME="TorBox053"
+
 # Used go version
 GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
@@ -1102,18 +1105,20 @@ history -c
 (chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+# NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname TorBox053) 2>/dev/null
-(cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-(cp torbox/etc/hosts /etc/) 2>/dev/null
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Rebooting...${NOCOLOR}"
-sleep 3
+(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+systemctl restart systemd-hostnamed
+echo $HOSTNAME | sudo tee /etc/hostname
+sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+#
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
 	clear
 else
 	sleep 10
 fi
+echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sleep 3
 reboot

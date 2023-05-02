@@ -84,6 +84,9 @@ NOCOLOR='\033[0m'
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# Default hostname
+HOSTNAME="TorBox053"
+
 # Used go version
 GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
@@ -1125,11 +1128,12 @@ sudo apt-get -y autoremove
 echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-# This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox053) 2>/dev/null
-(sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-(sudo cp torbox/etc/hosts /etc/) 2>/dev/null
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
+# NEW v.0.5.3
+(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+systemctl restart systemd-hostnamed
+echo $HOSTNAME | sudo tee /etc/hostname
+sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+#
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
 sudo mv /home/ubuntu/* /home/torbox/
 (sudo mv /home/ubuntu/.profile /home/torbox/) 2>/dev/null

@@ -52,6 +52,9 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# Default hostname
+HOSTNAME="TorBox053"
+
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -522,12 +525,13 @@ update_torcfg()
 	echo ""
 	echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
-
-  # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox052
-  (sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-  sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
+	# NEW v.0.5.3
+	# This has to be at the end to avoid unnecessary error messages
+	(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+	systemctl restart systemd-hostnamed
+	echo $HOSTNAME | sudo tee /etc/hostname
+	sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+	#
   echo ""
   echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
   sleep 5
