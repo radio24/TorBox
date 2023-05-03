@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2004,SC2181,SC2001
+# shellcheck disable=SC2001,SC2004,SC2034,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -390,7 +390,7 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd `ls -d -- */`
+          	cd "$(ls -d -- */)"
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
@@ -469,7 +469,7 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd `ls -d -- */`
+				cd "$(ls -d -- */)"
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
@@ -558,6 +558,7 @@ echo ""
 sleep 5
 (sudo dpkg-reconfigure unattended-upgrades) 2>&1
 clear
+# shellcheck disable=SC2009
 while ps -ax | grep "[u]nattended-upgr" | grep -v "[s]hutdown" ;
 do
   clear
@@ -738,6 +739,7 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
   	sudo tar -C /usr/local -xzvf $DOWNLOAD
 		sudo rm $DOWNLOAD
 	fi
+fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?
 if [ -f ".profile" ]; then
