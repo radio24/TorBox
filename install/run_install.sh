@@ -670,6 +670,7 @@ if [ -f $GO_PROGRAM ]; then
 	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 else
 	GO_PROGRAM=go
+	#This can lead to command not found - ignore it
 	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 fi
 if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
