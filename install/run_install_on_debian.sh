@@ -145,7 +145,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install_debian.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
+			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -264,7 +264,7 @@ re-connect()
 # NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
-# Syntax install_network_drivers <packagenames>
+# Syntax check_install_packages <packagenames>
 check_install_packages()
 {
  packagenames=$1
@@ -665,7 +665,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-# Additional installation for GO
+# Additional installation for go
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
@@ -689,7 +689,7 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
 	if [ "$DLCHECK" != "0" ] ; then
 		echo ""
 		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-		echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 		echo
 		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -835,14 +835,14 @@ fi
 
 # 7. Again checking connectivity
 clear
-echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
 # NEW v.0.5.3
 re-connect
 
 # 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 echo -e "${RED}[+]         Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
@@ -881,7 +881,7 @@ fi
 # 9. Installing all configuration files
 clear
 cd torbox
-echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
 (cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 cp etc/default/hostapd /etc/default/
@@ -960,7 +960,7 @@ fi
 
 # 10. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
    printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | tee -a /boot/firmware/config.txt
 fi
@@ -976,7 +976,7 @@ fi
 
 # 11. Configure the system services
 clear
-echo -e "${RED}[+] Step 13: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
 systemctl daemon-reload
 systemctl unmask hostapd
 systemctl enable hostapd
@@ -1035,7 +1035,7 @@ fi
 
 # 12. Updating run/torbox.run
 clear
-echo -e "${RED}[+] Step 14: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
@@ -1044,7 +1044,6 @@ sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-# Debian can directly start with the first-use script
 sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1057,7 +1056,7 @@ fi
 
 # 13. Adding and implementing the user torbox
 clear
-echo -e "${RED}[+] Step 15: Set up the torbox user...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
 echo ""
@@ -1094,7 +1093,7 @@ fi
 
 # 14. Setting/changing root password
 clear
-echo -e "${RED}[+] Step 16: Setting/changing the root password...${NOCOLOR}"
+echo -e "${RED}[+] Step 14: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
 echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
 echo
@@ -1106,11 +1105,11 @@ passwd
 # 15. Finishing, cleaning and booting
 sleep 10
 clear
-echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox will restart.${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox will reboot.${NOCOLOR}"
 echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 echo -e "${WHITE}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
@@ -1128,7 +1127,6 @@ apt-get -y autoclean
 apt-get -y autoremove
 echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 timedatectl set-timezone UTC
-
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
 # shellcheck disable=SC2044
