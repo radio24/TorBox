@@ -561,7 +561,7 @@ sudo systemctl mask tor
 sudo systemctl mask tor@default.service
 
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
-check_install_packages "net-tools ifupdown unzip equivs"
+check_install_packages "net-tools ifupdown unzip equivs rfkill"
 # NEW v.0.5.2: (Re)moved: obfs4proxy
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -960,6 +960,7 @@ echo -e "${RED}[+] Step 11: Because of security considerations, we disable Bluet
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
+rfkill block bluetooth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""

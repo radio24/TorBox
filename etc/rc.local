@@ -21,6 +21,7 @@
 #
 
 rfkill unblock all
+rfkill block bluetooth
 # To be activated in v.0.5.3
 # bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd

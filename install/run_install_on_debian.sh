@@ -26,9 +26,14 @@
 # - https://raspi.debian.net/tested-images/).
 #
 # SYNTAX
-# ./run_install_debian.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]
+# ./run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
+#
+# The --randomize_hostname option is helpful for people in highly authoritarian
+# countries to avoid their ISP seeing their default hostname. The ISP can
+# see and even block your hostname. When a computer connects to an ISP's
+# network, it sends a DHCP request that includes the hostname.
 #
 # The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
@@ -68,6 +73,7 @@
 # Set the the variables for the menu
 MENU_WIDTH=80
 MENU_HEIGHT_25=25
+MENU_HEIGHT_10=10
 
 # Colors
 RED='\033[1;31m'
@@ -80,10 +86,14 @@ NOCOLOR='\033[0m'
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# Default hostname
+HOSTNAME="TorBox052"
+
 # Used go version
 GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://go.dev/dl/"
+GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
@@ -121,7 +131,7 @@ CHECK_URL2="google.com"
 DEFAULT_PASS="CHANGE-IT"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -136,6 +146,8 @@ while true; do
 			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install_debian.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
+			echo "         --randomize_hostname"
+			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
 			echo "         --select-fork fork_owner_name"
 			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
@@ -146,6 +158,7 @@ while true; do
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
 			exit 0
 	  ;;
+		--randomize_hostname ) RANDOMIZE_HOSTNAME=1; shift ;;
     --select-tor ) SELECT_TOR="--select-tor"; shift ;;
 		--select-fork )
 		  # shellcheck disable=SC2034
@@ -498,13 +511,35 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
 [ "$exitstatus" == "255" ] && exit 0
+
+# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
+if [ -z "$RANDOMIZE_HOSTNAME" ]; then
+	INPUT=$(cat text/randomize_hostname-text)
+	if (whiptail --title "TorBox Installation on Debian" --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox Installation on Debian" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+			# shellcheck disable=SC2002
+			HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+		else
+			HOSTNAME=$(whiptail --title "Enter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+				HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
+			fi
+			if ${#HOSTNAME} -gt 64 ; then
+				HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+			fi
+		fi
+	fi
+else
+	# shellcheck disable=SC2002
+	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+fi
 
 # 1. Checking for Internet connection
 clear
@@ -543,7 +578,7 @@ check_install_packages "resolvconf"
 sleep 3
 (printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
 sleep 5
-check_install_packages "wget curl gnupg net-tools unzip sudo resolvconf"
+check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
 # Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -597,6 +632,13 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
+
+# NEW v.0.5.3: For Debian 12 needed
+PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f2 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
+if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
+  rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+fi
+
 pip3 install pytesseract
 pip3 install mechanize
 pip3 install PySocks
@@ -610,7 +652,8 @@ pip3 install click
 pip3 install paramiko
 pip3 install tornado
 pip3 install APScheduler
-pip3 install backports.zoneinfo
+# NEW v.0.5.3: backports.zoneinfo removed; see: https://pypi.org/project/backports.zoneinfo/
+# pip3 install backports.zoneinfo
 pip3 install eventlet
 pip3 install python-socketio
 pip3 install opencv-python-headless
@@ -630,8 +673,7 @@ echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: Check if go is already installed and has the right version
-if [ -f /usr/local/go/bin/go ]; then
-	GO_PROGRAM=/usr/local/go/bin/go
+if [ -f $GO_PROGRAM ]; then
 	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 else
 	GO_PROGRAM=go
@@ -710,8 +752,8 @@ if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
 	# NEW v.0.5.3 - with or without the path
-	if [ -f /usr/local/go/bin/go ]; then
-		GO_PROGRAM=/usr/local/go/bin/go
+	if [ -f $GO_PROGRAM ]; then
+		sleep 1
 	else
 		GO_PROGRAM=go
 	fi
@@ -869,7 +911,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-# We have to use rc.local.ubuntu because rfkill is not compatible
+# We have to use rc.local.ubuntu because rfkill is/was not compatible (to change with v.0.5.3!)
 cp etc/rc.local.ubuntu /etc/rc.local
 chmod a+x /etc/rc.local
 systemctl daemon-reload
@@ -922,6 +964,7 @@ echo -e "${RED}[+] Step 11: Because of security considerations, we completely di
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
    printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | tee -a /boot/firmware/config.txt
 fi
+rfkill block bluetooth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1102,18 +1145,20 @@ history -c
 (chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+# NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname TorBox052) 2>/dev/null
-(cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-(cp torbox/etc/hosts /etc/) 2>/dev/null
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-echo -e "${RED}[+] Rebooting...${NOCOLOR}"
-sleep 3
+(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+systemctl restart systemd-hostnamed
+echo $HOSTNAME | sudo tee /etc/hostname
+sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+#
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
 	clear
 else
 	sleep 10
 fi
+echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sleep 3
 reboot
