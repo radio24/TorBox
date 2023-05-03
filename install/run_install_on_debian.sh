@@ -73,6 +73,7 @@
 # Set the the variables for the menu
 MENU_WIDTH=80
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
 MENU_HEIGHT_10=10
 
 # Colors
@@ -521,8 +522,7 @@ exitstatus=$?
 
 # NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
 if [ -z "$RANDOMIZE_HOSTNAME" ]; then
-	INPUT="In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is "TorBox<nnn>" (<nnn> representing the version).\n\nWhen a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.\n\nWe recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.\n\nDo you want to use the DEFAULT hostname or to CHANGE it?"
-	if (whiptail --title "TorBox Installation on Debian" --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+	if (whiptail --title "TorBox Installation on Debian" --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is \"TorBox<nnn>\" (<nnn> representing the version).\n\nWhen a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.\n\nWe recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.\n\nDo you want to use the DEFAULT hostname or to CHANGE it?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 		if (whiptail --title "TorBox Installation on Debian" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
 			# shellcheck disable=SC2002
 			HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
