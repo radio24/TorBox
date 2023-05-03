@@ -26,7 +26,7 @@
 # - https://raspi.debian.net/tested-images/).
 #
 # SYNTAX
-# ./run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-branch branch_name] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -37,6 +37,9 @@
 #
 # The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
+#
+# The --select-fork option allows to install a specific fork. The
+# fork_owner_name is the GitHub user name of the for-owner.
 #
 # The --select-branch option allows to install a specific TorBox branch.
 # Without this option, the installation script installs the master branch.
@@ -119,13 +122,11 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi - DEBIAN-SPECIFIC
+# Wiringpi - DEBIAN / UBUNTU SPECIFIC
 WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
-# above values will be saved into run/torbox.run #######
-
-# Connectivity check - DEBIAN-SPECIFIC
-CHECK_URL1="ubuntu.com"
+# Connectivity check
+CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
 
 # Default password
@@ -583,7 +584,7 @@ check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
-# tor-geoipdb installiert auch tor
+# IMPORTANT tor-geoipdb installs also the tor package
 check_install_packages "tor-geoipdb"
 systemctl stop tor
 systemctl mask tor
@@ -630,11 +631,13 @@ fi
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
+echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
+sudo ln /usr/bin/python3 /usr/bin/python
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: For Debian 12 needed
-PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f2 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
+PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
@@ -729,7 +732,7 @@ else
 	sleep 10
 fi
 
-# 4. Installing Tor
+# 4. Installing tor
 clear
 echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 select_and_install_tor
@@ -943,10 +946,10 @@ else
 fi
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
-mkdir /var/lib/tor/services
+(mkdir /var/lib/tor/services) 2>/dev/null
 chown -R debian-tor:debian-tor /var/lib/tor/services
 chmod -R go-rwx /var/lib/tor/services
-mkdir /var/lib/tor/onion_auth
+(mkdir /var/lib/tor/onion_auth) 2>/dev/null
 chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
 chmod -R go-rwx /var/lib/tor/onion_auth
 
@@ -1017,7 +1020,8 @@ systemctl stop nginx
 (rm /etc/nginx/sites-available/default) 2>/dev/null
 (rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
-(chown torbox:torbox /var/www)
+(chown torbox:torbox /var/www) 2>/dev/null
+# Configuring webssh
 cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket

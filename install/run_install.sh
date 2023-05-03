@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2004,SC2181,SC2001
+# shellcheck disable=SC2001,SC2004,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -29,9 +29,14 @@
 # the user account "torbox" is already created and that you are logged in as such.
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
+#
+# The --randomize_hostname option is helpful for people in highly authoritarian
+# countries to avoid their ISP seeing their default hostname. The ISP can
+# see and even block your hostname. When a computer connects to an ISP's
+# network, it sends a DHCP request that includes the hostname.
 #
 # The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
@@ -74,6 +79,8 @@
 # Set the the variables for the menu
 MENU_WIDTH=80
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
+MENU_HEIGHT_10=10
 
 # Colors
 RED='\033[1;31m'
@@ -86,10 +93,14 @@ NOCOLOR='\033[0m'
 # Public nameserver used to circumvent cheap censorship
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
+# Default hostname
+HOSTNAME="TorBox052"
+
 # Used go version
 GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
 GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
 GO_DL_PATH="https://go.dev/dl/"
+GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the unofficial Tor repositories on GitHub
 TORURL="https://github.com/torproject/tor/tags"
@@ -103,24 +114,26 @@ TOR_HREF_FOR_SED2="\" data-view-component=.*"
 TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 
 # Snowflake repositories
+# shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+# shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
 # NEW v.0.5.2 - version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi
 WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
 # Connectivity check
-CHECK_URL1="http://ubuntu.com"
-CHECK_URL2="https://google.com"
+CHECK_URL1="debian.org"
+CHECK_URL2="google.com"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -133,8 +146,10 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install.sh [-h|--help] [--select-tor] [--select-branch branch_name] [--step_by_step]"
+			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
+			echo "         --randomize_hostname"
+			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
 			echo "         --select-tor   : Let select a specific tor version (default: newest stable version)"
 			echo "         --select-fork fork_owner_name"
 			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
@@ -147,6 +162,7 @@ while true; do
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
 			exit 0
 	  ;;
+		--randomize_hostname ) RANDOMIZE_HOSTNAME=1; shift ;;
     --select-tor ) SELECT_TOR="--select-tor"; shift ;;
 		--select-fork )
 		  # shellcheck disable=SC2034
@@ -201,6 +217,53 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
+# NEW v.0.5.3: New function re-connect
+# This function tries to restor a connection to the Internet after failing to install a package
+# Syntax: re-connect()
+re-connect()
+{
+	# Needs a sudo!
+	if [ -f "/etc/resolv.conf" ]; then
+		(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	fi
+	(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+	sleep 5
+	ping -c 1 -q $CHECK_URL1 >&/dev/null
+	OCHECK=$?
+	echo ""
+	if [ $OCHECK -eq 0 ]; then
+	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
+	else
+	  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
+	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  sleep 30
+	  echo ""
+	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  ping -c 1 -q $CHECK_URL2 >&/dev/null
+	  if [ $? -eq 0 ]; then
+	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	  else
+	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+	    (sudo dhclient -r) 2>&1
+	    sleep 5
+	    sudo dhclient &>/dev/null &
+	    sleep 30
+	    echo ""
+	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    ping -c 1 -q $CHECK_URL1 >&/dev/null
+	    if [ $? -eq 0 ]; then
+	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	    else
+				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				exit 1
+	    fi
+	  fi
+	fi
+}
+
+# NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax check_install_packages <packagenames>
@@ -208,14 +271,19 @@ check_install_packages()
 {
  packagenames=$1
  for packagename in $packagenames; do
-	 clear
-	 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	 echo ""
-	 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
-	 echo ""
-	 sudo apt-get -y install $packagename
-#   echo ""
-#   read -n 1 -s -r -p "Press any key to continue"
+	 check_installed=0
+	 while [ $check_installed == "0" ]; do
+	 	clear
+	 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+	 	echo ""
+	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 	echo ""
+	 	sudo apt-get -y install $packagename
+		check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
+		if [ "$check" == "installed" ]; then check_installed=1
+		else re-connect
+		fi
+	done
  done
 }
 
@@ -321,7 +389,7 @@ select_and_install_tor()
         	download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
         	if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-        	mkdir ~/debian-packages; cd ~/debian-packages
+        	mkdir ~/debian-packages; cd/debian-packages
 
 					# Difference to the update-function - we cannot use torsocks yet
         	wget $download_tor_url
@@ -400,7 +468,7 @@ select_and_install_tor()
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
 			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-			mkdir ~/debian-packages; cd ~/debian-packages
+			mkdir ~/debian-packages; cd/debian-packages
 
 			# Difference to the update-function - we cannot use torsocks yet
 			wget $download_tor_url
@@ -446,52 +514,43 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
+exitstatus=$?
+# exitstatus == 255 means that the ESC key was pressed
+[ "$exitstatus" == "255" ] && exit 0
+
+# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
+if [ -z "$RANDOMIZE_HOSTNAME" ]; then
+	if (whiptail --title "TorBox Installation on Raspberry Pi OS " --defaultno --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is \"TorBox<nnn>\" (<nnn> representing the version).\n\nWhen a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.\n\nWe recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.\n\nDo you want to use the DEFAULT hostname or to CHANGE it?" $MENU_HEIGHT_20 $MENU_WIDTH); then
+		if (whiptail --title "TorBox Installation on Raspberry Pi OS " --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
+			# shellcheck disable=SC2002
+			HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+		else
+			HOSTNAME=$(whiptail --title "Enter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+				HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
+			fi
+			if ${#HOSTNAME} -gt 64 ; then
+				HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+			fi
+		fi
+	fi
+else
+	# shellcheck disable=SC2002
+	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+fi
+
 
 # 1. Checking for Internet connection
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-# Needs a sudo!
-(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-sleep 5
-wget -q --spider $CHECK_URL1
-OCHECK=$?
-echo ""
-if [ $OCHECK -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
-  sleep 30
-  echo ""
-  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-  wget -q --spider $CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    (sudo dhclient -r) 2>&1
-    sleep 5
-    sudo dhclient &>/dev/null &
-    sleep 30
-    echo ""
-    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
-    wget -q --spider $CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-			echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-			exit 1
-    fi
-  fi
-fi
+
+# NEW v.0.5.3
+re-connect
 
 # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
 sleep 10
@@ -531,12 +590,6 @@ fi
 # 4. Installing all necessary packages
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-(sudo systemctl stop tor) 2>/dev/null
-(sudo systemctl mask tor) 2>/dev/null
-# Both tor services have to be masked to block outgoing tor connections
-(sudo systemctl mask tor@default.service) 2>/dev/null
-
-# NEW v.0.5.2: (Re)moved: obfs4proxy
 # Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
@@ -592,7 +645,8 @@ sudo pip3 install gunicorn
 sudo pip3 install paramiko
 sudo pip3 install tornado
 sudo pip3 install APScheduler
-sudo pip3 install backports.zoneinfo
+# NEW v.0.5.3: backports.zoneinfo removed; see: https://pypi.org/project/backports.zoneinfo/
+# pip3 install backports.zoneinfo
 sudo pip3 install eventlet
 sudo pip3 install python-socketio
 sudo pip3 install opencv-python-headless
@@ -604,48 +658,67 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-# Additional installation for GO
+# Additional installation for go
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
-if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-else DOWNLOAD="$GO_VERSION"
-fi
-wget "$GO_DL_PATH$DOWNLOAD"
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ] ; then
-  sudo tar -C /usr/local -xzvf $DOWNLOAD
-	# NEW v.0.5.3: what if .profile doesn't exist?
-	if [ -f ".profile" ]; then
-  	if ! grep "Added by TorBox (001)" .profile ; then
-  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  	fi
-	else
-		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-	fi
-  export PATH=$PATH:/usr/local/go/bin
-  sudo rm $DOWNLOAD
-  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-  	echo ""
-  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-  	clear
-  else
-  	sleep 10
-  fi
+
+# NEW v.0.5.3: Check if go is already installed and has the right version
+if [ -f $GO_PROGRAM ]; then
+	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
 else
-	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	exit 0
+	GO_PROGRAM=go
+	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+fi
+if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
+	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
+	else DOWNLOAD="$GO_VERSION"
+	fi
+	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
+	DLCHECK=$?
+	# NEW v.0.5.3: if the download failed, install the package from the distribution
+	if [ "$DLCHECK" != "0" ] ; then
+		echo ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
+		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+		echo
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		else
+			sleep 10
+		fi
+		re-connect
+		sudo apt-get -y install golang
+	else
+  	sudo tar -C /usr/local -xzvf $DOWNLOAD
+		sudo rm $DOWNLOAD
+	fi
 fi
 
-# 5. Install Tor
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (001)" .profile ; then
+		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	fi
+else
+	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+fi
+export PATH=$PATH:/usr/local/go/bin
+
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
+else
+	sleep 10
+fi
+
+# 5. Installing tor
 clear
 echo -e "${RED}[+] Step 5: Installing Tor...${NOCOLOR}"
 select_and_install_tor
@@ -661,8 +734,7 @@ fi
 # 6. Configuring Tor with its pluggable transports
 clear
 echo -e "${RED}[+] Step 6: Configuring Tor with its pluggable transports....${NOCOLOR}"
-# NEW v.0.5.2 - new installation method for obfs4proxy
-cd ~
+cd
 git clone $OBFS4PROXY_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
@@ -670,7 +742,7 @@ if [ $DLCHECK -eq 0 ]; then
 	cd obfs4proxy
 	go build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	sudo cp ./obfs4proxy/obfs4proxy /usr/bin
-	cd ~
+	cd
 	sudo rm -rf obfs4proxy
 	sudo rm -rf go*
 else
@@ -704,20 +776,22 @@ fi
 # 7. Install Snowflake
 clear
 echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
-cd ~
+echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
+cd
 git clone $SNOWFLAKE_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
-	cd ~/snowflake/proxy
+	cd snowflake/proxy
 	go get
 	go build
 	sudo cp proxy /usr/bin/snowflake-proxy
-	cd ~/snowflake/client
+	cd
+	cd snowflake/client
 	go get
 	go build
 	sudo cp client /usr/bin/snowflake-client
-	cd ~
+	cd
 	sudo rm -rf snowflake
 	sudo rm -rf go*
 else
@@ -741,55 +815,13 @@ fi
 # 8. Again checking connectivity
 clear
 echo -e "${RED}[+] Step 9: Re-checking Internet connectivity${NOCOLOR}"
-wget -q --spider $CHECK_URL1
-if [ $? -eq 0 ]; then
-  echo -e "${RED}[+]         Yes, we have still Internet connectivity! :-)${NOCOLOR}"
-else
-  echo -e "${WHITE}[!]         Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-  echo -e "${RED}[+]          We will check again in about 30 seconds...${NOCOLOR}"
-  sleeo 30
-  echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-  wget -q --spider $CHECK_URL2
-  if [ $? -eq 0 ]; then
-    echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-  else
-    echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-    echo -e "${RED}[+]          We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-    sudo dhclient -r
-    sleep 5
-    sudo dhclient &>/dev/null &
-    sleep 30
-    echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-    wget -q --spider $CHECK_URL1
-    if [ $? -eq 0 ]; then
-      echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-    else
-      echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-			echo -e "${RED}[+]          Let's add some open nameservers and try again...${NOCOLOR}"
-			sudo cp /etc/resolv.conf /etc/resolv.conf.bak
-			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-      sleep 5
-      echo ""
-      echo -e "${RED}[+]          Dumdidum...${NOCOLOR}"
-      sleep 15
-      echo -e "${RED}[+]          Trying again...${NOCOLOR}"
-      wget -q --spider $CHECK_URL1
-      if [ $? -eq 0 ]; then
-        echo -e "${RED}[+]          Yes, now, we have an Internet connection! :-)${NOCOLOR}"
-      else
-        echo -e "${RED}[+]          Hmmm, still no Internet connection... :-(${NOCOLOR}"
-        echo -e "${RED}[+]          Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-        exit 1
-      fi
-    fi
-  fi
-fi
+# NEW v.0.5.3
+re-connect
 
 # 9. Downloading and installing TorBox
 sleep 10
 clear
 echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
-# Showing the selected branch
 echo -e "${RED}[+]          Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
@@ -830,7 +862,6 @@ clear
 cd torbox
 echo -e "${RED}[+] Step 11: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.2: Vanguards removed
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -948,7 +979,6 @@ sudo systemctl stop systemd-journald.service
 sudo systemctl mask systemd-journald.service
 echo""
 
-# NEW v.0.5.2
 # Make Nginx ready for Webssh and Onion Services
 echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
 sudo systemctl stop nginx
@@ -957,7 +987,7 @@ sudo systemctl stop nginx
 (sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2>/dev/null
-# NEW v.0.5.2: configure webssh
+# Configuring webssh
 sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
@@ -1027,6 +1057,7 @@ echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
 echo " "
+# shellcheck disable=SC2044
 for logs in $(sudo find /var/log -type f); do
   echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
   sudo rm $logs
@@ -1039,19 +1070,33 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
-# NEW v.0.5.2: Disable auto-login
+# Disable auto-login
 echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+# NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
-(sudo hostnamectl set-hostname TorBox052) 2>/dev/null
-(sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-(sudo cp torbox/etc/hosts /etc/) 2>/dev/null
-echo -e "${RED}[+] Copied /etc/hosts -- backup done${NOCOLOR}"
-echo ""
+(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+systemctl restart systemd-hostnamed
+echo $HOSTNAME | sudo tee /etc/hostname
+sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+#
+# OLD
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
 echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox052) ${NOCOLOR}"
 echo ""
+
+# NEW v.0.5.3: Test - if this is working we don't need FRESH_INSTALLED=1 --> FRESH_INSTALLED=3 (+removing pi)
+if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
+	clear
+else
+	sleep 10
+fi
+echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sleep 3
+reboot
