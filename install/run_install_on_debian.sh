@@ -633,7 +633,7 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
-sudo ln /usr/bin/python3 /usr/bin/python
+ln /usr/bin/python3 /usr/bin/python
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 
