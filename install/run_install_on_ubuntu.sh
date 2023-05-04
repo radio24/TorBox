@@ -76,6 +76,7 @@
 #
 # Set the the variables for the menu
 MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
 MENU_HEIGHT_20=20
 MENU_HEIGHT_10=10
