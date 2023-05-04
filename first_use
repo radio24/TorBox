@@ -232,6 +232,36 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         exit 0
       fi
 
+			# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
+			INPUT=$(cat text/randomize_hostname-text)
+			HOSTNAME=$(hostname)
+			INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
+			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
+					# shellcheck disable=SC2002
+					HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+				else
+					HOSTNAME=$(whiptail --title "TorBox Installation on Raspberry Pi OS" --inputbox "\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+					if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+						HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
+					fi
+					if ${#HOSTNAME} -gt 64 ; then
+						HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+					fi
+				fi
+			else
+				HOSTNAME="TorBox053"
+			fi
+			clear
+			echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+			(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+			sudo systemctl restart systemd-hostnamed
+			if grep 127.0.1.1.* /etc/hosts ; then
+				(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
+			else
+				(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+			fi
+
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat text/first_use-firewall-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
