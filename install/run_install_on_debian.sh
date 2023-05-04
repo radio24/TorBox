@@ -1153,11 +1153,10 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 (hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 systemctl restart systemd-hostnamed
-echo $HOSTNAME | tee /etc/hostname
 if grep 127.0.1.1.* /etc/hosts ; then
-	sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+	(sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 else
-	sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts
+	(sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
 fi
 #
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

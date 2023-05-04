@@ -518,13 +518,6 @@ update_torcfg()
 	echo ""
 	echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
-
-  # This has to be at the end to avoid unnecessary error messages
-  sudo hostnamectl set-hostname TorBox052
-  (sudo cp /etc/hosts /etc/hosts.bak) 2>/dev/null
-  sudo cp torbox/etc/hosts /etc/
-  echo -e "${RED}[+]${NOCOLOR} Copied /etc/hosts -- backup done"
-  echo ""
   echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
   sleep 5
 }
