@@ -529,7 +529,7 @@ if [ -z "$RANDOMIZE_HOSTNAME" ]; then
 			# shellcheck disable=SC2002
 			HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
 		else
-			HOSTNAME=$(whiptail --title "TorBox Installation on Debian" --inputbox "\n\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			HOSTNAME=$(whiptail --title "TorBox Installation on Debian" --inputbox "\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
 				HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
 			fi
