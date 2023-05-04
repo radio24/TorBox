@@ -1,0 +1,9 @@
+In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is "TorBox<nnn>" (<nnn> representing the version).
+
+When a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.
+
+We recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.
+
+Your current hostname is: HOSTNAMEANKER
+
+Do you want to use the DEFAULT hostname or to CHANGE it?

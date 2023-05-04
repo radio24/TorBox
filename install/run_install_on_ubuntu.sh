@@ -1165,13 +1165,12 @@ sudo timedatectl set-timezone UTC
 echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-systemctl restart systemd-hostnamed
-echo $HOSTNAME | sudo tee /etc/hostname
+(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+sudo systemctl restart systemd-hostnamed
 if grep 127.0.1.1.* /etc/hosts ; then
-	sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts
+	(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 else
-	sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts
+	(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
 fi
 #
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
