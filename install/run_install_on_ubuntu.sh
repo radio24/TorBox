@@ -1211,4 +1211,4 @@ else
 fi
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
 sleep 3
-reboot
+sudo reboot
