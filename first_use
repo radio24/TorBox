@@ -236,7 +236,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			INPUT=$(cat text/randomize_hostname-text)
 			HOSTNAME=$(hostname)
 			INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
-			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
 					# shellcheck disable=SC2002
 					HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
