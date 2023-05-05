@@ -946,7 +946,7 @@ if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo apt-get -y purge bluez
   sudo apt-get -y autoremove
 fi
-rfkill block bluetooth
+sudo rfkill block bluetooth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""

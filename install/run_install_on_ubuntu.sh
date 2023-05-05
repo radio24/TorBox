@@ -999,7 +999,7 @@ echo -e "${RED}[+] Step 10: Because of security considerations, we disable Bluet
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
-rfkill block bluetooth
+sudo rfkill block bluetooth
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
