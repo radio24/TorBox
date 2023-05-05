@@ -469,8 +469,8 @@ select_and_install_tor()
 			echo ""
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
-			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-			mkdir ~/debian-packages; cd/debian-packages
+#			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
+#			mkdir ~/debian-packages; cd/debian-packages
 
 			# Difference to the update-function - we cannot use torsocks yet
 			wget $download_tor_url
