@@ -563,8 +563,8 @@ echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 echo
-echo  "             Date: $(date '+%Y-%m-%d')"
-./clock.py
+echo  "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
+echo  "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
 echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
 echo
@@ -1229,7 +1229,7 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 sudo systemctl restart systemd-hostnamed
-if grep 127.0.1.1.* /etc/hosts ; then
+if grep "127.0.1.1.*" /etc/hosts ; then
 	(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 else
 	(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
