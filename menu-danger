@@ -153,7 +153,7 @@ case "$CHOICE" in
 				clear
 				if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then
 					if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_25 $MENU_WIDTH); then
+						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 							exitstatus=$?
 							# exitstatus == 255 means that the ESC key was pressed
 							[ "$exitstatus" == "255" ] && exit 0
@@ -173,7 +173,7 @@ case "$CHOICE" in
 						sudo ipset create $CLEARNET_LIST hash:ip
 					fi
 					if [ -f "$VPN_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_25 $MENU_WIDTH); then
+						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 							exitstatus=$?
 							# exitstatus == 255 means that the ESC key was pressed
 							[ "$exitstatus" == "255" ] && exit 0

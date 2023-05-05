@@ -64,8 +64,9 @@ echo -e "    caches the DNS response (the IP address) for a certain amount of"
 echo -e "    time. Using another browser to connect will help."
 echo ""
 echo -e "    You can quit the rescan by pressing q"
+echo ""
 stty intr q
-trap break SIGINT
+trap "RESCAN=0; break" SIGINT
 
 # Read interfaces from run/torbox.run
 CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
