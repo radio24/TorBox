@@ -645,7 +645,7 @@ echo ""
 
 echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
 # NEW v.0.5.3: Surpress the system restart dialog
-export DEBIAN_FRONTEND=noninteractive
+sudo apt-get -y remove needrestart
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
