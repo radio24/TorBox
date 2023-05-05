@@ -55,20 +55,21 @@
 ##########################################################
 
 # Table of contents for this script:
-#  1. Checking for Internet connection
-#  2. Updating the system
-#  3. Installing all necessary packages
-#  4. Install Tor
-#  5. Configuring Tor with its pluggable transports
-#  6. Install Snowflake
-#  7. Re-checking Internet connectivity
-#  8. Downloading and installing the latest version of TorBox
-#  9. Installing all configuration files
-# 10. Disabling Bluetooth
-# 11. Configure the system services
-# 12. Updating run/torbox.run
-# 13. Adding and implementing the user torbox
-# 14. Finishing, cleaning and booting
+#  1a. Checking for Internet connection
+#  1b. Adjusting time, if needed
+#   2. Updating the system
+#   3. Installing all necessary packages
+#   4. Install Tor
+#   5. Configuring Tor with its pluggable transports
+#   6. Install Snowflake
+#   7. Re-checking Internet connectivity
+#   8. Downloading and installing the latest version of TorBox
+#   9. Installing all configuration files
+#  10. Disabling Bluetooth
+#  11. Configure the system services
+#  12. Updating run/torbox.run
+#  13. Adding and implementing the user torbox
+#  14. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -548,13 +549,67 @@ else
 	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
 fi
 
-# 1. Checking for Internet connection
+# 1a. Checking for Internet connection
 clear
-echo -e "${RED}[+] Step 1: Preparing the system: Do we have Internet?${NOCOLOR}"
+echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
 
 # NEW v.0.5.3
 re-connect
+
+# 1b. Adjusting time, if needed
+clear
+echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
+echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
+echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
+echo
+echo  "             Date: $(date '+%Y-%m-%d')"
+./clock.py
+echo
+echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo
+while true
+do
+	read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
+	# The following line is for the prompt to appear on a new line.
+	if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+		echo
+		echo
+		break
+	fi
+done
+if [[ $REPLY =~ ^[Yy]$ ]] ; then
+	echo ""
+	read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
+	echo ""
+	echo -e "${RED}Please enter the UTC time (HH:MM)${NOCOLOR}"
+	read -r -p $'You can find the correct time here: https://time.is/UTC: ' TIMESTRING
+	# Check and set date
+	if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
+		echo ""
+		sudo date -s "$DATESTRING"
+		echo -e "${RED}[+] Date set successfully!${NOCOLOR}"
+		if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+			echo ""
+			sudo date -s "$TIMESTRING"
+			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
+			sleep 3
+			clear
+		else
+			echo ""
+			echo -e "${WHITE}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		fi
+	else
+		echo ""
+		echo -e "${WHITE}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	fi
+fi
 
 # 2. Updating the system
 sleep 10
