@@ -436,12 +436,9 @@ update_torcfg()
   sudo cp etc/network/interfaces /etc/network/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-  if [ "$CHECK_OS" == "Debian" ] || [ "$CHECK_OS" == "Ubuntu" ]; then
-    sudo cp etc/rc.local.ubuntu /etc/rc.local
-    sudo chmod a+x /etc/rc.local
-  else
-    sudo cp etc/rc.local /etc/
-  fi
+  # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+  sudo cp etc/rc.local /etc/rc.local
+  sudo chmod a+x /etc/rc.local
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
   if [ "$CHECK_OS" == "Ubuntu" ]; then
     # Unlike the Raspberry Pi OS, Ubuntu uses systemd-resolved to resolve DNS queries (see also further below).

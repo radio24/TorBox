@@ -941,7 +941,8 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-sudo cp etc/rc.local.ubuntu /etc/rc.local
+# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+sudo cp etc/rc.local /etc/rc.local
 sudo chmod u+x /etc/rc.local
 # We will enable rc-local further below
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"

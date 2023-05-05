@@ -911,8 +911,8 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-# We have to use rc.local.ubuntu because rfkill is/was not compatible
-cp etc/rc.local.ubuntu /etc/rc.local
+# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+cp etc/rc.local /etc/rc.local
 chmod a+x /etc/rc.local
 systemctl daemon-reload
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"

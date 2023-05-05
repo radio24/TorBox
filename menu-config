@@ -720,11 +720,9 @@ case "$CHOICE" in
               echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
               sudo systemctl mask --now hostapd
               sudo systemctl daemon-reload
-              if [ "$CHECK_OS" == "Ubuntu" ]; then
-                sudo cp etc/rc.local.disable_wlan.ubuntu /etc/rc.local
-              else
-                sudo cp etc/rc.local.disable_wlan /etc/rc.local
-              fi
+              # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+              sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							sudo chmod a+x /etc/rc.local
             fi
           fi
         else
@@ -740,11 +738,9 @@ case "$CHOICE" in
         clear
         echo " "
         echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        if [ "$CHECK_OS" == "Ubuntu" ]; then
-          sudo cp etc/rc.local.ubuntu /etc/rc.local
-        else
-          sudo cp etc/rc.local /etc/rc.local
-        fi
+        # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+        sudo cp etc/rc.local /etc/rc.local
+				sudo chmod a+x /etc/rc.local
         sudo systemctl unmask hostapd
         sudo systemctl enable hostapd
         sudo systemctl start hostapd
