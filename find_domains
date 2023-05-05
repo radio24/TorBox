@@ -54,7 +54,6 @@ RESCAN=$2
 DUMP=""
 i=0
 
-# Read interfaces from run/torbox.run
 clear
 echo -e "${RED}[+] Starting with the (re)scan${NOCOLOR}"
 echo -e "    It is important that during the rescan, the domain is used as usual"
@@ -64,7 +63,11 @@ echo -e "    because your client browser or/and the operating system usually"
 echo -e "    caches the DNS response (the IP address) for a certain amount of"
 echo -e "    time. Using another browser to connect will help."
 echo ""
+echo -e "    You can quit the rescan by pressing q"
+stty intr q
+trap break SIGINT
 
+# Read interfaces from run/torbox.run
 CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
 NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
 
