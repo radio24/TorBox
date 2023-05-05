@@ -126,7 +126,8 @@ update_firmware()
     echo " "
     sudo rpi-eeprom-update
     echo " "
-    read -n 1 -s -r -p "Press any key to continue or CTRL-C to leave"
+    stty intr q
+    read -n 1 -s -r -p "Press any key to continue or q to leave"
     echo " "
     echo " "
     sudo rpi-eeprom-update -a

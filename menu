@@ -552,18 +552,25 @@ case "$CHOICE" in
           if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						clear
 						echo -e "${RED}[+] Reset PPP connection (you may check the output for errors)${NOCOLOR}"
-						echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
+						echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
+						echo ""
+						trap "bash menu; exit 0" SIGINT
+						stty intr q
 						sudo ./poff
 						sleep 5
 						sudo pon
 						echo ""
 						sleep 2
 						read -n 1 -s -r -p "Press any key to continue"
+						stty intr ^c
+						trap
 					fi
         else
         	echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
-        	echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
+        	echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
         	echo ""
+					trap "bash menu; exit 0" SIGINT
+					stty intr q
 					if pgrep -f "pppd"; then
 						sudo ./poff
 						sleep 5
@@ -572,6 +579,8 @@ case "$CHOICE" in
         	echo ""
         	sleep 2
         	read -n 1 -s -r -p "Press any key to continue"
+					stty intr ^c
+					trap
 				fi
         if ip link | grep ppp0 > /dev/null; then
           if ip link | grep wlan0 | grep "state UP" ; then

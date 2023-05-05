@@ -64,7 +64,7 @@ FRESHINSTALLED=$1
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
-# This function is used for the step 1 as a trap for CTRL-C
+# This function is used for the step 1 as a trap for q
 # Syntax finish_bridge_start2 <DEFAULT_BRIDGE_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
 finish_bridge_start2()
@@ -109,7 +109,7 @@ finish_bridge_start2()
 	fi
 }
 
-# This function is used for the main program as a trap for CTRL-C
+# This function is used for the main program as a trap for q
 # Syntax finish_bridge_start1 <DEFAULT_BRIDGE_SUPPORT>
 # Used predefined variables: RED, NOCOLOR, TORRC
 finish_bridge_start1()

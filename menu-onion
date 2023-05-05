@@ -923,8 +923,9 @@ case "$CHOICE" in
                 echo ""
 								if [ -d "${WEBSITE_DIR}/${SERVICE_NAME}" ]; then
                 	echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
-                	echo -e "${WHITE}    Last chance to abbort with CTRL-C!${NOCOLOR}"
+                	echo -e "${WHITE}    Last chance to abbort with q!${NOCOLOR}"
                 	trap "bash menu-onion; exit 0" SIGINT
+                  stty intr q
                 	sleep 1
                 	echo -e "1"
                 	sleep 1
@@ -938,6 +939,8 @@ case "$CHOICE" in
                 	sleep 1
                 	echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
                 	(sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
+									stty intr ^c
+									trap
 								fi
               elif [ "$exitstatus" == "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${WHITE}$SERVICE_NAME${NOCOLOR}"
