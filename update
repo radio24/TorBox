@@ -61,6 +61,7 @@ if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
 # Release Page of the unofficial Tor repositories on GitHub
@@ -276,8 +277,6 @@ update_tor()
     clear
     echo ""
     echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
-    if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-    mkdir ~/debian-packages; cd ~/debian-packages
     if [ $TORCONNECT -eq 0 ]; then
       wget $download_tor_url
       DLCHECK=$?
@@ -303,6 +302,8 @@ update_tor()
       ./configure
       make
       sudo make install
+      cd
+      sudo rm -r tor-*
       #Return code for FINISHING / 1=finishing / 0=no finishing needed
       return 1
     else
@@ -348,8 +349,6 @@ select_and_install_tor()
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
       download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
       filename="tor-$version_string.tar.gz"
-      if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-      mkdir ~/debian-packages; cd ~/debian-packages
       if [ $TORCONNECT -eq 0 ]; then
         wget $download_tor_url
         DLCHECK=$?
@@ -376,6 +375,8 @@ select_and_install_tor()
         ./configure
         make
         sudo make install
+        cd
+        sudo rm -r tor-*
         #Return code for FINISHING / 1=finishing / 0=no finishing needed
         return 1
       else
@@ -943,7 +944,6 @@ case "$CHOICE" in
       fi
       # Finishing
       cd ~/torbox
-      if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
       if [ $FINISHING = 1 ] ; then
 				echo -e "${RED}[+] Configuring Tor with its pluggable transports....${NOCOLOR}"
         (sudo mv /usr/local/bin/tor* /usr/bin) 2>/dev/null

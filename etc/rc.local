@@ -25,6 +25,17 @@ rfkill unblock all
 bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
+CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
+if [ "$CHECK_OS" = "Ubuntu" ] ; then
+	if ip -o link show | awk -F': ' '{print $2}' | grep end0 ; then
+		# rename interface name from end0 to eth0
+		# See aöso here: https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
+		sudo ip link set end0 down
+		sudo ip link set end0 name eth0
+	fi
+fi
+
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
@@ -49,7 +60,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
 		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" == "1" ]; then
+		if [ "$INTERFACE1_DOWN" = "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi
@@ -65,7 +76,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		fi
 		sudo ip link set dev $INTERFACE address $MAC_ADDRESS
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" == "1" ]; then
+		if [ "$INTERFACE1_DOWN" = "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi

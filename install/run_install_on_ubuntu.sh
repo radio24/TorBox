@@ -385,8 +385,6 @@ select_and_install_tor()
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
         	download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
-        	if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-        	mkdir ~/debian-packages; cd ~/debian-packages
 
 					# Difference to the update-function - we cannot use torsocks yet
         	wget $download_tor_url
@@ -406,11 +404,13 @@ select_and_install_tor()
 		        sh autogen.sh
           	./configure
           	make
+            sudo make install
+            cd
+            sudo rm -r tor-*
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
-          	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -464,8 +464,6 @@ select_and_install_tor()
 			echo ""
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
-			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-			mkdir ~/debian-packages; cd ~/debian-packages
 
 			# Difference to the update-function - we cannot use torsocks yet
 			wget $download_tor_url
@@ -485,6 +483,9 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
+				sudo make install
+				cd
+				sudo rm -r tor-*
 				sudo systemctl stop tor
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
@@ -639,6 +640,8 @@ sudo rm -Rf /etc/cloud
 echo ""
 
 echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
+# NEW v.0.5.3: Surpress the system restart dialog
+sudo apt-get -y remove needrestart
 sudo apt-get -y update
 sudo apt-get -y dist-upgrade
 sudo apt-get -y clean
@@ -727,7 +730,7 @@ echo ""
 # NEW v.0.5.3
 PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
-  rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+  sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 
 sudo pip3 install pytesseract
@@ -993,6 +996,11 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 sudo cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+# NEW v.0.5.3: Ubuntu supports Predictable Network Interface Names, but we need wlan0, wlan1 etc.
+# See here: https://askubuntu.com/questions/826325/how-to-revert-usb-wifi-interface-name-from-wlxxxxxxxxxxxxx-to-wlanx
+# See here: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
+echo -e "${RED}[+]${NOCOLOR}         Predictable Network Interface Names disabled"
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
@@ -1196,17 +1204,15 @@ echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox has to be rebooted manually.${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox will reboot.${NOCOLOR}"
 echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 echo -e "${WHITE}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${WHITE}    Then in the TorBox menu, you have to chose entry 14.${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(sudo rm -r debian-packages) 2>/dev/null
 (sudo rm -r WiringPi) 2>/dev/null
 (sudo rm -r Downloads) 2>/dev/null
 (sudo rm -r get-pip.py) 2>/dev/null

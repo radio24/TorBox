@@ -389,8 +389,6 @@ select_and_install_tor()
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
         	download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
-        	if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-        	mkdir ~/debian-packages; cd ~/debian-packages
 
 					# Difference to the update-function - we cannot use torsocks yet
         	wget $download_tor_url
@@ -410,6 +408,9 @@ select_and_install_tor()
 						sh autogen.sh
           	./configure
           	make
+            sudo make install
+            cd
+            sudo rm -r tor-*
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -468,8 +469,6 @@ select_and_install_tor()
 			echo ""
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
-			if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-			mkdir ~/debian-packages; cd ~/debian-packages
 
 			# Difference to the update-function - we cannot use torsocks yet
 			wget $download_tor_url
@@ -489,6 +488,9 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
+        sudo make install
+        cd
+        sudo rm -r tor-*
 				sudo systemctl stop tor
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
@@ -1056,7 +1058,6 @@ echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(sudo rm -r debian-packages) 2>/dev/null
 # Find the bigest space waster packages: dpigs -H
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
