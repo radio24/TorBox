@@ -59,6 +59,7 @@ if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberr
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
 #Other variables
 CRDAFILE="/etc/default/crda"

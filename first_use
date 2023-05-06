@@ -51,6 +51,7 @@ NOCOLOR='\033[0m'
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
 # Other variables
 TORRC="/etc/tor/torrc"
@@ -225,7 +226,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
       INPUT=$(cat text/first_use-welcome-text)
-      if (whiptail --title "TorBox - FIRST START UP! (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - FIRST START UP!" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
         sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}

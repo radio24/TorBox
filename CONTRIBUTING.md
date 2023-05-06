@@ -14,7 +14,8 @@ Please bear the following coding guidelines in mind:
 
   **Identify the Operation System**
   ```shell
-  CHECK_OS="$(lsb_release -si)"
+	CHECK_OS="$(lsb_release -si)"
+	CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 	if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
   ```
 

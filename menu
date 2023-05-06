@@ -54,6 +54,7 @@ NOCOLOR='\033[0m'
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"

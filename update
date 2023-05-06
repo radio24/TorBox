@@ -58,6 +58,7 @@ if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
 # Release Page of the unofficial Tor repositories on GitHub

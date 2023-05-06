@@ -25,6 +25,18 @@ sudo dmesg -D
 # bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
+CHECK_OS="$(lsb_release -si)"
+CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
+echo "$CHECK_OS"
+if [ "$CHECK_OS" = "Ubuntu" ] ; then
+	if ip -o link show | awk -F': ' '{print $2}' | grep end0 ; then
+		# rename interface name from end0 to eth0
+		# See aöso here: https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
+		sudo ip link set end0 down
+		sudo ip link set end0 name eth0
+	fi
+fi
+
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
