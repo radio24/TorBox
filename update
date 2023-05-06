@@ -292,6 +292,8 @@ update_tor()
       ./configure
       make
       sudo make install
+      cd
+      sudo rm -r tor-*
       #Return code for FINISHING / 1=finishing / 0=no finishing needed
       return 1
     else
@@ -363,6 +365,8 @@ select_and_install_tor()
         ./configure
         make
         sudo make install
+        cd
+				sudo rm -r tor-*
         #Return code for FINISHING / 1=finishing / 0=no finishing needed
         return 1
       else

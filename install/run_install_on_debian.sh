@@ -407,11 +407,13 @@ select_and_install_tor()
 		        sh autogen.sh
           	./configure
           	make
+            cd
+    				rm -r tor-*
+          	make install
 						systemctl stop tor
 						systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
 						systemctl mask tor@default.service
-          	make install
 						systemctl stop tor
 						systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -484,11 +486,13 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
+				make install
+				cd
+				rm -r tor-*
 				systemctl stop tor
 				systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
 				systemctl mask tor@default.service
-				make install
 				systemctl stop tor
 				systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
