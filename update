@@ -267,8 +267,6 @@ update_tor()
     clear
     echo ""
     echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
-    if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-    mkdir ~/debian-packages; cd ~/debian-packages
     if [ $TORCONNECT -eq 0 ]; then
       wget $download_tor_url
       DLCHECK=$?
@@ -339,8 +337,6 @@ select_and_install_tor()
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
       download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
       filename="tor-$version_string.tar.gz"
-      if [ -d ~/debian-packages ]; then sudo rm -r ~/debian-packages ; fi
-      mkdir ~/debian-packages; cd ~/debian-packages
       if [ $TORCONNECT -eq 0 ]; then
         wget $download_tor_url
         DLCHECK=$?
@@ -925,7 +921,6 @@ case "$CHOICE" in
       fi
       # Finishing
       cd ~/torbox
-      if [ -d ~/debian-packages ] ; then sudo rm -r ~/debian-packages ; fi
       if [ $FINISHING = 1 ] ; then
 				echo -e "${RED}[+] Configuring Tor with its pluggable transports....${NOCOLOR}"
         (sudo mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
