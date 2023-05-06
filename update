@@ -603,6 +603,9 @@ update_torbox_menu()
 		fi
 		mv $TMP_DIR/torbox/run torbox
   	# Restore TACA configuration
+		if [ -f "torbox/log_check_config.py" ]; then
+			sudo rm -r torbox/log_check_config.py
+		fi
 		sudo mv $TMP_DIR/torbox/log_check_config.py torbox
 		# Restore  TFS/TCS PID files
 		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/filesharing/pid/)
