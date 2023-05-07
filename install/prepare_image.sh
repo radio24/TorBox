@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -115,11 +116,36 @@ echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RE
 echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
 echo
 echo
-echo -e "${WHITE}Following requirements are installed:${NOCOLOR}"
-readarray -t REQUIREMENTS < requirements.txt
-for REQUIREMENT in "${REQUIREMENTS[@]}"
-do
-  echo -e "${RED}${REQUIREMENT} version: ${WHITE}$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//")${NOCOLOR}"
+echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt
+if [ -f requirements.failed ]; then rm requirements.failed; fi
+REPLY="Y"
+while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	REPLY=""
+	readarray -t REQUIREMENTS < requirements.txt
+	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+		if [ -z "$VERSION" ]; then
+			# shellcheck disable=SC2059
+			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		fi
+	done
+	if [ -f requirements.failed ]; then
+		echo ""
+		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				sudo pip3 install -r requirements.failed
+				sleep 5
+				rm requirements.failed
+				unset REQUIREMENTS
+				clear
+			fi
+		fi
+	fi
 done
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

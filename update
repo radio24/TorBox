@@ -528,7 +528,7 @@ update_torcfg()
 	# This has to be at the end to avoid unnecessary error messages
 	(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 	sudo systemctl restart systemd-hostnamed
-	if grep 127.0.1.1.* /etc/hosts ; then
+	if grep "127.0.1.1.*" /etc/hosts ; then
 		(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 	else
 		(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
@@ -778,24 +778,43 @@ case "$CHOICE" in
 			sleep 10
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
-			sudo pip3 install --upgrade pytesseract
-			sudo pip3 install --upgrade mechanize
-			sudo pip3 install --upgrade PySocks
-			sudo pip3 install --upgrade urwid
-			sudo pip3 install --upgrade Pillow
-			sudo pip3 install --upgrade requests
-			sudo pip3 install --upgrade Django
-			sudo pip3 install --upgrade click
-			sudo pip3 install --upgrade gunicorn
-			sudo pip3 install --upgrade paramiko
-			sudo pip3 install --upgrade tornado
-			sudo pip3 install --upgrade APScheduler
-			sudo pip3 install --upgrade backports.zoneinfo
-			sudo pip3 install --upgrade eventlet
-			sudo pip3 install --upgrade python-socketio
-			sudo pip3 install --upgrade opencv-python-headless
-			sudo pip3 install --upgrade numpy
+			# NEW v.0.5.3: New way to install and check Python requirements
+			sudo pip3 install --upgrade -r requirements.txt
 			sleep 5
+
+			clear
+			echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+			if [ -f requirements.failed ]; then rm requirements.failed; fi
+			REPLY="Y"
+			while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+				REPLY=""
+				readarray -t REQUIREMENTS < requirements.txt
+				for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+					if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+					VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+			  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+					if [ -z "$VERSION" ]; then
+						# shellcheck disable=SC2059
+						(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+					fi
+				done
+				if [ -f requirements.failed ]; then
+					echo ""
+					echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+					read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+					if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+						if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+							sudo pip3 install -r requirements.failed
+							sleep 5
+							rm requirements.failed
+							unset REQUIREMENTS
+							clear
+						fi
+					fi
+				fi
+			done
+			sleep 10
+			clear
 			echo ""
 			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
 			if uname -m | grep -q -E "arm64|aarch64"; then

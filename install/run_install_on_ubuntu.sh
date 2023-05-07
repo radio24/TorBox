@@ -733,26 +733,43 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 
-sudo pip3 install pytesseract
-#sudo pip3 install mechanize==0.4.7
-sudo pip3 install mechanize
-sudo pip3 install PySocks
-sudo pip3 install urwid
-sudo pip3 install Pillow
-sudo pip3 install requests
-sudo pip3 install Django
-sudo pip3 install click
-sudo pip3 install gunicorn
-sudo pip3 install click
-sudo pip3 install paramiko
-sudo pip3 install tornado
-sudo pip3 install APScheduler
-# NEW v.0.5.3: backports.zoneinfo removed; see: https://pypi.org/project/backports.zoneinfo/
-# pip3 install backports.zoneinfo
-sudo pip3 install eventlet
-sudo pip3 install python-socketio
-sudo pip3 install opencv-python-headless
-sudo pip3 install numpy
+# NEW v.0.5.3: New way to install and check Python requirements
+cd
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+sudo pip3 install -r requirements.txt
+sleep 5
+
+clear
+echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+if [ -f requirements.failed ]; then rm requirements.failed; fi
+REPLY="Y"
+while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	REPLY=""
+	readarray -t REQUIREMENTS < requirements.txt
+	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+		if [ -z "$VERSION" ]; then
+			# shellcheck disable=SC2059
+			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		fi
+	done
+	if [ -f requirements.failed ]; then
+		echo ""
+		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				sudo pip3 install -r requirements.failed
+				sleep 5
+				rm requirements.failed
+				unset REQUIREMENTS
+				clear
+			fi
+		fi
+	fi
+done
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
