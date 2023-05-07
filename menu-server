@@ -234,7 +234,29 @@ case "$CHOICE" in
 			fi
       nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
-      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			# # NEW v.0.5.3
+			# Nickname: A handle for your relay, so people don't have to refer to it by key. Nicknames must be between 1 and 19 characters inclusive, and must contain only the characters [a-zA-Z0-9]. If not set, "Unnamed" will be used.
+			# See here: https://github.com/Ilshidur/tor-relay-docker/blob/master/torrc.bridge.default
+      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional; only letters and numbers; not more than 19 characters).\n\nEnter your nickname:" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			clear
+			if [ ! -z "$nNICK" ]; then
+				if [[ $nNICK != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+					clear
+					echo " "
+					echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					nNICK=""
+					sleep 5
+				elif ${#nNICK} -gt 19 ; then
+					clear
+					echo " "
+					echo -e "${WHITE}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
+					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					nNICK=""
+					sleep 5
+				fi
+			fi
+			#
       nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration of the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
 "ANY" "Let BridgeDB decide about the distribution method (default)" ON \
 "HTTPS" "Distributed through the bridge website" OFF \
