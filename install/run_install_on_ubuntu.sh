@@ -1016,6 +1016,7 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 # NEW v.0.5.3: Ubuntu supports Predictable Network Interface Names, but we need wlan0, wlan1 etc.
 # See here: https://askubuntu.com/questions/826325/how-to-revert-usb-wifi-interface-name-from-wlxxxxxxxxxxxxx-to-wlanx
 # See here: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
 sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
 echo -e "${RED}[+]${NOCOLOR}         Predictable Network Interface Names disabled"
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
