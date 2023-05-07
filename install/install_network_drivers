@@ -48,7 +48,7 @@ EXECUTED=$1
 
 ######## PREPARATIONS ########
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-cd ~
+cd
 
 # For a Raspberry Pi OS installation
 if [ "$CHECK_OS" == "Raspbian" ]; then
@@ -66,26 +66,25 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-	cd ~
+	cd
 	git clone https://github.com/lwfinger/rtl8188eu.git
 	cd rtl8188eu
 	make all
 	sudo make install
-	cd ~
+	cd
 	sudo rm -r rtl8188eu
 	sleep 2
 
 	# Installing the RTL8188FU
+	# Should be included in Linux Kernel 6.2
 	clear
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
-	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
-	sudo dkms add ./rtl8188fu-arm
-	sudo dkms build rtl8188fu/1.0
-	sudo dkms install rtl8188fu/1.0
-	sudo cp ./rtl8188fu*/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	git clone https://github.com/kelebek333/rtl8188fu
+	sudo dkms install ./rtl8188fu
+	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	cd
 	sudo rm -r rtl8188fu*
 	sleep 2
 
@@ -98,7 +97,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	cd rtl8192eu-linux
 	sudo dkms add .
 	sudo dkms install rtl8192eu/1.0
-	cd ~
+	cd
 	sudo rm -r rtl8192eu-linux
 	sleep 2
 
@@ -110,7 +109,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8812au-20210629
 	sleep 2
 
@@ -122,11 +121,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8814au
 	sleep 2
 
-# Installing the RTL8821AU
+	# Installing the RTL8821AU
 	clear
 	echo -e "$INSTALLSTRING"
 	echo -e " "
@@ -134,7 +133,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821au-20210708
 	sleep 2
 
@@ -146,7 +145,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	git clone https://github.com/morrownr/8821cu-20210916.git
 	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821cu-20210916
 	sleep 2
 
@@ -158,7 +157,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 88x2bu-20210702
 	sleep 2
 
@@ -179,25 +178,25 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-	cd ~
+	cd
 	git clone https://github.com/lwfinger/rtl8188eu.git
 	cd rtl8188eu
 	make all
 	sudo make install
-	cd ~
+	cd
 	sudo rm -r rtl8188eu
 	sleep 2
 
 	# Installing the RTL8188FU
+	# Should be included in Linux Kernel 6.2
 	clear
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
 	git clone https://github.com/kelebek333/rtl8188fu
-	sudo dkms add ./rtl8188fu
-	sudo dkms build rtl8188fu/1.0
-	sudo dkms install rtl8188fu/1.0
+	sudo dkms install ./rtl8188fu
 	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	cd
 	sudo rm -r rtl8188fu
 	sleep 2
 
@@ -210,7 +209,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	cd rtl8192eu-linux
 	sudo dkms add .
 	sudo dkms install rtl8192eu/1.0
-	cd ~
+	cd
 	sudo rm -r rtl8192eu-linux
 	sleep 2
 
@@ -222,7 +221,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8812au-20210629
 	sleep 2
 
@@ -234,7 +233,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8814au
 	sleep 2
 
@@ -246,7 +245,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821au-20210708
 	sleep 2
 
@@ -258,7 +257,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/morrownr/8821cu-20210916.git
 	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821cu-20210916
 	sleep 2
 
@@ -270,7 +269,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 88x2bu-20210702
 	sleep 2
 
@@ -286,7 +285,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	sudo apt-get install -y linux-headers-$(uname -r)
 	# firmware-realtek is missing on ubuntu, but it should work without it
 	sudo apt-get install -y dkms libelf-dev build-essential
-	cd ~
+	cd
 	sleep 2
 
 	# Installing the RTL8188EU
@@ -295,28 +294,31 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	# echo -e "$INSTALLSTRING"
 	# echo -e " "
 	# echo -e "${RED}[+] Installing the Realtek RTL8188EU Wireless Network Driver ${NOCOLOR}"
-	# cd ~
+	# cd
 	# git clone https://github.com/lwfinger/rtl8188eu.git
 	# cd rtl8188eu
 	# make all
 	# sudo make install
-	# cd ~
+	# cd
 	# sudo rm -r rtl8188eu
 	# sleep 2
 
 	# Installing the RTL8188FU
-	clear
-	echo -e "$INSTALLSTRING"
-	echo -e " "
-	echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
-	sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
-	git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
-	sudo dkms add ./rtl8188fu-arm
-	sudo dkms build rtl8188fu/1.0
-	sudo dkms install rtl8188fu/1.0
-	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
-	sudo rm -r rtl8188fu
-	sleep 2
+	# Disabled because it should be already supported by the kernel
+	# See here: https://patchwork.kernel.org/project/linux-wireless/patch/b14f299d-3248-98fe-eee1-ba50d2e76c74@gmail.com/
+	# clear
+	# echo -e "$INSTALLSTRING"
+	# echo -e " "
+	# echo -e "${RED}[+] Installing the Realtek RTL8188FU Wireless Network Driver ${NOCOLOR}"
+	# sudo ln -s /lib/modules/$(uname -r)/build/arch/arm /lib/modules/$(uname -r)/build/arch/armv7l
+	# git clone -b arm https://github.com/kelebek333/rtl8188fu rtl8188fu-arm
+	# sudo dkms add ./rtl8188fu-arm
+	# sudo dkms build rtl8188fu/1.0
+	# sudo dkms install rtl8188fu/1.0
+	# sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	# cd
+	# sudo rm -r rtl8188fu
+	# sleep 2
 
 	# Installing the RTL8192EU
 	# Disabled because it should be already supported by the kernel ➔ https://wiki.ubuntuusers.de/WLAN/Karten/Realtek/
@@ -328,7 +330,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	# cd rtl8192eu-linux
 	# sudo dkms add .
 	# sudo dkms install rtl8192eu/1.0
-	# cd ~
+	# cd
 	# sudo rm -r rtl8192eu-linux
 	# sleep 2
 
@@ -340,7 +342,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	git clone https://github.com/morrownr/8812au-20210629.git
 	cd 8812au-20210629
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8812au-20210629
 	sleep 2
 
@@ -352,7 +354,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	git clone https://github.com/morrownr/8814au.git
 	cd 8814au
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8814au
 	sleep 2
 
@@ -364,7 +366,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	git clone https://github.com/morrownr/8821au-20210708.git
 	cd 8821au-20210708
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821au-20210708
 	sleep 2
 
@@ -376,7 +378,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	git clone https://github.com/morrownr/8821cu-20210916.git
 	cd 8821cu-20210916
 	sudo ./install-driver.sh NoPrompt
-	cd ~
+	cd
 	sudo rm -r 8821cu-20210916
 	sleep 2
 
@@ -388,6 +390,7 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	git clone https://github.com/morrownr/88x2bu-20210702.git
 	cd 88x2bu-20210702
 	sudo ./install-driver.sh NoPrompt
+	cd
 	sudo rm -r 88x2bu-20210702
 	sleep 2
 
