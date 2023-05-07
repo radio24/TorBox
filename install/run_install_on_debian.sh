@@ -656,8 +656,6 @@ pip3 install click
 pip3 install paramiko
 pip3 install tornado
 pip3 install APScheduler
-# NEW v.0.5.3: backports.zoneinfo removed; see: https://pypi.org/project/backports.zoneinfo/
-# pip3 install backports.zoneinfo
 pip3 install eventlet
 pip3 install python-socketio
 pip3 install opencv-python-headless

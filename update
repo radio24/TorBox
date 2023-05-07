@@ -768,7 +768,6 @@ case "$CHOICE" in
 			sudo pip3 install --upgrade paramiko
 			sudo pip3 install --upgrade tornado
 			sudo pip3 install --upgrade APScheduler
-			sudo pip3 install --upgrade backports.zoneinfo
 			sudo pip3 install --upgrade eventlet
 			sudo pip3 install --upgrade python-socketio
 			# NEW v.0.5.2
