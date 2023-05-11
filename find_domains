@@ -66,7 +66,7 @@ echo ""
 echo -e "    You can quit the rescan by pressing q"
 echo ""
 stty intr q
-trap "RESCAN=0; break" SIGINT
+trap "RESCAN=0; clear; break" SIGINT
 
 # Read interfaces from run/torbox.run
 CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
