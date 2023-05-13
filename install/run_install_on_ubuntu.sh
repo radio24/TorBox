@@ -559,8 +559,8 @@ echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 echo
-echo  "             Date: $(date '+%Y-%m-%d')"
-./clock.py
+echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
+echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
 echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
 echo

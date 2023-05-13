@@ -554,6 +554,60 @@ echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameser
 # NEW v.0.5.3
 re-connect
 
+# 1b. Adjusting time, if needed
+clear
+echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
+echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
+echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
+echo
+echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
+echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
+echo
+echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo
+while true
+do
+	read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
+	# The following line is for the prompt to appear on a new line.
+	if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+		echo
+		echo
+		break
+	fi
+done
+if [[ $REPLY =~ ^[Yy]$ ]] ; then
+	echo ""
+	read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
+	echo ""
+	echo -e "${RED}Please enter the UTC time (HH:MM)${NOCOLOR}"
+	read -r -p $'You can find the correct time here: https://time.is/UTC: ' TIMESTRING
+	# Check and set date
+	if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
+		echo ""
+		sudo date -s "$DATESTRING"
+		echo -e "${RED}[+] Date set successfully!${NOCOLOR}"
+		if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+			echo ""
+			sudo date -s "$TIMESTRING"
+			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
+			sleep 3
+			clear
+		else
+			echo ""
+			echo -e "${WHITE}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		fi
+	else
+		echo ""
+		echo -e "${WHITE}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	fi
+fi
+
 # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
 sleep 10
 clear
