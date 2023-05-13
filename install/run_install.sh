@@ -223,10 +223,7 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	# Needs a sudo!
-	if [ -f "/etc/resolv.conf" ]; then
-		(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-	fi
+	(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 	(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 	sleep 5
 	ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -555,6 +552,7 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+sudo timedatectl set-timezone UTC
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
@@ -589,7 +587,7 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 			echo ""
 			sudo date -s "$TIMESTRING"
 			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-			sleep 3
+			sleep 5
 			clear
 		else
 			echo ""
@@ -608,7 +606,6 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 fi
 
 # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
-sleep 10
 clear
 echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
 COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
@@ -748,6 +745,23 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
 		fi
 		re-connect
 		sudo apt-get -y install golang
+		GO_PROGRAM="/usr/local/go/bin/go"
+		if [ -f $GO_PROGRAM ]; then
+			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		else
+			GO_PROGRAM=go
+			#This can lead to command not found - ignore it
+			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		fi
+		if [ "$GO_VERSION_NR" -lt "17" ]; then
+			echo ""
+			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+			echo -e "${RED}[+] but failed. Please, try it manually. ${NOCOLOR}"
+			echo ""
+			exit 1
+		fi
 	else
   	sudo tar -C /usr/local -xzvf $DOWNLOAD
 		sudo rm $DOWNLOAD

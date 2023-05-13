@@ -315,6 +315,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# NEW v.0.5.2 post-release
 			# Synchronize time to avoid problems with bridges
 			clear
+			sudo timedatectl set-timezone UTC
 			echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 			echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"

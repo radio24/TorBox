@@ -221,9 +221,7 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	if [ -f "/etc/resolv.conf" ]; then
-		(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-	fi
+	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 	(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
 	sleep 5
 	# On some Debian systems, wget is not installed, yet
@@ -553,6 +551,7 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+timedatectl set-timezone UTC
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
@@ -587,7 +586,7 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 			echo ""
 			date -s "$TIMESTRING"
 			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-			sleep 3
+			sleep 5
 			clear
 		else
 			echo ""
@@ -606,7 +605,6 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 fi
 
 # 2. Updating the system
-sleep 10
 clear
 echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
 # NEW v.0.5.3: Using backport for go

@@ -225,9 +225,7 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	if [ -f "/etc/systemd/resolved.conf" ]; then
-		(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>&1
-	fi
+	(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>&1
 	(sudo printf "$RESOLVCONF" | sudo tee /etc/systemd/resolved.conf) 2>&1
 	sudo systemctl restart systemd-resolved
 	ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -559,6 +557,7 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+sudo timedatectl set-timezone UTC
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
@@ -593,7 +592,7 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 			echo ""
 			sudo date -s "$TIMESTRING"
 			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-			sleep 3
+			sleep 5
 			clear
 		else
 			echo ""
@@ -612,7 +611,6 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 fi
 
 # 2. Updating the system
-sleep 10
 clear
 echo -e "${RED}[+] Step 2a: Remove Ubuntu's unattended update feature...${NOCOLOR}"
 echo -e "${RED}[+]          Next we start the Ubuntu configure tool for unattended updates.${NOCOLOR}"
