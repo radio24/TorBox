@@ -758,7 +758,7 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
 			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
 			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
 			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-			echo -e "${RED}[+] but failed. Please, try it manually. ${NOCOLOR}"
+			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
 			echo ""
 			exit 1
 		fi

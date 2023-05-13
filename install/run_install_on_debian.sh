@@ -759,6 +759,23 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
 			apt-get -y -t bullseye-backports install golang
 		else
 			apt-get -y install golang
+			GO_PROGRAM="/usr/local/go/bin/go"
+			if [ -f $GO_PROGRAM ]; then
+				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+			else
+				GO_PROGRAM=go
+				#This can lead to command not found - ignore it
+				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+			fi
+			if [ "$GO_VERSION_NR" -lt "17" ]; then
+				echo ""
+				echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+				echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+				echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+				echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+				echo ""
+				exit 1
+			fi
 		fi
 	else
   	tar -C /usr/local -xzvf $DOWNLOAD
