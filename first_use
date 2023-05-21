@@ -190,16 +190,13 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-			# IMPORTANT: Check if this is still necessary with Ubuntu (it is not with Raspberry Pi OS and Debian)
-			# This will completely remove pi. The parameter
-			# will be set at the end of the run_install.sh
-      if [ -d "/home/pi" ]; then
-        sudo killall systemd
-        sleep 5
-        sudo userdel -r pi
+      if [ -d "/home/ubuntu" ]; then
+        # sudo killall systemd
+        # sleep 5
+        sudo userdel -r ubuntu
 				# This will remove the anoying SSH warning during the log in (which is not valid)
-				sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
-				sudo sed -i "/^pi:/d" /etc/shadow
+				# sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
+				# sudo sed -i "/^pi:/d" /etc/shadow
       fi
 			# DON'T REMOVE IT! This is necessary because of possible kernel updates
 			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
@@ -223,6 +220,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
     # This will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA should be activated.
     3)
+			# If there is still a home directory / user called "ubuntu", then we will remove it.
+			if [ -d "/home/ubuntu" ]; then
+				sudo userdel -r ubuntu
+			fi
+
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
       INPUT=$(cat text/first_use-welcome-text)
@@ -325,6 +327,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# NEW v.0.5.2 post-release
 			# Synchronize time to avoid problems with bridges
 			clear
+			sudo timedatectl set-timezone UTC
 			echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 			echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"

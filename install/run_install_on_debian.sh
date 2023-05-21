@@ -555,6 +555,7 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+timedatectl set-timezone UTC
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
@@ -589,7 +590,7 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 			echo ""
 			date -s "$TIMESTRING"
 			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-			sleep 3
+			sleep 5
 			clear
 		else
 			echo ""
@@ -608,7 +609,6 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 fi
 
 # 2. Updating the system
-sleep 10
 clear
 echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
 # NEW v.0.5.3: Using backport for go
@@ -700,6 +700,8 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
 fi
 
 # NEW v.0.5.3: New way to install and check Python requirements
+# Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
+#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
 cd
 wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 pip3 install -r requirements.txt
@@ -783,6 +785,23 @@ if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR ||
 			apt-get -y -t bullseye-backports install golang
 		else
 			apt-get -y install golang
+			GO_PROGRAM="/usr/local/go/bin/go"
+			if [ -f $GO_PROGRAM ]; then
+				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+			else
+				GO_PROGRAM=go
+				#This can lead to command not found - ignore it
+				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+			fi
+			if [ "$GO_VERSION_NR" -lt "17" ]; then
+				echo ""
+				echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+				echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+				echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+				echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+				echo ""
+				exit 1
+			fi
 		fi
 	else
   	tar -C /usr/local -xzvf $DOWNLOAD

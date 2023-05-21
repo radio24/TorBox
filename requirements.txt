@@ -10,7 +10,7 @@ click
 cryptography
 eventlet
 gunicorn
-mechanize
+mechanize==0.4.7
 numpy
 opencv-python-headless
 paramiko

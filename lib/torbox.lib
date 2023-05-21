@@ -113,6 +113,7 @@ settime()
 {
 	check_interface_with_internet
 	clear
+	sudo timedatectl set-timezone UTC
 	MANUAL=0
 	if [ $CONNECTED == 1 ]; then
 		if curl -m 6 -s "https://www.ntp.org" >/dev/null; then
@@ -120,7 +121,7 @@ settime()
 			sudo /usr/sbin/ntpdate pool.ntp.org
 			echo
 			echo -e "${RED}[+] Date and time set successfully!"
-			sleep 3
+			sleep 5
 			clear
 		else
 			MANUAL=1
@@ -144,7 +145,7 @@ settime()
 				echo ""
 				sudo date -s "$TIMESTRING"
 				echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-				sleep 3
+				sleep 5
 				clear
 			else
 				echo ""
