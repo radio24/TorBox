@@ -1,3 +1,3 @@
-from chatsecure.app import create_app
+from chatsecure.app import create_app, socketio
 
-app = create_app()
+app = create_app(debug=False)

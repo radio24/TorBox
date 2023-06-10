@@ -9,18 +9,18 @@ let socket;
 export const ChatContext = createContext();
 
 export const ChatProvider = (props) => {
-  const {
-    privKey, pubKey, pubKeyFp, token, userId, logout,
+	const {
+	privKey, pubKey, pubKeyFp, token, userId, logout,
 		encryptMessage
-  } = useContext(UserContext)
+	} = useContext(UserContext)
 
 	const [chatLoading, setChatLoading] = useState(true)
 	const [miniLoading, setMiniLoading] = useState(true)
-  const [userList, setUserList] = useState([])
-  const [chatName, setChatName] = useState("Default")
-  const [chatId, setChatId] = useState("default")  // Default group
-  const [chatGroup, setChatGroup] = useState(true)  // Start showing group
-  const [chatMessages, setChatMessages] = useState([])
+	const [userList, setUserList] = useState([])
+	const [chatName, setChatName] = useState("Default")
+	const [chatId, setChatId] = useState("default")  // Default group
+	const [chatGroup, setChatGroup] = useState(true)  // Start showing group
+	const [chatMessages, setChatMessages] = useState([])
 	const [unreadMessages, setUnreadMessages] = useState([])
 
 	const chatIdRef = useRef(chatId)
@@ -68,7 +68,7 @@ export const ChatProvider = (props) => {
 		setChatId(id)
 	}
 
-  const sendMessage = async (msg) => {
+	const sendMessage = async (msg) => {
 		let keys = []
 		if (chatId === "default") {
 			// encrypt for all users
@@ -80,17 +80,17 @@ export const ChatProvider = (props) => {
 		}
 		keys.push(pubKey.armor())
 		const encryptedMessage = await encryptMessage(msg, keys)
-    const data = {
-      sender: userId,
-      recipient: chatId,
-      msg: encryptedMessage,
-      is_group: chatGroup,
-    }
-    socket.emit("msg", data)
+	const data = {
+	  sender: userId,
+	  recipient: chatId,
+	  msg: encryptedMessage,
+	  is_group: chatGroup,
+	}
+	socket.emit("msg", data)
 
-    data.id = new Date().getTime()
-    setChatMessages([...chatMessages, data])
-  }
+	data.id = new Date().getTime()
+	setChatMessages([...chatMessages, data])
+	}
 
 	function onMessage(value) {
 		if (value.sender !== userId) {
@@ -139,6 +139,7 @@ export const ChatProvider = (props) => {
 		socket.connect()
 		initSocketEvents()
 	}
+
 	const initSocketEvents = () => {
 		// socket.on('connect', onConnect)
 		// socket.on('disconnect', onDisconnect)
@@ -150,17 +151,17 @@ export const ChatProvider = (props) => {
 	const initData = async () => {
     // await api.getGroupList().then(r => { console.log(r) })
     await api.getUserList().then(r => { updateUserList(r); })
-			.catch(r => { logout() })
+		.catch(r => { logout() })
     await api.getGroupMessageList().then(r => { setChatMessages(r) })
     setChatLoading(false)
   }
 
-  useEffect(() => {
-    if (token !== null && token !== "") {
+	useEffect(() => {
+	if (token !== null && token !== "") {
 			initSocket()
 			initData()
-    }
-  }, [token])
+	}
+	}, [token])
 
 	useEffect(() => {
 		setMiniLoading(true)
@@ -192,15 +193,15 @@ export const ChatProvider = (props) => {
   return (
     <ChatContext.Provider
       value={{
-				chatLoading, setChatLoading,
-				miniLoading, setMiniLoading,
+		chatLoading, setChatLoading,
+		miniLoading, setMiniLoading,
         userList, setUserList, updateUserList, getUserInfo,
         chatName, setChatName,
         chatId, setChatId,
         chatGroup, setChatGroup,
         chatMessages, setChatMessages,
         sendMessage, selectChat,
-				unreadMessages, setUnreadMessages, unreadMessagesRef,
+		unreadMessages, setUnreadMessages, unreadMessagesRef,
       }}
     >
       {props.children}

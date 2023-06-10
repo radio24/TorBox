@@ -49,6 +49,7 @@ def on_msg(data):
     if is_group:
         # send message to group
         gm = GroupMessage.create(**msg_db)
+        del msg_db["recipient"]  # only one group available
         msg["id"] = gm.id
         msg["ts"] = gm.ts
         # FIXME: datetime handle
@@ -118,10 +119,10 @@ def on_connect(auth=None):
 def on_disconnect():
     user = User.get(sid=request.sid)
     emit("user_disconnected", {"id": user.id}, broadcast=True)
-    user.delete_instance()
-    # user.sid = None
-    # user.active = False
-    # user.save()
+    # user.delete_instance()
+    user.sid = None
+    user.active = False
+    user.save()
 
 
 

@@ -36,7 +36,7 @@ def create_app(debug: bool = False):
     api = Api(app)
     api.add_resource(LoginResource, '/login')
     api.add_resource(UserListResource, '/users')
-    api.add_resource(GroupListResource, '/groups')
+    # api.add_resource(GroupListResource, '/groups')
     api.add_resource(UserMessageResource, '/user_msg/<int:sender_id>')
     api.add_resource(GroupMessageResource, '/group_msg')
 

@@ -21,6 +21,9 @@ export const APIClient = (token=false) => {
     if (r.status == 200) {
       return r.data
     }
+    else if (r.status == 403) {
+      console.log("username in use")
+    }
     else {
       return false
     }

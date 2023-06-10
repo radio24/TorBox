@@ -28,10 +28,14 @@ export const MessageBox = props => {
   const [showEmoji, setShowEmoji] = useState(false)
 
 	const showEmojiRef = useRef()
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const sendMsg = (msg) => {
-		sendMessage(msg)
-    setMessage("")
+    if (msg !== "") {
+      sendMessage(msg)
+      setMessage("")
+    }
   }
 
   const onMessageKeyDown = async (e) => {
@@ -45,6 +49,23 @@ export const MessageBox = props => {
     }
   }
 
+  const scrollDown = (behavior="instant") => {
+    messagesEndRef.current.scrollIntoView({ behavior: behavior });
+  }
+
+  const scrollDownIfBottom = () => {
+    const messagesContainer = messagesContainerRef.current;
+    const messagesEnd = messagesEndRef.current;
+    const isScrolledToBottom =
+      messagesContainer.scrollHeight - 50 - messagesContainer.clientHeight <=
+      messagesContainer.scrollTop + 30;
+
+    if (isScrolledToBottom) {
+      // messagesEnd.scrollIntoView({ behavior: behavior });
+      scrollDown("smooth")
+    }
+  }
+
 	useEffect(() => {
 		showEmojiRef.current = showEmoji
 	}, [showEmoji])
@@ -53,13 +74,24 @@ export const MessageBox = props => {
 		showEmojiRef.current = showEmoji
 	}, [])
 
+  useEffect(() => {
+    setTimeout(()=>{scrollDown()}, 500)
+  }, [chatId])
+
+  useEffect(() => {
+    scrollDownIfBottom()
+  }, [chatMessages]);
+
   return(
     <div className='flex flex-col w-full h-full
-    bg-slate-600/80'>
+    bg-gradient-to-l from-slate-500/70 to-slate-600/80'>
 
       {/*messages*/}
       <div className={"relative flex w-full h-[calc(100%-50px)]"} style={{overflow: "none"}}>
-          <div onClick={() => { }} className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}>
+          <div
+            className={"absolute sm:py-8 py-5 bottom-0 overflow-auto flex flex-col w-full max-h-full space-y-3"}
+            ref={messagesContainerRef}
+          >
             {chatMessages.map(m => {
               if (m.sender === userId) {
                 return (
@@ -73,6 +105,7 @@ export const MessageBox = props => {
               }
             })
             }
+           <div ref={messagesEndRef} />
           </div>
       </div>
 

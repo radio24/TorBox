@@ -1,10 +1,18 @@
+import os
 import peewee as pw
 from datetime import datetime
+import logging
+logger = logging.getLogger('peewee')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
-# TODO: db name should be taken from INSTANCE_NAME on ./tcs
+db_name = "tcs.db"  # Dev
+if os.environ.get("INSTANCE_NAME"):
+    db_name = "db/{}.db".format(os.environ.get("INSTANCE_NAME"))
+
 db = pw.SqliteDatabase(
-    "tcs.db", pragmas={"journal_mode": "wal", "cache_size": 10000, "foreign_keys": 1}
+    db_name, pragmas={"journal_mode": "wal", "cache_size": 10000, "foreign_keys": 1}
 )
 
 
@@ -16,7 +24,7 @@ class BaseModel(pw.Model):
 
 class User(BaseModel):
     """Store name and pubkey"""
-    name = pw.CharField(max_length=24, unique=True)
+    name = pw.CharField(max_length=24)
     pubkey = pw.TextField(unique=True)
     fp = pw.CharField(max_length=48, unique=True)
     token = pw.CharField(max_length=48, unique=True)
@@ -48,16 +56,24 @@ class UserMessage(BaseModel):
 class GroupMessage(BaseModel):
     """Messages to the group"""
     sender = pw.ForeignKeyField(
-        User, on_delete="SET NULL", backref="message_sent_groups"
+        User, on_delete="SET NULL", backref="message_sent_groups", null=True
     )
-    recipient = pw.ForeignKeyField(
-        Group, on_delete="CASCADE", backref="messages"
-    )
+    # recipient = pw.ForeignKeyField(
+    #     Group, on_delete="CASCADE", backref="messages"
+    # )
     msg = pw.TextField()
     ts = pw.DateTimeField(default=datetime.now)
 
 
-if __name__ == '__main__':
+def init_db():
     # Create tables
     db.create_tables([User, Group, UserMessage, GroupMessage])
     Group.create(name="default")
+
+
+def main():
+    init_db()
+
+
+if __name__ == '__main__':
+    main()

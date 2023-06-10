@@ -6,106 +6,119 @@ import {APIClient} from "../hooks/APIClient.jsx";
 export const UserContext = createContext();
 
 export const UserProvider = (props) => {
-  const [privKey, setPrivKey] = useState(null)
-  const [pubKey, setPubKey] = useState(null)
-  const [pubKeyFp, setPubKeyFp] = useState("")
-  const [userId, setUserId] = useState(null)
+	const [privKey, setPrivKey] = useState(null)
+	const [pubKey, setPubKey] = useState(null)
+	const [pubKeyFp, setPubKeyFp] = useState("")
+	const [userId, setUserId] = useState(null)
 	const [userName, setUserName] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [token, setToken] = useState(null)
+	const [messages, setMessages] = useState([])
+	const [token, setToken] = useState(null)
 	const [sessionLoading, setSessionLoading] = useState(false)
 
 	const privKeyRef = useRef()
 	const pubKeyRef = useRef()
 
+	const loginWithKey = async (_privateKey) => {
+		const myKey = await openpgp.readKey({ armoredKey: _privateKey })
+		const myPubKey = myKey.toPublic()
 
-	const decryptMessage = async (txt) => {
-// 		const publicKeyArmored = `-----BEGIN PGP PUBLIC KEY BLOCK-----
-// ...
-// -----END PGP PUBLIC KEY BLOCK-----`;
-    const privateKeyArmored = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-...
------END PGP PRIVATE KEY BLOCK-----`; // encrypted private key
+		// console.log("pubKey:", myPubKey.armor())
+		const uid = String(myKey.getUserIDs())
+		const result = uid.match(/\<(.*)?\>/gs)
+		// console.log(result)
+		if (result === null) {
+			//failed to load key alert
+		}
+		const email = result[0]
+		const name = email.split("@")[0].slice(1)
+		// console.log(name)
 
-    // const publicKey = await openpgp.readKey({ armoredKey: publicKeyArmored });
+		setUserName(name)
+		setPrivKey(myKey)
+		setPubKey(myPubKey)
+		setPubKeyFp(myPubKey.getFingerprint())
 
-    // const privateKey = await openpgp.readPrivateKey({ armoredKey: privKey.armor() })
-    const privateKey = privKey
-
-		const encrypted = txt
-    const message = await openpgp.readMessage({
-        armoredMessage: encrypted // parse armored message
-    });
-    const { data: decrypted, signatures } = await openpgp.decrypt({
-        message,
-        // verificationKeys: publicKey, // optional
-        decryptionKeys: privateKey
-    });
-    console.log(decrypted); // 'Hello, World!'
-		return decrypted
-    // check signature validity (signed messages only)
-    // try {
-    //     await signatures[0].verified; // throws on invalid signature
-    //     console.log('Signature is valid');
-    // } catch (e) {
-    //     throw new Error('Signature could not be verified: ' + e.message);
-    // }
+		login(name, myPubKey.armor())
 	}
 
+	const downloadKeys = async () => {
+		const element = document.createElement("a");
+		element.setAttribute("id", "download-key");
+		const file = new Blob([privKey.armor()], { type: "text/plain" });
+		element.href = URL.createObjectURL(file);
+		element.download = `${userName}.asc`;
+
+		// simulate link click
+		document.body.appendChild(element); // Required for this to work in FireFox
+		element.click();
+		document.body.removeChild(element)
+	}
+
+	const decryptMessage = async (txt) => {
+		const privateKey = privKey
+
+		const encrypted = txt
+		const message = await openpgp.readMessage({
+			armoredMessage: encrypted // parse armored message
+		});
+		const { data: decrypted, signatures } = await openpgp.decrypt({
+			message,
+			// verificationKeys: publicKey, // optional
+			decryptionKeys: privateKey
+		});
+		// TODO: Check calls to this function
+		return decrypted
+	}
 
 	const encryptMessage = async (text, publicKeysArmored) => {
-		// const publicKeysArmored = [
-    //     `-----BEGIN PGP PUBLIC KEY BLOCK-----
-		// 		-----END PGP PUBLIC KEY BLOCK-----`,
-		//
-		// 		`-----BEGIN PGP PUBLIC KEY BLOCK-----
-		// 		-----END PGP PUBLIC KEY BLOCK-----`
-		// 	];
-			const privateKeyArmored = privKey.armor();    // encrypted private key
-			const plaintext = text;
+		const privateKeyArmored = privKey.armor();    // encrypted private key
+		const plaintext = text;
 
-			const publicKeys = await Promise.all(publicKeysArmored.map(armoredKey => openpgp.readKey({ armoredKey })));
+		const publicKeys = await Promise.all(publicKeysArmored.map(armoredKey => openpgp.readKey({ armoredKey })));
 
-			const privateKey = await openpgp.readKey({ armoredKey: privateKeyArmored })
+		const privateKey = await openpgp.readKey({ armoredKey: privateKeyArmored })
 
-			const message = await openpgp.createMessage({ text: plaintext });
-			const encrypted = await openpgp.encrypt({
-					message, // input as Message object
-					encryptionKeys: publicKeys,
-					signingKeys: privateKey // optional
-			});
-			console.log(encrypted);
-			return encrypted
+		const message = await openpgp.createMessage({ text: plaintext });
+		const encrypted = await openpgp.encrypt({
+				message, // input as Message object
+				encryptionKeys: publicKeys,
+				signingKeys: privateKey // optional
+		});
+		return encrypted
 	}
 
 	const generateRandomKeys = async (name) => {
-    if (name === "" || name === null) {
-      setPubKeyFp("")
-      return false
-    }
-    const email = name.replace(" ", "_").toLowerCase() + "@torboxchatsecure.onion"
+		if (name === "" || name === null) {
+			setPubKeyFp("")
+			return false
+		}
+		const email = name.replace(" ", "_").toLowerCase() + "@torboxchatsecure.onion"
 
-    const { privateKey, publicKey, revocationCertificate } = await openpgp.generateKey({
-        curve: 'curve25519',
-        userIDs: [{ name: name, email: email }], // you can pass multiple user IDs
-        // passphrase: 'super long and hard to guess secret',
-        format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
-    });
+		const { privateKey, publicKey, revocationCertificate } = await openpgp.generateKey({
+			curve: 'curve25519',
+			userIDs: [{ name: name, email: email }], // you can pass multiple user IDs
+			// passphrase: 'super long and hard to guess secret',
+			format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
+		});
 
 		setUserName(name)
-    setPrivKey(privateKey)
-    setPubKey(publicKey)
-    setPubKeyFp(publicKey.getFingerprint())
-  }
+		setPrivKey(privateKey)
+		setPubKey(publicKey)
+		setPubKeyFp(publicKey.getFingerprint())
+	}
 
-	const login = async (name) => {
-    const api = APIClient()
-    const data = await api.login(name, pubKey.armor())
-    if (data) {
-      setUserId(data.id)
-      setToken(data.token)
-    }
-  }
+	const login = async (name, _pubKey=null) => {
+		const api = APIClient()
+		let data = null;
+		if (_pubKey === null)
+			data = await api.login(name, pubKey.armor())
+		else
+			data = await api.login(name, _pubKey)
+		if (data !== null) {
+			setUserId(data.id)
+			setToken(data.token)
+		}
+	}
 
 	const logout = async () => {
 		setSessionLoading(true)
@@ -183,23 +196,24 @@ export const UserProvider = (props) => {
 
 
   return (
-    <UserContext.Provider
-      value={{
-        privKey, setPrivKey,
-        pubKey, setPubKey,
-        pubKeyFp, setPubKeyFp,
-        userId, setUserId,
-				userName, setUserName,
-        // userList, setUserList,
-        messages, setMessages,
-        token, setToken,
-				login, logout,
-				sessionLoading,
-				generateRandomKeys,
-				encryptMessage, decryptMessage
-      }}
-    >
-      {props.children}
-    </UserContext.Provider>
+	<UserContext.Provider
+	  value={{
+		privKey, setPrivKey,
+		pubKey, setPubKey,
+		pubKeyFp, setPubKeyFp,
+		userId, setUserId,
+		userName, setUserName,
+		// userList, setUserList,
+		messages, setMessages,
+		token, setToken,
+		login, logout, loginWithKey,
+		sessionLoading,
+		generateRandomKeys,
+		encryptMessage, decryptMessage,
+		downloadKeys
+	  }}
+	>
+	  {props.children}
+	</UserContext.Provider>
   );
 };

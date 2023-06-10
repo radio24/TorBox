@@ -46,42 +46,52 @@ class LoginResource(Resource):
         name_txt = args.get("name", None)
         pubkey_txt = args.get("pubkey", None)
         if name_txt and pubkey_txt:
+            # try:
+            # load key
             try:
-                # load key
                 pubkey = pgpy.PGPKey()
                 pubkey.parse(pubkey_txt)
                 fp = pubkey.fingerprint
-                name = pubkey.userids[0].name
-                email = pubkey.userids[0].email
-
-                # some checks
-                assert name == name_txt
-                assert name.lower() == email.split("@")[0].lower()
-
-                # TODO: This block is to use with custom keys
-                # if user is already registered, login
-                user = User.filter(fp=fp)
-                if user:
-                    reply = {"id": user.id, "token": user.token}
-                    return jsonify(reply)
-
-                # generate token
-                s = str(fp + current_app.config["SECRET_KEY"]).encode("utf-8")
-                token = hashlib.sha1(s).hexdigest()
-                # add to db
-                new_user = User.create(
-                    name=name,
-                    pubkey=pubkey_txt,
-                    fp=fp,
-                    token=token,
-                )
-                new_user.save()
-                reply = {"id": new_user.id, "token": token}
-                return jsonify(reply)
-
-            except Exception as e:  # noqa
-                # print(e)
+            except:
                 return Response(status=400)
+            name = pubkey.userids[0].name
+            email = pubkey.userids[0].email
+
+            # some checks
+            # assert name == name_txt
+            # assert name.lower() == email.split("@")[0].lower()
+
+            # if user is already registered, login
+            user = User.filter(User.fp == fp)
+            if user:
+                user = list(user.dicts())[0]
+                print(user)
+                reply = {"id": user["id"], "token": user["token"]}
+                return jsonify(reply)
+            del user
+
+            # There can be only one unique name online
+            user = User.filter((User.name == name) & (User.active == True))
+            if user:
+                return Response(status=403)
+
+            # generate token
+            s = str(fp + current_app.config["SECRET_KEY"]).encode("utf-8")
+            token = hashlib.sha1(s).hexdigest()
+            # add to db
+            new_user = User.create(
+                name=name,
+                pubkey=pubkey_txt,
+                fp=fp,
+                token=token,
+            )
+            new_user.save()
+            reply = {"id": new_user.id, "token": token}
+            return jsonify(reply)
+
+            # except Exception as e:  # noqa
+            #     # print(e)
+            #     return Response(status=400)
 
         else:
             return Response(status=400)
@@ -119,7 +129,9 @@ class UserListResource(Resource):
                     peewee.JOIN.LEFT_OUTER,
                     on=(User.id == last_message.c.sender_id),
                 )
-                .filter(User.id != kwargs["user"].id)
+                .filter(
+                    (User.id != kwargs["user"].id) & (User.active == True)
+                 )
                 .dicts()
             )
 
@@ -139,6 +151,9 @@ class GroupListResource(Resource):
 
     def get(self, **kwargs):
         """Return list of active groups"""
+
+        # TODO: Integration not ready.
+        return Response(status=501)
         try:
             last_message = (
                 GroupMessage.select(
@@ -194,17 +209,33 @@ class GroupMessageResource(Resource):
         """Get list of messages in group"""
         try:
             user = kwargs["user"]
+            active_users = list(
+                User
+                .select(User.id)
+                .where(
+                    (User.active == 1)
+                )
+                .dicts()
+            )
+            active_users = [u["id"] for u in active_users]
+
             messages = list(
                 GroupMessage
                 .select()
                 .where(
-                    (GroupMessage.recipient == 1)
-                    # & (GroupMessage.ts >= user.ts_join)
+                    # (GroupMessage.recipient == 1) &
+                    ((GroupMessage.ts >= user.ts_join) &
+                    (GroupMessage.sender << active_users))
                 )
-                .order_by("-ts")
+                .order_by(GroupMessage.id)
+                # .limit(100)
                 .dicts()
             )
+            if len(messages) > 100:
+                messages = messages[-100:]
+
         except Exception as e:  # noqa
+            print("EXCEPTION!!!: {}".format(e))
             messages = []
 
         return jsonify(messages)
