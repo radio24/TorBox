@@ -167,10 +167,12 @@ check_bridge_relay
 check_interface_with_internet
 check_log_check
 check_tor
+TOR_OVER_VPN=$(sudo iptables -t nat -vnL | grep tun0)
 
-if [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ]; then TOR_STATUS="VPN is up & TOR working"
-elif [ ! -z "$TOR_STATUS" ] && [ -z "$VPN_STATUS" ]; then TOR_STATUS="         TOR is working"
-elif [ -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ]; then TOR_STATUS="              VPN is up"
+if [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ ! -z "$TOR_OVER_VPN" ]; then TOR_STATUS="   TOR over VPN working"
+elif [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="VPN is up & TOR working"
+elif [ ! -z "$TOR_STATUS" ] && [ -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="         TOR is working"
+elif [ -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="              VPN is up"
 else TOR_STATUS=""
 fi
 
@@ -737,6 +739,7 @@ case "$CHOICE" in
       tun0up=$(ip link | grep tun0)
       if [ -z "$tun0up" ] ; then
         connecting_to_VPN
+				sleep 3
         tun0up=$(ip link | grep tun0)
       fi
       if [ ! -z "$tun0up" ] ; then
@@ -749,8 +752,7 @@ case "$CHOICE" in
           echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
           echo ""
           add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-          sleep 2
+          # (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
           echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
           if wget -q --spider $CHECK_URL; then
             echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"

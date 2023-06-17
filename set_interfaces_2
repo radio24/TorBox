@@ -245,7 +245,7 @@ else
 fi
 
 ###### Exclusion of domains from tor protection activated ######
-if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then ./set_interfaces_3 1; fi
+if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then ./set_interfaces_3; fi
 
 ###### FINISH ######
 # Seems to guarante a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.

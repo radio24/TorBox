@@ -501,10 +501,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 							if [ -f "$VPN_LIST_FILE_OWN" ]; then
 								(sudo ipset destroy $VPN_LIST) 2>/dev/null
 								sudo ipset create $VPN_LIST hash:ip
-								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+								config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 							fi
 							sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
-							./set_interfaces_3 0
+							./set_interfaces_3
 						elif [ "$OLD_EXCLUSIONLISTS" == "0" ] && [ "$RESTORE_EXCLUSIONLISTS" == "1" ]; then
 							cp "restore$CLEARNET_LIST_FILE_OWN" /home/torbox/torbox/run
 							cp "restore$VPN_LIST_FILE_OWN" /home/torbox/torbox/run
@@ -516,10 +516,10 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 							if [ -f "$VPN_LIST_FILE_OWN" ]; then
 								(sudo ipset destroy $VPN_LIST) 2>/dev/null
 								sudo ipset create $VPN_LIST hash:ip
-								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+								config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 							fi
 							sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
-							./set_interfaces_3 0
+							./set_interfaces_3
 						fi
 					fi
 				else

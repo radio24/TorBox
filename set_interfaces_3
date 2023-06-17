@@ -25,7 +25,7 @@
 # clients through the clearnet or VPN.
 #
 # SYNTAX
-# ./set_interfaces_3 <first_run>
+# ./set_interfaces_3
 #
 # The <first_run> variable is set, if this script was started after a reboot
 # 0 -> no reboot was occured
@@ -87,18 +87,16 @@ read_config()
 echo -e "${RED}[+] Setting up exclusion of domains from tor protection...${NOCOLOR}"
 read_config
 
-# This is only needed, if not started by the TorBox menu
-# Check if exceptionslists already exist
-if [ "$FIRST_RUN" == "1" ]; then
-	if [ -f "$CLEARNET_LIST_FILE" ]; then
-		sudo $IPSET restore -file $CLEARNET_LIST_FILE -exist
-	else
-		sudo $IPSET create $CLEARNET_LIST hash:ip
-	fi
+# Flush the old ipset
+sudo $IPSET flush $CLEARNET_LIST
+if [ -f "$CLEARNET_LIST_FILE" ]; then
+	sudo $IPSET restore -file $CLEARNET_LIST_FILE -exist
+else
+	sudo $IPSET create $CLEARNET_LIST hash:ip
+fi
+if [ ! -z "$tun0up" ] ; then
 	if [ -f "$VPN_LIST_FILE" ]; then
 		sudo $IPSET restore -file $VPN_LIST_FILE -exist
-	else
-		sudo $IPSET create $VPN_LIST hash:ip
 	fi
 fi
 
@@ -122,30 +120,16 @@ fi
 
 # New rules
 # If we have VPN, then the clearnet list and the VPN list will be used to route packages through VPN.
-# If we have no VPN, then only the clearnet list will be used to route packages directly to theri destination.
-if [ ! -z "$tun0up" ] ; then
-	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST -m set ! --match-set $VPN_LIST dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST -m set ! --match-set $VPN_LIST dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST -m set ! --match-set $VPN_LIST dst -p udp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST -m set ! --match-set $VPN_LIST dst -p udp -j REDIRECT --to-port 9040
-else
-	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
-fi
+# If we have no VPN, then only the clearnet list will be used to route packages directly to the destination.
+sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
+sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
+sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 
 # -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
 sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
-if [ ! -z "$tun0up" ] ; then
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $VPN_LIST dst -j ACCEPT
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $VPN_LIST dst -j ACCEPT
-else
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
-	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
-fi
+sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
+sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT

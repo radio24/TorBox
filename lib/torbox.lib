@@ -536,12 +536,30 @@ connecting_to_VPN()
     echo ""
     ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
+		if ! grep "auth-retry interact" ${ovpn_file}; then printf "\nauth-retry interact" | tee -a ${ovpn_file}; fi
     sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
     sleep 15
+		# To be sure that DNS rsolution works
+		echo ""
+		echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+		if wget -q --spider "$CHECK_URL"; then
+			echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+		else
+			echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+			echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
+			echo ""
+			add_open_dns
+			# (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
+			echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
+			if wget -q --spider "$CHECK_URL"; then
+				echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
+			else
+				echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+			fi
+		fi
   else
-    sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
@@ -1026,7 +1044,7 @@ config_ipset()
 	IPSET_NAME=$2
 	IPSET_SAVE_FILE=$3
 	if [ -f "$FILENAME" ]; then
-		sudo ipset flush $IPSET_NAME
+		sudo ipset flush $IPSET_NAME;
 		readarray -t LIST_FILE_OWN_ARRAY < "$FILENAME"
 		for LIST_FILE_OWN_STRING in "${LIST_FILE_OWN_ARRAY[@]}"
 		do

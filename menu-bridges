@@ -494,25 +494,9 @@ case "$CHOICE" in
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         connecting_to_VPN
 				# Is the command below really necessary? I don't think so hmmmm
-        sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-        echo ""
-        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        if wget -q --spider "$CHECK_URL"; then
-          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-        else
-          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-          echo ""
-          add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-          sleep 2
-          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          if wget -q --spider "$CHECK_URL"; then
-            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-          else
-            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-          fi
-        fi
+        # sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+			  sudo systemctl restart tor &
+				tun0up=$(ip link | grep tun0)
       fi
     else
       INPUT=$(cat text/disconnecting-VPN-text)
@@ -522,6 +506,7 @@ case "$CHOICE" in
         sudo killall openvpn
         echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
         sleep 15
+				sudo systemctl restart tor &
         echo ""
         echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
         echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"

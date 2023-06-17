@@ -141,6 +141,6 @@ fi
 
 # NEW v.0.5.3
 # Starting domain exclusion, if activated
-if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 1 ; fi
+if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 ; fi
 
 exit 0

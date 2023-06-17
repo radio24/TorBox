@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=3
+NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=2
+NO_SPACER=3
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -102,6 +102,8 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - DANGER ZONE" 
 " 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 " 2" "Add, change or remove a domain/IP entry in the exlusion lists"  \
 " 3" "List the exclusion lists" \
+"==" "==========================================[Developper Tools]===" \
+" 4" "Forwarding only - tor protection disabled" \
 "==" "==============================================================="  \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -124,27 +126,9 @@ case "$CHOICE" in
 				if [ -z "$tun0up" ] ; then
 					INPUT=$(cat text/connecting-VPN-exclusion-text)
 	      	if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          	connecting_to_VPN
-				  	echo ""
-				  	echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-				  	if wget -q --spider "$CHECK_URL"; then
-							echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-						else
-							echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-							echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-							echo ""
-							add_open_dns
-							(sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-							sleep 2
-							echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-							if wget -q --spider "$CHECK_URL"; then
-								echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-							else
-								echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-							fi
-						fi
+						connecting_to_VPN
+						sudo systemctl restart tor &
 					fi
-					sleep 5
 				fi
 				# Start the exclusion
 				# Check if exceptionslists already exist and decide what to do with them --> Keep it, delete it, or escape
@@ -179,7 +163,7 @@ case "$CHOICE" in
 							[ "$exitstatus" == "255" ] && exit 0
 							(sudo ipset destroy $VPN_LIST) 2>/dev/null
 							sudo ipset create $VPN_LIST hash:ip
-							config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 						else
 							exitstatus=$?
 							# exitstatus == 255 means that the ESC key was pressed
@@ -196,12 +180,12 @@ case "$CHOICE" in
 					sudo ipset create $VPN_LIST hash:ip
 				fi
 				sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
-				./set_interfaces_3 0
+				./set_interfaces_3
 			fi
 		fi
     if [ "$TOGGLE19" == "Stop" ]; then
 			# Where is the Internet
-			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 			# Where are the clients
 			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
 			NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
@@ -284,7 +268,7 @@ case "$CHOICE" in
 							whiptail --title "TorBox - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
 					    ./find_domains "$DOMAINNAME" 1
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-							config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 							echo -e "${RED}[+] Done!${NOCOLOR}"
 							sleep 2
 						;;
@@ -313,7 +297,7 @@ case "$CHOICE" in
 								sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
 							fi
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-							config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 							echo -e "${RED}[+] Done!${NOCOLOR}"
 							sleep 2
 						;;
@@ -342,7 +326,7 @@ case "$CHOICE" in
 								echo -e "${RED}[+] Removing done!${NOCOLOR}"
 								echo ""
 								config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-								config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+								config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 								sleep 2
 							fi
 						;;
@@ -384,7 +368,7 @@ case "$CHOICE" in
 							(sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}) &>/dev/null
 						fi
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-						config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 						echo -e "${RED}[+] Done!${NOCOLOR}"
 						sleep 2
 					else
@@ -404,7 +388,7 @@ case "$CHOICE" in
 						[ "$exitstatus" == "255" ] && exit 1
 						./find_domains "$DOMAINNAME" 1
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-						config_ipset $VPN_LIST_FILE_OWN $VPN_LIST $VPN_LIST_FILE
+						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 						echo -e "${RED}[+] Done!${NOCOLOR}"
 						sleep 2
 					fi
@@ -457,6 +441,23 @@ case "$CHOICE" in
 			echo " "
 		fi
 		read -n 1 -s -r -p "Press any key to continue"
+	;;
+
+	# Forwarding only - tor protection disabled
+	4)
+		# Where is the Internet
+		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
+		# Where are the clients
+		CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+		NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
+		if [ "$NUMBER_OF_WORD" == "1" ]; then
+			I_DEVICE1=$CLIENT_IFACE
+			if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+		else
+			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		fi
+    sudo bash set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2
 	;;
 
   *)
