@@ -511,7 +511,7 @@ connecting_to_VPN()
     echo ""
     ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
-		if ! grep "auth-retry interact" ${ovpn_file}; then printf "\nauth-retry interact" | tee -a ${ovpn_file}; fi
+		if ! grep -q "auth-retry interact" ${ovpn_file}; then (printf "\nauth-retry interact") >/dev/null 2>&1 | tee -a ${ovpn_file}; fi
     sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
