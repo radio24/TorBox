@@ -83,7 +83,7 @@ fi
 
 # IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
 #            In case that changes, the support of multiple Snowflake bridges can be found in the code archive
-online_check $BRIDGE_DB_URL 1 1
+online_check $BRIDGE_DB_URL 0 1
 clear
 if [ $OCHECK == 1 ]; then
 	if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then

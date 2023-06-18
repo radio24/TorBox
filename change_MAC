@@ -212,7 +212,9 @@ change_mac_address()
 # This function restarts hostapd or asks for reselecting the Internet source in the main menu.
 change_mac_address_finish()
 {
-	if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
+	# I guess the old one was wrong
+	# if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
+	if [[ "$CLIENT_IFACE" =~ "$O_DEVICE" ]]; then
 		echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
 		sudo systemctl restart hostapd
 	elif [[ "$INTERNET_IFACE" == "$O_DEVICE" ]]; then

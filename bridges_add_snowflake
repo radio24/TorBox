@@ -90,7 +90,7 @@ case "$CHOICE" in
 		# exitstatus == 255 means that the ESC key was pressed
 		[ "$exitstatus" == "255" ] && COUNTRY=00 || COUNTRY=$(echo $COUNTRY | tr '[:upper:]' '[:lower:]')
 		clear
-    online_check $TOR_GET_BRIDGES_URL 1 1
+    online_check $TOR_GET_BRIDGES_URL 0 1
     if [ $OCHECK == 1 ]; then
       echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
       trap "bash bridges_add_snowflake $MODE_BRIDGES $STANDALONE; exit 0" SIGINT

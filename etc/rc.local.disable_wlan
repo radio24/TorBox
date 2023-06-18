@@ -20,6 +20,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/local/go/bin
 sudo dmesg -D
 rfkill unblock all
 bash /home/torbox/torbox/regset
@@ -112,16 +113,13 @@ fi
 if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tfs initial ; fi
 if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tcs initial ; fi
 
-sleep 5
 sudo systemctl start dnsmasq
-if sudo timeout 5 sudo route | grep -m 1 default ; then
-	sudo wget -q --spider "pool.ntp.org"
-	OCHECK=$?
-	echo "$OCHECK"
-	if [ $OCHECK -eq 0 ]; then
-		sudo /usr/sbin/ntpdate pool.ntp.org
-	fi
-fi
+sleep 3
+sudo /bin/ping -c 1 "pool.ntp.org" >/dev/null 2>&1 && sudo /usr/sbin/ntpdate pool.ntp.org
+
+# NEW v.0.5.3
+# Starting domain exclusion, if activated
+if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then sudo /sbin/ipset -q restore -file /home/torbox/torbox/run/clearnet-list -exist ; fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 
 # This function opens the ports, after a restart if bridge relay is on
@@ -138,9 +136,5 @@ else
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
-
-# NEW v.0.5.3
-# Starting domain exclusion, if activated
-if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 ; fi
 
 exit 0

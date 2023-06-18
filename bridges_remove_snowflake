@@ -120,7 +120,7 @@ case "$CHOICE" in
   # Delete only bridges, which do not exist anymore
   2)
     clear
-    online_check $BRIDGE_DB_URL 1 1
+    online_check $BRIDGE_DB_URL 0 1
     if [ $OCHECK == 1 ]; then
       echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
@@ -214,7 +214,7 @@ case "$CHOICE" in
   3)
     INPUT=$(cat text/delete-selected-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-			online_check $BRIDGE_DB_URL 1 1
+			online_check $BRIDGE_DB_URL 0 1
 			clear
 			if [ $OCHECK == 1 ]; then
 				if (whiptail --title "TorBox - BRIDGE REMOVAL" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then

@@ -410,7 +410,7 @@ case "$CHOICE" in
 		clear
 		if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
 			echo " "
-			echo -e "${RED}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
+			echo -e "${WHITE}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
 			echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
 			echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
 			echo " "
@@ -426,7 +426,7 @@ case "$CHOICE" in
 		fi
 		if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
 			echo " "
-			echo -e "${RED}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
+			echo -e "${WHITE}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
 			echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
 			echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
 			echo " "

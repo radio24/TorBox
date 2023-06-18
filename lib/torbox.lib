@@ -194,30 +194,6 @@ is_integer()
  	fi
 }
 
-# Currently not in use - only for documentation
-# local_clearnet_dns_resolution_on()
-# This function turns the local DNS resolution on
-local_clearnet_dns_resolution_on()
-{
-	(sudo iptables -t nat -D OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo iptables -t nat -D OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-	sudo systemctl start dnsmasq
-	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=1/" ${RUNFILE}
-}
-
-# Currently not in use - only for documentation
-# local_clearnet_dns_resolution_off()
-# This function turns the local DNS resolution off
-local_clearnet_dns_resolution_off()
-{
-	sudo systemctl stop dnsmasq
-	(sudo iptables  -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo iptables  -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=0/" ${RUNFILE}
-}
-
 # add_open_dns()
 # Syntax add_open_dns
 # Used predefined variables: RED, NOCOLOR, RUNFILE
@@ -283,8 +259,6 @@ online_check()
 	else
 		CLEARNET_ONLY=0
   fi
-	# Check if local clearnet DNS resolution is on or off
-	CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
@@ -362,8 +336,9 @@ online_check()
     fi
   fi
 
+  # TorBox v.0.5.3: It seems that $NO_CONNECTION_WARNING = 1 is not used anymore --> to be removed
   # Don't change it to "-z" !
-  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" != "1" ]; then
+  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" = "1" ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=1
@@ -695,7 +670,7 @@ list_all_obfs4_bridges()
 {
   BRIDGE_DB_URL="https://onionoo.torproject.org"
   clear
-  online_check $BRIDGE_DB_URL 1 1
+  online_check $BRIDGE_DB_URL 0 1
   clear
   if [ $OCHECK == 1 ]; then
     echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
@@ -782,7 +757,7 @@ list_all_snowflake_bridges()
 {
   BRIDGE_DB_URL="https://onionoo.torproject.org"
   clear
-  online_check $BRIDGE_DB_URL 1 1
+  online_check $BRIDGE_DB_URL 0 1
   clear
   if [ $OCHECK == 1 ]; then
     echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"

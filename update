@@ -936,7 +936,7 @@ case "$CHOICE" in
 		if [ $exitstatus != 255 ]; then
       clear
       # Avoid cheap censorship mechanisms
-      online_check $TORURL 1 1
+      online_check $TORURL 0 1
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         clear
@@ -1001,7 +1001,7 @@ case "$CHOICE" in
 		# exitstatus == 255 means that the ESC key was pressed
 		if [ $exitstatus != 255 ]; then
       clear
-      online_check $TORBOXURL 1 1
+      online_check $TORBOXURL 0 1
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         clear

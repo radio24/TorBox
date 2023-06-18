@@ -64,9 +64,6 @@ EXITID="EXITID=0"
 MMENUSTRING=""
 INTERNETSELECTION=$1
 
-#Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
-
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 
@@ -729,37 +726,28 @@ case "$CHOICE" in
   10)
     INPUT=$(cat text/tun0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			ask_captive
-      tun0up=$(ip link | grep tun0)
-      if [ -z "$tun0up" ] ; then
-        connecting_to_VPN
+			tun0up=$(ip link | grep tun0)
+			if [ -z "$tun0up" ] ; then
+				online_check default 0 0
+				if [ $OCHECK == 0 ]; then
+					INPUT=$(cat text/tun0-not_connected-text)
+					if (whiptail --title "TorBox - INFO" --yesno --no-button "CONTINUE" --yes-button "CONNECT WLAN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+						display_net_reconfiguration_info
+						(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+						echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+						(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+						echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+						sleep 2
+						ask_captive
+						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
+						sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0 0
+			  	fi
+				fi
+				connecting_to_VPN
 				sleep 3
-        tun0up=$(ip link | grep tun0)
-      fi
+			fi
+			tun0up=$(ip link | grep tun0)
       if [ ! -z "$tun0up" ] ; then
-        clear
-        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        if wget -q --spider $CHECK_URL; then
-          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-        else
-          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-          echo ""
-          add_open_dns
-          # (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          if wget -q --spider $CHECK_URL; then
-            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-          else
-            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-          fi
-        fi
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -811,9 +799,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 1
+          sudo bash set_interfaces_2 tun0 wlan0 eth0 0 1 1
         else
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 0
+          sudo bash set_interfaces_2 tun0 wlan0 eth0 0 0 1
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
