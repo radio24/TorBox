@@ -73,9 +73,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-sudo systemctl start hostapd
-
-# To set TorBox's AP is dangerous and may look someone out. We change that back to wlan0
+# To set TorBox's AP to wlan1 is dangerous and may lock someone out. We change that back to wlan0.
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1
@@ -91,6 +89,8 @@ if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wl
 	sudo systemctl restart isc-dhcp-server
 	sleep 2
 fi
+
+sudo systemctl start hostapd
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
