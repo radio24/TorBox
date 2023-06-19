@@ -1,19 +1,16 @@
 Congratulation, you got TorBox running!
 
-TorBox didn't connect the Tor network yet, but it will do so after the
-next start-up dialogue boxes, which will ask you the following:
+If you are running this "First Start-up Dialogue" for the first time, TorBox hasn't yet connected to the Tor network. However, it will do so after the following dialogue boxes, which will ask you the following:
+- if you want to use the standard hostname (TorBox053) or set your own or a
+  randomized hostname;
 - if you want to use a (default) firewall circumvention method;
 - from where the Internet is coming;
 - if you want to activate the TorBox automatic counter actions;
 - if you want to use OBFS4 or SNOWFLAKE bridges;
 - and if you want to install additional network drivers.
 
-Leaving now, for security reasons, tor will stay BLOCKED to communicate
-with the Internet. However, if needed, you can rerun the script using the
-Update and Maintenance sub-menu.
+Leaving now, for security reasons, tor will stay BLOCKED from communicating with the Internet. However, you can rerun the script using the Update and Maintenance sub-menu if needed.
 
-If you need additional help, please visit https://www.torbox.ch or contact
-us on our Github page (https://github.com/radio24/TorBox). You can also
-skip the next dialogue boxes if you know what you are doing.
+If you need additional help, please visit https://www.torbox.ch or our GitHub page (https://github.com/radio24/TorBox).
 
-Do you want to continue with the next dialogue boxes (the default is YES)?
+Do you want to continue with the following dialogue boxes (the default is YES)?

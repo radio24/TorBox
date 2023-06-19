@@ -187,17 +187,18 @@ if [ -z "$FRESHINSTALLED" ]; then FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${
 while [ $FRESHINSTALLED -gt 0 ]; do
   case $FRESHINSTALLED in
 
+		# TorBox v.0.5.3: Is not needed anymore !!!
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-      if [ -d "/home/ubuntu" ]; then
+      # if [ -d "/home/ubuntu" ]; then
         # sudo killall systemd
         # sleep 5
-        sudo userdel -r ubuntu
+        # sudo userdel -r ubuntu --> not needed anymore, is in 3) included
 				# This will remove the anoying SSH warning during the log in (which is not valid)
 				# sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
 				# sudo sed -i "/^pi:/d" /etc/shadow
-      fi
+      # fi
 			# DON'T REMOVE IT! This is necessary because of possible kernel updates
 			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
       sleep 5
@@ -228,7 +229,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
       INPUT=$(cat text/first_use-welcome-text)
-      if (whiptail --title "TorBox - FIRST START UP!" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - FIRST START UP (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
         sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
@@ -252,17 +253,16 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 						HOSTNAME=$(head -c 64 <<<$HOSTNAME)
 					fi
 				fi
-			else
-				HOSTNAME="TorBox053"
-			fi
-			clear
-			echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-			(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-			sudo systemctl restart systemd-hostnamed
-			if grep "127.0.1.1.*" /etc/hosts ; then
-				(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
-			else
-				(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+				clear
+				echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+				(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+				sudo systemctl restart systemd-hostnamed
+				if grep "127.0.1.1.*" /etc/hosts ; then
+					(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
+				else
+					(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+				fi
+				whiptail --title "TorBox - INFO" --msgbox "TorBox's hostname is now changed to $HOSTNAME\n\nYou have to log out and again log into your console to see the change." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
 			fi
 
 			# Will the user keep using the default configured firewall circumvention?
@@ -335,7 +335,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			echo  "             Date: $(date '+%Y-%m-%d')"
 			./clock.py
 			echo
-			echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+			echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 			echo
 			while true
 			do
@@ -354,7 +354,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat text/first_use-add-bridges-text)
-			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat text/no_antifirewall-please-text)
 					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then

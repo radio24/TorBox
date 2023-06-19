@@ -569,7 +569,7 @@ echo
 echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
 echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do

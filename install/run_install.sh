@@ -564,7 +564,7 @@ echo
 echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
 echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do
@@ -1113,9 +1113,9 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-# Is this right? Shouldn't it be FRESH_INSTALLED=3 ?
-# If removed, FRESH_INSTALLED=1 is obsolet and can be deleted in first_use
-sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+# TorBox v.0.5.3: TEST - was FRESH_INSTALLED=1
+# If not needed, FRESH_INSTALLED=1 is obsolet in first_use and can be deleted
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn

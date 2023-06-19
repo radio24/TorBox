@@ -1,4 +1,4 @@
-In highly authoritarian countries connecting the tor network could be seen as suspicious. Bridges with pluggable transports hide the connection to the tor network. However, we recommend only using this option if necessary because it is slower and doesn't work if you are behind a tightly configured firewall.
+In highly authoritarian countries connecting the tor network could be seen as suspicious. Bridges with pluggable transports hide the connection to the tor network. However, we recommend only using this option if necessary. It is slower and doesn't work if behind a tightly configured firewall.
 
 The most important bridges are OBFS4 and SNOWFLAKE. OBFS4 is more performant and works well in countries with moderate internet censorship. For China, Iran, Russia or Turkmenistan, we recommend using SNOWFLAKE (see also here: https://github.com/radio24/TorBox/discussions/179).
 
