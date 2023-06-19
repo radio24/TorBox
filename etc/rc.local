@@ -84,7 +84,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-# To set TorBox's AP is dangerous and may look someone out. We change that back to wlan0
+# To set TorBox's AP to wlan1 is dangerous and may lock someone out. We change that back to wlan0.
 if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   sudo ifdown wlan0
   sudo ifdown wlan1
