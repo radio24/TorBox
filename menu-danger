@@ -248,7 +248,7 @@ case "$CHOICE" in
 					touch "$VPN_LIST_FILE_OWN"
 				fi
 
-				# The domain is lready added
+				# The domain is already added
 				if [ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ] || [ "$NUMBER_DOMAIN_EXIST_VPN" -gt "0" ]; then
 					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - DOMAIN EXCLUSION" --menu "The domain is already on the exclusion list. You can do the following:" 11 $MENU_WIDTH 3 \
 					" 1" "Rescan and add more subdomains and IPs connected to the domain" \

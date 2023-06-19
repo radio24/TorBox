@@ -91,9 +91,12 @@ do
 			SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
 			SUBDOMAIN=$(sed -E "s/\.$//g" <<< "$SUBDOMAIN")
 			IP_LIST=$(cut -d' ' -f2- <<< "$DUMP_STRING")
+			# We are building "NEW_STRING" from scratch
+			# The domain is already in "NEW_STRING"
 			# ATTENTION: we need the space before "SUBDOMAIN" as a delimiter!!
 			if grep -q " $SUBDOMAIN" <<< "$NEW_STRING"; then
-				(IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+				# THIS WILL BREAK!! -> (IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
 					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
@@ -101,8 +104,9 @@ do
 						NEW_STRING=$(sed -E "s/[[:space:]]${SUBDOMAIN}/[[:space:]]${SUBDOMAIN}[[:space:]]$IP/g" <<< "$NEW_STRING");
 					fi
 				done
+			# The domain isn't in "NEW_STRING" yet
 			else
-				(IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
 					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
@@ -113,9 +117,11 @@ do
 		done
 		# Matching routine stop
 
+    # NEW v.0.5.3
+    unset DUMP_ARRAY
 		readarray -t DUMP_ARRAY< <(printf %s"${NEW_STRING}")
 		# Display the result
-		clear
+	  clear
 		echo -e "${RED}[+] Displaying the result${NOCOLOR}"
 		echo ""
 		echo -e "${WHITE}Domain IP${NOCOLOR}"
@@ -133,11 +139,10 @@ do
 			if [ ! -z "$SUBDOMAIN" ]; then
 				MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
 				# Avoid doubling IPs
-				(IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
 					MORE_IPs=$(sed "s/$IP//g" <<< "$MORE_IPs")
 				done
-				#
 				# Remove doubling spaces
 				IP=$(xargs <<< "$IP");
 				MORE_IPs=$(xargs <<< "$MORE_IPs");
@@ -226,7 +231,7 @@ if [ "$RESCAN" == "1" ]; then
 						IP_LIST=$(awk -F' ' '{$1=""; print $0}' <<< "$DUMP_STRING")
 						# ATTENTION: NO space before "SUBDOMAIN", because it is at the beginning of each line!!
 						if grep -q "^$SUBDOMAIN" "${CLEARNET_LIST_FILE_OWN}"; then
-							(IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+							IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 							for IP in "${IP_ARRAY[@]}"; do
 								if grep "^$SUBDOMAIN" "${CLEARNET_LIST_FILE_OWN}" | grep -q "$IP"; then
 									sleep 1
@@ -251,7 +256,7 @@ if [ "$RESCAN" == "1" ]; then
 						IP_LIST=$(awk -F' ' '{$1=""; print $0}' <<< "$DUMP_STRING")
 						# ATTENTION: NO space before "SUBDOMAIN", because it is at the beginning of each line!!
 						if grep -q " $SUBDOMAIN" "${VPN_LIST_FILE_OWN}"; then
-							(IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
+							IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 							for IP in "${IP_ARRAY[@]}"; do
 								if grep "^$SUBDOMAIN" "${VPN_LIST_FILE_OWN}" | grep -q "$IP"; then
 									sleep 1
