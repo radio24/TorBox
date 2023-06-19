@@ -53,11 +53,12 @@ HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
+TXT_DIR="/home/torbox/torbox/text"
 
 
 ###### MAIN ######
 clear
-INPUT=$(cat text/backup-text)
+INPUT=$(cat "${TXT_DIR}/backup-text")
 if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	if [ "$exitstatus" == "0" ]; then
@@ -176,7 +177,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			fi
 			echo ""
 			echo -e "${WHITE}[+] Backup is done!${NOCOLOR}"
-			echo -e "${RED}[+] You will find it here: ${OS_BK_TAR}"
+			echo -e "${RED}[+] You will find it here: ${WHITE}${OS_BK_TAR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear

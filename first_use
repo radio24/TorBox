@@ -313,6 +313,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					(cat install/log_check_config/footer >> log_check_config.py) &>/dev/null
 				fi
 				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+				sudo pkill -f "log_check.py"
 				sudo ./log_check.py &
 				echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 				sleep 2

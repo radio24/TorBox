@@ -1030,7 +1030,7 @@ case "$CHOICE" in
 	#This makes a backup of TorBox
 	6)
   	clear
-		./backup
+		./bin/backup
 	;;
 
 	#Restoring TorBox's configuration from a backup file
