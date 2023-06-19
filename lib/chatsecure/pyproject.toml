@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+filterwarnings = [
+#    "error",
+    "ignore::cryptography.utils.CryptographyDeprecationWarning",
+]
