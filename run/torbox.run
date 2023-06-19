@@ -59,9 +59,9 @@ SSH_FROM_INTERNET=0
 TOR_CONTROL_PORT_ACCESS=0
 
 # HTTP plain text blocking
-# 0 - HTTP plain text traffic can pass through tor (default)
-# 1 - HTTP plain text traffic is blocked
-BLOCK_HTTP=0
+# 0 - HTTP plain text traffic can pass through tor
+# 1 - HTTP plain text traffic is blocked (default)
+BLOCK_HTTP=1
 
 # TorBox's automatic counteractions
 # 0 - TorBox's automatic counteractions are deactivated (default)
