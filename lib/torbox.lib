@@ -44,7 +44,8 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 
 #Connectivity check
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
@@ -700,9 +701,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -730,9 +731,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -791,9 +792,9 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -822,9 +823,9 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"

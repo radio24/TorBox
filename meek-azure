@@ -49,7 +49,8 @@ NOCOLOR='\033[0m'
 #Other variables
 BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 MEEKSTRING=$1
 SNOWSTRING=$2
 EXITID=$(grep "^EXITID=" ${RUNFILE})
@@ -114,7 +115,7 @@ case $MEEKSTRING in
 		#		bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 	  #		bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				#Meek works only through clearnet
-		#		bridge_status=$(./bridges_check.py -f $bridge_hash)
+		#		bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
     #    case $bridge_status in
     #      0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
     #      1)
