@@ -183,6 +183,11 @@ case "$CHOICE" in
             sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
             sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
           fi
+					INPUT=$(cat text/restart-tor-text)
+		      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+		        clear
+		        restarting_tor menu-server
+		      fi
         fi
       else
         INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. You can not run both settings simultaneously!"
