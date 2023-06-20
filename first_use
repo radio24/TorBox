@@ -55,7 +55,7 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
 # Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 FRESHINSTALLED=$1
 [ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 

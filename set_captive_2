@@ -61,7 +61,7 @@ NOCOLOR='\033[0m'
 IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 DNSPROG="dnsmasq"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 #EXITID="EXITID=1"
 O_DEVICE=$1
 I_DEVICE1=$2

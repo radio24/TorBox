@@ -61,7 +61,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 #
 #Other variables
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 O_DEVICE=$1
 CHOICE2=""
 CHOICE2=$2

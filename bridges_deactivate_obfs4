@@ -51,7 +51,7 @@ NOCOLOR='\033[0m'
 #Other variables
 BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 EXITID=$(grep "^EXITID=" ${RUNFILE})
 bridge_address_list=""

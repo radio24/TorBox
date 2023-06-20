@@ -45,7 +45,7 @@ WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 # Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
 CLEARNET_LIST_FILE_OWN="run/clearnet-list.own"
 VPN_LIST_FILE_OWN="run/vpn-list.own"

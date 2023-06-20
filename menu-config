@@ -72,7 +72,7 @@ HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
 # shellcheck disable=SC2001,SC2016

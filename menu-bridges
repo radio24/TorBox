@@ -58,7 +58,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 BAK="/etc/tor/torrc.bak"
 LOOP_NUMBER=0
 PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2>/dev/null
@@ -213,13 +213,13 @@ case "$CHOICE" in
 		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
     	INPUT=$(cat text/activate-obfs4-bridges-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-    		sudo bash bridges_activate_obfs4
+    		sudo bash bin/bridges_activate_obfs4
     	else
     		trap "bash menu-bridges; exit 0" EXIT
     		exit 0
 			fi
 		else
-			sudo bash bridges_activate_obfs4
+			sudo bash bin/bridges_activate_obfs4
     fi
   	read_config
   ;;

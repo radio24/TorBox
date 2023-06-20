@@ -51,8 +51,9 @@ NOCOLOR='\033[0m'
 #Other variables
 BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITID=$(grep "^EXITID=" ${RUNFILE})
 bridge_address_list=""
 i=0
@@ -129,9 +130,9 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
-        	bridge_status=$(./bridges_check.py -f $bridge_hash)
+        	bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
         else
-          bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+          bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
         fi
         if [ $bridge_status == 1 ]; then
           j=$((i+1))
@@ -214,9 +215,9 @@ case "$CHOICE" in
 			if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				if [ $CLEARNET_DECISSION == 1 ]; then
-					bridge_status=$(./bridges_check.py -f $bridge_hash)
+					bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
 				else
-					bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+					bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
 				fi
 				if [ $bridge_status == 1 ]; then bridge_status="-ONLINE"
 				elif [ $bridge_status == 0 ]; then bridge_status="-OFFLINE"

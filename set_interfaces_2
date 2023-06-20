@@ -79,7 +79,7 @@ I_DEVICE2=$3
 CAPTIVE=$4
 RESTARTTOR=$5
 ONLY_RESET=$6
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 EXITLOOP=0
 
 

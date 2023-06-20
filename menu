@@ -59,7 +59,7 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 EXITID="EXITID=0"
 MMENUSTRING=""
 INTERNETSELECTION=$1

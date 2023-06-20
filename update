@@ -81,7 +81,7 @@ TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
 DEFAULT_SPEED=4000
 
 # Read configuration from run/torbox.run
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2>/dev/null
 GO_VERSION_64=$(grep "^GO_VERSION_64=" ${RUNFILE} | sed "s/GO_VERSION_64=//g") 2>/dev/null
 GO_DL_PATH=$(grep "^GO_DL_PATH=" ${RUNFILE} | sed "s/GO_DL_PATH=//g") 2>/dev/null
