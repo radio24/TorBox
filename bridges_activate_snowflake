@@ -85,20 +85,22 @@ fi
 #            In case that changes, the support of multiple Snowflake bridges can be found in the code archive
 online_check $BRIDGE_DB_URL 0 1
 clear
-if [ $OCHECK == 1 ]; then
-	if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-		echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-		echo " "
-		sleep 2
-		STATUS=1
-	else
-		STATUS=0
-	fi
-else
-	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-  echo " "
-	sleep 2
-fi
+# IMORTANT: the support to show the ONLINE/OFFLINE status of Snowflake bridges is currently disabled because it is not reliable.
+#if [ $OCHECK == 1 ]; then
+	# if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+	# echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+	#	echo " "
+	#	sleep 2
+	#	STATUS=1
+	# else
+	STATUS=0
+	# fi
+#else
+  # echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+	# echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
+  # echo " "
+	# sleep 3
+#fi
 if [ "$number_configured_snowflake_bridges_deactivated" == "0" ]; then
 	echo ""
 	echo -e "${WHITE}[!] There is no deactivated bridge, which can be activated!${NOCOLOR}"
@@ -127,8 +129,8 @@ do
 			bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
 		fi
 		if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
-	elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
-	elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
+		elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+		elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
 		fi
 	else bridge_status=""
 	fi
@@ -148,7 +150,11 @@ do
 	fi
 done
 trap
-service_menu menu "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\n\nImportant: If available, the bridge status is not always accurate!" 5
+service_menu menu "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated." 4
+if [ "$ENTRY_NUMBERS" == "==" ] || [ "$ENTRY_NUMBERS" == "" ]; then
+	sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
+	exit 0
+fi
 clear
 sudo cp ${TORRC} ${BAK}
 i=0
@@ -173,7 +179,6 @@ for bridge_address in $bridge_address_list; do
 		fi
 	done
 done
-echo ""
 echo -e "${RED}[+] DONE!${NOCOLOR}"
 sleep 5
 clear

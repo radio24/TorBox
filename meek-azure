@@ -82,7 +82,7 @@ case $MEEKSTRING in
 			fi
 		fi
 		trap "bash meek-azure; exit 0" SIGINT
-		echo -e "${WHITE}[!] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
+		echo -e "${RED}[+] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
 		if [ ${#configured_meekazure_deactivated[0]} = 0 ]; then
 			echo " "
@@ -91,55 +91,56 @@ case $MEEKSTRING in
 			read -n 1 -s -r -p "Press any key to continue"
 			exit 1
 		else
-			echo " "
-			echo -e "${WHITE}[!] MEEK-AZURE is configured and ready!${NOCOLOR}"
+			echo -e "${RED}[+] MEEK-AZURE is configured and ready!${NOCOLOR}"
 			number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
 			sleep 5
       clear
 		fi
 		echo " "
 		online_check $BRIDGE_DB_URL 0 1
-		if [ $OCHECK == 1 ]; then
-			echo " "
-			echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-			echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER - this could take a moment!${NOCOLOR}"
-			echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
-			sleep 2
-			echo " "
-			MEEK_ON=0
-			i=0
-			while [ $i -lt $number_configured_meekazure_deactivated ]
-			do
-				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
-				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
+		# IMORTANT: the support to show the ONLINE/OFFLINE status of Meek-Azure bridge is currently disabled because it is not reliable.
+		OCHECK=0
+		# if [ $OCHECK == 1 ]; then
+		#	echo " "
+		#	echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+		#	echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER - this could take a moment!${NOCOLOR}"
+		#	echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
+		#	sleep 2
+		#	echo " "
+		#	MEEK_ON=0
+		#	i=0
+		#	while [ $i -lt $number_configured_meekazure_deactivated ]
+		#	do
+		#		bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
+	  #		bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				#Meek works only through clearnet
-				bridge_status=$(./bridges_check.py -f $bridge_hash)
-        case $bridge_status in
-          0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
-          1)
-					  bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
-					  MEEK_ON=$((MEEK_ON+1))
-          ;;
-          2) bridge_status_txt="- DOESN'T EXIST";;
-        esac
-				i=$((i+1))
-				bridge_address="$i : $bridge_address $bridge_status_txt"
-				echo -e "$bridge_address"
-			done
-			if [ $MEEK_ON == 0 ] ; then
-				echo " "
-				echo -e "${WHITE}[!] SORRY! - the MEEK-AZURE SERVER seems to be OFFLINE!${NOCOLOR}"
-				echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
-			fi
-			echo " "
-			read -n 1 -s -r -p "Press any key to continue"
-		else
-			echo " "
-			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
-			echo -e "${RED}[+] We cannot check the MEEK-AZURE SERVER - we try to use it anyway!${NOCOLOR}"
-			echo " "
-			read -n 1 -s -r -p "Press any key to continue"
-		fi
+		#		bridge_status=$(./bridges_check.py -f $bridge_hash)
+    #    case $bridge_status in
+    #      0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
+    #      1)
+		#			  bridge_status_txt="${GREEN}- ONLINE${NOCOLOR}"
+		#			  MEEK_ON=$((MEEK_ON+1))
+    #      ;;
+    #      2) bridge_status_txt="- DOESN'T EXIST";;
+    #    esac
+		#		i=$((i+1))
+		#		bridge_address="$i : $bridge_address $bridge_status_txt"
+		#		echo -e "$bridge_address"
+		#	done
+		#	if [ $MEEK_ON == 0 ] ; then
+		#		echo " "
+		#		echo -e "${WHITE}[!] SORRY! - the MEEK-AZURE SERVER seems to be OFFLINE!${NOCOLOR}"
+		#		echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
+		#	fi
+		#	echo " "
+		#	read -n 1 -s -r -p "Press any key to continue"
+		# else
+		#	echo " "
+		#	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
+		#	echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
+		#	echo " "
+		#	sleep 3
+		# fi
 		clear
 		INPUT=$(cat text/activate-meek-azure-text)
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then

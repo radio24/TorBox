@@ -81,7 +81,7 @@ for opt, arg in options:
                 "Options:\n"\
                 " -n, --network=<tor|inet>\t\tForce check over specific network\n"\
                 " -f, --fingerprint=<fingerprint>\tGet status of a tor bridge (0: offline, 1: online, 2: not exists) [REQUIRED PARAM]\n"\
-                        "\t\t\t\t\t Fingerprint must not be hashed\n"\
+                        "\t\t\t\t\tFingerprint must not be hashed\n"\
                 " -s, --hashed-fingerprint\t\tSearch for hashed fingerprint\n"\
                 " -i, --info <file_name>\t\t\tSave the info from bridge and save to file in JSON format (-i prints to stdout)\n"\
                 " -h, --help\t\t\t\tshow this help\n")
