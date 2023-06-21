@@ -573,7 +573,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 
 			# Finally, restarting tor
 			echo -e "${RED}[+] Checking if the tor config file is without errors...${NOCOLOR}"
-			sudo /home/torbox/torbox/onion-parser
+			sudo /home/torbox/torbox/bin/onion-parser
 			echo " "
 			stty intr q
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue or q to stop... \e[0m'
