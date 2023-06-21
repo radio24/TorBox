@@ -50,6 +50,7 @@ NOCOLOR='\033[0m'
 BRIDGE_DB_URL="https://onionoo.torproject.org"
 TORRC="/etc/tor/torrc"
 TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="/home/torbox/torbox/text"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 MEEKSTRING=$1
 SNOWSTRING=$2
@@ -77,7 +78,7 @@ case $MEEKSTRING in
   "OFF")
 		clear
 		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
@@ -115,7 +116,7 @@ case $MEEKSTRING in
 		#		bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_meekazure_deactivated[$i]})
 	  #		bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 				#Meek works only through clearnet
-		#		bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
+		#		bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
     #    case $bridge_status in
     #      0) bridge_status_txt="${RED}- OFFLINE${NOCOLOR}";;
     #      1)
@@ -143,7 +144,7 @@ case $MEEKSTRING in
 		#	sleep 3
 		# fi
 		clear
-		INPUT=$(cat text/activate-meek-azure-text)
+		INPUT=$(cat $TXT_DIR/activate-meek-azure-text)
 		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
@@ -162,7 +163,7 @@ case $MEEKSTRING in
   ;;
 
 	"ON!")
-    INPUT=$(cat text/deactivate-meek-azure-text)
+    INPUT=$(cat $TXT_DIR/deactivate-meek-azure-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       clear
       sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}

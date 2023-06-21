@@ -57,6 +57,7 @@ TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TMP="/tmp/torrc.tmp"
 TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="/home/torbox/torbox/text"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 MODE_BRIDGES=$1
 EXITID=$(grep "^EXITID=" ${RUNFILE})
@@ -103,13 +104,13 @@ case "$CHOICE" in
 
   # Delete ALL configured Snowflake bridges
   1)
-    INPUT=$(cat text/delete-all-bridges-text)
+    INPUT=$(cat $TXT_DIR/delete-all-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --no-button "DON'T CHANGE" --yes-button "DELETE ALL" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sudo cp ${TORRC} ${BAK}
         deactivate_snowflake_bridges NORESTART
         sudo sed -i "/^#Bridge snowflake /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-				INPUT=$(cat text/restart-tor-text)
+				INPUT=$(cat $TXT_DIR/restart-tor-text)
 				if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         	clear
         	restarting_tor bridges_remove_snowflake
@@ -135,9 +136,9 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
-          bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
+          bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
-          bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
+          bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
         fi
         if [ $bridge_status == 2 ]; then
           j=$((j+1))
@@ -156,9 +157,9 @@ case "$CHOICE" in
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_snowflake_bridges_activated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
         if [ $CLEARNET_DECISSION == 1 ]; then
-          bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
+          bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
-          bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
+          bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
         fi
         if [ $bridge_status == 2 ]; then
           j=$((j+1))
@@ -187,13 +188,13 @@ case "$CHOICE" in
             deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-						INPUT=$(cat text/restart-tor-text)
+						INPUT=$(cat $TXT_DIR/restart-tor-text)
 						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             	restarting_tor bridges_remove_snowflake
 						fi
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-						INPUT=$(cat text/restart-tor-text)
+						INPUT=$(cat $TXT_DIR/restart-tor-text)
 						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             	restarting_tor bridges_remove_snowflake
 						fi
@@ -213,7 +214,7 @@ case "$CHOICE" in
 
   # Remove only selected bridges
   3)
-    INPUT=$(cat text/delete-selected-bridges-text)
+    INPUT=$(cat $TXT_DIR/delete-selected-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			online_check $BRIDGE_DB_URL 0 1
 			clear
@@ -247,9 +248,9 @@ case "$CHOICE" in
 				if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 					bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 					if [ $CLEARNET_DECISSION == 1 ]; then
-						bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
+						bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
 					else
-						bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
+						bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
 					fi
 					if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
 				elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
@@ -286,9 +287,9 @@ case "$CHOICE" in
 	      if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 	      	bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
 	      	if [ $CLEARNET_DECISSION == 1 ]; then
-	          bridge_status=$($TORBOX_PATH/bridges_check.py -f $bridge_hash)
+	          bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
 	        else
-	          bridge_status=$($TORBOX_PATH/bridges_check.py --network=tor -f $bridge_hash)
+	          bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
 	        fi
 					if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
 				  elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
@@ -347,13 +348,13 @@ case "$CHOICE" in
             deactivate_snowflake_bridges NORESTART
             clear
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-						INPUT=$(cat text/restart-tor-text)
+						INPUT=$(cat $TXT_DIR/restart-tor-text)
 						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             	restarting_tor bridges_remove_snowflake
 						fi
           else
             sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
-						INPUT=$(cat text/restart-tor-text)
+						INPUT=$(cat $TXT_DIR/restart-tor-text)
 						if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
             	restarting_tor bridges_remove_snowflake
 						fi

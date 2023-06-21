@@ -55,6 +55,8 @@ NOCOLOR='\033[0m'
 #Other variables
 TOR_GET_BRIDGES_URL="https://bridges.torproject.org"
 TORRC="/etc/tor/torrc"
+TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="/home/torbox/torbox/text"
 ZONEINFO="/usr/share/zoneinfo/iso3166.tab"
 MODE_BRIDGES=$1
 STANDALONE=$2
@@ -97,15 +99,15 @@ case "$CHOICE" in
       (rm -r /tmp/captcha.*) 2>/dev/null
       if [ $CLEARNET_DECISSION == 1 ]; then
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 bridges_get.py --snowflake)
+					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --snowflake)
 				else
-					bridge_address=$(python3 bridges_get.py --snowflake -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --snowflake -c $COUNTRY)
 				fi
       else
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 bridges_get.py --network=tor --snowflake)
+					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor --snowflake)
 				else
-					bridge_address=$(python3 bridges_get.py --network=tor --snowflake -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor --snowflake -c $COUNTRY)
 				fi
       fi
       if [ "$bridge_address" = "-1" ]; then
@@ -196,7 +198,7 @@ case "$CHOICE" in
   # Add bridges manually
   2)
     clear
-    whiptail --title "TorBox - ADD BRIDGES" --textbox text/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
+    whiptail --title "TorBox - ADD BRIDGES" --textbox $TXT_DIR/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
     number_bridges=$(whiptail --title "TorBox - ADD BRIDGES" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 		is_integer "${number_bridges}"
 		exitstatus=$?
