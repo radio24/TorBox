@@ -227,7 +227,7 @@ case "$CHOICE" in
 
   # Add OBFS4 bridges
   3)
-    sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 1
+    sudo bash bin/bridges_add_obfs4 "$MODE_BRIDGES" 1
     read_config
   ;;
 
@@ -283,7 +283,7 @@ case "$CHOICE" in
 		if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
       INPUT=$(cat $TXT_DIR/add-bridges-first-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add_snowflake "$MODE_BRIDGES" 0
+        sudo bash bin/bridges_add_snowflake "$MODE_BRIDGES" 0
       else
         deactivate_snowflake_bridges
         trap "bash menu-bridges; exit 0" EXIT
