@@ -173,7 +173,6 @@ case "$CHOICE" in
       done
 			trap "bash bridges_remove_obfs4; exit 0" SIGINT
       if [ $j = 0 ]; then
-        echo " "
         echo -e "${WHITE}[!] All checked OBFS4 do exist -> nothing to delete!${NOCOLOR}"
         sleep 5
         clear

@@ -822,7 +822,7 @@ case "$CHOICE" in
 		bash menu-danger
 	;;
   16)
-    screen bash update
+    screen bash menu-update
     clear
     # shellcheck disable=SC2164
     cd

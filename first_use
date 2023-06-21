@@ -431,7 +431,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				bash install/install_network_drivers install
-				recommended_reboot update
+				recommended_reboot first_use
 			fi
     ;;
 

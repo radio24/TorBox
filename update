@@ -25,7 +25,7 @@
 # It also offers some maintenance tools.
 #
 # SYNTAX
-# screen bash update
+# screen bash menu-update
 #
 #
 ##### SET VARIABLES ######
@@ -768,7 +768,7 @@ case "$CHOICE" in
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-				trap "screen bash update; exit 0" EXIT
+				trap "screen bash menu-update; exit 0" EXIT
 				exit 1
 			fi
 			clear
@@ -876,7 +876,7 @@ case "$CHOICE" in
 			echo -e "${RED}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			recommended_reboot update
+			recommended_reboot menu-update
 		fi
 	;;
 
@@ -894,11 +894,11 @@ case "$CHOICE" in
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-				trap "screen bash update; exit 0" EXIT
+				trap "screen bash menu-update; exit 0" EXIT
 				exit 1
 			fi
 			bash install/install_network_drivers
-			recommended_reboot update
+			recommended_reboot menu-update
 		fi
 	;;
 
@@ -910,7 +910,7 @@ case "$CHOICE" in
       if (whiptail --defaultno --yesno "$INPUT" 16 $MENU_WIDTH); then
         clear
         update_firmware
-				recommended_reboot update
+				recommended_reboot menu-update
       fi
     else
       clear
@@ -945,7 +945,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        trap "screen bash update; exit 0" EXIT
+        trap "screen bash menu-update; exit 0" EXIT
         exit 1
       fi
       if [ $OCHECK == 0 ]; then
@@ -954,7 +954,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        trap "screen bash update; exit 0" EXIT
+        trap "screen bash menu-update; exit 0" EXIT
         exit 1
       fi
       if [ $EXPERT == 1 ]; then
@@ -1010,7 +1010,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        trap "screen bash update; exit 0" EXIT
+        trap "screen bash menu-update; exit 0" EXIT
         exit 1
       fi
       if [ $OCHECK == 0 ]; then
@@ -1019,7 +1019,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        trap "screen bash update; exit 0" EXIT
+        trap "screen bash menu-update; exit 0" EXIT
         exit 1
       fi
       update_torbox_menu $EXPERT
@@ -1046,7 +1046,7 @@ case "$CHOICE" in
 	  if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 	  	clear
 	    update_torcfg
-			recommended_reboot update
+			recommended_reboot menu-update
     fi
 	;;
 
@@ -1062,7 +1062,7 @@ case "$CHOICE" in
 	    sleep 2
 	    echo -e "${WHITE}[+] FINISHED!${NOCOLOR}"
 			sleep 2
-			recommended_reboot update
+			recommended_reboot menu-update
 		fi
 	;;
 
@@ -1093,7 +1093,7 @@ case "$CHOICE" in
 			(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 		  echo -e "${RED}[+] Done!${NOCOLOR}"
 		  sleep 4
-		  restarting_tor update
+		  restarting_tor menu-update
 	  fi
 	;;
 
@@ -1118,7 +1118,7 @@ case "$CHOICE" in
 						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 						sleep 5
 						clear
-						trap "bash update; exit 0" EXIT
+						trap "bash menu-update; exit 0" EXIT
 						exit 1
 					fi
 				else
@@ -1132,7 +1132,7 @@ case "$CHOICE" in
 				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
-				restarting_tor update
+				restarting_tor menu-update
 			fi
 		else
 			echo -e "${RED}[+] Updating the list of excluded slow tor relays...${NOCOLOR}"
@@ -1146,7 +1146,7 @@ case "$CHOICE" in
 			sudo mv torrc.exclude-slow /etc/tor
 			sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
-			restarting_tor update
+			restarting_tor menu-update
 		fi
 	;;
 
@@ -1201,7 +1201,7 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	13)
   	clear
-		./first_use 3 update
+		./first_use 3 menu-update
 		exit 0
 	;;
 
@@ -1238,4 +1238,4 @@ case "$CHOICE" in
 		exit 0
 
 esac
-bash update
+bash menu-update

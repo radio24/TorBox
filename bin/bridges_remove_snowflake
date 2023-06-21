@@ -174,7 +174,6 @@ case "$CHOICE" in
       done
 			trap "bash bridges_remove_snowflake; exit 0" SIGINT
       if [ $j = 0 ]; then
-        echo " "
         echo -e "${WHITE}[!] All checked Snowflake do exist -> nothing to delete!${NOCOLOR}"
         sleep 5
         clear
