@@ -422,14 +422,11 @@ configure_tfs()
 }
 
 # This function configures the TCS in the run file and starts TCS.
-# Syntax configure_tcs <TCS_MESSAGE>
+# Syntax configure_tcs
 # This function needs the following special variables:
 # SERVICE_NAME
 configure_tcs()
 {
-  TCS_MESSAGE=$1
-	# This is necessary to work with special characters in sed
-	TCS_MESSAGE_TXT="$(<<< "$TCS_MESSAGE" sed -e 's`[][\\/.*^$]`\\&`g')"
 	# Using the Anchor in torbox.run
 	REPLACE_STRING=$(grep -m 1 "This will configure the TCS program" ${RUNFILE})
 	#This is necessary to work with special characters in sed
@@ -439,14 +436,13 @@ configure_tcs()
 	# This will give VIRTPORT and HIDDENSSERVICEPORT
 	find_virtport $SERVICE_NAME
 	echo -e "${RED}[+] Configuring TCS...${NOCOLOR}"
-	if [ ! -z "$TCS_MESSAGE_TXT" ]; then TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -m \"$TCS_MESSAGE_TXT\" -od $ONION_HOSTNAME"
-	else TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME"
-	fi
+	TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME"
 	sudo sed -E -i "s/# This will configure the TCS program.*/$REPLACE_STRING$TCS_STRING/g" "${RUNFILE}"
 	echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
-	if [ ! -z "$TCS_MESSAGE" ]; then (nohup sudo ./lib/chatsecure/tcs -n $SERVICE_NAME -m "$TCS_MESSAGE" -od $ONION_HOSTNAME &) &>/dev/null
-	else (nohup sudo ./lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME &) &>/dev/null
-	fi
+
+	#(nohup sudo ./lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME &) &>/dev/null
+	sudo python3 lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME
+
 	# NEW v.0.5.2 - New placed in this function
 	# Configure Nginx
 	echo ""
@@ -1797,12 +1793,11 @@ case "$CHOICE" in
 			create_service_list
 			error_no_onion_service
 			clear
-			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - TorBox's Chat Secure" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
+			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - TorBox's Chat Secure" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
 			"==" "===============================================================" \
 			" 1" "Start or restart TCS on Onion domains" \
-			" 2" "Change the message below the TorBox Chat Secure logo" \
-			" 3" "Stop TCS on an Onion domain" \
-			" 4" "List all Onion domains with TCS" \
+			" 2" "Stop TCS on an Onion domain" \
+			" 3" "List all Onion domains with TCS" \
 			"==" "===============================================================" \
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
@@ -1830,44 +1825,8 @@ case "$CHOICE" in
 										# Check if the service/port pair is already used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ] && error_already_used
 										[ -f "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && error_already_used
-										# HAS TO BE TESTED!!
-										TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.2 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-				      			configure_tcs "$TCS_MESSAGE"
+										configure_tcs
 										echo ""
-										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
-											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
-										fi
-										echo ""
-										read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-										clear
-									fi
-								done
-							done
-						fi
-					;;
-
-					#Change the message below the TorBox Chat Secure logo
-					2)
-						clear
-						SERVICE_NAME_LIST=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
-						[ -z $SERVICE_NAME_LIST ] && error_no_tcs_running
-						#TCS_CONFIG_LIST=$(grep "^TCS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/chatsecure/tcs ||")
-						service_menu menu "$SERVICE_NAME_LIST"
-						exitstatus=$?
-						if [ "$exitstatus" == "0" ]; then
-							i=0
-							for SERVICE_NAME in $SERVICE_NAME_LIST; do
-								i=$((i+1))
-								for SERVICE_NUMBER in $ENTRY_NUMBERS; do
-									if [ "$i" = "$SERVICE_NUMBER" ]; then
-										TCS_MESSAGE=$(whiptail --title "TorBox v.0.5.2 - TorBox's Chat Secure capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox Chat Secure\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-										sudo sed -E -i "/^TCS-$SERVICE_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
-										clear
-										[ -f "lib/chatsecure/pid/$SERVICE_NAME.pid" ] && stopping_tcs $SERVICE_NAME
-										configure_tcs "$TCS_MESSAGE"
-										echo ""
-										# This will give ONION_HOSTNAME
-										test_service_exists $SERVICE_NAME
 										if [ "$VIRTPORT" == "80" ]; then echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}${NOCOLOR}"; else
 											echo -e "${WHITE}Service address (http) = ${RED}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"
 										fi
@@ -1881,9 +1840,9 @@ case "$CHOICE" in
 					;;
 
 					#Stop TCS on Onion domain
-					3)
+					2)
 						SERVICE_NAME_LIST_001=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
-						[ -z "$SERVICE_NAME_LIST_001" ] && error_no_tCs_running
+						[ -z "$SERVICE_NAME_LIST_001" ] && error_no_tcs_running
 						clear
 						SERVICE_NAME_LIST_002=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
 						if [ -z "$SERVICE_NAME_LIST_002" ]; then
@@ -1919,8 +1878,8 @@ case "$CHOICE" in
 						;;
 
 					#List all Onion domains with TCS
-					4)
-            if ! pgrep -f "lib/chatsecure/tcs"; then error_no_tcs_running; fi
+					3)
+            if ! pgrep -f "./tcs"; then error_no_tcs_running; fi
 						clear
 						SERVICE_NAME_LIST=$(grep "^TCS-" ${RUNFILE} | sed "s/^TCS-//" | cut -d "=" -f1)
 						if [ ! -z "$SERVICE_NAME_LIST" ]; then
