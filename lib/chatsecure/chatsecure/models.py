@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import peewee as pw
 from datetime import datetime
 import logging
@@ -6,10 +7,11 @@ logger = logging.getLogger('peewee')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-db_name = "tcs.db"  # Dev
+db_name = BASE_DIR / "tcs.db"  # Dev
 if os.environ.get("INSTANCE_NAME"):
-    db_name = "db/{}.db".format(os.environ.get("INSTANCE_NAME"))
+    db_name = BASE_DIR / "db/{}.db".format(os.environ.get("INSTANCE_NAME"))
 
 db = pw.SqliteDatabase(
     db_name, pragmas={"journal_mode": "wal", "cache_size": 10000, "foreign_keys": 1}

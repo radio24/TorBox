@@ -105,7 +105,7 @@ def run_webserver(instance_name, dev=True):
 
         # Unix socket file path
         socket_path = f"/var/run/tcs_{instance_name}.sock"
-        # socket_path = f"/tmp/tcs_{instance_name}.sock"  #dev
+        # socket_path = f"/tmp/tcs_{instance_name}.sock"  # dev
 
         green_sock = eventlet.listen(socket_path, family=socket.AF_UNIX)
         os.chmod(socket_path, 0o777)

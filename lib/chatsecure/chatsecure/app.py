@@ -1,5 +1,6 @@
 import os
 import secrets
+from pathlib import Path
 from flask import Flask, Blueprint, request, render_template
 from flask_socketio import SocketIO
 from flask_restful import Api
@@ -16,13 +17,15 @@ from chatsecure.views import (
 socketio = SocketIO(cors_allowed_origins="*", manage_session=True)
 from chatsecure.chatsocket import *
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 def create_app(debug: bool = False):
     """Create Factory application."""
     app = Flask(
         __name__,
         static_url_path='/assets',
-        static_folder=os.getcwd() + "/chatsecure/templates/assets/"
+        static_folder=BASE_DIR / "chatsecure/templates/assets/"
     )
     app.debug = debug
 
