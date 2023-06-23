@@ -74,7 +74,7 @@ if [ $ARGUMENT = 1 ]; then
 # automat 2 1 is executed, which tries to reconnect the wireless connection (if available)
 # and flushes the tor configuration.
 elif [ $ARGUMENT = 2 ]; then
-  INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+  INTERNET_IFACE=$(grep "^INTERNET_IFACE=" $RUNFILE | sed "s/.*=//g")
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
     RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
@@ -105,7 +105,7 @@ elif [ $ARGUMENT = 2 ]; then
 # Entry 3: Restart Tor, an reconect wifi, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
-	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
+	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" $RUNFILE | sed "s/.*=//g")
 	if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
 		RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
