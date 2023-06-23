@@ -1013,6 +1013,12 @@ stopping_tcs()
 		PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
 		sudo sed -E -i "/^TCS-$TCS_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
+		# NEW - TorBox v.0.5.3
+		sleep 2
+		(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
+		(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+		(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+		#
 		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 		find_virtport "${TCS_NAME}"
 		sudo rm "/etc/nginx/sites-enabled/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"

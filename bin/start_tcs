@@ -36,7 +36,10 @@ MENU_HEIGHT_20=20
 
 #Other variables
 INITIAL=$1
-RUNFILE=/home/torbox/torbox/run/torbox.run
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+PID_PATH="$TORBOX_PATH/lib/chatsecure/pid"
+DB_PATH="$TORBOX_PATH/lib/chatsecure/db"
 
 ######## FUNCTIONS ########
 
@@ -52,25 +55,41 @@ if [ $n -gt 0 ] ; then
 		((i++))
 		TCS_CONFIG_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f2-)
 		SERVICE_NAME=$(cut -d " " -f3 <<< ${TCS_CONFIG_LIST})
-		if [[ ! -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && -z "$INITIAL" ]]; then
+		if [[ ! -f $PID_PATH/$SERVICE_NAME.pid && -z "$INITIAL" ]]; then
 			if (whiptail --title "TorBox v.0.5.2 - TorBox's Chat Secure capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+				# NEW - TorBox v.0.5.3
+				(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+				(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+				#
+				TCS_CONFIG_LIST="nohup sudo $TORBOX_PATH/$TCS_CONFIG_LIST &"
 				(eval $TCS_CONFIG_LIST) &>/dev/null
 			else
 				echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
 				sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
+				# NEW - TorBox v.0.5.3
+				(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+				(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+				#
 				echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 				find_virtport "${SERVICE_NAME}"
 				(sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
 				(sudo rm "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
 				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 			fi
-		elif [[ ! -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
-			TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+		elif [[ ! -f $PID_PATH/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
+			# NEW - TorBox v.0.5.3
+			(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+			(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+			#
+			TCS_CONFIG_LIST="nohup sudo $TORBOX_PATH/$TCS_CONFIG_LIST &"
 			(eval $TCS_CONFIG_LIST) &>/dev/null
-		elif [[ -f /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
-			sudo rm /home/torbox/torbox/lib/chatsecure/pid/$SERVICE_NAME.pid
-			TCS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TCS_CONFIG_LIST &"
+		elif [[ -f $PID_PATH/$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
+			(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
+			# NEW - TorBox v.0.5.3
+			(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+			(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+			#
+			TCS_CONFIG_LIST="nohup sudo $TORBOX_PATH/$TCS_CONFIG_LIST &"
 			(eval $TCS_CONFIG_LIST) &>/dev/null
 		fi
 	done

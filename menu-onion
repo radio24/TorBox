@@ -436,13 +436,15 @@ configure_tcs()
 	# This will give VIRTPORT and HIDDENSSERVICEPORT
 	find_virtport $SERVICE_NAME
 	echo -e "${RED}[+] Configuring TCS...${NOCOLOR}"
+	# NEW - TorBox v.0.5.3
+	(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
+	(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+	(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+	#
 	TCS_STRING="\nTCS-$SERVICE_NAME=lib\/chatsecure\/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME"
 	sudo sed -E -i "s/# This will configure the TCS program.*/$REPLACE_STRING$TCS_STRING/g" "${RUNFILE}"
 	echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
-
-	#(nohup sudo ./lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME &) &>/dev/null
-	sudo python3 lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME
-
+	(nohup sudo ./lib/chatsecure/tcs -n $SERVICE_NAME -od $ONION_HOSTNAME &) &>/dev/null
 	# NEW v.0.5.2 - New placed in this function
 	# Configure Nginx
 	echo ""
@@ -1748,7 +1750,6 @@ case "$CHOICE" in
 	             			for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 	               			if [ "$i" = "$SERVICE_NUMBER" ]; then
 												stopping_tfs $SERVICE_NAME
-												echo ""
 											fi
 	             			done
 	             		done
@@ -1849,6 +1850,12 @@ case "$CHOICE" in
 							echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
 							(sudo pkill -f "chatsecure") &>/dev/null
 							sudo sed -i "/^TCS-/d" "${RUNFILE}"
+							# NEW - TorBox v.0.5.3
+							sleep 2
+							(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
+							(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+							(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+							#
 							echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 							sudo ls /etc/nginx/sites-enabled | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-enabled/{}
 							sudo ls /etc/nginx/sites-available | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available/{}
@@ -1862,7 +1869,6 @@ case "$CHOICE" in
 										for SERVICE_NUMBER in $ENTRY_NUMBERS; do
 											if [ "$i" = "$SERVICE_NUMBER" ]; then
 												stopping_tcs $SERVICE_NAME
-												echo ""
 											fi
 										done
 									done
