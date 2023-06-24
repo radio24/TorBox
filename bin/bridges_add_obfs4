@@ -100,11 +100,11 @@ case "$CHOICE" in
     	(rm -r /tmp/captcha.*) 2>/dev/null
     	if [ $CLEARNET_DECISSION == 1 ]; then
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py)
 				else
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py -c $COUNTRY)
 					if [ "$bridge_address" = "-2" ]; then
-						bridge_address=$(python3 $TORBOX_PATH/bridges_get.py)
+						bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py)
 						if [ "$bridge_address" != "-1" ]; then
 							echo " "
 							echo -e "${RED}[+] Sorry, there is no specific bridge for that country!${NOCOLOR}"
@@ -115,11 +115,11 @@ case "$CHOICE" in
 				fi
 			else
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor)
 				else
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor -c $COUNTRY)
 					if [ "$bridge_address" = "-2" ]; then
-						bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor)
+						bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor)
 						if [ "$bridge_address" != "-1" ]; then
 							echo " "
 							echo -e "${RED}[+] Sorry, there is no specific bridge for that country!${NOCOLOR}"

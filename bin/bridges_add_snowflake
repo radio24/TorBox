@@ -99,15 +99,15 @@ case "$CHOICE" in
       (rm -r /tmp/captcha.*) 2>/dev/null
       if [ $CLEARNET_DECISSION == 1 ]; then
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --snowflake)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --snowflake)
 				else
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --snowflake -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --snowflake -c $COUNTRY)
 				fi
       else
 				if [ "$COUNTRY" == "00" ]; then
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor --snowflake)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor --snowflake)
 				else
-					bridge_address=$(python3 $TORBOX_PATH/bridges_get.py --network=tor --snowflake -c $COUNTRY)
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor --snowflake -c $COUNTRY)
 				fi
       fi
       if [ "$bridge_address" = "-1" ]; then

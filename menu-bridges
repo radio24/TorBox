@@ -244,7 +244,7 @@ case "$CHOICE" in
       sleep 5
     else
       whiptail --title "TorBox - INFO" --textbox $TXT_DIR/remove-obfs4-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
-      sudo bash bridges_remove_obfs4 "$MODE_BRIDGES"
+      sudo bash bin/bridges_remove_obfs4 "$MODE_BRIDGES"
       read_config
     fi
   ;;
@@ -263,7 +263,7 @@ case "$CHOICE" in
         sleep 5
       else
         whiptail --title "TorBox - INFO" --textbox $TXT_DIR/deactivate-obfs4-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo bash bridges_deactivate_obfs4
+        sudo bash bin/bridges_deactivate_obfs4
         read_config
       fi
     fi
