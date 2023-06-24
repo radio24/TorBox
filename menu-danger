@@ -31,10 +31,10 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=4
+NO_ITEMS=5
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=3
+NO_SPACER=4
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -82,6 +82,13 @@ read_config()
 	else
 		TOGGLE19="Stop"
 	fi
+
+	# TOGGLE20 shows if the wlan1 failsafe is enabled or disabled
+	if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
+		TOGGLE20="Disable"
+	else
+		TOGGLE20="Enable"
+	fi
 }
 
 
@@ -102,8 +109,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - DANGER ZONE" 
 " 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 " 2" "Add, change or remove a domain/IP entry in the exlusion lists"  \
 " 3" "List the exclusion lists" \
+"==" "=============================================[Lock-out risk]===" \
+" 4" "$TOGGLE20 the AP on wlan1 failsafe" \
 "==" "==========================================[Developper Tools]===" \
-" 4" "Forwarding only - tor protection disabled" \
+" 5" "Forwarding only - tor protection disabled" \
 "==" "==============================================================="  \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -443,8 +452,23 @@ case "$CHOICE" in
 		read -n 1 -s -r -p "Press any key to continue"
 	;;
 
-	# Forwarding only - tor protection disabled
+  # Enable/Disable the AP on wlan1 failsafe
 	4)
+		clear
+		INPUT=$(cat text/disable_wlan1_failsafe-text)
+		if (whiptail --title "TorBox - INFO" --yesno --no-button "ENABLE" --yes-button "DISABLE" "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
+			exit 0
+		fi
+		exitstatus=$?
+		# exitstatus == 255 means that the ESC key was pressed
+		[ "$exitstatus" == "255" ] && exit 0
+		sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=1/" ${RUNFILE}
+	;;
+
+
+	# Forwarding only - tor protection disabled
+	5)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients
