@@ -100,6 +100,7 @@ $MODPROBE ip_nat_ftp
 
 ########## NAT rules ##########
 #We will forward all the network traffic to the captive portal in order to log in
+sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=1/" ${RUNFILE}
 echo -e "${WHITE}[!] WARNING: Tor is not running - all data are directly forwarded to the Internet...${NOCOLOR}"
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE  -j MASQUERADE
 $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT

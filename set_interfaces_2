@@ -205,6 +205,7 @@ $IPTABLES -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 
 ###### NAT rules ######
+sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=0/" ${RUNFILE}
 echo -e "${RED}[+] Setting up PREROUTING chain...${NOCOLOR}"
 # Access on the box's own IP should be granted (only TCP)
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT

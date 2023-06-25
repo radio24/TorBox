@@ -173,6 +173,8 @@ elif [ -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; t
 else TOR_STATUS=""
 fi
 
+if grep ^FORWARDING_ONLY=1 ${RUNFILE}; then TOR_STATUS="   FORWARDING - NO TOR!"; fi
+
 if grep "^TOR_CONTROL_PORT_ACCESS=1" ${RUNFILE}; then
   CONTROLPORT_WLAN="s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/"
   CONTROLPORT_ETH="s/^#ControlPort 192.168.43.1:9051/ControlPort 192.168.43.1:9051/"

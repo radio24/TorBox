@@ -54,6 +54,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 RUNFILE="/home/torbox/torbox/run/torbox.run"
+SSHD_CONFIG="/etc/ssh/sshd_config"
 CLEARNET_LIST="clearnet-list"
 CLEARNET_LIST_FILE="run/$CLEARNET_LIST"
 # Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
@@ -84,10 +85,17 @@ read_config()
 	fi
 
 	# TOGGLE20 shows if the wlan1 failsafe is enabled or disabled
-	if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
+	if grep "WLAN_FAILSAFE=1" ${RUNFILE} ; then
 		TOGGLE20="Disable"
 	else
 		TOGGLE20="Enable"
+	fi
+
+	# TOGGLE21 shows if SSH pasword login is enabled or disable
+	if sudo grep "^PasswordAuthentication no" ${SSHD_CONFIG} ; then
+		TOGGLE21="Enable"
+	else
+		TOGGLE21="Diasable"
 	fi
 }
 
@@ -111,8 +119,9 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - DANGER ZONE" 
 " 3" "List the exclusion lists" \
 "==" "=============================================[Lock-out risk]===" \
 " 4" "$TOGGLE20 the AP on wlan1 failsafe" \
+" 5" "$TOGGLE21 SSH password login" \
 "==" "==========================================[Developper Tools]===" \
-" 5" "Forwarding only - tor protection disabled" \
+" 6" "Forwarding only - tor protection disabled" \
 "==" "==============================================================="  \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -456,19 +465,62 @@ case "$CHOICE" in
 	4)
 		clear
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
-		if (whiptail --title "TorBox - INFO" --yesno --no-button "ENABLE" --yes-button "DISABLE" "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
-			exit 0
+		else
+			exitstatus=$?
+			# exitstatus == 255 means that the ESC key was pressed
+			[ "$exitstatus" == "255" ] && exit 0
+			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=1/" ${RUNFILE}
 		fi
-		exitstatus=$?
-		# exitstatus == 255 means that the ESC key was pressed
-		[ "$exitstatus" == "255" ] && exit 0
-		sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=1/" ${RUNFILE}
 	;;
 
+	# Enable/disable SSH password login
+	5)
+		clear
+		if [ "$TOGGLE21" == "Disable" ]; then
+			cd
+			if [ -f .ssh/authorized_keys ]; then
+				cd torbox
+				INPUT=$(cat text/disable_SSH_pasword_login-text)
+				if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+					clear
+					echo -e "${RED}[+] Disabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+					(sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
+					(sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
+					(printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG) 2>/dev/null
+					echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] Make sure that you are able to log into TorBox with the${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] SSH key before you leave the actual SSH session!${SERVICE_NAME}${NOCOLOR}"
+					sudo systemctl restart sshd
+					echo " "
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					clear
+				fi
+			else
+				cd torbox
+				clear
+				echo -e "${WHITE}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys"
+				echo -e "${RED}[!] keys are generated, and the public key is on the TorBox ready to work."
+				echo " "
+				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+				clear
+			fi
+		else
+			clear
+			echo -e "${RED}[+] Enabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+			(sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}) 2>/dev/null
+			(sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}) 2>/dev/null
+			echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
+			echo -e "${RED}[+] DONE! ${SERVICE_NAME}${NOCOLOR}"
+			sleep 5
+			clear
+		fi
+	;;
 
 	# Forwarding only - tor protection disabled
-	5)
+	6)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients

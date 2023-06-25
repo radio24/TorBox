@@ -113,5 +113,10 @@ UNPROTECTED_DOMAIN=0
 # However, this may not be what the user wants. WLAN_FAILSAFE=0 will disabled that failsafe.
 WLAN_FAILSAFE=1
 
+# Through an entry in the Danger Zone sub-menu or in dealing with Captive Portals, TorBox
+# only forwards the data stream without sending it through tor. In this case, a warning
+# will be displayed in the main menu.
+FORWARDING_ONLY=0
+
 # Exit controll variable
 EXITID=0
