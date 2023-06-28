@@ -571,7 +571,7 @@ update_torbox_menu()
 	mkdir $TMP_DIR
 	cp --parents -R torbox/run $TMP_DIR
   # Save TACA configuration
-  cp torbox/log_check_config.py $TMP_DIR
+  cp --parents torbox/log_check_config.py $TMP_DIR
 	# Save TFS/TCS PID files
 	cp --parents -R torbox/lib/filesharing/pid $TMP_DIR
 	cp --parents -R torbox/lib/chatsecure/pid $TMP_DIR
@@ -598,15 +598,15 @@ update_torbox_menu()
 		echo -e "${RED}[+] Writing configuration...${NOCOLOR}"
 		cd
 		# Move the run-files back
-		if [ -d "torbox/run" ]; then
+		if [ -d "$TMP_DIR/torbox/run" ]; then
 			sudo rm -r torbox/run
+			mv $TMP_DIR/torbox/run torbox
 		fi
-		mv $TMP_DIR/torbox/run torbox
   	# Restore TACA configuration
-		if [ -f "torbox/log_check_config.py" ]; then
+		if [ -f "$TMP_DIR/torbox/log_check_config.py" ]; then
 			sudo rm -r torbox/log_check_config.py
+			sudo mv $TMP_DIR/torbox/log_check_config.py torbox
 		fi
-		sudo mv $TMP_DIR/torbox/log_check_config.py torbox
 		# Restore  TFS/TCS PID files
 		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/filesharing/pid/)
 		if [ ! -z "$TFS_NAME_LIST" ]; then
