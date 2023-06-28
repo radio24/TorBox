@@ -24,38 +24,71 @@
 # ./catchbuiltinbridges.py
 #
 
+import click
 import requests
 
-# fetch the content from the URL
-response = requests.get("https://bridges.torproject.org/moat/circumvention/builtin")
+# Try to get the builtin bridges through tor
+def get_proxy(network=''):
+    # Tor Socks Proxy
+    proxy = {
+        "http": "socks5h://127.0.0.1:9050",
+        "https": "socks5h://127.0.0.1:9050",
+    }
 
-# extract the information in the square brackets from the content
-information = []
-start_index = 0
+    if not network:
+        # Check if Tor proxy is up, otherwise set inet network
+        try:
+            response = requests.get("https://bridges.torproject.org/moat/circumvention/builtin", proxies=proxy, timeout=5)
+        except:  # noqa
+            network = 'inet'
 
-# start_index returns the position of the first occurence until not found (-1)
-while True:
-  start_index = response.text.find("[", start_index)
-  if start_index == -1:
-    break
-  end_index = response.text.find("]", start_index)
-# extract the text out of the brackets and creates a list
-  information.append(response.text[start_index:end_index + 1])
-  start_index = end_index + 1
+    if network == "inet":
+        proxy = {
+            "http": "",
+            "https": "",
+        }
+    return proxy
 
-# split the lines with commas into separate lines
-lines = []
-for info in information:
-  parts = info.split("[")[1].split("]")[0]
-  for part in parts.split("\",\""):
-    lines.append(part)
+# fmt: off
+@click.command()
+@click.option('--network', '-n', default='', type=str, help="Force to get bridges over specific network. Example: -n <tor|inet>")
+# fmt: on
 
-# remove the quotation marks at the beginning and end of each line
-lines = [line.strip('"') for line in lines]
+# Fetch the content from the URL
+def fetch_bridges(network):
+    proxy = get_proxy(network)
+    response = requests.get("https://bridges.torproject.org/moat/circumvention/builtin", proxies=proxy)
 
-# sort the lines
-lines.sort()
+    # Extract the information in the square brackets from the content
+    information = []
+    start_index = 0
 
-# print the lines
-for line in lines:
-  print(line)
+    # start_index returns the position of the first occurence until not found (-1)
+    while True:
+        start_index = response.text.find("[", start_index)
+        if start_index == -1:
+            break
+        end_index = response.text.find("]", start_index)
+        # Extract the text out of the brackets and creates a list
+        information.append(response.text[start_index:end_index + 1])
+        start_index = end_index + 1
+
+        # split the lines with commas into separate lines
+        lines = []
+        for info in information:
+            parts = info.split("[")[1].split("]")[0]
+            for part in parts.split("\",\""):
+                lines.append(part)
+
+        # Remove the quotation marks at the beginning and end of each line
+        lines = [line.strip('"') for line in lines]
+
+        # sort the lines
+        lines.sort()
+
+        # print the lines
+        for line in lines:
+            print(line)
+
+if __name__ == '__main__':
+    fetch_bridges()
