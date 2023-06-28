@@ -214,7 +214,7 @@ read_config
 
 # Resetting
 shopt -s checkwinsize
-[ -f nohup.out ] && sudo rm nohup.out
+[ -f nohup.out ] && (sudo rm nohup.out) 2>/dev/null
 stty intr ^c
 trap
 
@@ -429,7 +429,7 @@ case "$CHOICE" in
             echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (sudo rm nohup.out) &>/dev/null
           fi
         fi
       fi
@@ -595,7 +595,7 @@ case "$CHOICE" in
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (sudo rm nohup.out) 2>/dev/null
           fi
         else
           sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]" ${HOSTAPD}
@@ -605,7 +605,7 @@ case "$CHOICE" in
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (sudo rm nohup.out) 2>/dev/null
           fi
         fi
       fi
@@ -668,7 +668,7 @@ case "$CHOICE" in
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (sudo rm nohup.out) 2>/dev/null
           fi
         else
           sudo sed -i "s/^#vht_oper_chwidth=1/vht_oper_chwidth=1/" ${HOSTAPD}
@@ -679,7 +679,7 @@ case "$CHOICE" in
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (sudo rm nohup.out) 2>/dev/null
           fi
         fi
       fi
@@ -723,7 +723,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
         echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
         (nohup bin/hostapd_fallback) 2>/dev/null
-        sudo rm nohup.out
+        (sudo rm nohup.out) 2>/dev/null
       fi
       read_config
     fi
@@ -952,7 +952,7 @@ case "$CHOICE" in
 		if [ "$TOGGLE18" = "Stop" ]; then
 			clear
 			echo -e "${RED}[+] Stop excluding slow tor relays...${NOCOLOR}"
-			sudo rm /etc/tor/torrc.exclude-slow
+			(sudo rm /etc/tor/torrc.exclude-slow) 2>/dev/null
 			sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
 			sleep 1
