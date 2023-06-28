@@ -45,6 +45,7 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="$TORBOX_PATH/text"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 
 #Connectivity check
@@ -175,9 +176,9 @@ finish()
   	sleep 4
   	check_tor
   	if [ "$TOR_STATUS" = "TOR is working" ]; then
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
   	else
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
   	fi
 	else
   	EXITID="EXITID=0"
@@ -286,7 +287,7 @@ online_check()
       TORCONNECT=0
       # Don't change it to "! -z" !
       if [ "$CLEARNET_WARNING" == "1" ]; then
-        INPUT=$(cat text/clearnet_warning-text)
+        INPUT=$(cat $TXT_DIR/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
           if curl -m 6 -s $CHECK_URL >/dev/null; then
@@ -337,8 +338,7 @@ online_check()
     fi
   fi
 
-  # TorBox v.0.5.3: It seems that $NO_CONNECTION_WARNING = 1 is not used anymore --> to be removed
-  # Don't change it to "-z" !
+  # ""$NO_CONNECTION_WARNING" = "1" means that there is a varning displayed if TorBox has no connection
   if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" = "1" ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -486,7 +486,7 @@ connecting_to_VPN()
 	# shellcheck disable=SC2012
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
   if [ -z "${ovpnlist[0]}" ] ; then
-    whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
@@ -857,7 +857,7 @@ deactivate_obfs4_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
   sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-	INPUT=$(cat text/restart-tor-text)
+	INPUT=$(cat $TXT_DIR/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			restarting_tor $SOURCE_SCRIPT
@@ -875,7 +875,7 @@ deactivate_snowflake_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/g" ${TORRC}
   sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-	INPUT=$(cat text/restart-tor-text)
+	INPUT=$(cat $TXT_DIR/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			restarting_tor $SOURCE_SCRIPT
@@ -893,12 +893,12 @@ activate_obfs4_bridges()
   number_of_obfs4_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-    INPUT=$(cat text/restart-tor-bridges-text)
+    INPUT=$(cat $TXT_DIR/restart-tor-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			deactivating_bridge_relay
 	    sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
@@ -922,12 +922,12 @@ activate_snowflake_bridges()
   number_of_snowflake_bridges
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-    INPUT=$(cat text/restart-tor-bridges-snowflake-text)
+    INPUT=$(cat $TXT_DIR/restart-tor-bridges-snowflake-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			deactivating_bridge_relay
 	    sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}

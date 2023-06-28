@@ -109,6 +109,7 @@ case "$CHOICE" in
         sudo cp ${TORRC} ${BAK}
         deactivate_snowflake_bridges NORESTART
         sudo sed -i "/^#Bridge snowflake /d" ${TORRC}
+        sudo sed -i "/^#Specific Snowflake bridge for /d" ${TORRC}
         sudo sed -i "s/^EXITID=.*/EXITID=1/" ${RUNFILE}
 				INPUT=$(cat $TXT_DIR/restart-tor-text)
 				if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then

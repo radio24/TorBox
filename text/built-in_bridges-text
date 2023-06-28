@@ -1,0 +1,7 @@
+This menu entry will remove all bridges in the tor configuration, fetch and add bridges used as default built-in bridges in the TorBrowser.
+
+TorBox is released with its built-in bridges, which were tested before the release. The user also can get new OBFS4 and Snowflake bridges by using the according entry in the Countermeasure sub-menu. However, if all fails and the user cannot catch valid bridges, the default built-in bridges could serve as a last resort.
+
+If still working (for example, on a not censored network), TorBox will try to get the default bridges through Tor. If this is not possible, with the user's consent, TorBox will use Clearnet.
+
+Are you sure to remove all existing bridges, fetch and add default built-in bridges?

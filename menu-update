@@ -93,9 +93,10 @@ TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TO
 SPEED=$(grep "^EX_SLOW=" ${RUNFILE} | sed "s/EX_SLOW=//g") 2>/dev/null
 
 #Other variables
-TOR_DIR="/etc/tor/"
-TORRC="${TOR_DIR}torrc"
+TORRC="/etc/tor/torrc"
+BAK="/etc/tor/torrc.bak"
 TMP_DIR="/home/torbox/tmp"
+TOR_GET_DEFAULT_BRIDGES_URL="https://bridges.torproject.org/moat/circumvention/builtin"
 TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
 # shellcheck disable=SC2001,SC2016
@@ -727,7 +728,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
 " 3" "Update the firmware of the RPI 4 (reboot required!)"  \
-" 4" "Update or change the version of Tor" \
+" 4" "Update or change the version of tor" \
 " 5" "Update the TorBox menu (whitout touching the configuration)"  \
 "==" "==========================================[Backup & Restore]===" \
 " 6" "Backup TorBox's configuration to a backup file" \
@@ -735,13 +736,14 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU
 "===" "==============================================[Maintenance]===" \
 " 8" "Reset TorBox's configuration files (dangerous!)" \
 " 9" "Reset TWM and erase all wifi passwords (reboot required!)" \
-"10" "Reset Tor and force a change of the permanent entry node" \
-"11" "Renew the list of excluded slow tor relays" \
-"12" "Restart Nginx, webssh and TFS" \
-"13" "Rerun the \"First Start-up\" script" \
-"14" "Erase all log files" \
-"15" "Time synchronisation"  \
-"16" "Just fixing and cleaning" \
+"10" "Reset tor and force a change of the permanent entry node" \
+"11" "Remove all tor bridges and use built-in bridges" \
+"12" "Renew the list of excluded slow tor relays" \
+"13" "Restart Nginx, webssh and TFS" \
+"14" "Rerun the \"First Start-up\" script" \
+"15" "Erase all log files" \
+"16" "Time synchronisation"  \
+"17" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -1103,8 +1105,137 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# Renew the list of excluded slow tor relays
+	# Remove all tor bridges and use built-in bridges
 	11)
+		clear
+		INPUT=$(cat text/built-in_bridges-text)
+		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			online_check $TOR_GET_DEFAULT_BRIDGES_URL 0 1
+			if [ $OCHECK == 1 ]; then
+				echo -e "${RED}[+] Trying to fetch default built-in bridge... this may take some time, please wait!${NOCOLOR}"
+				trap "bash menu-update; exit 0" SIGINT
+				if [ $CLEARNET_DECISSION == 1 ]; then
+						all_default_bridge_address=$(python3 $TORBOX_PATH/bin/catchbuiltinbridges.py)
+				else
+						all_default_bridge_address=$(python3 $TORBOX_PATH/bin/catchbuiltinbridges.py --network=tor)
+	    	fi
+				if [ "$bridge_address" = "-1" ]; then
+					echo " "
+					echo -e "${WHITE}[!] NETWORK ERROR!${NOCOLOR}"
+					echo -e "${RED}[+] Sorry, I couldn't fetch anything! Please, try again later!${NOCOLOR}"
+					echo " "
+					read -n 1 -s -r -p "Press any key to continue"
+					clear
+					exit 0
+				else
+					clear
+					# Make a backup of torrc
+					sudo cp $TORRC $BAK
+					# Deactivate and remove all bridges
+					deactivate_obfs4_bridges NORESTART
+	        sudo sed -i "/^#Bridge obfs4 /d" ${TORRC}
+					deactivate_snowflake_bridges NORESTART
+	        sudo sed -i "/^#Bridge snowflake /d" ${TORRC}
+					sudo sed -i "/^#Specific Snowflake bridge for /d" ${TORRC}
+					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+					sudo sed -i "/^#Bridge meek_lite /d" ${TORRC}
+
+					# Add OBFS4
+					# Create an array
+					SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+					IFS=$'\n'      # Change IFS to newline char
+					bridge_address=$(grep "^obfs4 " <<< "$all_default_bridge_address")
+					bridge_address=($bridge_address) # split the `names` string into an array by the same name
+					IFS=$SAVEIFS   # Restore original IFS
+					number_bridges=${#bridge_address[@]}
+					n=0
+					echo ""
+					for (( i=0; i<number_bridges; i++ ))
+					do
+						[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges OBFS4 bridge(s) - probably some are duplicates${NOCOLOR}"
+						n=$((n+1))
+						if grep -q "${bridge_address[$i]}" $TORRC ; then
+							sleep 1
+						else
+							echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
+							bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4 `#Bridge obfs4 `g')"
+							bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+							(printf %s"${bridge_address[$i]}\n" | sudo tee -a $TORRC) &>/dev/null
+						fi
+					done
+
+					# Add Snowflake
+					# Create an array
+					SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+					IFS=$'\n'      # Change IFS to newline char
+					unset bridge_address
+					# shellcheck disable=SC2178
+					bridge_address=$(grep "^snowflake " <<< "$all_default_bridge_address")
+					# shellcheck disable=SC2128
+					bridge_address=($bridge_address) # split the `names` string into an array by the same name
+					IFS=$SAVEIFS   # Restore original IFS
+					number_bridges=${#bridge_address[@]}
+					n=0
+					echo ""
+					for (( i=0; i<number_bridges; i++ ))
+					do
+						[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges Snowflake bridge(s)${NOCOLOR}"
+						n=$((n+1))
+						if grep -q "${bridge_address[$i]}" $TORRC ; then
+							sleep 1
+						else
+							echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
+	            bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`snowflake `#Bridge snowflake `g')"
+							#This is necessary to work with special characters in sed
+							NEW_STRING="$(<<< "${bridge_address[$i]}" sed -e 's`[][\\/.*^$]`\\&`g')"
+							# Using the Anchor in torrc
+							REPLACE_STRING=$(grep -m 1 "^## Snowflake (do not remove or change that line - this is an anchor)" ${TORRC})
+							#This is necessary to work with special characters in sed
+							REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+							REPLACE_STRING="$REPLACE_STRING\n$NEW_STRING"
+							sudo sed -E -i "s/^## Snowflake .*/$REPLACE_STRING/g" "${TORRC}"
+						fi
+					done
+
+					# Add Meek-Azure (only one line!)
+					unset bridge_address
+					# shellcheck disable=SC2178
+					bridge_address=$(grep -m 1 "^meek_lite " <<< "$all_default_bridge_address")
+					# shellcheck disable=SC2128
+					if [ ! -z "$bridge_address" ]; then
+						echo ""
+						echo -e "${WHITE}[!] Sucess!. We fetched a Meek bridge${NOCOLOR}"
+						echo -e "${RED}[+] Adding, bridge...${NOCOLOR}"
+						bridge_address="$(<<< "${bridge_address}" sed -e 's`meek_lite `#Bridge meek_lite `g')"
+						#This is necessary to work with special characters in sed
+						NEW_STRING="$(<<< "${bridge_address}" sed -e 's`[][\\/.*^$]`\\&`g')"
+						# Using the Anchor in torrc
+						REPLACE_STRING=$(grep -m 1 "^## Meek-Azure (do not remove or change that line - this is an anchor)" ${TORRC})
+						#This is necessary to work with special characters in sed
+						REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+						REPLACE_STRING="$REPLACE_STRING\n$NEW_STRING"
+						sudo sed -E -i "s/^## Meek-Azure .*/$REPLACE_STRING/g" "${TORRC}"
+					fi
+
+					# Finishing
+					sleep 5
+					clear
+					whiptail --title "TorBox - INFO" --textbox text/built-in_bridges_finish-text $MENU_HEIGHT_20 $MENU_WIDTH
+				fi
+	    else
+	      echo ""
+	      echo -e "${WHITE}[!] OH NO! - no connection :( ${NOCOLOR}"
+	      echo -e "${WHITE}[!] Can't fetch bridges - ABORTING :( ${NOCOLOR}"
+	      echo " "
+	      read -n 1 -s -r -p "Press any key to continue"
+	      clear
+	      exit 0
+	    fi
+		fi
+	;;
+
+	# Renew the list of excluded slow tor relays
+	12)
 		clear
 		if [ "$SPEED" == "0" ]; then
 			INPUT=$(cat text/exclude_slow_tor_relays-update-text)
@@ -1156,7 +1287,7 @@ case "$CHOICE" in
 	;;
 
 	# Restart nginx, webssh, TFS and TCS
-	12)
+	13)
 		clear
 		# shellcheck disable=SC2012
 		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
@@ -1204,14 +1335,14 @@ case "$CHOICE" in
 	;;
 
 	# Rerun the "First Start-up" script
-	13)
+	14)
   	clear
 		bin/first_use 3 menu-update
 		exit 0
 	;;
 
 	# This erases all log files
-	14)
+	15)
   	clear
     erase_logs
     echo ""
@@ -1220,12 +1351,12 @@ case "$CHOICE" in
 	;;
 
 	# Time synchronisation
-	15)
+	16)
 		settime
 	;;
 
 	# Fixing and cleaning - just to be sure that all works properly.
-	16)
+	17)
 		clear
   	echo -e "${RED}[+] Fixing and cleaning...${NOCOLOR}"
   	sudo apt --fix-broken install

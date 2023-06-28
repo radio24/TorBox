@@ -21,8 +21,13 @@
 # This will fetch the builtin bridges and display it alphabetically sorted.
 #
 # SYNTAX
-# ./catchbuiltinbridges.py
+# ./catchbuiltinbridges.py [-n, --network=<tor|inet>] [--help]
 #
+# -n, --network=<tor|inet>: force check over specific network
+# --help              Show this message and exit.
+#
+# ERROR CODES:
+# -1: Network error
 
 import click
 import requests
@@ -57,7 +62,12 @@ def get_proxy(network=''):
 # Fetch the content from the URL
 def fetch_bridges(network):
     proxy = get_proxy(network)
-    response = requests.get("https://bridges.torproject.org/moat/circumvention/builtin", proxies=proxy)
+
+    try:
+        response = requests.get("https://bridges.torproject.org/moat/circumvention/builtin", proxies=proxy)
+    except:
+        print(-1)
+        quit()
 
     # Extract the information in the square brackets from the content
     information = []

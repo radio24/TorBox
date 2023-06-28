@@ -72,7 +72,7 @@ ReachableAddresses accept *:443, accept *:80
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
 #ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 
-## Meek-Azure
+## Meek-Azure (do not remove or change that line - this is an anchor)
 #Bridge meek_lite 192.0.2.18:80 BE776A53492E1E044A26F17306E1BC46A55A1625 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
 
 ## Snowflake (do not remove or change that line - this is an anchor)
