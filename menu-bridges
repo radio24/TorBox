@@ -59,8 +59,9 @@ NOCOLOR='\033[0m'
 #Other variables
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
-TXT_DIR="/home/torbox/torbox/text"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+TXT_DIR="$TORBOX_PATH/text"
 LOOP_NUMBER=0
 PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2>/dev/null
 
@@ -362,7 +363,7 @@ case "$CHOICE" in
     INPUT=$(cat $TXT_DIR/advanced-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      ./vitor
+      bin/vitor
       INPUT=$(cat $TXT_DIR/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
@@ -378,10 +379,10 @@ case "$CHOICE" in
       echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
       sudo pkill -f "log_check.py"
       echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
-      (sudo rm log_check_config.py) &>/dev/null
+      (sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
       echo -e "${RED}[+] ...log removed!${NOCOLOR}"
       (sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
-      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
       sleep 1
       clear
       echo -e "${RED}[+] TorBox's automatic counteractions feature is deativated!${NOCOLOR}"
@@ -407,12 +408,12 @@ case "$CHOICE" in
           echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"
           sleep 1
           LOOP_NUMBER=$((LOOP_NUMBER+1))
-          [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
-          [[ "$ARGUMENT" =~ [1-6] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
+          [ $LOOP_NUMBER = 1 ] && (cp $TORBOX_PATH/install/log_check_config/header $TORBOX_PATH/log_check_config.py) &>/dev/null
+          [[ "$ARGUMENT" =~ [1-6] ]] && (cat $TORBOX_PATH/install/log_check_config/00"${ARGUMENT}" >> $TORBOX_PATH/log_check_config.py) &>/dev/null
         done
         if [ ! -z "$LOOP_NUMBER" ]; then
-          (cat install/log_check_config/footer >> log_check_config.py) &>/dev/null
-          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+          (cat $TORBOX_PATH/install/log_check_config/footer >> $TORBOX_PATH/log_check_config.py) &>/dev/null
+          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" $RUNFILE) &>/dev/null
           sudo ./log_check.py &
           clear
           echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"

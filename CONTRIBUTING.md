@@ -10,7 +10,7 @@ Please bear the following coding guidelines in mind:
 
 - If a feature can not be implemented with shell script - for example, because of complexity - alternatively, Python >= 3 should be used.
 
-- Currently, all added features should run under Raspberry Pi OS (priority 1), Debian (priority 2) and Ubuntu (priority 3) and should be independent of the used hardware. If your code was written for a particular platform, try to make it portable to other platforms so that everyone may enjoy it. If your code works only with the version of a binary on a particular platform, ensure that it will not be loaded on other platforms that have a command with the same name.
+- Currently, all added features should run under Raspberry Pi OS (priority 1), Debian (priority 2), and Ubuntu (priority 3), all with 64-bit support. The code should be independent of the used hardware. If the code was written for a particular platform, try to make it portable to other platforms so everyone can enjoy it. If your code works only with the binary version on a specific platform, ensure it will not be loaded on other platforms.
 
   **Identify the Operation System**
   ```shell
@@ -67,15 +67,6 @@ Please bear the following coding guidelines in mind:
   esac
   ```
 
-- Writing URLs to a file, use `|` as a delimiter (this guideline is currently being implemented):
-  `sed "s|GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|" torbox.run`
-
-  Depreciated and should be replaced:
-  ```shell
-  REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
-  sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
-  ```
-
 - To suppress undesired terminal outputs, '&>/dev/null' or '2>/dev/null' should be used at the end of a command, as in the example below (this guideline is currently being implemented):
 
   ```shell
@@ -102,7 +93,7 @@ Please bear the following coding guidelines in mind:
   If `CLEARNET_ONLY=0` then `if [ -z "$CLEARNET_ONLY" ]; then` will be `false`, but `if [ "$CLEARNET_ONLY" == "0" ]; then` will be true.
 
 
-- Check exit code directly with e.g. 'if mycmd;', not indirectly with '$?' (for more information, see [Shellcheck #SC2181](https://github.com/koalaman/shellcheck/wiki/SC2181); this guideline is currently being implemented)
+- Check exit code directly with e.g. 'if mycmd;', not indirectly with '$?' (for more information, see [Shellcheck SC2181](https://github.com/koalaman/shellcheck/wiki/SC2181); this guideline is currently being implemented)
 
 - In general, variable names should be short and in upper case. However, there are exceptions; if the complexity needs longer, self-explaining variable names, then they can also be in lower case.
 
@@ -142,3 +133,15 @@ Please bear the following coding guidelines in mind:
 - Use an editor that supports [EditorConfig](https://editorconfig.org/) (for example [Atom](https://atom.io)), and format source code according to [our settings](https://editorconfig.org/).
 
 - Please test your code thoroughly before creating a pull-request! With shell scripts, it is recommended to use [shellcheck](https://github.com/koalaman/shellcheck). If your code is accepted into the distribution, a lot of people will try it out, so try to do a thorough job of eradicating all the bugs before you send it to us.
+
+## Depreciated
+- ifconfig: ifconfig is not installed as default in Debian - use the command "ip" instead!
+
+- Writing URLs to a file, use `|` as a delimiter (this guideline is currently being implemented):
+  `sed "s|GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|" torbox.run`
+
+  Depreciated and should be replaced:
+  ```shell
+  REPLACEMENT_STR="$(<<< "$GO_DL_PATH" sed -e 's`[][\\/.*^$]`\\&`g')"
+  sudo sed -i "s/^GO_DL_PATH=.*/GO_DL_PATH=${REPLACEMENT_STR}/g" torbox.run
+  ```

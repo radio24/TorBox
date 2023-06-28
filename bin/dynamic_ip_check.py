@@ -25,7 +25,7 @@
 # has changed. If this is the case, it triggers the restart of the tor service.
 #
 # SYNTAX
-# ./synamic_ip_check.py [-i wlanx] [--interface wlanx]
+# ./dynamic_ip_check.py [-i wlanx] [--interface wlanx]
 
 import argparse
 import subprocess

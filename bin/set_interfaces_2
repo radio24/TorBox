@@ -79,7 +79,8 @@ I_DEVICE2=$3
 CAPTIVE=$4
 RESTARTTOR=$5
 ONLY_RESET=$6
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITLOOP=0
 
 
@@ -92,7 +93,7 @@ EXITLOOP=0
 # This function pass through Captive Portals using the TUNNELLING nethod
 captive_tunneling()
 {
-	sudo bash set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+	sudo bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
 	EXITLOOP=$?
 	if [ $EXITLOOP == 0 ]; then
 		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
@@ -110,9 +111,9 @@ captive_tunneling()
 			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
 			echo ""
 		fi
-		(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 		echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-		(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
 		echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 	fi
@@ -127,12 +128,12 @@ captive_tunneling()
 while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
 	if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
 		if [ $CAPTIVE = 2 ]; then
-			sudo bash change_MAC $O_DEVICE 3
+			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
 		fi
 		clear
 		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
 		sleep 2
-		sudo ./torbox_wireless_manager.py -i $O_DEVICE
+		sudo $TORBOX_PATH/lib/torbox_wireless_manager.py -i $O_DEVICE
 		clear
 		if [ $CAPTIVE = 1 ]; then
 			captive_tunneling
@@ -141,7 +142,7 @@ while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
 		fi
 	else
 		if [ $CAPTIVE = 2 ]; then
-			sudo bash change_MAC $O_DEVICE 3
+			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
 		elif [ $CAPTIVE = 1 ]; then
 			captive_tunneling
 		else
@@ -246,7 +247,7 @@ else
 fi
 
 ###### Exclusion of domains from tor protection activated ######
-if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then ./set_interfaces_3; fi
+if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfaces_3; fi
 
 ###### FINISH ######
 # Seems to guarante a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.

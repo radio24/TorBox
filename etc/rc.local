@@ -23,7 +23,7 @@
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/local/go/bin
 sudo dmesg -D
 rfkill unblock all
-bash /home/torbox/torbox/regset
+bash /home/torbox/torbox/bin/regset
 sudo systemctl stop hostapd
 
 CHECK_OS="$(lsb_release -si)"
@@ -108,7 +108,7 @@ sudo systemctl start hostapd
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
   if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
-	  exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a)
+	  exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
 	fi
 fi
 
@@ -116,7 +116,7 @@ fi
 if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
 	if ip link | grep wlan0 ; then
 		if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
-			exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan0 -a)
+			exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
 		fi
 	fi
 fi

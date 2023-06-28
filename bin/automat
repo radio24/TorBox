@@ -32,7 +32,8 @@
 # IMPORTANT: rc.local needs absolute paths, it is not recommended to use the torbox.lib!
 ARGUMENT=$1
 ARGUMENT2=$2
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 LOG=""
 RETURN=0
 i=0
@@ -76,7 +77,7 @@ if [ $ARGUMENT = 1 ]; then
 elif [ $ARGUMENT = 2 ]; then
   INTERNET_IFACE=$(grep "^INTERNET_IFACE=" $RUNFILE | sed "s/.*=//g")
   if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-    RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
+    RETURN=$(sudo $TORBOX_PATH/lib/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
 			(printf %s"[$DATE] - TACA TRIGGER #2a - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else
@@ -107,7 +108,7 @@ elif [ $ARGUMENT = 2 ]; then
 elif [ $ARGUMENT = 3 ]; then
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" $RUNFILE | sed "s/.*=//g")
 	if [ "$INTERNET_IFACE" == "wlan0" ] || [ "$INTERNET_IFACE" == "wlan1" ]; then
-		RETURN=$(sudo /home/torbox/torbox/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
+		RETURN=$(sudo $TORBOX_PATH/lib/torbox_wireless_manager.py -i $INTERNET_IFACE -a)
 		if [ $RETURN = 1 ]; then
 			(printf %s"[$DATE] - TACA TRIGGER #3  - Restart wifi connection - successful.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 		else

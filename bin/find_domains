@@ -46,9 +46,9 @@ NOCOLOR='\033[0m'
 
 #Other variables
 RUNFILE="/home/torbox/torbox/run/torbox.run"
-# Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
-CLEARNET_LIST_FILE_OWN="run/clearnet-list.own"
-VPN_LIST_FILE_OWN="run/vpn-list.own"
+# Format of CLEARNET_LIST_FILE_OWN / VPN_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
+CLEARNET_LIST_FILE_OWN="/home/torbox/torbox/run/clearnet-list.own"
+VPN_LIST_FILE_OWN="/home/torbox/torbox/run/vpn-list.own"
 DOMAINNAME=$1
 RESCAN=$2
 DUMP=""

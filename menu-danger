@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=5
+NO_ITEMS=6
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -95,7 +95,7 @@ read_config()
 	if sudo grep "^PasswordAuthentication no" ${SSHD_CONFIG} ; then
 		TOGGLE21="Enable"
 	else
-		TOGGLE21="Diasable"
+		TOGGLE21="Disable"
 	fi
 }
 
@@ -198,7 +198,7 @@ case "$CHOICE" in
 					sudo ipset create $VPN_LIST hash:ip
 				fi
 				sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}
-				./set_interfaces_3
+				bin/set_interfaces_3
 			fi
 		fi
     if [ "$TOGGLE19" == "Stop" ]; then
@@ -216,7 +216,7 @@ case "$CHOICE" in
 			fi
 			clear
 			sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}
-			sudo bash set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 0 0 1
+			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 0 0 1
 			sudo ipset destroy 2>/dev/null
 		fi
   ;;
@@ -284,7 +284,7 @@ case "$CHOICE" in
 						1)
 						  INPUT=$(cat text/rescan_domain-text)
 							whiptail --title "TorBox - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
-					    ./find_domains "$DOMAINNAME" 1
+					    bin/find_domains "$DOMAINNAME" 1
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 							echo -e "${RED}[+] Done!${NOCOLOR}"
@@ -404,7 +404,7 @@ case "$CHOICE" in
 						exitstatus=$?
 						# exitstatus == 255 means that the ESC key was pressed
 						[ "$exitstatus" == "255" ] && exit 1
-						./find_domains "$DOMAINNAME" 1
+						bin/find_domains "$DOMAINNAME" 1
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
 						echo -e "${RED}[+] Done!${NOCOLOR}"
@@ -533,7 +533,7 @@ case "$CHOICE" in
 			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		fi
-    sudo bash set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2
+    sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2
 	;;
 
   *)

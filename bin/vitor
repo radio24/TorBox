@@ -270,7 +270,7 @@ edit_check_verify(){
 
 
 ## https://unix.stackexchange.com/questions/532585/getting-dbind-warnings-about-registering-with-the-accessibility-bus
-export NO_AT_BRIDGE=1 
+export NO_AT_BRIDGE=1
 
 ## first check
 notice "${file} selected"

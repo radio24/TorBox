@@ -62,6 +62,7 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 DNSPROG="dnsmasq"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
+TXT_DIR="/home/torbox/torbox/text"
 #EXITID="EXITID=1"
 O_DEVICE=$1
 I_DEVICE1=$2
@@ -72,7 +73,7 @@ I_DEVICE2=$3
 ###### DISPLAY A WARNING ######
 sleep 2
 clear
-INPUT=$(cat text/is-it-captive-text)
+INPUT=$(cat $TXT_DIR/is-it-captive-text)
 if (whiptail --title "TorBox - WARNING" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
   EXITLOOP=0
 else
@@ -110,7 +111,7 @@ $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT
 
 ########## DIALOG BOX #########
 clear
-INPUT=$(cat text/browser-text)
+INPUT=$(cat $TXT_DIR/browser-text)
 if (whiptail --title "TorBox - INFO" --defaultno --no-button "CONTINUE" --yes-button "TRY IT AGAIN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
   EXITLOOP=0
 else

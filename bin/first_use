@@ -55,7 +55,9 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
 # Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+TXT_DIR="$TORBOX_PATH/text"
 FRESHINSTALLED=$1
 [ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 
@@ -94,7 +96,7 @@ finish_bridge_start2()
 			exit 0
 		else
 			clear
-			whiptail --textbox text/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
+			whiptail --textbox $TXT_DIR/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
 			CHECK=$(grep "^#ReachableAddresses" ${TORRC})
 			if [ -z ${CHECK} ] ; then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
@@ -138,7 +140,7 @@ finish_bridge_start1()
  		 trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
  		 exit 0
  	 else
-     INPUT=$(cat text/first_use-anti-firewall-text)
+     INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
      if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			 CHECK=$(grep "^#ReachableAddresses" ${TORRC})
 			 if [ -z ${CHECK} ] ; then
@@ -228,7 +230,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
       clear
-      INPUT=$(cat text/first_use-welcome-text)
+      INPUT=$(cat $TXT_DIR/first_use-welcome-text)
       if (whiptail --title "TorBox - FIRST START UP (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
@@ -237,7 +239,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       fi
 
 			# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
-			INPUT=$(cat text/randomize_hostname-text)
+			INPUT=$(cat $TXT_DIR/randomize_hostname-text)
 			HOSTNAME=$(hostname)
 			INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
 			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -266,7 +268,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			fi
 
 			# Will the user keep using the default configured firewall circumvention?
-			INPUT=$(cat text/first_use-firewall-text)
+			INPUT=$(cat $TXT_DIR/first_use-firewall-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
@@ -296,32 +298,32 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       fi
       # Ask for TACA support
       clear
-      INPUT=$(cat text/first_use-TACA-text)
+      INPUT=$(cat $TXT_DIR/first_use-TACA-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				# To start TACA, notices.log has to be present
 				(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 				(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
-				if [ ! -f log_check_config.py ]; then
+				if [ ! -f $TORBOX_PATH/log_check_config.py ]; then
 					clear
 					for ARGUMENT in $(seq 1 6) ; do
 						echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"
 						sleep 1
 						LOOP_NUMBER=$((LOOP_NUMBER+1))
-						[ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
-						[[ "$ARGUMENT" =~ [1-6] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
+						[ $LOOP_NUMBER = 1 ] && (cp $TORBOX_PATH/install/log_check_config/header $TORBOX_PATH/log_check_config.py) &>/dev/null
+						[[ "$ARGUMENT" =~ [1-6] ]] && (cat $TORBOX_PATH/install/log_check_config/00"${ARGUMENT}" >> $TORBOX_PATH/log_check_config.py) &>/dev/null
 					done
-					(cat install/log_check_config/footer >> log_check_config.py) &>/dev/null
+					(cat $TORBOX_PATH/install/log_check_config/footer >> $TORBOX_PATH/log_check_config.py) &>/dev/null
 				fi
-				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+				(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" $RUNFILE) &>/dev/null
 				sudo pkill -f "log_check.py"
-				sudo ./log_check.py &
+				sudo $TORBOX_PATH/log_check.py &
 				echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 				sleep 2
 			else
 				sudo pkill -f "log_check.py"
-	      (sudo rm log_check_config.py) &>/dev/null
+	      (sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
 	      (sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
-	      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+	      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
 	      sleep 1
       fi
 
@@ -334,7 +336,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 			echo
 			echo  "             Date: $(date '+%Y-%m-%d')"
-			./clock.py
+			clock.py
 			echo
 			echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 			echo
@@ -354,10 +356,10 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       # Ask for bridge support
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
-      INPUT=$(cat text/first_use-add-bridges-text)
+      INPUT=$(cat $TXT_DIR/first_use-add-bridges-text)
 			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
-					INPUT=$(cat text/no_antifirewall-please-text)
+					INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
@@ -378,7 +380,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 					clear
-					sudo bash bin/bridges_activate_snowflake norestart
+					sudo bash bridges_activate_snowflake norestart
 				fi
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear
@@ -426,11 +428,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 		# This will install additional network drivers
     4)
 			clear
-			INPUT=$(cat text/install_network_drivers-text)
+			INPUT=$(cat $TXT_DIR/install_network_drivers-text)
 			FRESHINSTALLED=0
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 			if (whiptail --title "TorBox v.0.5.2 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				bash install/install_network_drivers install
+				bash $TORBOX_PATH/install/install_network_drivers install
 				recommended_reboot first_use
 			fi
     ;;

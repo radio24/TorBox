@@ -156,7 +156,7 @@ trap
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 clear
 if [ -z "$INTERNETSELECTION" ]; then
-  if [ $FRESHINSTALLED -gt 0 ]; then ./first_use; fi
+  if [ $FRESHINSTALLED -gt 0 ]; then bin/first_use; fi
 fi
 read_config
 do_we_use_bridges
@@ -266,9 +266,9 @@ case "$CHOICE" in
     INPUT=$(cat text/cable-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -323,9 +323,9 @@ case "$CHOICE" in
       # The following line should minimize those cases where a restart is required.
       sudo systemctl restart isc-dhcp-server
       if [ -z "$INTERNETSELECTION" ]; then
-        sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 1
+        sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 1
       else
-        sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
+        sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
       fi
       if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -338,9 +338,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
-        (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+        (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
         ask_captive
@@ -395,9 +395,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -414,9 +414,9 @@ case "$CHOICE" in
     INPUT=$(cat text/wlan0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -471,9 +471,9 @@ case "$CHOICE" in
       # The following line should minimize those cases where a restart is required.
       sudo systemctl restart isc-dhcp-server
       if [ -z "$INTERNETSELECTION" ]; then
-        sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 1
+        sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 1
       else
-        sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 0
+        sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 0
       fi
       if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       # iptables cannot be saved !!
@@ -485,9 +485,9 @@ case "$CHOICE" in
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -543,9 +543,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -558,7 +558,7 @@ case "$CHOICE" in
 						echo ""
 						trap "bash menu; exit 0" SIGINT
 						stty intr q
-						sudo ./poff
+						sudo bin/poff
 						sleep 5
 						sudo pon
 						echo ""
@@ -574,7 +574,7 @@ case "$CHOICE" in
 					trap "bash menu; exit 0" SIGINT
 					stty intr q
 					if pgrep -f "pppd"; then
-						sudo ./poff
+						sudo bin/poff
 						sleep 5
 					fi
         	sudo pon
@@ -636,9 +636,9 @@ case "$CHOICE" in
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           if [ -z "$INTERNETSELECTION" ]; then
-            sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 1
+            sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 1
           else
-            sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
+            sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
           fi
           if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -655,9 +655,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
-				(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
 				ask_captive
@@ -712,9 +712,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -735,14 +735,14 @@ case "$CHOICE" in
 					INPUT=$(cat text/tun0-not_connected-text)
 					if (whiptail --title "TorBox - INFO" --yesno --no-button "CONTINUE" --yes-button "CONNECT WLAN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						display_net_reconfiguration_info
-						(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+						(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 						echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-						(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+						(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 						echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 						sleep 2
 						ask_captive
 						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
-						sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0 0
+						sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0 0
 			  	fi
 				fi
 				connecting_to_VPN
@@ -801,9 +801,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 0 1 1
+          sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 0 1 1
         else
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 0 0 1
+          sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 0 0 1
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null

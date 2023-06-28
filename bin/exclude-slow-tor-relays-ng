@@ -63,7 +63,7 @@ MINIMUM_BANDWIDTH = 4000
 TOR_DATA_DIR = "/var/lib/tor"
 
 # The path where torrc.exclude-slow will be stored
-TOR_STORE_DIR = "./"
+TOR_STORE_DIR = "/var/lib/tor"
 
 # The file to write the new ExcludeNodes torrc lines
 FILENAME = "torrc.exclude-slow"

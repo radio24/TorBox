@@ -93,7 +93,7 @@ change_crda()
 
   if [ $exitstatus = 0 ]; then
     sudo iw reg set $COUNTRY
-		sudo sed -i "s/^sudo iw reg set*./sudo iw reg set $COUNTRY/g" regset
+		sudo sed -i "s/^sudo iw reg set*./sudo iw reg set $COUNTRY/g" bin/regset
     INPUT="REGDOMAIN=$COUNTRY"
     sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
   fi
@@ -107,7 +107,7 @@ change_crda()
 #  fi
 #  echo -e "${RED}[+] We have to restart the TorBox's WLAN!${NOCOLOR}"
 #  echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-#  (nohup ./hostapd_fallback) 2>/dev/null
+#  (nohup bin/hostapd_fallback) 2>/dev/null
 }
 
 # This function imports the configuration and makes some preparations
@@ -366,7 +366,7 @@ case "$CHOICE" in
         echo " "
         echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
         echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
-        (nohup ./hostapd_fallback) 2>/dev/null
+        (nohup bin/hostapd_fallback) 2>/dev/null
       fi
     fi
   ;;
@@ -428,7 +428,7 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
+            (nohup bin/hostapd_fallback) 2>/dev/null
             sudo rm nohup.out
           fi
         fi
@@ -594,7 +594,7 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
+            (nohup bin/hostapd_fallback) 2>/dev/null
             sudo rm nohup.out
           fi
         else
@@ -604,7 +604,7 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
+            (nohup bin/hostapd_fallback) 2>/dev/null
             sudo rm nohup.out
           fi
         fi
@@ -667,7 +667,7 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
+            (nohup bin/hostapd_fallback) 2>/dev/null
             sudo rm nohup.out
           fi
         else
@@ -678,7 +678,7 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
+            (nohup bin/hostapd_fallback) 2>/dev/null
             sudo rm nohup.out
           fi
         fi
@@ -690,7 +690,7 @@ case "$CHOICE" in
 	# Change / randomize the MAC adresses of TorBox's interfaces
   9)
 		INPUT=$(cat text/help-change-MAC)
-		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash change_MAC; fi
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash bin/change_MAC; fi
 	;;
 
   #This hides / unhides the WLAN
@@ -722,7 +722,7 @@ case "$CHOICE" in
         echo " "
         echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
         echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-        (nohup ./hostapd_fallback) 2>/dev/null
+        (nohup bin/hostapd_fallback) 2>/dev/null
         sudo rm nohup.out
       fi
       read_config
@@ -940,10 +940,10 @@ case "$CHOICE" in
 				fi
 				clear
 				echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-				sudo ./exclude-slow-tor-relays-ng -b $SPEED
+				sudo bin/exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
-				sudo mv torrc.exclude-slow /etc/tor
+#				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor menu-config
@@ -967,7 +967,7 @@ case "$CHOICE" in
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      ./vitor
+      bin/vitor
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear

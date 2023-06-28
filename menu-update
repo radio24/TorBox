@@ -1036,7 +1036,7 @@ case "$CHOICE" in
 	#Restoring TorBox's configuration from a backup file
 	7)
   	clear
-		./restore
+		bin/restore
 	;;
 
 	# Reset TorBox's configuration files (dangerous!)
@@ -1131,10 +1131,10 @@ case "$CHOICE" in
 				fi
 				clear
 				echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-				sudo ./exclude-slow-tor-relays-ng -b $SPEED
+				sudo bin/exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
-				sudo mv torrc.exclude-slow /etc/tor
+				#sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor menu-update
@@ -1145,10 +1145,10 @@ case "$CHOICE" in
 			sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
 			echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-			sudo ./exclude-slow-tor-relays-ng -b $SPEED
+			sudo bin/exclude-slow-tor-relays-ng -b $SPEED
 			sleep 5
 			clear
-			sudo mv torrc.exclude-slow /etc/tor
+			#sudo mv torrc.exclude-slow /etc/tor
 			sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 			restarting_tor menu-update
@@ -1206,7 +1206,7 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	13)
   	clear
-		./first_use 3 menu-update
+		bin/first_use 3 menu-update
 		exit 0
 	;;
 
