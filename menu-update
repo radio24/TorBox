@@ -847,7 +847,6 @@ case "$CHOICE" in
 			  echo ""
 			  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			fi
-			fi
 			sleep 5
 			echo ""
 			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
