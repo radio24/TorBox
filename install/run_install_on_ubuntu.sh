@@ -91,9 +91,7 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 # Default hostname
 HOSTNAME="TorBox053"
 
-# Used go version
-GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+# For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
@@ -792,57 +790,52 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
-# NEW v.0.5.3: Check if go is already installed and has the right version
-if [ -f $GO_PROGRAM ]; then
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-else
-	GO_PROGRAM=go
-	#This can lead to command not found - ignore it
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+# NEW v.0.5.3: New way to download the current version of go
+if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+else PLATFORM="linux-armv6l"
 fi
-if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-	else DOWNLOAD="$GO_VERSION"
-	fi
-	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
-	DLCHECK=$?
-	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	if [ "$DLCHECK" != "0" ] ; then
+
+# Fetch the filename of the latest go version
+GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+DLCHECK=$?
+# NEW v.0.5.3: if the download failed, install the package from the distribution
+if [ "$DLCHECK" != "0" ] ; then
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
-		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-		echo
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 10
-		fi
-		re-connect
-		sudo apt-get -y install golang
-		GO_PROGRAM="/usr/local/go/bin/go"
-		if [ -f $GO_PROGRAM ]; then
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		else
-			GO_PROGRAM=go
-			#This can lead to command not found - ignore it
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		fi
-		if [ "$GO_VERSION_NR" -lt "17" ]; then
-			echo ""
-			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
-			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
-			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
-			echo ""
-			exit 1
-		fi
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-  	sudo tar -C /usr/local -xzvf $DOWNLOAD
-		sudo rm $DOWNLOAD
+		sleep 10
 	fi
+	re-connect
+	sudo apt-get -y install golang
+	GO_PROGRAM="/usr/local/go/bin/go"
+	if [ -f $GO_PROGRAM ]; then
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	else
+		GO_PROGRAM=go
+		#This can lead to command not found - ignore it
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	fi
+	if [ "$GO_VERSION_NR" -lt "17" ]; then
+		echo ""
+		echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+		echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+		echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+		echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+		echo ""
+		exit 1
+	fi
+else
+  sudo tar -C /usr/local -xzvf $GO_FILENAME
+	sudo rm $GO_FILENAME
 fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?

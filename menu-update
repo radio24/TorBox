@@ -82,8 +82,6 @@ DEFAULT_SPEED=4000
 
 # Read configuration from run/torbox.run
 RUNFILE="/home/torbox/torbox/run/torbox.run"
-GO_VERSION=$(grep "^GO_VERSION=" ${RUNFILE} | sed "s/GO_VERSION=//g") 2>/dev/null
-GO_VERSION_64=$(grep "^GO_VERSION_64=" ${RUNFILE} | sed "s/GO_VERSION_64=//g") 2>/dev/null
 GO_DL_PATH=$(grep "^GO_DL_PATH=" ${RUNFILE} | sed "s/GO_DL_PATH=//g") 2>/dev/null
 OBFS4PROXY_USED=$(grep "^OBFS4PROXY_USED=" ${RUNFILE} | sed "s/OBFS4PROXY_USED=//g") 2>/dev/null
 SNOWFLAKE_USED=$(grep "^SNOWFLAKE_USED=" ${RUNFILE} | sed "s/SNOWFLAKE_USED=//g") 2>/dev/null
@@ -819,44 +817,36 @@ case "$CHOICE" in
 			clear
 			echo ""
 			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
-			if uname -m | grep -q -E "arm64|aarch64"; then
-			  wget $GO_DL_PATH$GO_VERSION_64
-			  DLCHECK=$?
-			  if [ $DLCHECK -eq 0 ] ; then
-			  	sudo tar -C /usr/local -xzvf $GO_VERSION_64
-			  	if ! grep "# Added by TorBox (001)" .profile ; then
-			  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
-						export PATH=$PATH:/usr/local/go/bin
-			  	fi
-			  	sudo rm $GO_VERSION_64
-			  else
-			  	echo ""
-			  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
-			  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-			  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-			  	echo ""
-			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			  fi
+			# NEW v.0.5.3: New way to download the current version of go
+			if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+			elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+			else PLATFORM="linux-armv6l"
+			fi
+			# Fetch the filename of the latest go version
+			GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+			wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+			DLCHECK=$?
+			if [ $DLCHECK -eq 0 ] ; then
+			  sudo tar -C /usr/local -xzvf $GO_FILENAME
+				# NEW v.0.5.3: what if .profile doesn't exist?
+				if [ -f ".profile" ]; then
+					if ! grep "Added by TorBox (001)" .profile ; then
+						sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+					fi
+				else
+					sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+				fi
+				export PATH=$PATH:/usr/local/go/bin
+			  sudo rm $GO_FILENAME
 			else
-			  wget $GO_DL_PATH$GO_VERSION
-			  DLCHECK=$?
-			  if [ $DLCHECK -eq 0 ] ; then
-			  	sudo tar -C /usr/local -xzvf $GO_VERSION
-			  	if ! grep "# Added by TorBox (001)" .profile ; then
-			  		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | sudo tee -a .profile
-						export PATH=$PATH:/usr/local/go/bin
-			  	fi
-			  	sudo rm $GO_VERSION
-			  else
-			  	echo ""
-			  	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-			  	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-			  	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-			  	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-			  	echo ""
-			  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			  fi
+			  echo ""
+			  echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+			  echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+			  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+			  echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+			  echo ""
+			  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			fi
 			fi
 			sleep 5
 			echo ""

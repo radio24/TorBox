@@ -27,9 +27,7 @@ NAMESERVERS=1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4
 PING_SERVER=http://google.com
 
 # Used URLs (pre-filled with the default values)
-# Used go version
-GO_VERSION=go1.20.2.linux-armv6l.tar.gz
-GO_VERSION_64=go1.20.2.linux-arm64.tar.gz
+# For go
 GO_DL_PATH=https://golang.org/dl/
 
 # obfs4proxy repositories
