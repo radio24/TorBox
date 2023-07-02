@@ -648,7 +648,7 @@ case "$CHOICE" in
           (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) &>/dev/null
           (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) &>/dev/null
           (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) &>/dev/null
-					if [ ! -z "HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Reactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
+					if [ ! -z "$HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Reactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
           if grep -q "HiddenServiceDir" ${TORRC}; then
 						# This produces WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
 						create_web_service_list 0
@@ -693,7 +693,7 @@ case "$CHOICE" in
         (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2>/dev/null
         (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
         (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
-				if [ ! -z "HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Deactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
+				if [ ! -z "$HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Deactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
 				# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
 				TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 				if [ ! -z "$TFS_NAME_LIST" ]; then
