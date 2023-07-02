@@ -641,18 +641,19 @@ case "$CHOICE" in
     if [ -z "$MODE_OS" ]; then
       INPUT=$(cat text/activate-onion_service-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        if grep "#HiddenServiceDir" ${TORRC}; then
-					clear
+        if grep -q "#HiddenServiceDir" ${TORRC}; then
+					HIDDENSERVICENAMES=$(grep "^#HiddenServiceDir" ${TORRC} | sed "s/^#HiddenServiceDir \/var\/lib\/tor\/services\///g")
           echo -e "${RED}[+] Activating Onion Service Mode... ${SERVICE_NAME}...${NOCOLOR}"
-          (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) 2>/dev/null
-          (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) 2>/dev/null
-          (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
-          (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
-          if grep "HiddenServiceDir" ${TORRC}; then
+          (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) &>/dev/null
+          (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) &>/dev/null
+          (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) &>/dev/null
+          (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) &>/dev/null
+					if [ ! -z "HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Reactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
+          if grep -q "HiddenServiceDir" ${TORRC}; then
 						# This produces WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
 						create_web_service_list 0
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-              echo -e "${RED}[+] Found shared folders... Nginx reloaded to make them available.${NOCOLOR}"
+              echo -e "${RED}[+] ${WHITE}Found shared folder(s)... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
 							# sudo systemctl reload nginx will not create new socks !!
 							# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 							sudo systemctl reload nginx
@@ -660,12 +661,12 @@ case "$CHOICE" in
 						create_web_service_list 1
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
 							sudo ./bin/start_tfs initial
-              echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+              echo -e "${RED}[+] ${WHITE}Found a TFS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
             fi
 						create_web_service_list 2
             if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
 							sudo ./bin/start_tcs initial
-              echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
+              echo -e "${RED}[+] ${WHITE}Found a TCS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
             fi
             echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
             sudo systemctl restart tor
@@ -686,11 +687,13 @@ case "$CHOICE" in
       INPUT=$(cat text/deactivate-onion_server-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "DEACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
+				HIDDENSERVICENAMES=$(grep "^HiddenServiceDir" ${TORRC} | sed "s/^HiddenServiceDir \/var\/lib\/tor\/services\///g")
         echo -e "${RED}[+] Deactivating Onion Service Mode...${NOCOLOR}"
         (sudo sed -i "s/^#HiddenServiceDir/##HiddenServiceDir/g" ${TORRC}) 2>/dev/null
         (sudo sed -i "s/^#HiddenServicePort/##HiddenServicePort/g" ${TORRC}) 2>/dev/null
         (sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
         (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
+				if [ ! -z "HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Deactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
 				# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
 				TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 				if [ ! -z "$TFS_NAME_LIST" ]; then
