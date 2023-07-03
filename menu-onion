@@ -110,6 +110,8 @@ test_service_exists()
     echo " "
     read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
     clear
+		# NEW - TorBox v.0.5.3
+		trap "bash menu-onion; exit 0" EXIT
     exit 1
   fi
 }
@@ -164,6 +166,7 @@ create_client_list()
 
 create_web_service_list(){
 	TFS="${1}"
+	WEB_SERVICE_NAME_LIST_WITH_PORT=""
 	if [ "$TFS" == "0" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion.conf" | sed "s/-onion.conf//g")
 	elif [ "$TFS" == "1" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-filesharing.conf" | sed "s/-onion-filesharing.conf//g")
 	elif [ "$TFS" == "2" ]; then WEB_SERVICE_NAME_LIST_WITH_PORT=$(sudo ls ${NGINX_DIR}/sites-enabled/ | grep "\-onion-chatsecure.conf" | sed "s/-onion-chatsecure.conf//g")
@@ -276,7 +279,7 @@ show_onion_address()
   echo -e "${WHITE}Service address = ${RED}${ONION_HOSTNAME}${NOCOLOR}"
   find_virtport "${SERVICE_NAME}"
   echo -e "${WHITE}Virtual port    = ${RED}${VIRTPORT}${NOCOLOR}"
-    if sudo grep -qc "^HiddenServiceDir .*/${SERVICE_NAME}$" "${TORRC}"; then
+  if sudo grep -qc "^HiddenServiceDir .*/${SERVICE_NAME}$" "${TORRC}"; then
     echo -e "${WHITE}Status          = ${RED}active${NOCOLOR}"
   else
     echo -e "${WHITE}Status          = ${WHITE}inactive${NOCOLOR}"
@@ -305,8 +308,8 @@ show_onion_address()
 		[ -L "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ] && SHARED_FOLDER=$(grep "# Path to shared dir" "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" | sed -e 's/^[[:space:]]*//' | cut -d " " -f2 | cut -d  ";" -f1)
 		[ ! -z "$SHARED_FOLDER" ] && echo -e "${RED}Shared folder   = ${WHITE}$SHARED_FOLDER${NOCOLOR}"
 		if grep -q -c "^TFS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TFS is configured ${RED}for this service address. You can change that with menu entry 18. If started, it is accessible${NOCOLOR}"
-	elif grep -q -c "^TCS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TCS is configured ${RED}for this service address. You can change that with menu entry 19. If started, it is accessible${NOCOLOR}"
-else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 17. If started, it is accessible${NOCOLOR}"; fi
+		elif grep -q -c "^TCS-${SERVICE_NAME}" ${RUNFILE}; then echo -e "${WHITE}TCS is configured ${RED}for this service address. You can change that with menu entry 19. If started, it is accessible${NOCOLOR}"
+		else echo -e "${RED}The folder is shared by Nginx. You can change that with menu entry 17. If started, it is accessible${NOCOLOR}"; fi
 		if [ "$VIRTPORT" == "80" ]; then echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}${NOCOLOR}"
 		else echo -e "${RED}through the service address ${WHITE}${ONION_HOSTNAME}:${VIRTPORT}${NOCOLOR}"; fi
 	else
@@ -465,6 +468,38 @@ configure_tcs()
 	# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sudo systemctl reload nginx
 	(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
+}
+
+# This function creates WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
+# config_shared_folders_TFS_and_TCS
+config_shared_folders_TFS_and_TCS()
+{
+	WEB_SERVICE_NAME_LIST=""
+	create_web_service_list 0
+	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+		echo -e "${RED}[+] ${WHITE}Found shared folder(s)...    ${RED}Nginx reloaded to make them available.${NOCOLOR}"
+		# sudo systemctl reload nginx will not create new socks !!
+		# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		sudo systemctl reload nginx
+	fi
+	WEB_SERVICE_NAME_LIST=""
+	create_web_service_list 1
+	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+		sudo ./bin/start_tfs initial
+		echo -e "${RED}[+] ${WHITE}Found a TFS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
+	fi
+	WEB_SERVICE_NAME_LIST=""
+	create_web_service_list 2
+	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
+		sudo ./bin/start_tcs initial
+		echo -e "${RED}[+] ${WHITE}Found a TCS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
+	fi
+	echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+	sudo systemctl restart tor
+	echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	clear
 }
 
 # This function checks if an Onion Service is configured and exit when this is not the case
@@ -642,43 +677,34 @@ case "$CHOICE" in
       INPUT=$(cat text/activate-onion_service-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "ACTIVATE" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         if grep -q "#HiddenServiceDir" ${TORRC}; then
-					HIDDENSERVICENAMES=$(grep "^#HiddenServiceDir" ${TORRC} | sed "s/^#HiddenServiceDir \/var\/lib\/tor\/services\///g")
-          echo -e "${RED}[+] Activating Onion Service Mode... ${SERVICE_NAME}...${NOCOLOR}"
+					SERVICE_NAME_LIST=$(grep "^#HiddenServiceDir" ${TORRC} | sed "s/^#HiddenServiceDir \/var\/lib\/tor\/services\///g")
+          echo -e "${RED}[+] Activating Onion Service Mode...${NOCOLOR}"
           (sudo sed -i "s/^#HiddenServiceDir/HiddenServiceDir/g" ${TORRC}) &>/dev/null
           (sudo sed -i "s/^#HiddenServicePort/HiddenServicePort/g" ${TORRC}) &>/dev/null
           (sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) &>/dev/null
           (sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC}) &>/dev/null
-					if [ ! -z "$HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Reactivating following Onion Service name(s):\n\n${WHITE}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
-          if grep -q "HiddenServiceDir" ${TORRC}; then
-						# This produces WEB_SERVICE_NAME_LIST with all available shared folder, TFS and TCS configurations for Nginx
-						create_web_service_list 0
-            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-              echo -e "${RED}[+] ${WHITE}Found shared folder(s)... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
-							# sudo systemctl reload nginx will not create new socks !!
-							# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-							sudo systemctl reload nginx
-            fi
-						create_web_service_list 1
-            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-							sudo ./bin/start_tfs initial
-              echo -e "${RED}[+] ${WHITE}Found a TFS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
-            fi
-						create_web_service_list 2
-            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-							sudo ./bin/start_tcs initial
-              echo -e "${RED}[+] ${WHITE}Found a TCS configuration... ${RED}Nginx reloaded to make them available.${NOCOLOR}"
-            fi
-            echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-            sudo systemctl restart tor
-            echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
-            echo ""
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					echo -e "${RED}[+] Reactivating following Onion Service name(s):\n\n${WHITE}${SERVICE_NAME_LIST}\n${NOCOLOR}"
+					config_shared_folders_TFS_and_TCS
+					i=0
+					#This is necessary to work with special characters in sed
+					DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
+					SERVICE_NAME_LIST=$(grep "HiddenServiceDir" ${TORRC} | sed "s/^#HiddenServiceDir $DATA_DIR_OS_STRING\///g" | sed "s/^HiddenServiceDir $DATA_DIR_OS_STRING\///g")
+					for SERVICE_NAME in $(printf %s"${SERVICE_NAME_LIST}" | tr "," " "); do
+						i=$((i+1))
 						clear
-          fi
+						if [ "$i" -gt "1" ]; then
+							echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included (page $i)${NOCOLOR}"
+						else
+							echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included${NOCOLOR}"
+						fi
+						show_onion_address $SERVICE_NAME
+					done
         else
           trap "bash menu-onion; exit 0" SIGINT
           echo -e "${WHITE}[!] THERE ARE NO ONION SERVICES CONFIGURED!!${NOCOLOR}"
-          read -n 1 -s -r -p $'\e[1;31m[+] We will create now an Onion Service for you. If you agree, press ENTER, otherwise press CTR-C. \e[0m'
+					stty intr q
+          read -n 1 -s -r -p $'\e[1;31m[+] We will create now an Onion Service for you. If you agree, press ENTER, otherwise press q. \e[0m'
+					stty intr ^c
           clear
           bash menu-onion 3; exit 0
         fi
@@ -725,8 +751,53 @@ case "$CHOICE" in
   # Create or reactivate an Onion Service
   3)
     INPUT=$(cat text/enable-onion_service-text)
-    if (whiptail --title "TorBox - INFO" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then SELECTION=3; fi
-    if [ $SELECTION == 3 ]; then
+    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			#This is necessary to work with special characters in sed
+			DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
+			SERVICE_NAME_LIST=$(grep "#HiddenServiceDir" ${TORRC} | sed "s/^##HiddenServiceDir $DATA_DIR_OS_STRING\///g" | sed "s/^#HiddenServiceDir $DATA_DIR_OS_STRING\///g")
+			if [ ! -z "$SERVICE_NAME_LIST" ]; then
+				if (whiptail --title "TorBox - INFO" --yesno --no-button "CREATE A NEW ONE" --yes-button "REACTIVATE" "There are deactivated Onion Services configured.\n\nDo you want to reactivate an already configured Onion Service or create a new one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					exitstatus=$?
+					service_menu checklist "$SERVICE_NAME_LIST"
+					if [ "$exitstatus" == "0" ]; then
+						i=0
+						for SERVICE_NAME in $SERVICE_NAME_LIST; do
+							i=$((i+1))
+							for SERVICE_NUMBER in $ENTRY_NUMBERS; do
+								if [ "$i" = "$SERVICE_NUMBER" ]; then
+									echo -e "${RED}[+] Reactivating ${WHITE}${SERVICE_NAME}${NOCOLOR}"
+									SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
+									sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2>/dev/null
+		              sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2>/dev/null
+		              sudo sed -i "s/^#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC} 2>/dev/null
+									# This gives VIRTPORT, HIDDENSSERVICEPORT
+									find_virtport $SERVICE_NAME
+									#This is necessary to work with special characters in sed
+									HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
+									sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
+								fi
+							done
+						done
+						config_shared_folders_TFS_and_TCS
+						i=0
+						for SERVICE_NAME in $(printf %s"${SERVICE_NAME_LIST}" | tr "," " "); do
+							i=$((i+1))
+							clear
+							if [ "$i" -gt "1" ]; then
+								echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included (page $i)${NOCOLOR}"
+							else
+								echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included${NOCOLOR}"
+							fi
+							show_onion_address $SERVICE_NAME
+						done
+						trap "bash menu-onion; exit 0" EXIT
+						exit 0
+					else
+						trap "bash menu-onion; exit 0" EXIT
+						exit 0
+					fi
+				fi
+			fi
       SERVICE_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nName your onion service directory in one string and no space (e.g.: torbox.ch):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ ! -z "${SERVICE_NAME}" ]; then
@@ -755,9 +826,8 @@ case "$CHOICE" in
             exitstatus=$?
             if [ "$exitstatus" == "0" ]; then
               clear
-              echo -e "${RED}[+] Reactivating ${SERVICE_NAME}...${NOCOLOR}"
+              echo -e "${RED}[+] Reactivating ${WHITE}${SERVICE_NAME}${NOCOLOR}"
               #This is necessary to work with special characters in sed
-              DATA_DIR_OS_STRING="$(<<< "${DATA_DIR_OS}" sed -e 's`[][\\/.*^$]`\\&`g')"
               SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -i "s/^##HiddenServiceDir/#HiddenServiceDir/g" ${TORRC} 2>/dev/null
               sudo sed -i "s/^##HiddenServicePort/#HiddenServicePort/g" ${TORRC} 2>/dev/null
@@ -767,32 +837,10 @@ case "$CHOICE" in
               #This is necessary to work with special characters in sed
               HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
               sudo sed -i "s/^#$HIDDENSSERVICEPORT_STRING/$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
-							# This produces WEB_SERVICE_NAME_LIST with all available shared folder (0), TFS (1) and TCS (2) configurations for Nginx
-							create_web_service_list 0
-	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-	              echo -e "${RED}[+] Found shared folders... Nginx reloaded to make them available.${NOCOLOR}"
-								# sudo systemctl reload nginx will not create new socks !!
-								# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-								sudo systemctl reload nginx
-	            fi
-							create_web_service_list 1
-	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-								sudo ./bin/start_tfs initial
-	              echo -e "${RED}[+] Found a TFS configuration... Nginx reloaded to make them available.${NOCOLOR}"
-	            fi
-							create_web_service_list 2
-	            if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
-								sudo ./bin/start_tcs initial
-	              echo -e "${RED}[+] Found a TCS configuration... Nginx reloaded to make them available.${NOCOLOR}"
-	            fi
-              echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
-              sudo systemctl restart tor
-              echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
-              echo ""
-              sleep 2
-              clear
-              echo -e "${RED}[+] This is the information for your reactivated Onion Service${NOCOLOR}"
-              show_onion_address $SERVICE_NAME
+							echo -e "${RED}[+] Reactivating following Onion Service name:\n\n${WHITE}${SERVICE_NAME}\n${NOCOLOR}"
+							config_shared_folders_TFS_and_TCS
+							echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included${NOCOLOR}"
+							show_onion_address $SERVICE_NAME
               trap "bash menu-onion; exit 0" EXIT
               exit 0
             fi
@@ -837,14 +885,15 @@ case "$CHOICE" in
           #Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
           sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$NEW_STRING/g" "${TORRC}"
           #Create a folder, which can be published through the Onion Services
-          echo -e "${RED}[+] Creating $WEBSITE_DIR/$SERVICE_NAME which can be shared through the Onion domain.${NOCOLOR}"
+          echo -e "${RED}[+] Creating ${WHITE}$WEBSITE_DIR/$SERVICE_NAME ${RED}which can be shared through the Onion domain.${NOCOLOR}"
           sudo mkdir "$WEBSITE_DIR/$SERVICE_NAME"
 					sudo chown torbox:torbox "$WEBSITE_DIR/$SERVICE_NAME"
           echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
           sudo systemctl restart tor
           echo -e "${RED}[+] Restarted Tor succesfully!${NOCOLOR}"
-          sleep 5
-          clear
+					echo ""
+					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					clear
           echo -e "${RED}[+] This is the information for your newly created Onion Service${NOCOLOR}"
           show_onion_address $SERVICE_NAME
         fi
@@ -872,9 +921,9 @@ case "$CHOICE" in
       i=$((i+1))
       clear
 			if [ "$i" -gt "1" ]; then
-				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; shared folders, TFS and TCS included (page $i)${NOCOLOR}"
+				echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included (page $i)${NOCOLOR}"
 			else
-				echo -e "${RED}[+] This is the list of all existing Onion Services on your system; folders, TFS and TCS included${NOCOLOR}"
+				echo -e "${RED}[+] This is the list of all existing Onion Services on your system - shared folders, TFS and TCS included${NOCOLOR}"
 			fi
       show_onion_address $SERVICE_NAME
     done
