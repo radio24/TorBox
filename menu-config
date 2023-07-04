@@ -221,7 +221,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
 " 2" "Generate SSH keys logging into TorBox"  \
@@ -1107,7 +1107,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for Sixfab Shields/HATs for cellular connections
-  #Remark for TorBox v.0.5.2 - we try to do it without an online connection.
+  #Remark for TorBox v.0.5.3 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
   22)
     INPUT=$(cat text/sixfab-text)

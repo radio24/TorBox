@@ -112,10 +112,10 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi
@@ -674,7 +674,7 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
-# NEW v.0.5.2: (Re)moved: obfs4proxy
+# Installation of standard packages
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"

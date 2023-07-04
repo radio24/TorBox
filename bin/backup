@@ -87,7 +87,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 
 		# Please, choose with SPACE which data you want to includ
 		if [ "$OBFS4RELAY" == "1" ] || [ "$ONIONSERVICES" == "1" ] || [ "$ONIONAUTH" == "1" ] ; then
-			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.2 - BACKUP SELECTION\" --checklist --separate-output \"\nAdditionally to the TorBox configuration, we have found OBFS4 Bridge Relay and/or Onion Services data, which can be included in the backup. \n\nPlease, choose with SPACE which data you want to includ and press ENTER \n(ESC -> go back)\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
+			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.3 - BACKUP SELECTION\" --checklist --separate-output \"\nAdditionally to the TorBox configuration, we have found OBFS4 Bridge Relay and/or Onion Services data, which can be included in the backup. \n\nPlease, choose with SPACE which data you want to includ and press ENTER \n(ESC -> go back)\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
 			i=0
 			n=0
 			if [ "$OBFS4RELAY" == "1" ]; then

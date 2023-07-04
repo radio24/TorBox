@@ -153,7 +153,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "==" "=============================================[OBFS4 bridges]==="  \
@@ -391,7 +391,7 @@ case "$CHOICE" in
     if [ "$LOGCHECK" = "Activate" ]; then
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
+      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.3 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
       "1" "Protection against out of sync time" ON \
       "2" "Protection against entry guard failing and overloaded tor network" ON \
       "3" "Protection against interrupted WiFi connection with the Internet" ON \

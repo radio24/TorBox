@@ -56,7 +56,7 @@ if [ $n -gt 0 ] ; then
 		TCS_CONFIG_LIST=$(grep -m $i "^TCS-" "${RUNFILE}" | cut -d "=" -f2-)
 		SERVICE_NAME=$(cut -d " " -f3 <<< ${TCS_CONFIG_LIST})
 		if [[ ! -f $PID_PATH/$SERVICE_NAME.pid && -z "$INITIAL" ]]; then
-			if (whiptail --title "TorBox v.0.5.2 - TorBox's Chat Secure capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox v.0.5.3 - TorBox's Chat Secure capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TCS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TCS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				# NEW - TorBox v.0.5.3
 				(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
 				(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null

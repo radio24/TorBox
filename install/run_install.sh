@@ -118,10 +118,10 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4Proxy
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi
@@ -661,7 +661,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-#Install wiringpi
+# Install wiringpi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
@@ -669,7 +669,7 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
-# NEW v.0.5.2: not nice, but working
+# Not nice, but working
 sudo apt -y --fix-broken install
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
@@ -1179,7 +1179,7 @@ echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox052) ${NOCOLOR}"
+echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: Test - if this is working we don't need FRESH_INSTALLED=1 --> FRESH_INSTALLED=3 (+removing pi)

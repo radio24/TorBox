@@ -191,7 +191,7 @@ else
 	#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 	if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
   ###### DISPLAY THE MAIN MENU ######
-  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
   " 2" "Enforce a new exit node with a new IP" \
   " 3" "Restart Tor - check if it is working (press q to quit)"  \
@@ -846,7 +846,7 @@ case "$CHOICE" in
 
   # Reboot or Shotdown TorBox
   19)
-    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.3 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \
     3>&1 1>&2 2>&3)

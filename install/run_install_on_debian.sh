@@ -115,7 +115,7 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4 repository

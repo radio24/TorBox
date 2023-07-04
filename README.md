@@ -3,19 +3,11 @@
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
-
-- - -
-### Limited time action: More feedback is needed to improve TorBox!
-We just released [an updated version of TorBox v.0.5.2](https://www.torbox.ch/?p=3041). Constantly, we are working in the background to improve TorBox further. However, **we need more feedback from you**, the users.
-
-Giving a small incentive, we will give the people with the three most valuable feedback a [ProtonMail $100 Gift Card](https://shop.proton.me/collections/coming-soon/products/proton-100-gift-card-digital) each. To participate, you must add your feedback as an [issue](https://github.com/radio24/TorBox/issues) or a [discussion](https://github.com/radio24/TorBox/discussions) on our [GitHub page](https://github.com/radio24/TorBox) or send it via [email](mailto:anonym@torbox.ch). **We judge feedback as valuable if it leads to a concrete improvement**.
-- - -
-
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
-* **TorBox Image** (about 1.1 GB): [v.0.5.2 (10.03.2023)](https://www.torbox.ch/data/torbox-20230310-v052.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
-* **TorBox Menu only**: [v.0.5.2 (10.03.2023)](https://www.torbox.ch/data/torbox052-20230310.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Image** (about 1.1 GB): [v.0.5.3 (09.07.2023)](https://www.torbox.ch/data/torbox-20230709-v053.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Menu only**: [v.0.5.3 (09.07.2023)](https://www.torbox.ch/data/TorBox053-20230709.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 ![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
 
@@ -28,7 +20,7 @@ TorBox is ideal for providing additional protection for the entire data stream a
 1. Download the latest TorBox image file and [verify the integrity of the downloaded file](https://www.torbox.ch/?page_id=1128).
 2. Transfer the downloaded image file on an [SD Card](https://en.wikipedia.org/wiki/Secure_Digital), for example, with [Etcher](https://www.balena.io/etcher/). TorBox needs at least an 8 GB SD Card.
 3. Put the SD Card into your Raspberry Pi, link it with an Internet router using an Ethernet cable, or place an USB WiFi adapter in one of the USB ports to use an existing WiFi. Afterwards, start the Raspberry Pi. During the start, the system on the SD card automatically expands over the entire free partition – user interaction, screen, and peripherals are not required yet.
-4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “**TorBox052**” (password: **CHANGE-IT**).
+4. After 2-3 minutes, when the green LED stops to flicker, connect your client to the new WiFi “**TorBox053**” (password: **CHANGE-IT**).
 5. Login to the TorBox by using a [SSH client](https://www.torbox.ch/?page_id=112#how-can-i-access-the-torbox-menu) (**192.168.42.1** on a WiFi client or **192.168.43.1** on a cable client) or a web browser (http://192.168.42.1 on a WiFi client or http://192.168.43.1 on a cable client; for a connection via cable, see [here](https://www.torbox.ch/?page_id=775); username: **torbox** / password: **CHANGE-IT**).
 6. After [seeing a welcome screen and answering some initial questions during the first start-up](https://www.torbox.ch/?page_id=2637), you should see the [TorBox Main Menu](https://www.torbox.ch/?page_id=775). Immediately, you should **change the default passwords** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875).
 

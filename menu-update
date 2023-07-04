@@ -721,7 +721,7 @@ stty intr ^c
 trap
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \

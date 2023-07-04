@@ -84,7 +84,7 @@ fi
 
 ######## PREPARATIONS ########
 clear
-# NEW v.0.5.2: dnsmasq is already running - there may be a restart necessary, in case /etc/resolve was changed
+# Even if dnsmasq is already running, there may be a restart necessary, in case /etc/resolve was changed
 echo -e "${RED}[+] Restarting DNS forwarder...${NOCOLOR}"
 sudo systemctl restart $DNSPROG
 echo -e "${RED}[+] Flushing existing iptables rules...${NOCOLOR}"
@@ -117,9 +117,6 @@ if (whiptail --title "TorBox - INFO" --defaultno --no-button "CONTINUE" --yes-bu
 else
   EXITLOOP=1
 fi
-# NEW v.0.5.2: dnsmasq keeps running - there may be a reload/restart necessary
-#echo -e "${RED}[+] Stopping DNS forwarder...${NOCOLOR}"
-#sudo systemctl stop $DNSPROG
 
 ########## FINISHING ##########
 exit $EXITLOOP
