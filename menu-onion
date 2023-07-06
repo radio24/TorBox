@@ -1451,7 +1451,11 @@ case "$CHOICE" in
 									if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
 										SHARE_PATH="$WEBSITE_DIR/$SERVICE_NAME"
 									else
-										SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+										if [ $SUB_FOLDER == */ ]; then
+												SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+											else
+												SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
+											fi
 									fi
 									if [ ! -d $SHARE_PATH ]; then
 										sudo chown torbox:torbox $WEBSITE_DIR
@@ -1522,7 +1526,11 @@ case "$CHOICE" in
 										sleep 1
 									else
 										SHARE_PATH_OLD=$SHARE_PATH
-										SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+										if [ $SUB_FOLDER == */ ]; then
+											SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+										else
+											SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
+										fi
 									fi
 									if [ ! -d $SHARE_PATH ]; then
 										sudo chown torbox:torbox $WEBSITE_DIR
@@ -1673,9 +1681,13 @@ case "$CHOICE" in
 										clear
 										# If the user doesn't write something into the dialogue, the default is valid
 										if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
-											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME"
+											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/"
 										else
-											TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+											if [ $SUB_FOLDER == */ ]; then
+												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+											else
+												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
+											fi
 										fi
 										if [ ! -d $TFS_PATH ]; then
 											sudo chown torbox:torbox $WEBSITE_DIR
@@ -1730,7 +1742,11 @@ case "$CHOICE" in
 										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
 											sleep 1
 										else
-											TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+											if [ $SUB_FOLDER == */ ]; then
+												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
+											else
+												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
+											fi
 										fi
 										if [ ! -d $TFS_PATH ]; then
 											sudo chown torbox:torbox $WEBSITE_DIR
