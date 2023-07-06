@@ -1451,7 +1451,7 @@ case "$CHOICE" in
 									if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
 										SHARE_PATH="$WEBSITE_DIR/$SERVICE_NAME"
 									else
-										if [ $SUB_FOLDER == */ ]; then
+										if [[ $SUB_FOLDER == */ ]]; then
 												SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 											else
 												SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
@@ -1526,7 +1526,7 @@ case "$CHOICE" in
 										sleep 1
 									else
 										SHARE_PATH_OLD=$SHARE_PATH
-										if [ $SUB_FOLDER == */ ]; then
+										if [[ $SUB_FOLDER == */ ]]; then
 											SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 										else
 											SHARE_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
@@ -1683,7 +1683,7 @@ case "$CHOICE" in
 										if [[ "$SUB_FOLDER" = "" || "$SUB_FOLDER" = " " ]]; then
 											TFS_PATH="$WEBSITE_DIR/$SERVICE_NAME/"
 										else
-											if [ $SUB_FOLDER == */ ]; then
+											if [[ $SUB_FOLDER == */ ]]; then
 												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 											else
 												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
@@ -1742,7 +1742,7 @@ case "$CHOICE" in
 										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
 											sleep 1
 										else
-											if [ $SUB_FOLDER == */ ]; then
+											if [[ $SUB_FOLDER == */ ]]; then
 												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
 											else
 												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER/"
