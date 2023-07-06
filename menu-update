@@ -1099,6 +1099,7 @@ case "$CHOICE" in
 		clear
 		INPUT=$(cat text/built-in_bridges-text)
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			clear
 			online_check $TOR_GET_DEFAULT_BRIDGES_URL 0 1
 			if [ $OCHECK == 1 ]; then
 				echo -e "${RED}[+] Trying to fetch default built-in bridge... this may take some time, please wait!${NOCOLOR}"
