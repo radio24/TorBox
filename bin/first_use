@@ -335,7 +335,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 			echo
 			echo  "             Date: $(date '+%Y-%m-%d')"
-			clock.py
+			$TORBOX_PATH/bin/clock.py
 			echo
 			echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 			echo

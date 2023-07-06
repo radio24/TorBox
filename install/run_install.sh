@@ -515,7 +515,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : Randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -1132,7 +1132,7 @@ echo -e "${RED}[+]          This will erase all log files and cleaning up the sy
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
+echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
 echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
@@ -1167,7 +1167,7 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-sudo systemctl restart systemd-hostnamed
+(sudo systemctl restart systemd-hostnamed) 2>/dev/null
 if grep 127.0.1.1.* /etc/hosts ; then
 	(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 else
@@ -1178,7 +1178,7 @@ fi
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
+echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
 echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 

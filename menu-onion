@@ -330,9 +330,9 @@ configure_tfs()
 {
 	TFS_MESSAGE=$1
 	allow_ud=0
-	if [ ! -z "$CHOICE" ]; then
-		mapfile -t CHOICE <<< "$CHOICE"
-		for ARGUMENT in "${CHOICE[@]}"; do
+	if [ ! -z "$CHOICE3" ]; then
+		mapfile -t CHOICE3 <<< "$CHOICE3"
+		for ARGUMENT in "${CHOICE3[@]}"; do
 			if [ $ARGUMENT = 1 ]; then allow_ud=$((allow_ud+1))
 			elif [ $ARGUMENT = 2 ]; then allow_ud=$((allow_ud+2))
 			fi
@@ -1633,7 +1633,7 @@ case "$CHOICE" in
 			create_service_list
 			error_no_onion_service
 			clear
-			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
+			CHOICE2=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --menu "Choose an option (ESC -> go back)" 13 $MENU_WIDTH 6 \
 			"==" "===============================================================" \
 			" 1" "Start or restart TFS on Onion domains" \
 			" 2" "Change the configuration of a certain TFS" \
@@ -1643,8 +1643,8 @@ case "$CHOICE" in
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ "$exitstatus" == "0" ]; then
-				CHOICE=$(echo "$CHOICE" | tr -d ' ')
-				case "$CHOICE" in
+				CHOICE2=$(echo "$CHOICE2" | tr -d ' ')
+				case "$CHOICE2" in
 
 					# Restart or Start TFS on Onion domains
 					1)
@@ -1682,12 +1682,12 @@ case "$CHOICE" in
 											sudo -utorbox mkdir -p $TFS_PATH
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-					      		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+					      		CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
 					     			" 1" "Allow uploading" ON \
 						     		" 2" "Allow downloading" ON \
 						     		3>&1 1>&2 2>&3)
 										clear
-										CHOICE=$(echo "$CHOICE" | tr -d ' ')
+										CHOICE3=$(echo "$CHOICE3" | tr -d ' ')
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 					     			configure_tfs "$TFS_MESSAGE"
 										echo ""
@@ -1738,22 +1738,22 @@ case "$CHOICE" in
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
 										if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
@@ -1845,7 +1845,7 @@ case "$CHOICE" in
 			create_service_list
 			error_no_onion_service
 			clear
-			CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - TorBox's Chat Secure" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
+			CHOICE2=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - TorBox's Chat Secure" --menu "Choose an option (ESC -> go back)" 12 $MENU_WIDTH 5 \
 			"==" "===============================================================" \
 			" 1" "Start or restart TCS on Onion domains" \
 			" 2" "Stop TCS on an Onion domain" \
@@ -1854,8 +1854,8 @@ case "$CHOICE" in
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ "$exitstatus" == "0" ]; then
-				CHOICE=$(echo "$CHOICE" | tr -d ' ')
-				case "$CHOICE" in
+				CHOICE2=$(echo "$CHOICE2" | tr -d ' ')
+				case "$CHOICE2" in
 
 					# Restart or Start TCS on Onion domains
 					1)
