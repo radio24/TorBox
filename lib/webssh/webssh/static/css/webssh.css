@@ -1,0 +1,121 @@
+body {
+    background: linear-gradient(180deg, rgba(31, 41, 56, 1) 0%, rgba(53, 64, 84, 1) 100%);
+}
+
+#privatekey-content {
+    display: none;
+}
+
+.container-style {
+    position: relative;
+    width: 450px;
+    background-color: #3d4c5f50;
+    box-shadow: 5px 5px 40px 0px #00000040;
+    border-radius: 15px;
+    padding: 45px 45px 45px 45px;
+}
+
+.webssh-logo {
+    margin: 0 0 15px 0;
+    text-align: center;
+}
+
+.webssh-logo img {
+    width: 100px;
+}
+
+.webssh-title {
+    color: #ffffff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+}
+
+.webssh-title span {
+    font-weight: 300;
+    margin: 0 0 0 10px;
+}
+
+.webssh-subtitle {
+    color: #ffffff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 300;
+    margin: 0 0 15px 0;
+}
+
+.webssh-input {
+    width: 100%;
+    border: none;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    padding: 5px 0 5px 0;
+    margin-bottom: 15px;
+}
+
+.webssh-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 5px 20px 20px 20px;
+    color: #ffffff;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 300;
+}
+
+.webssh-options input {
+    margin: 0 10px 0 0;
+}
+
+.webssh-button {
+    border: none;
+    margin-top: 10px;
+    border-radius: 0.5rem;
+    padding: 5px 40px;
+    background: linear-gradient(180deg, #95c741 0%, #7aa534 100%);
+}
+
+.webssh-get-key {
+    width: calc(100% - 30px);
+    border: none;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    padding: 5px 0 5px 0;
+    text-align: center;
+    margin: 0 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+.webssh-get-key span {
+    padding: 0 15px;
+}
+
+.webssh-file-input::-webkit-file-upload-button {
+    visibility: hidden;
+}
+
+.webssh-file-input::before {
+    content: '🔑 Select Private Key';
+    display: inline-block;
+    background: linear-gradient(180deg, #95c741 0%, #7aa534 100%);
+    border-radius: 0.5rem;
+    margin-bottom: 10px;
+    outline: none;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    cursor: pointer;
+    font-weight: 300;
+    font-size: 1rem;
+}
+
+.webssh-file-input:hover::before {
+    border-color: black;
+}
+
+.webssh-file-input:active::before {
+    background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+}

@@ -7,6 +7,7 @@
     <link href="static/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <link href="static/css/xterm.min.css" rel="stylesheet" type="text/css"/>
     <link href="static/css/fullscreen.min.css" rel="stylesheet" type="text/css"/>
+    <link href="static/css/webssh.css" rel="stylesheet" type="text/css"/>
     <style type="text/css">
       .row {
         margin-top: 15px;
@@ -42,13 +43,6 @@
           padding-top: 80px;
       }
 
-      .container-style {
-        width: 450px;
-        box-shadow: 5px 5px 15px 15px #e9ecefa1;
-        border-radius: 15px;
-        padding: 45px 45px 25px 45px;
-      }
-
       #status {
           width: 450px;
           margin: 30px auto auto auto;
@@ -74,20 +68,50 @@
     <div id="waiter" style="display: none"> Connecting ... </div>
 
     <div class="container form-container container-style" style="display: none">
-      <div class="col text-center">
-        <img src="static/img/torbox_logo.jpg" />
+      <div class="col webssh-logo">
+        <img src="static/img/torbox-icon.png" />
       </div>
+
+      <div class="webssh-title">
+        TorBox<span>WebSSH</span>
+      </div>
+
+      <div class="webssh-subtitle">
+        Select login method
+      </div>
+
       <form id="connect" action="" method="post" enctype="multipart/form-data"{% if debug %} novalidate{% end %}>
-        <div class="col">
-            <input class="form-control input-start" type="text" id="username" name="username" placeholder="username" value="" required>
+        <div class="webssh-options">
+          <label for="auth-password" onclick="loginType('password')">
+              <input id="auth-password" type="radio" name="auth" value="password" checked />
+              Password
+          </label>
+          <label for="auth-key" onclick="loginType('key')">
+            <input id="auth-key" type="radio" name="auth" value="key" />
+            Key
+          </label>
         </div>
         <div class="col">
-            <input class="form-control input-start" type="password" id="password" name="password" placeholder="password" value="" required>
+            <input class="webssh-input input-start" type="text" id="username" name="username" placeholder="username" value="" required="true" autocomplete="off">
+        </div>
+        <div class="col" id="password-content">
+            <input class="webssh-input input-start" type="password" id="password" name="password" placeholder="password" value="" required="true">
+        </div>
+        <div id="privatekey-content">
+          <div id="webssh-get-key" class="webssh-get-key" onclick="getKeyfile();">
+            <span>🔑 Select Private Key</span>
+          </div>
+          <div class="col">
+              <input style="display: none;" type="file" id="privatekey" name="privatekey" value="">
+          </div>
+          <div class="col">
+            <input class="webssh-input input-start" type="password" id="passphrase" name="passphrase" placeholder="passphrase" value="" >
+          </div>
         </div>
         <div class="col text-center">
             <input type="hidden" id="term" name="term" value="xterm-256color">
             {% module xsrf_form_html() %}
-            <button type="submit" class="btn btn-primary" style="background-color: #80B932; border: 0">Connect</button>
+            <button type="submit" class="webssh-button">Connect</button>
         </div>
       </form>
 
@@ -98,12 +122,13 @@
       <div id="terminal"></div>
     </div>
 
-
     <script src="static/js/jquery.min.js"></script>
     <script src="static/js/popper.min.js"></script>
     <script src="static/js/bootstrap.min.js"></script>
     <script src="static/js/xterm.min.js"></script>
     <script src="static/js/xterm-addon-fit.min.js"></script>
     <script src="static/js/main.js"></script>
+    <script src="static/js/webssh.js"></script>
+
   </body>
 </html>
