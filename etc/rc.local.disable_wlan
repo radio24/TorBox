@@ -103,6 +103,17 @@ fi
 # If a cellular device is available, and previously used then let's check if we can auto-connect
 if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
 
+# Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
+if ip link | grep eth0 ; then
+	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
+		if ! sudo timeout 5 sudo route | grep -m 1 default; then
+			sudo ifdown eth0 2>/dev/null
+			ip addr flush dev eth0
+			sudo ifup eth0 2>/dev/null
+		fi
+	fi
+fi
+
 # If configured, turn TACA on
 if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null
