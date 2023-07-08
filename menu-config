@@ -224,7 +224,7 @@ clear
 CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
-" 2" "Generate SSH keys logging into TorBox"  \
+" 2" "Generate SSH key for TorBox login"  \
 " 3" "Change the password of TorBox's WLAN (reboot required)"  \
 " 4" "Change the password of your tor control port (restarts tor!)"  \
 "==" "==================================================[Network]===" \
@@ -290,12 +290,12 @@ case "$CHOICE" in
 			echo ""
 			echo -e "${RED}[+] SSH KEYS SUCCESFULY GENERATED!${NOCOLOR}"
 			echo -e "${RED}[+] Don't forget...${NOCOLOR}"
-			echo "    The private key must be downloaded on your client using"
+			echo "    The private key (id_rsa) must be downloaded on your client using"
 			echo "    SFTP (it uses the same login and password as your SSH client)."
 			echo "    To log into TorBox, you must use an SSH client that supports"
-			echo "    SSH key handling (for example, Termius). The key should be"
-			echo "    kept secure so that no other users on your computer can read"
-			echo "    the file. "
+			echo "    SSH key handling (for example, Termius) or TorBox's webssh."
+			echo "    The key should be kept secure so that no other users on your "
+			echo "    computer can read the file."
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
