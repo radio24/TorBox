@@ -1103,8 +1103,6 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-# TorBox v.0.5.3: TEST - was FRESH_INSTALLED=1
-# If not needed, FRESH_INSTALLED=1 is obsolet in first_use and can be deleted
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"

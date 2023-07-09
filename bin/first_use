@@ -193,14 +193,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-      # if [ -d "/home/ubuntu" ]; then
-        # sudo killall systemd
-        # sleep 5
-        # sudo userdel -r ubuntu --> not needed anymore, is in 3) included
-				# This will remove the anoying SSH warning during the log in (which is not valid)
-				# sudo sed -i "/pi:x:1000:1000:,,,:\/home\/pi:\/bin\/bash/d" /etc/passwd
-				# sudo sed -i "/^pi:/d" /etc/shadow
-      # fi
 			# DON'T REMOVE IT! This is necessary because of possible kernel updates
 			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
       sleep 5
@@ -225,7 +217,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     3)
 			# If there is still a home directory / user called "ubuntu", then we will remove it.
 			if [ -d "/home/ubuntu" ]; then
-				sudo userdel -r ubuntu
+				(sudo userdel -r ubuntu) 2>/dev/null
 			fi
 
 			# Welcome screen and asking if the user wants to configure the new installed TorBox
