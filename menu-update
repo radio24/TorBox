@@ -170,7 +170,7 @@ update_tor_preparations()
 	sudo apt-get -y update
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   clear
-  echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
+  echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
   if [ $TORCONNECT -eq 0 ]; then
     readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   else
@@ -275,6 +275,7 @@ update_tor()
   if [ $RECOMPILE = 1 ]; then
     clear
     echo ""
+		cd
     echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
     if [ $TORCONNECT -eq 0 ]; then
       wget $download_tor_url
@@ -288,7 +289,7 @@ update_tor()
       echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
       tar xzf $filename
 		  echo ""
-			cd "$(ls -d -- */)"
+			cd "$(ls -d -- tor-*/)"
       echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 			# Give it a touch of git (without these lines the compilation will break with a git error)
 			git init
@@ -303,6 +304,7 @@ update_tor()
       sudo make install
       cd
       sudo rm -r tor-*
+			cd torbox
       #Return code for FINISHING / 1=finishing / 0=no finishing needed
       return 1
     else
@@ -344,7 +346,8 @@ select_and_install_tor()
     if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
       CHOICE_TOR=$((REPLY-1))
       clear
-      echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
+			cd
+      echo -e "${RED}[+] Download the selected tor version...... ${NOCOLOR}"
       version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
       download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
       filename="tor-$version_string.tar.gz"
@@ -361,7 +364,7 @@ select_and_install_tor()
         echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
         tar xzf $filename
         echo ""
-        cd "$(ls -d -- */)"
+        cd "$(ls -d -- tor-*/)"
         echo -e "${RED}[+] Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
@@ -376,6 +379,7 @@ select_and_install_tor()
         sudo make install
         cd
         sudo rm -r tor-*
+				cd torbox
         #Return code for FINISHING / 1=finishing / 0=no finishing needed
         return 1
       else
@@ -447,7 +451,7 @@ update_torcfg()
     # LLMNR=yes / MulticastDNS=yes / Chache=no
     (sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>/dev/null
     sudo cp etc/systemd/resolved.conf /etc/systemd/
-    echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
+    echo -e "${RED}[+]${NOCOLOR} Copied /etc/systemd/resolved.conf -- backup done"
   fi
   if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
     sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
@@ -519,9 +523,9 @@ update_torcfg()
   fi
 	(sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
 	sudo cp etc/nginx/nginx.conf /etc/nginx/
-	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+	echo -e "${RED}[+]${NOCOLOR} Copied /etc/nginx/nginx.conf -- backup done"
 	echo ""
-	echo -e "${RED}[+]          Configure Nginx${NOCOLOR}"
+	echo -e "${RED}[+] Configure Nginx${NOCOLOR}"
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
 	# NEW v.0.5.3
 	# This has to be at the end to avoid unnecessary error messages
