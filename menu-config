@@ -53,6 +53,11 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# The minimum bandwidth a relay should have, in kilobytes. Relays with less
+# than this amount of bandwidth will be added to the ExcludeNodes line and
+# therefore not used by your Tor client. (default: 4000 KB/s)
+DEFAULT_SPEED=4000
+
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
@@ -67,7 +72,7 @@ HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
 # shellcheck disable=SC2001,SC2016
@@ -88,6 +93,7 @@ change_crda()
 
   if [ $exitstatus = 0 ]; then
     sudo iw reg set $COUNTRY
+		sudo sed -i "s/^sudo iw reg set*./sudo iw reg set $COUNTRY/g" bin/regset
     INPUT="REGDOMAIN=$COUNTRY"
     sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" ${CRDAFILE}
   fi
@@ -101,7 +107,7 @@ change_crda()
 #  fi
 #  echo -e "${RED}[+] We have to restart the TorBox's WLAN!${NOCOLOR}"
 #  echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
-#  (nohup ./hostapd_fallback) 2>/dev/null
+#  (nohup bin/hostapd_fallback) 2>/dev/null
 }
 
 # This function imports the configuration and makes some preparations
@@ -208,41 +214,42 @@ read_config
 
 # Resetting
 shopt -s checkwinsize
-[ -f nohup.out ] && sudo rm nohup.out
+[ -f nohup.out ] && (sudo rm nohup.out) 2>/dev/null
 stty intr ^c
 trap
 
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
-" 2" "Change the password of TorBox's WLAN (reboot required)"  \
-" 3" "Change the password of your tor control port (restarts tor!)"  \
+" 2" "Generate SSH key for TorBox login"  \
+" 3" "Change the password of TorBox's WLAN (reboot required)"  \
+" 4" "Change the password of your tor control port (restarts tor!)"  \
 "==" "==================================================[Network]===" \
-" 4" "Change the name of TorBox's WLAN"  \
-" 5" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
-" 6" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
-" 7" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
-" 8" "Change/randomize/list the MAC adresses of TorBox's interfaces" \
-" 9" "$TOGGLE08 TorBox's WLAN"  \
-"10" "$TOGGLE09 TorBox's WLAN"  \
+" 5" "Change the name of TorBox's WLAN"  \
+" 6" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
+" 7" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
+" 8" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
+" 9" "Change/randomize/list the MAC adresses of TorBox's interfaces" \
+"10" "$TOGGLE08 TorBox's WLAN"  \
+"11" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
-"11" "$TOGGLE17 Torbox's WebSSH access" \
-"12" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
-"13" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-"14" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"12" "$TOGGLE17 Torbox's WebSSH access" \
+"13" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"14" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"15" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"15" "$TOGGLE18 excluding slow tor relays"  \
-"16" "Enter the advanced tor configuration editor"  \
+"16" "$TOGGLE18 excluding slow tor relays"  \
+"17" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"17" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"18" "Erase all log files" \
+"18" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"19" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"19" "Support for Adafruit's PiTFT displays (reboot required)" \
-"20" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"21" "Support for Sixfab Shields/HATs for cellular connections" \
+"10" "Support for Adafruit's PiTFT displays (reboot required)" \
+"21" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"22" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -260,8 +267,43 @@ case "$CHOICE" in
 		clear
   ;;
 
+	#This generates SSH keys
+	2)
+		INPUT=$(cat text/generate_ssh_keys-text)
+		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			cd
+		 	(rm id_rsa*) &>/dev/null
+			clear
+			ssh-keygen -f id_rsa
+			if [ -f .ssh/authorized_keys ]; then
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "KEEP" --yes-button "Replace" "OLD PUBLIC KEY FOUND\n\nShould we keep (default) or replace the old key?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+					(rm .ssh/authorized_keys) &>/dev/null
+				fi
+			fi
+			if [ ! -d ".ssh" ]; then
+				mkdir .ssh
+				chmod 700 .ssh
+			fi
+			cat id_rsa.pub >> .ssh/authorized_keys
+			chmod 600 .ssh/authorized_keys
+			cd torbox
+			echo ""
+			echo -e "${RED}[+] SSH KEYS SUCCESFULY GENERATED!${NOCOLOR}"
+			echo -e "${RED}[+] Don't forget...${NOCOLOR}"
+			echo "    The private key (id_rsa) must be downloaded on your client using"
+			echo "    SFTP (it uses the same login and password as your SSH client)."
+			echo "    To log into TorBox, you must use an SSH client that supports"
+			echo "    SSH key handling (for example, Termius) or TorBox's webssh."
+			echo "    The key should be kept secure so that no other users on your "
+			echo "    computer can read the file."
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		fi
+  ;;
+
   #This changes the password of the WLAN
-  2)
+  3)
     INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if [ ! -z "$INPUT" ]; then
       if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
@@ -295,7 +337,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the password of the Tor control port
-  3)
+  4)
     INPUT=$(whiptail --title "Changing Tor's configuration" --inputbox "\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if [ ! -z "$INPUT" ]; then
       INPUTHASH=HashedControlPassword\ $(tor --hash-password ${INPUT})
@@ -310,7 +352,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the name of the WLAN
-  4)
+  5)
     INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter the new name for TorBox's WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if [ ! -z "$INPUT" ]; then
       clear
@@ -324,28 +366,36 @@ case "$CHOICE" in
         echo " "
         echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
         echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
-        (nohup ./hostapd_fallback) 2>/dev/null
+        (nohup bin/hostapd_fallback) 2>/dev/null
       fi
     fi
   ;;
 
   #This sets the WLAN regulatory domain.
-  5)
+  6)
     REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
     TLC=$(echo "$REGDOMAIN"|cut -c11-12)
     if [ "$TLC" != "00" ] && [ ! -z "$TLC" ]; then
       COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
-    else
-      COUNTRY=US
-    fi
-    INPUT=$(cat text/wrd-text)
-    if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
-      change_crda
+			INPUT=$(cat text/wrd-text)
+	    if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
+	      change_crda
+	    fi
+    elif [ -z "$TLC" ]; then
+			INPUT=$(cat text/wrd-text)
+			if (whiptail --yesno "The WLAN regulatory domain is not set yet.\n\n$INPUT" 16 $MENU_WIDTH); then
+				change_crda
+			fi
+		elif [ "$TLC" != "00" ]; then
+			INPUT=$(cat text/wrd-text)
+			if (whiptail --yesno "The WLAN regulatory domain is set to GLOBAL.\n\n$INPUT" 16 $MENU_WIDTH); then
+				change_crda
+			fi
     fi
   ;;
 
   #This changes the frequency band
-  6)
+  7)
     if [ "$TOGGLE05" = "2.5 GHz" ]; then
       if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
         clear
@@ -378,8 +428,8 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (nohup bin/hostapd_fallback) 2>/dev/null
+            (sudo rm nohup.out) &>/dev/null
           fi
         fi
       fi
@@ -400,7 +450,7 @@ case "$CHOICE" in
   ;;
 
   #Change the WLAN channel
-  7)
+  8)
     if [ "$TOGGLE05" = "2.5 GHz" ]; then
       if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
         CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
@@ -544,8 +594,8 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (nohup bin/hostapd_fallback) 2>/dev/null
+            (sudo rm nohup.out) 2>/dev/null
           fi
         else
           sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]" ${HOSTAPD}
@@ -554,8 +604,8 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (nohup bin/hostapd_fallback) 2>/dev/null
+            (sudo rm nohup.out) 2>/dev/null
           fi
         fi
       fi
@@ -617,8 +667,8 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (nohup bin/hostapd_fallback) 2>/dev/null
+            (sudo rm nohup.out) 2>/dev/null
           fi
         else
           sudo sed -i "s/^#vht_oper_chwidth=1/vht_oper_chwidth=1/" ${HOSTAPD}
@@ -628,8 +678,8 @@ case "$CHOICE" in
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
             echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup ./hostapd_fallback) 2>/dev/null
-            sudo rm nohup.out
+            (nohup bin/hostapd_fallback) 2>/dev/null
+            (sudo rm nohup.out) 2>/dev/null
           fi
         fi
       fi
@@ -638,13 +688,13 @@ case "$CHOICE" in
   ;;
 
 	# Change / randomize the MAC adresses of TorBox's interfaces
-  8)
+  9)
 		INPUT=$(cat text/help-change-MAC)
-		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash change_MAC; fi
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash bin/change_MAC; fi
 	;;
 
   #This hides / unhides the WLAN
-  9)
+  10)
     if [ "$TOGGLE08" = "Hide" ]; then
       INPUT=$(cat text/hide_wlan-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -672,15 +722,15 @@ case "$CHOICE" in
         echo " "
         echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
         echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-        (nohup ./hostapd_fallback) 2>/dev/null
-        sudo rm nohup.out
+        (nohup bin/hostapd_fallback) 2>/dev/null
+        (sudo rm nohup.out) 2>/dev/null
       fi
       read_config
     fi
   ;;
 
   #This disables / enables the WLAN
-  10)
+  11)
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
       if [ -z "$CABLE" ]; then
@@ -707,11 +757,9 @@ case "$CHOICE" in
               echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
               sudo systemctl mask --now hostapd
               sudo systemctl daemon-reload
-              if [ "$CHECK_OS" == "Ubuntu" ]; then
-                sudo cp etc/rc.local.disable_wlan.ubuntu /etc/rc.local
-              else
-                sudo cp etc/rc.local.disable_wlan /etc/rc.local
-              fi
+              # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+              sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							sudo chmod a+x /etc/rc.local
             fi
           fi
         else
@@ -727,11 +775,9 @@ case "$CHOICE" in
         clear
         echo " "
         echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        if [ "$CHECK_OS" == "Ubuntu" ]; then
-          sudo cp etc/rc.local.ubuntu /etc/rc.local
-        else
-          sudo cp etc/rc.local /etc/rc.local
-        fi
+        # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+        sudo cp etc/rc.local /etc/rc.local
+				sudo chmod a+x /etc/rc.local
         sudo systemctl unmask hostapd
         sudo systemctl enable hostapd
         sudo systemctl start hostapd
@@ -743,7 +789,7 @@ case "$CHOICE" in
   ;;
 
 	#This disables / enables Torbox's WebSSH access
-  11)
+  12)
 		if [ "$TOGGLE17" = "Disable" ]; then
 			INPUT=$(cat text/disable_twebssh-text)
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -771,7 +817,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables SSH access through Internet
-  12)
+  13)
     if [ "$TOGGLE10" = "Enable" ]; then
       INPUT=$(cat text/ssh_i_access-on-txt)
       ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
@@ -810,7 +856,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables the access to the Tor control port from clients
-  13)
+  14)
     if [ "$TOGGLE14" = "Enable" ]; then
       INPUT=$(cat text/tor_control_port_enable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -835,7 +881,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables HTTP plain text traffic block
-  14)
+  15)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -868,7 +914,7 @@ case "$CHOICE" in
   ;;
 
 	# Exclude slow tor relays
-  15)
+  16)
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -889,18 +935,15 @@ case "$CHOICE" in
 						trap "bash menu-config; exit 0" EXIT
 						exit 1
 					fi
-					clear
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
 				else
-					clear
-					SPEED=4000
-					echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
-					sudo ./exclude-slow-tor-relays-ng -b $SPEED
+					SPEED=$DEFAULT_SPEED
 				fi
+				clear
+				echo -e "${RED}[+] Excluding slow tor relays (shouldn't be more then half of the total relays)...${NOCOLOR}"
+				sudo bin/exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
-				sudo mv torrc.exclude-slow /etc/tor
+#				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor menu-config
@@ -909,7 +952,7 @@ case "$CHOICE" in
 		if [ "$TOGGLE18" = "Stop" ]; then
 			clear
 			echo -e "${RED}[+] Stop excluding slow tor relays...${NOCOLOR}"
-			sudo rm /etc/tor/torrc.exclude-slow
+			(sudo rm /etc/tor/torrc.exclude-slow) 2>/dev/null
 			sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 			sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
 			sleep 1
@@ -920,11 +963,11 @@ case "$CHOICE" in
   ;;
 
 	# Enter the advanced configuration editor
-  16)
+  17)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      ./vitor
+      bin/vitor
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
@@ -934,7 +977,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-  17)
+  18)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
       LOG_STATUS=$(sudo systemctl is-active rsyslog)
 			[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
@@ -980,14 +1023,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-  18)
+  19)
     clear
     erase_logs
     sleep 2
   ;;
 
   #This is the support for Adafruit's PiTFT displays
-  19)
+  20)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       online_check
@@ -1008,7 +1051,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  20)
+  21)
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)
@@ -1064,9 +1107,9 @@ case "$CHOICE" in
   ;;
 
   #This is the support for Sixfab Shields/HATs for cellular connections
-  #Remark for TorBox v.0.5.2 - we try to do it without an online connection.
+  #Remark for TorBox v.0.5.3 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  21)
+  22)
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh

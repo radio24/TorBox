@@ -92,11 +92,9 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox052"
+HOSTNAME="TorBox053"
 
-# Used go version
-GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+# For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
@@ -117,7 +115,7 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4 repository
@@ -405,9 +403,9 @@ select_and_install_tor()
 		        sh autogen.sh
           	./configure
           	make
+            make install
             cd
-    				rm -r tor-*
-          	make install
+            rm -r tor-*
 						systemctl stop tor
 						systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -512,7 +510,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Debian(scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -559,7 +557,7 @@ echo
 echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
 echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do
@@ -695,23 +693,45 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 
-pip3 install pytesseract
-pip3 install mechanize
-pip3 install PySocks
-pip3 install urwid
-pip3 install Pillow
-pip3 install requests
-pip3 install Django
-pip3 install click
-pip3 install gunicorn
-pip3 install click
-pip3 install paramiko
-pip3 install tornado
-pip3 install APScheduler
-pip3 install eventlet
-pip3 install python-socketio
-pip3 install opencv-python-headless
-pip3 install numpy
+# NEW v.0.5.3: New way to install and check Python requirements
+# Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
+#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
+cd
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+pip3 install -r requirements.txt
+sleep 5
+
+clear
+echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+if [ -f requirements.failed ]; then rm requirements.failed; fi
+REPLY="Y"
+while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	REPLY=""
+	readarray -t REQUIREMENTS < requirements.txt
+	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+		if [ -z "$VERSION" ]; then
+			# shellcheck disable=SC2059
+			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		fi
+	done
+	if [ -f requirements.failed ]; then
+		echo ""
+		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				pip3 install -r requirements.failed
+				sleep 5
+				rm requirements.failed
+				unset REQUIREMENTS
+				clear
+			fi
+		fi
+	fi
+done
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -726,61 +746,57 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
-# NEW v.0.5.3: Check if go is already installed and has the right version
-if [ -f $GO_PROGRAM ]; then
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-else
-	GO_PROGRAM=go
-	#This can lead to command not found - ignore it
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+# NEW v.0.5.3: New way to download the current version of go
+if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+else PLATFORM="linux-armv6l"
 fi
-if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-	else DOWNLOAD="$GO_VERSION"
-	fi
-	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
-	DLCHECK=$?
-	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	if [ "$DLCHECK" != "0" ] ; then
+
+# Fetch the filename of the latest go version
+GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+DLCHECK=$?
+
+# NEW v.0.5.3: if the download failed, install the package from the distribution
+if [ "$DLCHECK" != "0" ] ; then
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-		echo
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 10
-		fi
-		re-connect
-		if grep "^deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then
-			apt-get -y -t bullseye-backports install golang
-		else
-			apt-get -y install golang
-			GO_PROGRAM="/usr/local/go/bin/go"
-			if [ -f $GO_PROGRAM ]; then
-				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-			else
-				GO_PROGRAM=go
-				#This can lead to command not found - ignore it
-				GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-			fi
-			if [ "$GO_VERSION_NR" -lt "17" ]; then
-				echo ""
-				echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
-				echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
-				echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-				echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
-				echo ""
-				exit 1
-			fi
-		fi
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-  	tar -C /usr/local -xzvf $DOWNLOAD
-		rm $DOWNLOAD
+		sleep 10
 	fi
+	re-connect
+	if grep "^deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then
+		apt-get -y -t bullseye-backports install golang
+	else
+		apt-get -y install golang
+		GO_PROGRAM="/usr/local/go/bin/go"
+		if [ -f $GO_PROGRAM ]; then
+			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		else
+			GO_PROGRAM=go
+			#This can lead to command not found - ignore it
+			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		fi
+		if [ "$GO_VERSION_NR" -lt "17" ]; then
+			echo ""
+			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+			echo ""
+			exit 1
+		fi
+	fi
+else
+	tar -C /usr/local -xzvf $GO_FILENAME
+	rm $GO_FILENAME
 fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?
@@ -824,8 +840,8 @@ if [ $DLCHECK -eq 0 ]; then
 	export GO111MODULE="on"
 	cd obfs4proxy
 	# NEW v.0.5.3 - with or without the path
-	if [ -f $GO_PROGRAM ]; then
-		sleep 1
+	if [ -f /usr/local/go/bin/go ]; then
+		GO_PROGRAM=/usr/local/go/bin/go
 	else
 		GO_PROGRAM=go
 	fi
@@ -983,8 +999,8 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-# We have to use rc.local.ubuntu because rfkill is/was not compatible (to change with v.0.5.3!)
-cp etc/rc.local.ubuntu /etc/rc.local
+# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+cp etc/rc.local /etc/rc.local
 chmod a+x /etc/rc.local
 systemctl daemon-reload
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
@@ -1182,7 +1198,7 @@ echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox will reboot.${NOCOLOR}"
+echo -e "${WHITE}    After this last step, TorBox will restart.${NOCOLOR}"
 echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 echo -e "${WHITE}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
 echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"

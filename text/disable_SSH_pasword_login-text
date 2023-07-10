@@ -1,0 +1,6 @@
+This menu entry will disable SSH password login.
+
+Especially after generating and testing SSH keys to log into TorBox without a password, disabling the SSH password login is advisable.
+
+IMPORTANT
+Disabling SSH password login is only possible if SSH keys are generated, and the public key is on the TorBox ready to work.

@@ -1,0 +1,8 @@
+This entry will exclude a specific domain (for example, netflix.com) from being routed through tor. It means that the IP address of this site will be accessed directly or through a VPN. You have to assume that everyone will see that you access this site and may even see the content of the communication.
+
+If the domain is already in the exclusion list, then the domain can be changed as follow:
+- Rescan and add more subdomains and IPs connected to the domain.
+- Change the kind of exclusion list (direct access or through a VPN).
+- Remove the domain and its IPs.
+
+Are you ready to start?

@@ -25,6 +25,7 @@ ControlPort 127.0.0.1:9051
 #ControlPort 192.168.43.1:9051
 HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
 DisableDebuggerAttachment 0
+AvoidDiskWrites 1
 #%include /etc/tor/torrc.exclude-slow
 
 ## THE CONFIGURATION OF THE ONION SERVICES STARTS HERE!
@@ -43,7 +44,7 @@ DisableDebuggerAttachment 0
 #ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy
 #ServerTransportListenAddr obfs4 0.0.0.0:443
 #ContactInfo <address@email.com>
-#Nickname TorBox052
+#Nickname TorBox053
 #BridgeDistribution any
 
 ## TO OVERCOME A FIREWALL, START HERE!
@@ -71,17 +72,18 @@ ReachableAddresses accept *:443, accept *:80
 #ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
 #ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
 
-## Meek-Azure
+## Meek-Azure (do not remove or change that line - this is an anchor)
 #Bridge meek_lite 192.0.2.18:80 BE776A53492E1E044A26F17306E1BC46A55A1625 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
 
 ## Snowflake (do not remove or change that line - this is an anchor)
-#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
 #Specific Snowflake bridge for China
-#Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.net:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
 #Specific Snowflake bridge for Iran
 #Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.azureedge.net/ front=ajax.aspnetcdn.com ice=stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
 #Specific Snowflake bridge for Turkmenistan
-#Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:206.53.159.130:3479,stun:176.119.42.11:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:52.26.251.34:3479,stun:18.191.223.12:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479 utls-imitate=hellorandomizedalpn
+#Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=cdn.sstatic.net ice=stun:206.53.159.130:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479 utls-imitate=hellorandomizedalpn
+
 ## IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
 
 ## OBFS4 bridges
@@ -97,14 +99,15 @@ ReachableAddresses accept *:443, accept *:80
 #Bridge obfs4 193.11.166.194:27020 86AC7B8D430DAC4117E9F42C9EAED18133863AAF cert=0LDeJH4JzMDtkJJrFphJCiPqKx7loozKN7VNfuukMGfHO0Z8OGdzHVkhVAOfo1mUdv9cMg iat-mode=0
 #Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
 #Bridge obfs4 5.45.100.58:1337 66002E678B3A3C6968AB1944C233A82A34FCF0B8 cert=cZei7/b4KsHqb0tTn3mnAZ+LruUAJ1+yiXKwWxmNFLbpfQycmibCoYjlmX8n1gGskaiQLQ iat-mode=0
-#Bridge obfs4 23.94.134.145:8082 1F36B62A1ECED5C884D188330D7291ED6A98827F cert=sCzTCeprtMZ3IyVjJo+ksd0d/XYbPDT3TrfBM0nQv+DL1LkFC5eRPmXPpAsfsUNeIxfzJA iat-mode=0
-#Bridge obfs4 185.44.209.160:15045 3176C361647E23B1371E4EB444B05D6841386C11 cert=fgq1fgr8UDsBPUHY1Jbe9u6Ozj+eF5/zsMk9yqfvpxNC02rtgM8/MKYR/V4P5FO4CDbrBw iat-mode=0
-#Bridge obfs4 185.247.226.57:443 C2A28A62022616D17173FBB79EFF8162628EE136 cert=2LUpLXg7zAfYuCYFr3aMlYI2i1LMqj5we+s06LtVrVrUV1EGcjoxTyj054Ykdyu1G5XTUQ iat-mode=0
 #Bridge obfs4 146.57.248.225:22 10A6CD36A537FCE513A322361547444B393989F0 cert=K1gDtDAIcUfeLqbstggjIw2rtgIKqdIhUlHp82XRqNSq/mtAjp1BIC9vHKJ2FAEpGssTPw iat-mode=0
-#Bridge obfs4 217.86.148.59:10235 ECDE7860636D20A3374804FE8FF36D89B7AFE96D cert=O3GU2XtIUe6umRZqDk5uoHH1aP8zxqNLPF9l9oTMSknYnyI4XN81OA/UUIJN3d8Qf77NQw iat-mode=0
 #Bridge obfs4 87.197.128.98:9292 AE6BA15179AEEF64A0F543BEB7FA1BE2E91A93CF cert=t36bkZYMFJyJzTN1HYyh5LzAK/R81GAAH2Q7N3P9qLt5Jd0g7qDvWPIKTurxO2t7XzxSQA iat-mode=0
-#Bridge obfs4 51.79.156.106:9002 09F4467891E27057CC8EC15A9E4CAAF770AE1CDD cert=s5dFoGJDY/tPpRKfyz/GsWamfzmvt5noPAt8ZiPiuLuqsBoMtnopwiPp4OiaM/N4R6x9Kw iat-mode=0
 #Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
 #Bridge obfs4 51.222.13.177:80 5EDAC3B810E12B01F6FD8050D2FD3E277B289A08 cert=2uplIpLQ0q9+0qMFrK5pkaYRDOe460LL9WHBvatgkuRr/SL31wBOEupaMMJ6koRE6Ld0ew iat-mode=0
 #Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
 #Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
+#Bridge obfs4 2.229.145.26:9001 363DCFB52ED15579C968C339959751125CFE9E65 cert=lWV/kX9g/6WA56Oce6UVfoncRn1gGHN4Vs6+84FMNK3aPoNhDuTfQywJREFyu62oLzItAg iat-mode=0
+#Bridge obfs4 23.88.57.187:64682 8474BCEFF0E06DD04B6272C2DEDDA8E7D4BEA582 cert=VAkW8b/TxygLDw3+fBrV17cz7e0X7BPLi2dyl52/CApzuPDbQPUVKjLX6M7gJpBjgYt1cg iat-mode=0
+#Bridge obfs4 172.98.142.184:7358 3F85291518BD51DE1D88B8031A62E085FF26E41A cert=ufbLZaUbgbkCum+IAEqPVgwag8Do5hgVh6paeo1F3S7vj20IG4onuoiwA63m4fOhug8EWA iat-mode=0
+#Bridge obfs4 185.229.111.42:443 BAC14303729F3EB82F777F818FCE6DBF054CC3D4 cert=AKdHfYBsQhED3BlzjQKJR2Wd4LcIS+zKCCaoi0+cTfBYp714KSYk/R9k7rLXBTRlpLaiWw iat-mode=0
+#Bridge obfs4 65.108.254.231:1312 42787C35C3A916C9556AB6835664B20DA66F73FC cert=VACdrxjo3NvNVKKmdx4Aq9js2DfN9HebzhVQdKc0+k79WIZQ1JdoQQIrtOiF9Gtl9fbAPA iat-mode=0
+#Bridge obfs4 157.90.115.53:443 42486E8C5B6F82C066DF55BEE73534231F8ABA49 cert=pv/ni3rSR3byqrSnWjw/Th/ygdBd0U61BY/eBTIPcqekjF4U4af4XcjYXcgTtI1dJ5plaw iat-mode=0

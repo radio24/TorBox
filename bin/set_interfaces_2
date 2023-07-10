@@ -1,0 +1,267 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file sets all preconditions and defines all iptables rules to route the
+# entire data stream from the connected clients through the Tor network.
+#
+# SYNTAX
+# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <captive portal> <restarting_tor> <only_reset_ip_tables>
+#
+# The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
+# eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
+# eth1  -> 	TorBox is connected to the Internet with a cable (USB ethernet adapter) or with a tethering device.
+# wlan0 ->  TorBox is connected to the Internet through a wireless network (onboard chip).
+# wlan1 -> 	TorBox is connected to the Internet through a wireless network (USB wlan adapter).
+# usb0  ->  TorBox is connected to the Internet through an USB adapter or a cellular interface.
+# ppp0 ->   TorBox is connected to the Internet through a cellular interface
+#
+# The <incoming interface 1> and <incoming interface 2> represent the interfaces where the client-devices
+# are connected to the TorBox. Possible values for <incoming interface 1> and <incoming interface 2>:
+# eth0  -> 	The device is connected with a cable (ethernet interface).
+# eth1  -> 	The device is connected with a cable (USB ethernet adapter).
+# wlan0 -> 	The device is connected via wireless network (onboard chip)
+# wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
+#
+# Both, <incoming interface 1> and <incoming interface 2>, have to be set.
+# If <incoming interface 1> is not used, the default should be "wlan0".
+# If <incoming interface 2> is not used, the default should be "eth0", except if the Internet is on "eth0". In this case the default would be "eth1".
+#
+# Possible values for <captive portal>:
+# 0	-> The network connection is open -- no login/password/phone number etc. is required.
+# 1	-> To pass through the Captive Portal the TUNNELLING method is used.
+# 2 -> To pass through the Captive Portal the SPOOFING method is used.
+#
+# Possible values for <restarting_tor>:
+# 0	->	Don't restart tor.
+# 1	->	Restart tor
+#
+# The <only_reset_ip_tables> is set, if set_interfaces_2 was only called to reset the iptables rules (for example to stop the domains without to exclusion)
+# Possible values for <only_reset_ip_tables>:
+# 0 -> Default, started after changing the Internet source
+# 1 -> Only started to reset the iptables rules
+#
+###### SET VARIABLES ######
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+IPTABLES="/sbin/iptables"
+MODPROBE="/sbin/modprobe"
+MY_OWN_IP1="192.168.42.1"
+MY_OWN_IP2="192.168.43.1"
+INT_NET1="$MY_OWN_IP1/8"
+INT_NET2="$MY_OWN_IP2/8"
+O_DEVICE=$1
+I_DEVICE1=$2
+I_DEVICE2=$3
+CAPTIVE=$4
+RESTARTTOR=$5
+ONLY_RESET=$6
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+EXITLOOP=0
+
+
+##############################
+######## FUNCTIONS ###########
+
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+# This function pass through Captive Portals using the TUNNELLING nethod
+captive_tunneling()
+{
+	sudo bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+	EXITLOOP=$?
+	if [ $EXITLOOP == 0 ]; then
+		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
+		echo ""
+		# TEST: that should improve the connectivity with the captive portal
+		sudo ifdown $O_DEVICE
+		# The next line should help TorBox to forget the old IP
+		ip addr flush dev $O_DEVICE
+		sudo ifup $O_DEVICE &>/dev/null &
+		echo ""
+		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
+		echo ""
+		if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ] ; then
+			echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
+			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
+			echo ""
+		fi
+		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+		echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+		sleep 2
+	fi
+}
+
+# NEW v.0.5.3 - Not necessary
+###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
+#clear
+#[ "$ONLY_RESET" != "1" ] && deactivating_bridge_relay
+
+###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
+while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
+	if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
+		if [ $CAPTIVE = 2 ]; then
+			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
+		fi
+		clear
+		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
+		sleep 2
+		sudo $TORBOX_PATH/lib/torbox_wireless_manager.py -i $O_DEVICE
+		clear
+		if [ $CAPTIVE = 1 ]; then
+			captive_tunneling
+		else
+			EXITLOOP=1
+		fi
+	else
+		if [ $CAPTIVE = 2 ]; then
+			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
+		elif [ $CAPTIVE = 1 ]; then
+			captive_tunneling
+		else
+			EXITLOOP=1
+		fi
+	fi
+done
+
+###### PREPARATIONS ######
+clear
+echo -e "${RED}[+] Flushing existing iptables rules...${NOCOLOR}"
+$IPTABLES -F
+$IPTABLES -F -t nat
+$IPTABLES -X
+$IPTABLES -P INPUT DROP
+$IPTABLES -P OUTPUT ACCEPT
+$IPTABLES -P FORWARD DROP
+$MODPROBE ip_conntrack
+$MODPROBE iptable_nat
+$MODPROBE ip_conntrack_ftp
+$MODPROBE ip_nat_ftp
+
+###### INPUT chain ######
+echo -e "${RED}[+] Setting up INPUT chain...${NOCOLOR}"
+# State tracking rules
+$IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A INPUT -m state --state INVALID -j DROP
+# Anti-spoofing rules
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j DROP
+# Let packages to the localhost
+$IPTABLES -A INPUT -i lo -j ACCEPT
+# Open access from the internal network (usually my own devices)
+$IPTABLES -A INPUT -i $I_DEVICE1 -j ACCEPT
+$IPTABLES -A INPUT -i $I_DEVICE2 -j ACCEPT
+# Allow ICMP Ping
+$IPTABLES -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+$IPTABLES -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+
+###### OUTPUT chain ######
+echo -e "${RED}[+] Setting up OUTPUT chain...${NOCOLOR}"
+# Avoid Linux kernel transproxy packet leak. See: https://lists.torproject.org/pipermail/tor-talk/2014-March/032507.html
+$IPTABLES -A OUTPUT -m conntrack --ctstate INVALID -j DROP
+$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
+#$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP    --> This rule slows the traffic down and blocks some tools
+$IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
+# IMPORTANT: We cannot block local DNS requests!! Meek and Snowflake need local DNS resolution. For more information see here: https://www.torbox.ch/?page_id=112#why-is-the-local-torbox-traffic-not-routed-through-tor-why-is-by-default-googles-andor-cloudflares-service-used-to-circumvent-cheap-censorship-measures-or-to-test-the-connectivity-can-i-change-google-andor-cloudflare-services-with-something-else
+# If activated, the rows below will log local DNS requests, but not block them
+#$IPTABLES -A OUTPUT -o $O_DEVICE -p tcp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST TCP" --log-ip-options --log-tcp-options
+#$IPTABLES -A OUTPUT -o $O_DEVICE -p udp --dport 53 -j LOG --log-prefix "SSH SHELL DNS-REQUEST UDP" --log-ip-options
+# No other restrictions for OUTPUT
+
+###### FORWARD chain ######
+echo -e "${RED}[+] Setting up FORWARD chain...${NOCOLOR}"
+# State tracking rules
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+# Allow ICMP Ping
+$IPTABLES -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
+$IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
+
+###### NAT rules ######
+sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=0/" ${RUNFILE}
+echo -e "${RED}[+] Setting up PREROUTING chain...${NOCOLOR}"
+# Access on the box's own IP should be granted (only TCP)
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
+# TCP/UDP/DNS over Tor - Attention: 9053 supports only UDP DNS, the rest goes through 9040!
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp --dport 53 -j REDIRECT --to-ports 9053
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp --dport 53 -j REDIRECT --to-ports 9053
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
+## Masquerading
+$IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
+
+###### SSH access through Internet ######
+if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
+	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
+else
+	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
+fi
+
+###### HTTP plain text traffic blocker ######
+# PREROUTING 3 guaranties that .onion address are not blocked --> set it permanent
+if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
+	echo -e "${RED}[+] Setting up HTTP plain text traffic blocker...${NOCOLOR}"
+	($IPTABLES -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+else
+	($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+fi
+
+###### Exclusion of domains from tor protection activated ######
+if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfaces_3; fi
+
+###### FINISH ######
+# Seems to guarante a more reliable connection for eth0, for example - the question remains whether there are problems with CAPTIVE portals.
+# REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
+if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
+	echo -e "${RED}[+] Finishing...${NOCOLOR}"
+	(sudo ifdown $O_DEVICE) 2>/dev/null
+	sleep 2
+	(sudo ifup $O_DEVICE) 2>/dev/null
+	sleep 2
+fi
+# ==========
+if [ $RESTARTTOR -eq 1 ]; then
+	echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
+	sudo systemctl stop tor
+	sudo systemctl restart tor
+fi

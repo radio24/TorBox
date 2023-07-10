@@ -1,0 +1,144 @@
+#!/bin/bash
+
+# This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file sets all preconditions and defines all iptables rules to route the
+# data going to IP addresses on certain exception lists from the connected
+# clients through the clearnet or VPN.
+#
+# SYNTAX
+# ./set_interfaces_3 [<first_run>]
+#
+# The <first_run> variable is set, if this script was started after a reboot
+# 0 -> no reboot was occured
+# 1 -> started after a reboot
+#
+###### SET VARIABLES ######
+#
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables - because of rc.local, all paths have to be absolute
+IPTABLES="/sbin/iptables"
+IPSET="/sbin/ipset -q"
+CLEARNET_LIST="clearnet-list"
+CLEARNET_LIST_FILE="/home/torbox/torbox/run/$CLEARNET_LIST"
+VPN_LIST="vpn-list"
+VPN_LIST_FILE="/home/torbox/torbox/run/$VPN_LIST"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+FIRST_RUN=$1
+if [ -z "$FIRST_RUN" ]; then FIRST_RUN=0; fi
+
+
+
+######## FUNCTIONS ########
+
+# This function imports the configuration and makes some preparations
+read_config()
+{
+	# TOGGLE19 shows if domain exclusion active or not
+	if grep "UNPROTECTED_DOMAIN=0" ${RUNFILE} ; then
+	  echo ""
+	  echo -e "${WHITE}[!] ERROR: The use of unprotected domains are not supported ${SERVICE_NAME}${NOCOLOR}"
+		echo -e "${RED}[!] To use this feature, you have to activate it through the TorBox Menu. ${SERVICE_NAME}${NOCOLOR}"
+	  echo " "
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+	  exit 0
+	fi
+
+	# Where is the Internet
+	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
+	if [ ! -z "$tun0up" ]; then O_DEVICE="tun0"; else O_DEVICE=$INTERNET_IFACE; fi
+	# Where are the clients
+	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
+	NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
+	if [ "$NUMBER_OF_WORD" == "1" ]; then
+		I_DEVICE1=$CLIENT_IFACE
+		if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+	else
+		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+	fi
+}
+
+
+######## MAIN ########
+# Is TorBox connected to a VPN?
+tun0up=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+
+# Flush the old ipset
+sudo $IPSET flush $CLEARNET_LIST
+if [ -f "$CLEARNET_LIST_FILE" ]; then
+	sudo $IPSET restore -file $CLEARNET_LIST_FILE -exist
+else
+	sudo $IPSET create $CLEARNET_LIST hash:ip
+fi
+if [ ! -z "$tun0up" ] ; then
+	if [ -f "$VPN_LIST_FILE" ]; then
+		sudo $IPSET restore -file $VPN_LIST_FILE -exist
+	fi
+fi
+
+# This part will not be executed, if set_interfaces_3 was started by rc.local
+# In this case the correct rules should be loaded by sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+if [ "$FIRST_RUN" == "0" ]; then
+	echo -e "${RED}[+] Setting up exclusion of domains from tor protection...${NOCOLOR}"
+	read_config
+
+	# HTTP plain text traffic blocker active?
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=8; R2=9; else R1=3; R2=4; fi
+
+	# Remove old rules
+	# Old rules --> they have to be catched by iptables-save
+	D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING" | grep "\-p tcp -j REDIRECT --to-ports 9040" | cut -d ' ' -f4)
+	NUMBER_OF_WORD=$(wc -w <<< "${D_DEVICE_T}")
+	if [ "$NUMBER_OF_WORD" == "1" ]; then
+		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+	else
+		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+	fi
+
+	# New rules
+	# If we have VPN, then the clearnet list and the VPN list will be used to route packages through VPN.
+	# If we have no VPN, then only the clearnet list will be used to route packages directly to the destination.
+	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
+
+	# -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
+	sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+	# -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
+	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
+	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
+
+	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+fi

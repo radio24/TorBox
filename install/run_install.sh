@@ -95,11 +95,9 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox052"
+HOSTNAME="TorBox053"
 
-# Used go version
-GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+# For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
@@ -120,10 +118,10 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# OBFS4 repository
+# OBFS4Proxy
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi
@@ -223,7 +221,9 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	if [ -f "/etc/resolv.conf" ]; then
+		(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+	fi
 	(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
 	sleep 5
 	ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -255,6 +255,7 @@ re-connect()
 	    else
 				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
 				exit 1
 	    fi
 	  fi
@@ -405,9 +406,9 @@ select_and_install_tor()
 						sh autogen.sh
           	./configure
           	make
-						sudo make install
+            sudo make install
             cd
-    				sudo rm -r tor-*
+            sudo rm -r tor-*
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -484,9 +485,9 @@ select_and_install_tor()
         sh autogen.sh
 				./configure
 				make
-				sudo make install
+        sudo make install
         cd
-				sudo rm -r tor-*
+        sudo rm -r tor-*
 				sudo systemctl stop tor
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
@@ -512,7 +513,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -541,7 +542,6 @@ else
 	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
 fi
 
-
 # 1. Checking for Internet connection
 clear
 echo -e "${RED}[+] Step 1: Do we have Internet?${NOCOLOR}"
@@ -560,7 +560,7 @@ echo
 echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
 echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do
@@ -643,7 +643,7 @@ fi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -659,7 +659,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-#Install wiringpi
+# Install wiringpi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
@@ -667,7 +667,7 @@ echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
 wget $WIRINGPI_USED
 sudo dpkg -i wiringpi-latest.deb
-# NEW v.0.5.2: not nice, but working
+# Not nice, but working
 sudo apt -y --fix-broken install
 sudo dpkg -i wiringpi-latest.deb
 sudo rm wiringpi-latest.deb
@@ -684,23 +684,45 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
-sudo pip3 install pytesseract
-# Mit v.0.5.3 zu testen: sudo pip3 install mechanize
-sudo pip3 install mechanize==0.4.7
-sudo pip3 install PySocks
-sudo pip3 install urwid
-sudo pip3 install Pillow
-sudo pip3 install requests
-sudo pip3 install Django
-sudo pip3 install click
-sudo pip3 install gunicorn
-sudo pip3 install paramiko
-sudo pip3 install tornado
-sudo pip3 install APScheduler
-sudo pip3 install eventlet
-sudo pip3 install python-socketio
-sudo pip3 install opencv-python-headless
-sudo pip3 install numpy
+# NEW v.0.5.3: New way to install and check Python requirements
+# Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
+#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
+cd
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+sudo pip3 install -r requirements.txt
+sleep 5
+
+clear
+echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+if [ -f requirements.failed ]; then rm requirements.failed; fi
+REPLY="Y"
+while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	REPLY=""
+	readarray -t REQUIREMENTS < requirements.txt
+	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+		if [ -z "$VERSION" ]; then
+			# shellcheck disable=SC2059
+			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		fi
+	done
+	if [ -f requirements.failed ]; then
+		echo ""
+		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				sudo pip3 install -r requirements.failed
+				sleep 5
+				rm requirements.failed
+				unset REQUIREMENTS
+				clear
+			fi
+		fi
+	fi
+done
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -715,57 +737,51 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
-# NEW v.0.5.3: Check if go is already installed and has the right version
-if [ -f $GO_PROGRAM ]; then
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-else
-	GO_PROGRAM=go
-	#This can lead to command not found - ignore it
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+# NEW v.0.5.3: New way to download the current version of go
+if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+else PLATFORM="linux-armv6l"
 fi
-if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-	else DOWNLOAD="$GO_VERSION"
-	fi
-	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
-	DLCHECK=$?
-	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	if [ "$DLCHECK" != "0" ] ; then
+
+# Fetch the filename of the latest go version
+GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+DLCHECK=$?
+# NEW v.0.5.3: if the download failed, install the package from the distribution
+if [ "$DLCHECK" != "0" ] ; then
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO!${NOCOLOR}"
-		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-		echo
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 10
-		fi
-		re-connect
-		sudo apt-get -y install golang
-		GO_PROGRAM="/usr/local/go/bin/go"
-		if [ -f $GO_PROGRAM ]; then
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		else
-			GO_PROGRAM=go
-			#This can lead to command not found - ignore it
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		fi
-		if [ "$GO_VERSION_NR" -lt "17" ]; then
-			echo ""
-			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
-			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
-			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
-			echo ""
-			exit 1
-		fi
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-  	sudo tar -C /usr/local -xzvf $DOWNLOAD
-		sudo rm $DOWNLOAD
+		sleep 10
 	fi
+	re-connect
+	sudo apt-get -y install golang
+	GO_PROGRAM="/usr/local/go/bin/go"
+	if [ -f $GO_PROGRAM ]; then
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	else
+		GO_PROGRAM=go
+		#This can lead to command not found - ignore it
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	fi
+	if [ "$GO_VERSION_NR" -lt "17" ]; then
+		echo ""
+		echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+		echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+		echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+		echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+		echo ""
+		exit 1
+	fi
+else
+  sudo tar -C /usr/local -xzvf $GO_FILENAME
+	sudo rm $GO_FILENAME
 fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?
@@ -779,11 +795,11 @@ fi
 export PATH=$PATH:/usr/local/go/bin
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
+  echo ""
+  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  clear
 else
-	sleep 10
+  sleep 10
 fi
 
 # 5. Installing tor
@@ -882,14 +898,14 @@ fi
 
 # 8. Again checking connectivity
 clear
-echo -e "${RED}[+] Step 9: Re-checking Internet connectivity${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Re-checking Internet connectivity${NOCOLOR}"
 # NEW v.0.5.3
 re-connect
 
 # 9. Downloading and installing TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 10: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 echo -e "${RED}[+]          Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
@@ -928,7 +944,7 @@ fi
 # 10. Installing all configuration files
 clear
 cd torbox
-echo -e "${RED}[+] Step 11: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
 echo ""
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
@@ -976,8 +992,13 @@ echo ""
 
 #Back to the home directory
 cd
-if ! grep "# Added by TorBox (002)" .profile ; then
-	sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | sudo tee -a .profile
+# NEW v.0.5.3: what if .profile doesn't exist?
+if [ -f ".profile" ]; then
+	if ! grep "Added by TorBox (002)" .profile ; then
+		sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+	fi
+else
+	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 fi
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
@@ -998,7 +1019,7 @@ fi
 
 # 11. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 12: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
@@ -1019,7 +1040,7 @@ fi
 
 # 12. Configure the system services
 clear
-echo -e "${RED}[+] Step 13: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
 sudo systemctl daemon-reload
 sudo systemctl unmask hostapd
 sudo systemctl enable hostapd
@@ -1073,16 +1094,13 @@ fi
 
 # 13. Updating run/torbox.run
 clear
-echo -e "${RED}[+] Step 15: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
+echo -e "${RED}[+] Step 13: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
-sudo sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
-sudo sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-#sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
@@ -1105,13 +1123,13 @@ fi
 # 14. Finishing, cleaning and booting
 echo ""
 echo ""
-echo -e "${RED}[+] Step 17: We are finishing and cleaning up now!${NOCOLOR}"
+echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox052) ${NOCOLOR}"
+echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
+echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
@@ -1138,7 +1156,6 @@ history -c
 (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 (sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 echo ""
-# Disable auto-login
 echo -e "${RED}[+]${NOCOLOR} Disable auto-login..."
 sudo raspi-config nonint do_boot_behaviour B1
 echo ""
@@ -1146,7 +1163,7 @@ echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 # NEW v.0.5.3
 # This has to be at the end to avoid unnecessary error messages
 (sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-sudo systemctl restart systemd-hostnamed
+(sudo systemctl restart systemd-hostnamed) 2>/dev/null
 if grep 127.0.1.1.* /etc/hosts ; then
 	(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 else
@@ -1154,10 +1171,11 @@ else
 fi
 #
 # OLD
+echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
-echo -e "${WHITE}    In order to do so type \"exit\" and log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox052) ${NOCOLOR}"
+echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
+echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: Test - if this is working we don't need FRESH_INSTALLED=1 --> FRESH_INSTALLED=3 (+removing pi)

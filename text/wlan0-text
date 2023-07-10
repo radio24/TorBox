@@ -1,24 +1,19 @@
-This menu entry supposes that TorBox should be connected to the Internet
-through the onboard wireless chip supporting the 2.5 and 5 GHz band
-(wlan0).
+This menu entry supposes that TorBox should be connected to the Internet through the onboard wireless chip supporting the 2.5 and 5 GHz bands (wlan0).
 
 IMPORTANT
-- Not all USB WiFi adapters work correctly as an Access Point (AP) - as
-  simpler the adapter, as higher the chance for success. Especially, USB
+- Not all USB WiFi adapters work correctly as an Access Point (AP) - the
+  simpler the adapter, the higher the chance for success. Especially, USB
   WiFi adapters supporting the 5 GHz band usually don't work correctly
   as an AP, and we recommend using main menu entry 5 instead or connecting
   the clients with an Ethernet cable (eth0).
 - To avoid a user lockout situation, if the AP is not disabled in the
   Config sub-menu, the settings are automatically reset to the default
   values using the onboard wireless chip as AP.
+- That said, you can also make the change permanent by using the according
+  menu entry in the Danger Zone sub-menu.
 
-The next step is to set up TorBox so that your client devices have access
-through TorBox's wireless network (wlan1) and/or through Ethernet (eth0).
-In the second case, please plug in the ethernet cable with your client
-device NOW.
+The next step is to set up TorBox so that your client devices can access  TorBox's wireless network (wlan1) and/or Ethernet (eth0).  In the second case, please plug in the ethernet cable with your client device NOW.
 
-If we have to restart TorBox's wireless network, please reconnect your
-client without closing the ssh session. Usually, the configuration
-continuous -- if not, then please repeat the process.
+If we must restart TorBox's wireless network, please reconnect your client without closing the ssh session. Usually, the configuration continuous -- if not, then please repeat the process.
 
 Would you like to CONTINUE?

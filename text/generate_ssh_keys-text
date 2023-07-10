@@ -1,0 +1,19 @@
+This menu entry will generate new private and public SSH keys, providing an easy, secure way to log into TorBox.
+
+In the end, you will have two files in TorBox's home directory:
+- id_rsa (Private Key): The private key must be downloaded on your client
+  using SFTP (it uses the same login and password as your SSH client). To
+  log into TorBox, you must use an SSH client that supports SSH key handling
+  (for example, Termius) or TorBox's webssh. The key should be kept secure
+	so that no other users on your computer can read the file. 
+- id_rsa.pub (Public Key). The public key will be placed on the TorBox.
+
+IMPORTANT
+- This menu entry doesn't disable password identification. However, you will
+  find the according menu entry in the Danger Zone.
+- Already existing SSH keys will be overwritten. If disabled, you may
+  temporarily enable password identification to avoid the risk of being
+  locked out. With replacing the public SSH key, you must replace and test
+  the private key of your SSH client before you log out of the TorBox!
+- Regardless of the use of SSH keys, the default passwords with entries 1
+  and 3 should be changed in any case.

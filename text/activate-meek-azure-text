@@ -8,8 +8,8 @@ IMPORTANT
   a firewall blocks the network traffic.
 - To run correctly, MEEK-AZURE has to resolve DNS requests and connect
   some URLs directly. It is not a problem because all client's DNS
-	requests and data are still handled through the tor network.
-	However, your network provider may see that you are using tor.
+  requests and data are still handled through the tor network.
+  However, your network provider may see that you are using tor.
 - OBFS4 BRIDGE, BRIDGE RELAY MODE, SNOWFLAKE and countermeasures against
   tightly configured firewalls will automatically be deactivated; the
   configuration will be kept for later re-activation.

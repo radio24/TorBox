@@ -1,0 +1,36 @@
+.msg-input {
+    @apply mx-2 border-0 h-auto overflow-y-scroll !important
+}
+
+.emoji-button {
+    @apply text-gray-400 !important
+}
+
+/*rounded msg*/
+.msg {
+    @apply rounded-3xl !important
+}
+/*no padding*/
+.msg .p-card-content {
+    @apply p-0 !important
+}
+.msg .p-card-body {
+    @apply py-4 !important
+}
+/*no shadow*/
+.p-card {
+    @apply shadow-none !important
+}
+
+.msg-in {
+    @apply rounded-bl-none !important
+}
+
+.msg-out {
+    @apply rounded-br-none bg-[#d2f8a3] !important;
+    /*color: #d2f8a3;*/
+}
+
+.p-sidebar {
+    @apply w-full !important;
+}

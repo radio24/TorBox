@@ -1,0 +1,42 @@
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
+#root {
+  @apply w-full h-full;
+}
+
+*:focus {
+  box-shadow: none !important;
+}
+
+.ui--IdentityIcon {
+  cursor: auto !important;
+}
+
+/*Spinner loading colors*/
+@keyframes p-progress-spinner-color {
+    100%,
+    0% {
+        stroke: rgb(163 230 53)
+    }
+}
+
+
+/* width */
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px grey;
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #a6a6a6;
+  border-radius: 10px;
+}

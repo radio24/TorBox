@@ -44,7 +44,9 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="$TORBOX_PATH/text"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 
 #Connectivity check
 CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
@@ -113,6 +115,7 @@ settime()
 {
 	check_interface_with_internet
 	clear
+	sudo timedatectl set-timezone UTC
 	MANUAL=0
 	if [ $CONNECTED == 1 ]; then
 		if curl -m 6 -s "https://www.ntp.org" >/dev/null; then
@@ -120,7 +123,7 @@ settime()
 			sudo /usr/sbin/ntpdate pool.ntp.org
 			echo
 			echo -e "${RED}[+] Date and time set successfully!"
-			sleep 3
+			sleep 5
 			clear
 		else
 			MANUAL=1
@@ -144,7 +147,7 @@ settime()
 				echo ""
 				sudo date -s "$TIMESTRING"
 				echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-				sleep 3
+				sleep 5
 				clear
 			else
 				echo ""
@@ -173,9 +176,9 @@ finish()
   	sleep 4
   	check_tor
   	if [ "$TOR_STATUS" = "TOR is working" ]; then
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
   	else
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext text/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
+    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
   	fi
 	else
   	EXITID="EXITID=0"
@@ -191,30 +194,6 @@ is_integer()
  	if [ "$ERROR" == "1" ]; then
    	false
  	fi
-}
-
-# Currently not in use - only for documentation
-# local_clearnet_dns_resolution_on()
-# This function turns the local DNS resolution on
-local_clearnet_dns_resolution_on()
-{
-	(sudo iptables -t nat -D OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo iptables -t nat -D OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-	sudo systemctl start dnsmasq
-	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=1/" ${RUNFILE}
-}
-
-# Currently not in use - only for documentation
-# local_clearnet_dns_resolution_off()
-# This function turns the local DNS resolution off
-local_clearnet_dns_resolution_off()
-{
-	sudo systemctl stop dnsmasq
-	(sudo iptables  -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo iptables  -t nat -A OUTPUT -p tcp --dport 53 -j DNAT --to 127.0.0.1:9053) 2>/dev/null
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-	sudo sed -i "s/^CLEARNET_DNS=.*/CLEARNET_DNS=0/" ${RUNFILE}
 }
 
 # add_open_dns()
@@ -282,8 +261,6 @@ online_check()
 	else
 		CLEARNET_ONLY=0
   fi
-	# Check if local clearnet DNS resolution is on or off
-	CLEARNET_DNS=$(grep "^CLEARNET_DNS=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
   OCHECK=0
   TORCONNECT=0
   CLEARNET_DECISSION=0
@@ -310,7 +287,7 @@ online_check()
       TORCONNECT=0
       # Don't change it to "! -z" !
       if [ "$CLEARNET_WARNING" == "1" ]; then
-        INPUT=$(cat text/clearnet_warning-text)
+        INPUT=$(cat $TXT_DIR/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
           CLEARNET_DECISSION=1
           if curl -m 6 -s $CHECK_URL >/dev/null; then
@@ -361,8 +338,8 @@ online_check()
     fi
   fi
 
-  # Don't change it to "-z" !
-  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" != "1" ]; then
+  # ""$NO_CONNECTION_WARNING" = "1" means that there is a varning displayed if TorBox has no connection
+  if [ "$OCHECK" == "0" ] && [ "$NO_CONNECTION_WARNING" = "1" ]; then
     INPUT="It seems that your TorBox is not properly connected to the internet! For this operation, TorBox to be properly connected with the internet!\n\nAre you really sure to continue without proper internet connection (I guess, you know what you are doing)?"
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       OCHECK=1
@@ -493,7 +470,7 @@ restarting_tor()
   echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
   echo -e "    You can leave the progress report by pressing q."
   echo ""
-	trap "bash $SOURCE_SCRIPT; exit 0" SIGINT
+	if [ ! -z "$SOURCE_SCRIPT" ]; then trap "bash $SOURCE_SCRIPT; exit 0" SIGINT; fi
 	stty intr q
   sudo systemctl restart tor &
   sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
@@ -509,7 +486,7 @@ connecting_to_VPN()
 	# shellcheck disable=SC2012
   readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
   if [ -z "${ovpnlist[0]}" ] ; then
-    whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
@@ -535,12 +512,30 @@ connecting_to_VPN()
     echo ""
     ovpn_file=../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     sudo sed -i "s/^dev tun.*/dev tun0/" ${ovpn_file}
+		if ! grep -q "auth-retry interact" ${ovpn_file}; then (printf "\nauth-retry interact") >/dev/null 2>&1 | tee -a ${ovpn_file}; fi
     sudo openvpn --daemon --config ../openvpn/${ovpnlist[$CHOICE_OVPN]}.ovpn
     echo ""
     echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
     sleep 15
+		# To be sure that DNS rsolution works
+		echo ""
+		echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
+		if wget -q --spider "$CHECK_URL"; then
+			echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
+		else
+			echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+			echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
+			echo ""
+			add_open_dns
+			# (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
+			echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
+			if wget -q --spider "$CHECK_URL"; then
+				echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
+			else
+				echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+			fi
+		fi
   else
-    sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
     trap "bash menu; exit 0" EXIT
     exit 0
   fi
@@ -589,7 +584,7 @@ service_menu()
     i=$((i+1))
 		# shellcheck disable=SC2001
 		ENTRY=$(sed "s/%/ /g" <<< "$ENTRY")
-		# NEW v.0.5.2: This should make it possible to use SPACES
+		# This should make it possible to use SPACES
 		ENTRY=$(sed "s/_/ /g" <<< "$ENTRY")
     case "${DIALOG_TYPE}" in
       checklist)
@@ -609,9 +604,12 @@ service_menu()
   clear
 	NUMBER_OF_LINES=$((i+NUMBER_OF_LINES+7))
   if [ $i -gt 14 ]; then i=14; fi
-  WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $NUMBER_OF_LINES 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
-  CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
-	# NEW v.0.5.2
+	if [ "$DIALOG_TYPE" == "checklist" ]; then
+  	WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with SPACE and then press ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $NUMBER_OF_LINES 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
+	else
+		WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --$DIALOG_TYPE --separate-output \"\nChoose with pressing ENTER (ESC -> go back)${ADDITIONAL_MENU_TEXT}\" $NUMBER_OF_LINES 80 $i ${ENTRY_LIST} 3>&1 1>&2 2>&3"
+	fi
+	CHOICE_ENTRY=$(eval $WHIPTAIL_LINE)
 	exitstatus=$?
   [ ! -z "${CHOICE_ENTRY}" ] && ENTRY_NUMBERS=$(printf %s"${CHOICE_ENTRY}")
 }
@@ -676,18 +674,18 @@ list_all_obfs4_bridges()
 {
   BRIDGE_DB_URL="https://onionoo.torproject.org"
   clear
-  online_check $BRIDGE_DB_URL 1 1
+  online_check $BRIDGE_DB_URL 0 1
   clear
   if [ $OCHECK == 1 ]; then
     echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
     sleep 2
   else
     echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-    sleep 2
+		echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
+    sleep 3
   fi
   number_of_obfs4_bridges
   if [ $number_configured_bridges_deactivated -gt 0 ]; then
-    echo " "
     echo " "
     echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
@@ -702,9 +700,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -719,7 +717,6 @@ list_all_obfs4_bridges()
   fi
   if [ $number_configured_bridges_activated -gt 0 ]; then
     echo " "
-    echo " "
     echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <Number>: <IP>:<Port> <Fingerprint> <- STATUS>${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
@@ -733,9 +730,9 @@ list_all_obfs4_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -763,24 +760,26 @@ list_all_obfs4_bridges()
 # List all Snowflake bridges
 list_all_snowflake_bridges()
 {
-  BRIDGE_DB_URL="https://onionoo.torproject.org"
+	clear
+	BRIDGE_DB_URL="https://onionoo.torproject.org"
+  online_check $BRIDGE_DB_URL 0 1
   clear
-  online_check $BRIDGE_DB_URL 1 1
-  clear
-  if [ $OCHECK == 1 ]; then
-    echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-    sleep 2
-  else
-    echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-    sleep 2
-  fi
+	# IMORTANT: the support to show the ONLINE/OFFLINE status of Snowflake bridges is currently disabled because it is not reliable.
+  # if [ $OCHECK == 1 ]; then
+    # echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+    # sleep 2
+  # else
+    # echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+		# echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
+    # sleep 3
+  # fi
+	OCHECK=0
   number_of_snowflake_bridges
   if [ $number_configured_snowflake_bridges_deactivated -gt 0 ]; then
     echo " "
-    echo " "
     echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
-		echo -e "${RED}[+] For Snowflake bridges, the status is not always accurate!${NOCOLOR}"
+		echo -e "${RED}[+] For Snowflake bridges, the status is not available!${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
     echo " "
@@ -792,9 +791,9 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -809,10 +808,9 @@ list_all_snowflake_bridges()
   fi
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
     echo " "
-    echo " "
     echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
     echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
-		echo -e "${RED}[+] For Snowflake bridges, the status is not always accurate!${NOCOLOR}"
+		echo -e "${RED}[+] For Snowflake bridges, the status is not available!${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
     echo " "
@@ -824,9 +822,9 @@ list_all_snowflake_bridges()
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
           if [ $CLEARNET_DECISSION == 1 ]; then
-            bridge_status=$(./bridges_check.py -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
-            bridge_status=$(./bridges_check.py --network=tor -f $bridge_hash)
+            bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
           fi
           if [ $bridge_status == 1 ]; then bridge_status="${GREEN}- ONLINE${NOCOLOR}"
           elif [ $bridge_status == 0 ]; then bridge_status="${RED}- OFFLINE${NOCOLOR}"
@@ -858,7 +856,7 @@ deactivate_obfs4_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin meek_lite,obfs4/#ClientTransportPlugin meek_lite,obfs4/g" ${TORRC}
   sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
-	INPUT=$(cat text/restart-tor-text)
+	INPUT=$(cat $TXT_DIR/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			restarting_tor $SOURCE_SCRIPT
@@ -876,7 +874,7 @@ deactivate_snowflake_bridges()
   sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
   sudo sed -i "s/^ClientTransportPlugin snowflake/#ClientTransportPlugin snowflake/g" ${TORRC}
   sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
-	INPUT=$(cat text/restart-tor-text)
+	INPUT=$(cat $TXT_DIR/restart-tor-text)
 	if [ "$SOURCE_SCRIPT" != "NORESTART" ]; then
 		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			restarting_tor $SOURCE_SCRIPT
@@ -894,12 +892,12 @@ activate_obfs4_bridges()
   number_of_obfs4_bridges
   if [ $number_configured_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-    INPUT=$(cat text/restart-tor-bridges-text)
+    INPUT=$(cat $TXT_DIR/restart-tor-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			deactivating_bridge_relay
 	    sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
@@ -923,12 +921,12 @@ activate_snowflake_bridges()
   number_of_snowflake_bridges
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
-    INPUT=$(cat text/restart-tor-bridges-snowflake-text)
+    INPUT=$(cat $TXT_DIR/restart-tor-bridges-snowflake-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			deactivating_bridge_relay
 	    sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
@@ -1014,9 +1012,38 @@ stopping_tcs()
 		PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
 		sudo sed -E -i "/^TCS-$TCS_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
+		# NEW - TorBox v.0.5.3
+		sleep 2
+		(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
+		(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
+		(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
+		#
 		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 		find_virtport "${TCS_NAME}"
 		sudo rm "/etc/nginx/sites-enabled/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 		sudo rm "/etc/nginx/sites-available/${TCS_NAME}-${VIRTPORT}-onion-chatsecure.conf"
 	done
+}
+
+# config_ipset(<filename> <ipset_name> <ipset-save-file>)
+# Configures ipset
+config_ipset()
+{
+	FILENAME=$1
+	IPSET_NAME=$2
+	IPSET_SAVE_FILE=$3
+	if [ -f "$FILENAME" ]; then
+		sudo ipset flush $IPSET_NAME;
+		readarray -t LIST_FILE_OWN_ARRAY < "$FILENAME"
+		for LIST_FILE_OWN_STRING in "${LIST_FILE_OWN_ARRAY[@]}"
+		do
+			SUBDOMAIN=$(cut -d ' ' -f1 <<< $LIST_FILE_OWN_STRING)
+			LIST_FILE_OWN_STRING=$(sed "s/${SUBDOMAIN}//g" <<< $LIST_FILE_OWN_STRING)
+			echo -e "${RED}[+] Excluding from tor routing: ${WHITE}$SUBDOMAIN${NOCOLOR}"
+			IFS=' ' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
+			for IP in "${IP_ARRAY[@]}"; do sudo ipset -exist add $IPSET_NAME $IP; done
+		done
+		sudo ipset save $IPSET_NAME > $IPSET_SAVE_FILE
+		sleep 1
+	fi
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154
+# shellcheck disable=SC2001,SC2154
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -43,6 +43,7 @@ NO_SPACER=4
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
 MENU_HEIGHT_15=15
 MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
@@ -52,16 +53,16 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors (don't change it!)
 RED='\033[1;31m'
-GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
 BAK="/etc/tor/torrc.bak"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+TXT_DIR="$TORBOX_PATH/text"
 LOOP_NUMBER=0
-i=0
 PING_SERVER=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s|.*http\?://||g") 2>/dev/null
 
 
@@ -152,7 +153,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - COUNTERMEASURE MENU" --menu "Choose an option (ESC -> back to the main menu)            ${BRIDGESTRING}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "ALL ABOUT BRIDGES AND PLUGGABLE TRANSPORTS - READ ME FIRST!"  \
 "==" "=============================================[OBFS4 bridges]==="  \
@@ -172,9 +173,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - COUNTERMEASUR
 "==" "======================================[More Countermeasures]===" \
 "13" "Enter the advanced tor configuration editor"  \
 "14" "$LOGCHECK TorBox's automatic counteractions - $LOGCHECKSTATUSb"  \
-"15" "Countermeasure against a tightly configured firewall - $FIREWALL" \
-"16" "Countermeasure against a disconnection when idle feature - $PING" \
-"17" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
+"15" "Change or randomize TorBox's hostname" \
+"16" "Countermeasure against a tightly configured firewall - $FIREWALL" \
+"17" "Countermeasure against a disconnection when idle feature - $PING" \
+"18" "$VPNSTRING1 TorBox $VPNSTRING2 a VPN" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -185,25 +187,25 @@ case "$CHOICE" in
 
   # Display the read.me
   1)
-    INPUT=$(cat text/help-bridges-text)
+    INPUT=$(cat $TXT_DIR/help-bridges-text)
     whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
   ;;
 
   # Activate OBFS4 bridges to circumvent censorship
   2)
 		if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-    	whiptail --title "TorBox - INFO" --textbox text/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    	whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_meek-snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
   	fi
-		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+		if [ "$FIREWALL" = "ON" ]; then
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
   	if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
-    	INPUT=$(cat text/add-bridges-first-text)
+    	INPUT=$(cat $TXT_DIR/add-bridges-first-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      	sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 0
+      	sudo bash bin/bridges_add_obfs4 "$MODE_BRIDGES" 0
     	else
       	deactivate_obfs4_bridges
       	trap "bash menu-bridges; exit 0" EXIT
@@ -211,22 +213,22 @@ case "$CHOICE" in
     	fi
 		fi
 		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-    	INPUT=$(cat text/activate-obfs4-bridges-text)
+    	INPUT=$(cat $TXT_DIR/activate-obfs4-bridges-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-    		sudo bash bridges_activate_obfs4
+    		sudo bash bin/bridges_activate_obfs4
     	else
     		trap "bash menu-bridges; exit 0" EXIT
     		exit 0
 			fi
 		else
-			sudo bash bridges_activate_obfs4
+			sudo bash bin/bridges_activate_obfs4
     fi
   	read_config
   ;;
 
   # Add OBFS4 bridges
   3)
-    sudo bash bridges_add_obfs4 "$MODE_BRIDGES" 1
+    sudo bash bin/bridges_add_obfs4 "$MODE_BRIDGES" 1
     read_config
   ;;
 
@@ -242,8 +244,8 @@ case "$CHOICE" in
       echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
-      whiptail --title "TorBox - INFO" --textbox text/remove-obfs4-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
-      sudo bash bridges_remove_obfs4 "$MODE_BRIDGES"
+      whiptail --title "TorBox - INFO" --textbox $TXT_DIR/remove-obfs4-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
+      sudo bash bin/bridges_remove_obfs4 "$MODE_BRIDGES"
       read_config
     fi
   ;;
@@ -261,8 +263,8 @@ case "$CHOICE" in
         echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
         sleep 5
       else
-        whiptail --title "TorBox - INFO" --textbox text/deactivate-obfs4-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
-        sudo bash bridges_deactivate_obfs4
+        whiptail --title "TorBox - INFO" --textbox $TXT_DIR/deactivate-obfs4-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+        sudo bash bin/bridges_deactivate_obfs4
         read_config
       fi
     fi
@@ -271,18 +273,18 @@ case "$CHOICE" in
   # Activate/deactivate Snowflake bridges to circumvent censorship
   7)
     if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_meek-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     fi
-		if grep "^ReachableAddresses" ${TORRC} ; then
-			INPUT=$(cat text/no_antifirewall-please-text)
+		if [ "$FIREWALL" = "ON" ]; then
+			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
 		if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
-      INPUT=$(cat text/add-bridges-first-text)
+      INPUT=$(cat $TXT_DIR/add-bridges-first-text)
       if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        sudo bash bridges_add_snowflake "$MODE_BRIDGES" 0
+        sudo bash bin/bridges_add_snowflake "$MODE_BRIDGES" 0
       else
         deactivate_snowflake_bridges
         trap "bash menu-bridges; exit 0" EXIT
@@ -290,22 +292,22 @@ case "$CHOICE" in
       fi
 		fi
 		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
-    	INPUT=$(cat text/activate-snowflake-bridges-text)
+    	INPUT=$(cat $TXT_DIR/activate-snowflake-bridges-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      	sudo bash bridges_activate_snowflake
+      	sudo bash bin/bridges_activate_snowflake
     	else
       	trap "bash menu-bridges; exit 0" EXIT
       	exit 0
     	fi
 		else
-			sudo bash bridges_activate_snowflake
+			sudo bash bin/bridges_activate_snowflake
 		fi
     read_config
   ;;
 
 	# Add Snowflake bridges
   8)
-    sudo bash bridges_add_snowflake "$MODE_BRIDGES" 1
+    sudo bash bin/bridges_add_snowflake "$MODE_BRIDGES" 1
     read_config
   ;;
 
@@ -321,8 +323,8 @@ case "$CHOICE" in
       echo -e "${WHITE}[!] There are no configured Snowflake bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
-      whiptail --title "TorBox - INFO" --textbox text/remove-snowflake-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
-      sudo bash bridges_remove_snowflake "$MODE_BRIDGES"
+      whiptail --title "TorBox - INFO" --textbox $TXT_DIR/remove-snowflake-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
+      sudo bash bin/bridges_remove_snowflake "$MODE_BRIDGES"
       read_config
     fi
   ;;
@@ -340,7 +342,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] If you want to use Snowflake bridges, you have to activate them first with menu entry 7 or 8.${NOCOLOR}"
         sleep 5
       else
-        whiptail --title "TorBox - INFO" --textbox text/deactivate-snowflake-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
+        whiptail --title "TorBox - INFO" --textbox $TXT_DIR/deactivate-snowflake-bridges-text $MENU_HEIGHT_15 $MENU_WIDTH
 				deactivate_snowflake_bridges menu-bridges
         read_config
       fi
@@ -350,19 +352,19 @@ case "$CHOICE" in
   # Use Meek-Azure to circumvent censorship
   12)
     if [ "$MODE_OBFS4" = "Bridge obfs4 " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
-      whiptail --title "TorBox - INFO" --textbox text/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+      whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_snow-please-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     fi
-    sudo bash meek-azure $MEEKSTRING $SNOWSTRING
+    sudo bash bin/meek-azure $MEEKSTRING $SNOWSTRING
     read_config
   ;;
 
   # Enter the advanced configuration editor
   13)
-    INPUT=$(cat text/advanced-bridges-text)
+    INPUT=$(cat $TXT_DIR/advanced-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      ./vitor
-      INPUT=$(cat text/restart-tor-text)
+      bin/vitor
+      INPUT=$(cat $TXT_DIR/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear
         restarting_tor menu-bridges
@@ -377,10 +379,10 @@ case "$CHOICE" in
       echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
       sudo pkill -f "log_check.py"
       echo -e "${RED}[+] ...configuration removed...${NOCOLOR}"
-      (sudo rm log_check_config.py) &>/dev/null
+      (sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
       echo -e "${RED}[+] ...log removed!${NOCOLOR}"
       (sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
-      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+      (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
       sleep 1
       clear
       echo -e "${RED}[+] TorBox's automatic counteractions feature is deativated!${NOCOLOR}"
@@ -389,7 +391,7 @@ case "$CHOICE" in
     if [ "$LOGCHECK" = "Activate" ]; then
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.2 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
+      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.3 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
       "1" "Protection against out of sync time" ON \
       "2" "Protection against entry guard failing and overloaded tor network" ON \
       "3" "Protection against interrupted WiFi connection with the Internet" ON \
@@ -406,12 +408,12 @@ case "$CHOICE" in
           echo -e "${RED}[+] Activating TorBox's automatic countermeasure - protection number $ARGUMENT${NOCOLOR}"
           sleep 1
           LOOP_NUMBER=$((LOOP_NUMBER+1))
-          [ $LOOP_NUMBER = 1 ] && (cp install/log_check_config/header log_check_config.py) &>/dev/null
-          [[ "$ARGUMENT" =~ [1-6] ]] && (cat install/log_check_config/00"${ARGUMENT}" >> log_check_config.py) &>/dev/null
+          [ $LOOP_NUMBER = 1 ] && (cp $TORBOX_PATH/install/log_check_config/header $TORBOX_PATH/log_check_config.py) &>/dev/null
+          [[ "$ARGUMENT" =~ [1-6] ]] && (cat $TORBOX_PATH/install/log_check_config/00"${ARGUMENT}" >> $TORBOX_PATH/log_check_config.py) &>/dev/null
         done
         if [ ! -z "$LOOP_NUMBER" ]; then
-          (cat install/log_check_config/footer >> log_check_config.py) &>/dev/null
-          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" /home/torbox/torbox/run/torbox.run) &>/dev/null
+          (cat $TORBOX_PATH/install/log_check_config/footer >> $TORBOX_PATH/log_check_config.py) &>/dev/null
+          (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=1/" $RUNFILE) &>/dev/null
           sudo ./log_check.py &
           clear
           echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
@@ -422,8 +424,39 @@ case "$CHOICE" in
     fi
   ;;
 
-  # Countermeasure against a tightly configured firewall
+	# Change or randomize TorBox's hostname
   15)
+		INPUT=$(cat $TXT_DIR/randomize_hostname-text)
+		HOSTNAME=$(hostname)
+		INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
+		if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
+				# shellcheck disable=SC2002
+				HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+			else
+				HOSTNAME=$(whiptail --title "TorBox Installation on Raspberry Pi OS" --inputbox "\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+					HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
+				fi
+				if ${#HOSTNAME} -gt 64 ; then
+					HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+				fi
+			fi
+			clear
+			echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+			(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+			sudo systemctl restart systemd-hostnamed
+			if grep "127.0.1.1.*" /etc/hosts ; then
+				(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
+			else
+				(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+			fi
+			whiptail --title "TorBox - INFO" --msgbox "TorBox's hostname is now changed to $HOSTNAME\n\nYou have to log out and again log into your console to see the change." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
+		fi
+  ;;
+
+  # Countermeasure against a tightly configured firewall
+  16)
     if [ "$FIREWALL" = "OFF" ] || [ -z "$FIREWALL" ]; then
 			if [ "$TOGGLE07b" = "ON" ]; then
 				INPUT="\n\nTo activate the countermeasure against tightly configured firewalls, you have first to DEACTIVATE OBFS4 Bridge Relay Mode in the OBFS4 Bridge Relay sub-menu. You can not run both settings simultaneously!"
@@ -431,10 +464,10 @@ case "$CHOICE" in
 				trap "bash menu-bridges; exit 0" EXIT
 				exit 1
 			fi
-      INPUT=$(cat text/firewall-text-on)
+      INPUT=$(cat $TXT_DIR/firewall-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
-        INPUT=$(cat text/restart-tor-text)
+        INPUT=$(cat $TXT_DIR/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
           restarting_tor menu-bridges
@@ -449,9 +482,9 @@ case "$CHOICE" in
       fi
     fi
     if [ "$FIREWALL" = "ON" ]; then
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
         sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-        INPUT=$(cat text/restart-tor-text)
+        INPUT=$(cat $TXT_DIR/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
           clear
           restarting_tor menu-bridges
@@ -468,9 +501,9 @@ case "$CHOICE" in
   ;;
 
   # Countermeasure against a disconnection when idle feature
-  16)
+  17)
     if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
-      INPUT=$(cat text/ping-text-on)
+      INPUT=$(cat $TXT_DIR/ping-text-on)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         ping -q "$PING_SERVER" >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
@@ -488,39 +521,23 @@ case "$CHOICE" in
   ;;
 
   # Connect/Disconnect TorBox to/from VPN
-  17)
+  18)
     if [ -z "$tun0up" ] ; then
-      INPUT=$(cat text/connecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      INPUT=$(cat $TXT_DIR/connecting-VPN-text)
+      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         connecting_to_VPN
-        sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
-        echo ""
-        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        if wget -q --spider "$CHECK_URL"; then
-          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-        else
-          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-          echo ""
-          add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-          sleep 2
-          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          if wget -q --spider "$CHECK_URL"; then
-            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-          else
-            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-          fi
-        fi
+			  sudo systemctl restart tor &
+				tun0up=$(ip link | grep tun0)
       fi
     else
-      INPUT=$(cat text/disconnecting-VPN-text)
+      INPUT=$(cat $TXT_DIR/disconnecting-VPN-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
         sudo killall openvpn
         echo -e "${RED}[+] Please wait, we need 15 second to configure the interface...${NOCOLOR}"
         sleep 15
+				sudo systemctl restart tor &
         echo ""
         echo -e "${RED}[+] It may take some time for Tor to reconnect.${NOCOLOR}"
         echo -e "${RED}[+] In case of problems, use main menu entry 5-10.${NOCOLOR}"

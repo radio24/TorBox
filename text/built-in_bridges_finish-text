@@ -1,0 +1,7 @@
+DONE!
+
+We removed all bridges in the tor configuration, fetched and added bridges used as default built-in bridges in the TorBrowser.
+
+However, we didn't restart tor because currently, all bridges are DEACTIVATED!
+
+If you need bridges, configure them first in the Countermeasure sub-menu and only after that restart tor.

@@ -131,9 +131,9 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.2 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
-" 1" "RUN AN OBFS4BRIDGE RELAY - READ ME FIRST"  \
+" 1" "RUN AN OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
 " 2" "Toggle OBFS4 Bridge Relay Mode from $TOGGLE07b to $TOGGLE08b"  \
 " 3" "Check and/or change the configuration"  \
@@ -183,6 +183,11 @@ case "$CHOICE" in
             sudo iptables -A INPUT -p tcp --dport $sORPORT -j ACCEPT
             sudo iptables -A INPUT -p tcp --dport $sOBFS4PORT -j ACCEPT
           fi
+					INPUT=$(cat text/restart-tor-text)
+		      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+		        clear
+		        restarting_tor menu-server
+		      fi
         fi
       else
         INPUT="\n\nTo activate the OBFS4 Bridge Relay Mode, you have first to DEACTIVATE the Bridge Mode. You can not run both settings simultaneously!"
@@ -234,7 +239,29 @@ case "$CHOICE" in
 			fi
       nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
-      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional).\n\nEnter your nickname (optional):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			# # NEW v.0.5.3
+			# Nickname: A handle for your relay, so people don't have to refer to it by key. Nicknames must be between 1 and 19 characters inclusive, and must contain only the characters [a-zA-Z0-9]. If not set, "Unnamed" will be used.
+			# See here: https://github.com/Ilshidur/tor-relay-docker/blob/master/torrc.bridge.default
+      nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional; only letters and numbers; not more than 19 characters).\n\nEnter your nickname:" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			clear
+			if [ ! -z "$nNICK" ]; then
+				if [[ $nNICK != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+					clear
+					echo " "
+					echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					nNICK=""
+					sleep 5
+				elif ${#nNICK} -gt 19 ; then
+					clear
+					echo " "
+					echo -e "${WHITE}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
+					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					nNICK=""
+					sleep 5
+				fi
+			fi
+			#
       nBRIDGEDISTRIBUTION=$(whiptail --title "Changing the configuration of the Bridge Relay -- Distribution Method" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH 6 \
 "ANY" "Let BridgeDB decide about the distribution method (default)" ON \
 "HTTPS" "Distributed through the bridge website" OFF \
@@ -256,7 +283,7 @@ case "$CHOICE" in
       nORPORT="4235"
       nOBFS4PORT="443"
       nCONTACT="<address@email.com>"
-      nNICK="TorBox052"
+      nNICK="TorBox053"
       nBRIDGEDISTRIBUTION="any"
       change_config
       read_config
@@ -275,6 +302,14 @@ case "$CHOICE" in
         MYIP=$(curl -s http://ifconfig.me)
       fi
       FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
+			if [ -z "$FINGERPRINT" ]; then
+				clear
+				echo -e "${WHITE}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
+				echo -e "${RED}[+] Did you forget to restart tor? Please use entry 7.${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p "Press any key to continue"
+				exit 1
+			fi
       FINGERPRINT=$(cut -d ' ' -f2 <<< $FINGERPRINT)
       CERT=$(sudo grep -oP "cert=.*" /var/lib/tor/pt_state/obfs4_bridgeline.txt)
       BRIDGELINE="$MYIP:$sOBFS4PORT $FINGERPRINT $CERT"
@@ -289,7 +324,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
       echo " "
     else
-      echo -e "${RED}[+] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
+      echo -e "${WHITE}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
       echo -e "${RED}[+] There is no personal bridge address, yet. You have to activate the Bridge Relay first (menu entry 2).${NOCOLOR}"
       echo " "
     fi
@@ -301,7 +336,7 @@ case "$CHOICE" in
     INPUT=$(cat text/advanced-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
-      ./vitor
+      bin/vitor
       INPUT=$(cat text/restart-tor-text)
       if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
         clear

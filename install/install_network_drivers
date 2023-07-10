@@ -125,7 +125,7 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	sudo rm -r 8814au
 	sleep 2
 
-# Installing the RTL8821AU
+	# Installing the RTL8821AU
 	clear
 	echo -e "$INSTALLSTRING"
 	echo -e " "
@@ -196,6 +196,7 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	git clone https://github.com/kelebek333/rtl8188fu
 	sudo dkms install ./rtl8188fu
 	sudo cp ./rtl8188fu/firmware/rtl8188fufw.bin /lib/firmware/rtlwifi/
+	cd
 	sudo rm -r rtl8188fu
 	sleep 2
 

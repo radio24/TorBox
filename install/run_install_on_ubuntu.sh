@@ -94,11 +94,9 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox052"
+HOSTNAME="TorBox053"
 
-# Used go version
-GO_VERSION="go1.20.3.linux-armv6l.tar.gz"
-GO_VERSION_64="go1.20.3.linux-arm64.tar.gz"
+# For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
@@ -119,10 +117,10 @@ SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowf
 # Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
 # shellcheck disable=SC2034
 SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# NEW v.0.5.2 - version 2.3.0
+# Version 2.3.0
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
-# NEW v.0.5.2
+# OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
 # Wiringpi - DEBIAN / UBUNTU SPECIFIC
@@ -225,9 +223,12 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>&1
-	(sudo printf "$RESOLVCONF" | sudo tee /etc/systemd/resolved.conf) 2>&1
-	sudo systemctl restart systemd-resolved
+#	if [ -f "/etc/systemd/resolved.conf" ]; then
+#		(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>/dev/null
+#	fi
+# THIS SEEMS TO BE WRONG!!!!
+#	(sudo printf "$RESOLVCONF" | sudo tee /etc/systemd/resolved.conf) 2>&1
+#	sudo systemctl restart systemd-resolved
 	ping -c 1 -q $CHECK_URL1 >&/dev/null
 	OCHECK=$?
 	echo ""
@@ -239,13 +240,18 @@ re-connect()
 	  sleep 30
 	  echo ""
 	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+		sudo systemctl restart systemd-resolved
 	  ping -c 1 -q $CHECK_URL2 >&/dev/null
 	  if [ $? -eq 0 ]; then
 	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	  else
 	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    (sudo dhclient -r) 2>&1
+			if [ -f "/etc/resolv.conf" ]; then
+				(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
+			fi
+			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
+			(sudo dhclient -r) 2>&1
 	    sleep 5
 	    sudo dhclient &>/dev/null &
 	    sleep 30
@@ -273,17 +279,17 @@ check_install_packages()
   for packagename in $packagenames; do
 		check_installed=0
 		while [ $check_installed == "0" ]; do
-		 clear
-		 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-		 echo ""
-		 echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
-		 echo ""
-		 sudo apt-get -y install $packagename
-		 check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
-		 if [ "$check" == "installed" ]; then check_installed=1
-		 else re-connect
-		 fi
-	 done
+    	clear
+    	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+    	echo ""
+    	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+    	echo ""
+    	sudo apt-get -y install $packagename
+			check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
+			if [ "$check" == "installed" ]; then check_installed=1
+			else re-connect
+			fi
+		done
   done
 }
 
@@ -395,7 +401,7 @@ select_and_install_tor()
         	if [ $DLCHECK -eq 0 ]; then
           	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
           	tar xzf $filename
-          	cd "$(ls -d -- */)"
+          	cd "$(ls -d -- tor-*/)"
           	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 						# Give it a touch of git (without these lines the compilation will break with a git error)
 						git init
@@ -407,9 +413,9 @@ select_and_install_tor()
 		        sh autogen.sh
           	./configure
           	make
-						sudo make install
-						cd
-						sudo rm -r tor-*
+            sudo make install
+            cd
+            sudo rm -r tor-*
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -474,7 +480,7 @@ select_and_install_tor()
 			if [ $DLCHECK -eq 0 ]; then
 				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
 				tar xzf $filename
-				cd "$(ls -d -- */)"
+				cd "$(ls -d -- tor-*/)"
 				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 				# Give it a touch of git (without these lines the compilation will break with a git error)
 				git init
@@ -565,7 +571,7 @@ echo
 echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
 echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do
@@ -673,7 +679,7 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez macchanger"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -735,24 +741,45 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 
-sudo pip3 install pytesseract
-#sudo pip3 install mechanize==0.4.7
-sudo pip3 install mechanize
-sudo pip3 install PySocks
-sudo pip3 install urwid
-sudo pip3 install Pillow
-sudo pip3 install requests
-sudo pip3 install Django
-sudo pip3 install click
-sudo pip3 install gunicorn
-sudo pip3 install click
-sudo pip3 install paramiko
-sudo pip3 install tornado
-sudo pip3 install APScheduler
-sudo pip3 install eventlet
-sudo pip3 install python-socketio
-sudo pip3 install opencv-python-headless
-sudo pip3 install numpy
+# NEW v.0.5.3: New way to install and check Python requirements
+# Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
+#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
+cd
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+sudo pip3 install -r requirements.txt
+sleep 5
+
+clear
+echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+if [ -f requirements.failed ]; then rm requirements.failed; fi
+REPLY="Y"
+while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	REPLY=""
+	readarray -t REQUIREMENTS < requirements.txt
+	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+		if [ -z "$VERSION" ]; then
+			# shellcheck disable=SC2059
+			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		fi
+	done
+	if [ -f requirements.failed ]; then
+		echo ""
+		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				sudo pip3 install -r requirements.failed
+				sleep 5
+				rm requirements.failed
+				unset REQUIREMENTS
+				clear
+			fi
+		fi
+	fi
+done
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -767,64 +794,59 @@ echo ""
 echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
 echo ""
 
-# NEW v.0.5.3: Check if go is already installed and has the right version
-if [ -f $GO_PROGRAM ]; then
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-else
-	GO_PROGRAM=go
-	#This can lead to command not found - ignore it
-	GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+# NEW v.0.5.3: New way to download the current version of go
+if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+else PLATFORM="linux-armv6l"
 fi
-if [ -z "$GO_VERSION_NR" ] || grep "No such file or directory" $GO_VERSION_NR || [ "$GO_VERSION_NR" -lt "17" ]; then
-	if uname -m | grep -q -E "arm64|aarch64"; then DOWNLOAD="$GO_VERSION_64"
-	else DOWNLOAD="$GO_VERSION"
-	fi
-	wget --no-cache "$GO_DL_PATH$DOWNLOAD"
-	DLCHECK=$?
-	# NEW v.0.5.3: if the download failed, install the package from the distribution
-	if [ "$DLCHECK" != "0" ] ; then
+
+# Fetch the filename of the latest go version
+GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+DLCHECK=$?
+# NEW v.0.5.3: if the download failed, install the package from the distribution
+if [ "$DLCHECK" != "0" ] ; then
+	echo ""
+	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (arm64)!${NOCOLOR}"
-		echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-		echo
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		else
-			sleep 10
-		fi
-		re-connect
-		sudo apt-get -y install golang
-		GO_PROGRAM="/usr/local/go/bin/go"
-		if [ -f $GO_PROGRAM ]; then
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		else
-			GO_PROGRAM=go
-			#This can lead to command not found - ignore it
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		fi
-		if [ "$GO_VERSION_NR" -lt "17" ]; then
-			echo ""
-			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
-			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
-			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
-			echo ""
-			exit 1
-		fi
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
 	else
-  	sudo tar -C /usr/local -xzvf $DOWNLOAD
-		sudo rm $DOWNLOAD
+		sleep 10
 	fi
+	re-connect
+	sudo apt-get -y install golang
+	GO_PROGRAM="/usr/local/go/bin/go"
+	if [ -f $GO_PROGRAM ]; then
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	else
+		GO_PROGRAM=go
+		#This can lead to command not found - ignore it
+		GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+	fi
+	if [ "$GO_VERSION_NR" -lt "17" ]; then
+		echo ""
+		echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+		echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+		echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+		echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+		echo ""
+		exit 1
+	fi
+else
+  sudo tar -C /usr/local -xzvf $GO_FILENAME
+	sudo rm $GO_FILENAME
 fi
 
 # NEW v.0.5.3: what if .profile doesn't exist?
 if [ -f ".profile" ]; then
-  if ! grep "Added by TorBox (001)" .profile ; then
-  	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-  fi
+	if ! grep "Added by TorBox (001)" .profile ; then
+		sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	fi
 else
 	sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
 fi
@@ -934,14 +956,14 @@ fi
 
 # 7. Again checking connectivity
 clear
-echo -e "${RED}[+] Step 8: Re-checking Internet connectivity...${NOCOLOR}"
+echo -e "${RED}[+] Step 7: Re-checking Internet connectivity...${NOCOLOR}"
 # NEW v.0.5.3
 re-connect
 
 # 8. Downloading and installing the latest version of TorBox
 sleep 10
 clear
-echo -e "${RED}[+] Step 9: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
 echo -e "${RED}[+]         Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
@@ -980,9 +1002,8 @@ fi
 # 9. Installing all configuration files
 clear
 cd torbox
-echo -e "${RED}[+] Step 10: Installing all configuration files....${NOCOLOR}"
+echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
 echo ""
-# NEW v.0.5.2: Vanguards removed
 (sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 sudo cp etc/default/hostapd /etc/default/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
@@ -1023,7 +1044,8 @@ echo -e "${RED}[+]${NOCOLOR}         Predictable Network Interface Names disable
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-sudo cp etc/rc.local.ubuntu /etc/rc.local
+# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+sudo cp etc/rc.local /etc/rc.local
 sudo chmod u+x /etc/rc.local
 # We will enable rc-local further below
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
@@ -1053,7 +1075,7 @@ cd
 # NEW v.0.5.3: what if .profile doesn't exist?
 if [ -f ".profile" ]; then
 	if ! grep "Added by TorBox (002)" .profile ; then
-		printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+		sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
 	fi
 else
 	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
@@ -1077,7 +1099,7 @@ fi
 
 # 10. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 11: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
+echo -e "${RED}[+] Step 10: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
 if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 fi
@@ -1094,7 +1116,7 @@ fi
 # 11. Configure the system services
 sleep 10
 clear
-echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
+echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
 echo ""
 
 # Under Ubuntu systemd-resolved acts as local DNS server. However, clients can not use it, because systemd-resolved is listening
@@ -1149,7 +1171,6 @@ sudo systemctl stop nginx
 (sudo rm -r /var/www/html) 2>/dev/null
 # This is necessary for Nginx / TFS
 (sudo chown torbox:torbox /var/www) 2>/dev/null
-# Configuring webssh
 sudo cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 # This is not needed in Ubuntu - see here: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket

@@ -1,0 +1,12 @@
+Currently, you are not connected to a VPN. Only the domains on the "clearnet list" will be handled. The domains on the "VPN list" will be routed through tor for security reasons.
+
+When possible, we recommend that domains excluded from routing through tor are routed through a VPN. If you agree, we will connect the TorBox to a VPN so that the local network data from the command prompt and the domains in the "CLEARNET" and "VPN list" are routed through VPN.
+
+Client network data not on these lists will still be routed through tor using the interface highlighted in the main menu.
+
+IMPORTANT
+- To use this menu entry, you have first to put one or more *.ovpn-files
+  in the ~/openvpn directory so that TorBox can execute OpenVPN with
+  that file.
+
+Would you like to connect to a VPN?

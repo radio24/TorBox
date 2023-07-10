@@ -1,6 +1,8 @@
 from django import forms
 from .models import DownloadFileModel
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True

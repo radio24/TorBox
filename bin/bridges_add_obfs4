@@ -1,0 +1,260 @@
+#!/bin/bash
+# shellcheck disable=SC2001,SC2004,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2023 Patrick Truffer
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This file add automatically or manually bridges to /etc/tor/torrc.
+#
+# SYNTAX
+# ./bridges_add_obfs4 <bridge mode> <standalone>
+#
+# <bridge mode>: "UseBridges 1" for bridge mode on; everything else = bridge mode off
+# <standalone>: 0 - bridges_add_obfs4 was executed as part of the activation process, when no bridges were found
+#               1 - bridges_add_obfs4 was directly executed
+#
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=2
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=2
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_25=25
+MENU_HEIGHT_15=15
+# MENU_HEIGHT should not exceed 26
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
+
+#Colors
+RED='\033[1;31m'
+WHITE='\033[1;37m'
+NOCOLOR='\033[0m'
+
+#Other variables
+TOR_GET_BRIDGES_URL="https://bridges.torproject.org"
+TORRC="/etc/tor/torrc"
+TORBOX_PATH="/home/torbox/torbox"
+TXT_DIR="/home/torbox/torbox/text"
+MODE_BRIDGES=$1
+STANDALONE=$2
+COUNTRY=00
+number_bridges=0
+i=0
+
+###########################
+######## FUNCTIONS ########
+
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+###########################
+
+clear
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+"==" "===============================================================" \
+" 1" "Add OBFS4 bridges automatically"  \
+" 2" "Add OBFS4 bridges manually"  \
+"==" "===============================================================" \
+3>&1 1>&2 2>&3)
+
+CHOICE=$(echo "$CHOICE" | tr -d ' ')
+case "$CHOICE" in
+
+  # Add bridges automatically
+  1)
+    clear
+		if (whiptail --title "TorBox - ADD BRIDGES" --yesno "Do you want to try to fetch country-specific bridges?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+			# The list below was created by following command: cat /usr/share/zoneinfo/iso3166.tab | tail -n +26 | tr '\t' '!' | sed 's/!/\" \"/' | sed 's/^/\"/' | sed 's/$/\"/' | tr '\n' ' '
+			COUNTRY=$(whiptail --menu "Please, select the country in which the Pi is to be used" $MENU_HEIGHT_25 $MENU_WIDTH 17 "AD" "Andorra" "AE" "United Arab Emirates" "AF" "Afghanistan" "AG" "Antigua & Barbuda" "AI" "Anguilla" "AL" "Albania" "AM" "Armenia" "AO" "Angola" "AQ" "Antarctica" "AR" "Argentina" "AS" "Samoa (American)" "AT" "Austria" "AU" "Australia" "AW" "Aruba" "AX" "Åland Islands" "AZ" "Azerbaijan" "BA" "Bosnia & Herzegovina" "BB" "Barbados" "BD" "Bangladesh" "BE" "Belgium" "BF" "Burkina Faso" "BG" "Bulgaria" "BH" "Bahrain" "BI" "Burundi" "BJ" "Benin" "BL" "St Barthelemy" "BM" "Bermuda" "BN" "Brunei" "BO" "Bolivia" "BQ" "Caribbean NL" "BR" "Brazil" "BS" "Bahamas" "BT" "Bhutan" "BV" "Bouvet Island" "BW" "Botswana" "BY" "Belarus" "BZ" "Belize" "CA" "Canada" "CC" "Cocos (Keeling) Islands" "CD" "Congo (Dem. Rep.)" "CF" "Central African Rep." "CG" "Congo (Rep.)" "CH" "Switzerland" "CI" "Côte d'Ivoire" "CK" "Cook Islands" "CL" "Chile" "CM" "Cameroon" "CN" "China" "CO" "Colombia" "CR" "Costa Rica" "CU" "Cuba" "CV" "Cape Verde" "CW" "Curaçao" "CX" "Christmas Island" "CY" "Cyprus" "CZ" "Czech Republic" "DE" "Germany" "DJ" "Djibouti" "DK" "Denmark" "DM" "Dominica" "DO" "Dominican Republic" "DZ" "Algeria" "EC" "Ecuador" "EE" "Estonia" "EG" "Egypt" "EH" "Western Sahara" "ER" "Eritrea" "ES" "Spain" "ET" "Ethiopia" "FI" "Finland" "FJ" "Fiji" "FK" "Falkland Islands" "FM" "Micronesia" "FO" "Faroe Islands" "FR" "France" "GA" "Gabon" "GB" "Britain (UK)" "GD" "Grenada" "GE" "Georgia" "GF" "French Guiana" "GG" "Guernsey" "GH" "Ghana" "GI" "Gibraltar" "GL" "Greenland" "GM" "Gambia" "GN" "Guinea" "GP" "Guadeloupe" "GQ" "Equatorial Guinea" "GR" "Greece" "GS" "South Georgia & the South Sandwich Islands" "GT" "Guatemala" "GU" "Guam" "GW" "Guinea-Bissau" "GY" "Guyana" "HK" "Hong Kong" "HM" "Heard Island & McDonald Islands" "HN" "Honduras" "HR" "Croatia" "HT" "Haiti" "HU" "Hungary" "ID" "Indonesia" "IE" "Ireland" "IL" "Israel" "IM" "Isle of Man" "IN" "India" "IO" "British Indian Ocean Territory" "IQ" "Iraq" "IR" "Iran" "IS" "Iceland" "IT" "Italy" "JE" "Jersey" "JM" "Jamaica" "JO" "Jordan" "JP" "Japan" "KE" "Kenya" "KG" "Kyrgyzstan" "KH" "Cambodia" "KI" "Kiribati" "KM" "Comoros" "KN" "St Kitts & Nevis" "KP" "Korea (North)" "KR" "Korea (South)" "KW" "Kuwait" "KY" "Cayman Islands" "KZ" "Kazakhstan" "LA" "Laos" "LB" "Lebanon" "LC" "St Lucia" "LI" "Liechtenstein" "LK" "Sri Lanka" "LR" "Liberia" "LS" "Lesotho" "LT" "Lithuania" "LU" "Luxembourg" "LV" "Latvia" "LY" "Libya" "MA" "Morocco" "MC" "Monaco" "MD" "Moldova" "ME" "Montenegro" "MF" "St Martin (French)" "MG" "Madagascar" "MH" "Marshall Islands" "MK" "North Macedonia" "ML" "Mali" "MM" "Myanmar (Burma)" "MN" "Mongolia" "MO" "Macau" "MP" "Northern Mariana Islands" "MQ" "Martinique" "MR" "Mauritania" "MS" "Montserrat" "MT" "Malta" "MU" "Mauritius" "MV" "Maldives" "MW" "Malawi" "MX" "Mexico" "MY" "Malaysia" "MZ" "Mozambique" "NA" "Namibia" "NC" "New Caledonia" "NE" "Niger" "NF" "Norfolk Island" "NG" "Nigeria" "NI" "Nicaragua" "NL" "Netherlands" "NO" "Norway" "NP" "Nepal" "NR" "Nauru" "NU" "Niue" "NZ" "New Zealand" "OM" "Oman" "PA" "Panama" "PE" "Peru" "PF" "French Polynesia" "PG" "Papua New Guinea" "PH" "Philippines" "PK" "Pakistan" "PL" "Poland" "PM" "St Pierre & Miquelon" "PN" "Pitcairn" "PR" "Puerto Rico" "PS" "Palestine" "PT" "Portugal" "PW" "Palau" "PY" "Paraguay" "QA" "Qatar" "RE" "Réunion" "RO" "Romania" "RS" "Serbia" "RU" "Russia" "RW" "Rwanda" "SA" "Saudi Arabia" "SB" "Solomon Islands" "SC" "Seychelles" "SD" "Sudan" "SE" "Sweden" "SG" "Singapore" "SH" "St Helena" "SI" "Slovenia" "SJ" "Svalbard & Jan Mayen" "SK" "Slovakia" "SL" "Sierra Leone" "SM" "San Marino" "SN" "Senegal" "SO" "Somalia" "SR" "Suriname" "SS" "South Sudan" "ST" "Sao Tome & Principe" "SV" "El Salvador" "SX" "St Maarten (Dutch)" "SY" "Syria" "SZ" "Eswatini (Swaziland)" "TC" "Turks & Caicos Is" "TD" "Chad" "TF" "French Southern & Antarctic Lands" "TG" "Togo" "TH" "Thailand" "TJ" "Tajikistan" "TK" "Tokelau" "TL" "East Timor" "TM" "Turkmenistan" "TN" "Tunisia" "TO" "Tonga" "TR" "Turkey" "TT" "Trinidad & Tobago" "TV" "Tuvalu" "TW" "Taiwan" "TZ" "Tanzania" "UA" "Ukraine" "UG" "Uganda" "UM" "US minor outlying islands" "US" "United States" "UY" "Uruguay" "UZ" "Uzbekistan" "VA" "Vatican City" "VC" "St Vincent" "VE" "Venezuela" "VG" "Virgin Islands (UK)" "VI" "Virgin Islands (US)" "VN" "Vietnam" "VU" "Vanuatu" "WF" "Wallis & Futuna" "WS" "Samoa (western)" "YE" "Yemen" "YT" "Mayotte" "ZA" "South Africa" "ZM" "Zambia" "ZW" "Zimbabwe" 3>&1 1>&2 2>&3)
+			exitstatus=$?
+			COUNTRY=$(echo $COUNTRY | tr '[:upper:]' '[:lower:]')
+			# exitstatus == 255 means that the ESC key was pressed
+			if [ "$exitstatus" == "255" ] || [ "$COUNTRY" == "" ]; then
+				clear
+				echo -e "${RED}[+] No country selected --> trying to fetch general valid OBFS4 bridges!${NOCOLOR}"
+				COUNTRY=00
+				sleep 5
+			fi
+		fi
+		clear
+		online_check $TOR_GET_BRIDGES_URL 0 1
+		if [ $OCHECK == 1 ]; then
+    	echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
+    	trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
+    	(rm -r /tmp/captcha.*) 2>/dev/null
+    	if [ $CLEARNET_DECISSION == 1 ]; then
+				if [ "$COUNTRY" == "00" ]; then
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py)
+				else
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py -c $COUNTRY)
+					if [ "$bridge_address" = "-2" ]; then
+						bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py)
+						if [ "$bridge_address" != "-1" ]; then
+							echo " "
+							echo -e "${RED}[+] Sorry, there is no specific bridge for that country!${NOCOLOR}"
+							echo -e "${RED}[+] However, we received general valid bridges!${NOCOLOR}"
+							sleep 5
+						fi
+					fi
+				fi
+			else
+				if [ "$COUNTRY" == "00" ]; then
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor)
+				else
+					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor -c $COUNTRY)
+					if [ "$bridge_address" = "-2" ]; then
+						bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor)
+						if [ "$bridge_address" != "-1" ]; then
+							echo " "
+							echo -e "${RED}[+] Sorry, there is no specific bridge for that country!${NOCOLOR}"
+							echo -e "${RED}[+] However, we received general valid bridges!${NOCOLOR}"
+							sleep 5
+						fi
+					fi
+				fi
+    	fi
+			if [ "$bridge_address" = "-1" ]; then
+				echo " "
+				echo -e "${WHITE}[!] NETWORK ERROR!${NOCOLOR}"
+				echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p "Press any key to continue"
+				clear
+				exit 0
+			elif [ "$bridge_address" = "-2" ]; then
+				echo " "
+				echo -e "${RED}[+] Sorry, there is no specific bridge for that country!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p "Press any key to continue"
+				clear
+				exit 0
+			else
+				clear
+				# Create an array
+				SAVEIFS=$IFS   # Save current IFS (Internal Field Separator)
+				IFS=$'\n'      # Change IFS to newline char
+				# shellcheck disable=SC2206
+				bridge_address=($bridge_address) # split the `names` string into an array by the same name
+				IFS=$SAVEIFS   # Restore original IFS
+				number_bridges=${#bridge_address[@]}
+				n=0
+				for (( i=0; i<number_bridges; i++ ))
+				do
+					[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges bridge(s)${NOCOLOR}"
+					n=$((n+1))
+					if grep -q "${bridge_address[$i]}" $TORRC ; then
+						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
+					else
+						echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
+        		if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$SNOWSTRING" = "OFF" ] && [ "$MEEKSTRING" = "OFF" ]; then
+          		bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4 `Bridge obfs4 `g')"
+          		bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+        		else
+          		bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`obfs4 `#Bridge obfs4 `g')"
+          		bridge_address[$i]=$(echo -e "${bridge_address[$i]}\n")
+        		fi
+						printf %s"${bridge_address[$i]}\n" | sudo tee -a $TORRC
+					fi
+				done
+      	echo ""
+      	echo -e "${RED}[+] DONE!${NOCOLOR}"
+				echo " "
+				read -n 1 -s -r -p "Press any key to continue"
+      	clear
+      	if [ $STANDALONE = 0 ]; then
+        	activate_obfs4_bridges bridges_add_obfs4
+        	exit 0
+      	fi
+    	fi
+  	else
+    	echo ""
+    	echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+    	echo -e "${WHITE}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
+    	echo " "
+    	read -n 1 -s -r -p "Press any key to continue"
+    	clear
+    	exit 0
+  	fi
+  ;;
+
+  # Add bridges manually
+  2)
+    clear
+    whiptail --title "TorBox - ADD BRIDGES" --textbox $TXT_DIR/add-bridges-manually-text $MENU_HEIGHT_25 $MENU_WIDTH
+    number_bridges=$(whiptail --title "TorBox - ADD BRIDGES" --inputbox "\n\nHow many bridges do you like to add?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+		is_integer "${number_bridges}"
+		exitstatus=$?
+		# exitstatus == 1 means that $number_bridges is not an integer
+		if [ "$exitstatus" == "1" ]; then
+			clear
+			echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+			echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
+			sleep 5
+			clear
+			exit 1
+		fi
+    if [ $number_bridges -gt 0 ]; then
+      i=1
+      while [ $i -le $number_bridges ]
+      do
+        bridge_address=$(whiptail --title "TorBox - ADD BRIDGES" --inputbox "\n\nInsert one bridge (something like:\nobfs4 xxx.xxx.xxx.xxx:xxxx <fingerprint> cert=abcd.. iat-mode=0)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+        bridge_address="$(<<< "$bridge_address" sed -e 's/[[:blank:]]*$//')"
+        if [ -z "$bridge_address" ]; then
+          trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" EXIT
+          exit 0
+        fi
+        if grep -q "$bridge_address" $TORRC ; then
+          echo -e "${WHITE}[!] Bridge number $i is already added!${NOCOLOR}"
+          sleep 3
+          i=$((i+1))
+        else
+          if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$SNOWSTRING" = "OFF" ] && [ "$MEEKSTRING" = "OFF" ]; then
+            bridge_address="Bridge $bridge_address"
+          else
+            bridge_address="#Bridge $bridge_address"
+          fi
+          echo -e "${RED}[+] Saved bridge number $i!${NOCOLOR}"
+          (printf %s"$bridge_address\n" | sudo tee -a $TORRC) 2>/dev/null
+          i=$((i+1))
+        fi
+      done
+      sleep 5
+      clear
+      if [ $STANDALONE = 0 ]; then
+        activate_obfs4_bridges bridges_add_obfs4
+        exit 0
+      fi
+    else
+      exit 0
+    fi
+  ;;
+
+  *)
+    clear
+    exit 0
+esac
+
+bash bridges_add_obfs4
+exit 0

@@ -1,6 +1,4 @@
-This menu entry supposes that TorBox is connected with the internet
-through a VPN connection using the interface tun0. There are two
-possibilities of how TorBox handles VPN connections:
+This menu entry supposes that TorBox is connected with the internet through a VPN connection using the interface tun0. There are two possibilities of how TorBox handles VPN connections:
 
 1. The VPN connection is already established, and the interface tun0 is
    configured.
@@ -16,13 +14,10 @@ IMPORTANT
 - Nevertheless, we consider the additional risk of this "Tor over VPN"
   situation to be proportionate - see here: https://bit.ly/31lUhLQ
 
-The next step is to set up TorBox so that your client devices have access
-through TorBox's wireless network (wlan0) and/or through Ethernet (eth0).
-In the second case, please plug in the ethernet cable with your client
-device NOW.
+The next step is to set up TorBox so that your client devices have access through TorBox's wireless network (wlan0) and/or through Ethernet (eth0). In the second case, please plug in the ethernet cable with your client device NOW.
 
-If we have to restart TorBox's wireless network, please reconnect your
-client without closing the ssh session. Usually, the configuration
-continuous -- if not, then please repeat the process.
+If we have to restart TorBox's wireless network, please reconnect your client without closing the ssh session. Usually, the configuration continuous -- if not, then please repeat the process.
+
+To completely disconnect from a VPN, please, use the countermeasure sub-menu entry 17. Using in the main menu entries 5-9 will only change the route of Tor’s network traffic to the Internet, but local network traffic from the command prompt will still be routed through the VPN.
 
 Would you like to CONTINUE?

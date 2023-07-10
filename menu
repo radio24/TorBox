@@ -59,13 +59,10 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
 TORRC="/etc/tor/torrc"
-RUNFILE="run/torbox.run"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
 EXITID="EXITID=0"
 MMENUSTRING=""
 INTERNETSELECTION=$1
-
-#Connectivity check
-CHECK_URL=$(grep "^PING_SERVER=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
@@ -159,7 +156,7 @@ trap
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 clear
 if [ -z "$INTERNETSELECTION" ]; then
-  if [ $FRESHINSTALLED -gt 0 ]; then ./first_use; fi
+  if [ $FRESHINSTALLED -gt 0 ]; then bin/first_use; fi
 fi
 read_config
 do_we_use_bridges
@@ -167,12 +164,16 @@ check_bridge_relay
 check_interface_with_internet
 check_log_check
 check_tor
+TOR_OVER_VPN=$(sudo iptables -t nat -vnL | grep tun0)
 
-if [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ]; then TOR_STATUS="VPN is up & TOR working"
-elif [ ! -z "$TOR_STATUS" ] && [ -z "$VPN_STATUS" ]; then TOR_STATUS="         TOR is working"
-elif [ -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ]; then TOR_STATUS="              VPN is up"
+if [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ ! -z "$TOR_OVER_VPN" ]; then TOR_STATUS="   TOR over VPN working"
+elif [ ! -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="VPN is up & TOR working"
+elif [ ! -z "$TOR_STATUS" ] && [ -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="         TOR is working"
+elif [ -z "$TOR_STATUS" ] && [ ! -z "$VPN_STATUS" ] && [ -z "$TOR_OVER_VPN" ]; then TOR_STATUS="              VPN is up"
 else TOR_STATUS=""
 fi
+
+if grep ^FORWARDING_ONLY=1 ${RUNFILE}; then TOR_STATUS="   FORWARDING - NO TOR!"; fi
 
 if grep "^TOR_CONTROL_PORT_ACCESS=1" ${RUNFILE}; then
   CONTROLPORT_WLAN="s/^#ControlPort 192.168.42.1:9051/ControlPort 192.168.42.1:9051/"
@@ -190,7 +191,7 @@ else
 	#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 	if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
   ###### DISPLAY THE MAIN MENU ######
-  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.2 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
   " 2" "Enforce a new exit node with a new IP" \
   " 3" "Restart Tor - check if it is working (press q to quit)"  \
@@ -207,12 +208,13 @@ else
   "12" "Go to the configuration sub-menu..." \
 	"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
 	"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
-  "15" "Go to the update and maintenance sub-menu..." \
+	"15" "Go to the Danger Zone..." \
+  "16" "Go to the update and maintenance sub-menu..." \
 	"==" "============================================[Informational]===" \
-	"16" "HOW CAN I SUPPORT THE TOR PROJECT!" \
-	"17" "HOW CAN I HELP WITH TORBOX?" \
+	"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+	"18" "HOW CAN I HELP WITH TORBOX?" \
   "===" "========================================[Reboot & Shutdown]===" \
-  "18" "Reboot / Shutdown TorBox" \
+  "19" "Reboot / Shutdown TorBox" \
   3>&1 1>&2 2>&3)
 	exitstatus=$?
 	# exitstatus == 255 means that the ESC key was pressed
@@ -264,9 +266,9 @@ case "$CHOICE" in
     INPUT=$(cat text/cable-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -321,9 +323,9 @@ case "$CHOICE" in
       # The following line should minimize those cases where a restart is required.
       sudo systemctl restart isc-dhcp-server
       if [ -z "$INTERNETSELECTION" ]; then
-        sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 1
+        sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 1
       else
-        sudo bash set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
+        sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CAPTIVE 0
       fi
       if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -336,10 +338,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep wlan1; then
         display_net_reconfiguration_info
-        # (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-        (nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+        (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
         ask_captive
@@ -394,9 +395,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -413,9 +414,9 @@ case "$CHOICE" in
     INPUT=$(cat text/wlan0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -470,9 +471,9 @@ case "$CHOICE" in
       # The following line should minimize those cases where a restart is required.
       sudo systemctl restart isc-dhcp-server
       if [ -z "$INTERNETSELECTION" ]; then
-        sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 1
+        sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 1
       else
-        sudo bash set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 0
+        sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CAPTIVE 0
       fi
       if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       # iptables cannot be saved !!
@@ -484,9 +485,9 @@ case "$CHOICE" in
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -542,9 +543,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -553,26 +554,35 @@ case "$CHOICE" in
           if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						clear
 						echo -e "${RED}[+] Reset PPP connection (you may check the output for errors)${NOCOLOR}"
-						echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
-						sudo ./poff
+						echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
+						echo ""
+						trap "bash menu; exit 0" SIGINT
+						stty intr q
+						sudo bin/poff
 						sleep 5
 						sudo pon
 						echo ""
 						sleep 2
 						read -n 1 -s -r -p "Press any key to continue"
+						stty intr ^c
+						trap
 					fi
         else
         	echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
-        	echo -e "${RED}[+] If stuck, please press CTRL-C${NOCOLOR}"
+        	echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
         	echo ""
+					trap "bash menu; exit 0" SIGINT
+					stty intr q
 					if pgrep -f "pppd"; then
-						sudo ./poff
+						sudo bin/poff
 						sleep 5
 					fi
         	sudo pon
         	echo ""
         	sleep 2
         	read -n 1 -s -r -p "Press any key to continue"
+					stty intr ^c
+					trap
 				fi
         if ip link | grep ppp0 > /dev/null; then
           if ip link | grep wlan0 | grep "state UP" ; then
@@ -626,9 +636,9 @@ case "$CHOICE" in
           # The following line should minimize those cases where a restart is required.
           sudo systemctl restart isc-dhcp-server
           if [ -z "$INTERNETSELECTION" ]; then
-            sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 1
+            sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 1
           else
-            sudo bash set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
+            sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CAPTIVE 0
           fi
           if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -645,9 +655,9 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       if ip link | grep eth1 ; then
         display_net_reconfiguration_info
-				(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+				(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
 				echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
 				ask_captive
@@ -702,9 +712,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 1
         else
-          sudo bash set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CAPTIVE 0
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -718,37 +728,28 @@ case "$CHOICE" in
   10)
     INPUT=$(cat text/tun0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      display_net_reconfiguration_info
-			(nohup ./hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup ./hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			ask_captive
-      tun0up=$(ip link | grep tun0)
-      if [ -z "$tun0up" ] ; then
-        connecting_to_VPN
-        tun0up=$(ip link | grep tun0)
-      fi
+			tun0up=$(ip link | grep tun0)
+			if [ -z "$tun0up" ] ; then
+				online_check default 0 0
+				if [ $OCHECK == 0 ]; then
+					INPUT=$(cat text/tun0-not_connected-text)
+					if (whiptail --title "TorBox - INFO" --yesno --no-button "CONTINUE" --yes-button "CONNECT WLAN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+						display_net_reconfiguration_info
+						(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
+						echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+						(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+						echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+						sleep 2
+						ask_captive
+						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
+						sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0 0
+			  	fi
+				fi
+				connecting_to_VPN
+				sleep 3
+			fi
+			tun0up=$(ip link | grep tun0)
       if [ ! -z "$tun0up" ] ; then
-        clear
-        echo -e "${RED}[+] Checking DNS...${NOCOLOR}"
-        if wget -q --spider $CHECK_URL; then
-          echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
-        else
-          echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
-          echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
-          echo ""
-          add_open_dns
-          (sudo resolvconf -a tun0 </etc/resolv.conf) 2>/dev/null
-          sleep 2
-          echo -e "${RED}[+] Checking DNS again...${NOCOLOR}"
-          if wget -q --spider $CHECK_URL; then
-            echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
-          else
-            echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
-          fi
-        fi
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -800,9 +801,9 @@ case "$CHOICE" in
         # The following line should minimize those cases where a restart is required.
         sudo systemctl restart isc-dhcp-server
         if [ -z "$INTERNETSELECTION" ]; then
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 1
+          sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 0 1 1
         else
-          sudo bash set_interfaces_2 tun0 wlan0 eth0 $CAPTIVE 0
+          sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 0 0 1
         fi
         if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -817,8 +818,13 @@ case "$CHOICE" in
   12) bash menu-config;;
 	13) bash menu-server;;
 	14) bash menu-onion;;
-  15)
-    screen bash update
+	15)
+		INPUT=$(cat text/menu_danger-text)
+		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+		bash menu-danger
+	;;
+  16)
+    screen bash menu-update
     clear
     # shellcheck disable=SC2164
     cd
@@ -827,20 +833,20 @@ case "$CHOICE" in
   ;;
 
 	# How to support Tor
-	16)
+	17)
 		INPUT=$(cat text/support-tor-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
 	# How to support TorBox
-	17)
+	18)
 		INPUT=$(cat text/support-torbox-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
   # Reboot or Shotdown TorBox
-  18)
-    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.2 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
+  19)
+    CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.3 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \
     3>&1 1>&2 2>&3)
