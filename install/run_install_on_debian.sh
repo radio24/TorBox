@@ -121,13 +121,11 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi - DEBIAN-SPECIFIC
+# Wiringpi - DEBIAN / UBUNTU SPECIFIC
 WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
-# above values will be saved into run/torbox.run #######
-
-# Connectivity check - DEBIAN-SPECIFIC
-CHECK_URL1="ubuntu.com"
+# Connectivity check
+CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
 
 # Default password
@@ -221,9 +219,7 @@ done
 # Syntax: re-connect()
 re-connect()
 {
-	if [ -f "/etc/resolv.conf" ]; then
-		(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
-	fi
+	(cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 	(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
 	sleep 5
 	# On some Debian systems, wget is not installed, yet
@@ -266,7 +262,7 @@ re-connect()
 # NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
-# Syntax install_network_drivers <packagenames>
+# Syntax check_install_packages <packagenames>
 check_install_packages()
 {
  packagenames=$1
@@ -514,7 +510,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as \"./run_install_debian\" (without sudo !!) in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -639,7 +635,7 @@ check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
-# tor-geoipdb installiert auch tor
+# IMPORTANT tor-geoipdb installs also the tor package
 check_install_packages "tor-geoipdb"
 systemctl stop tor
 systemctl mask tor
@@ -821,7 +817,7 @@ else
 	sleep 10
 fi
 
-# 4. Installing Tor
+# 4. Installing tor
 clear
 echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 select_and_install_tor
@@ -1035,10 +1031,10 @@ else
 fi
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
-mkdir /var/lib/tor/services
+(mkdir /var/lib/tor/services) 2>/dev/null
 chown -R debian-tor:debian-tor /var/lib/tor/services
 chmod -R go-rwx /var/lib/tor/services
-mkdir /var/lib/tor/onion_auth
+(mkdir /var/lib/tor/onion_auth) 2>/dev/null
 chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
 chmod -R go-rwx /var/lib/tor/onion_auth
 

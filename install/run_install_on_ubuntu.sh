@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2004,SC2181,SC2001
+# shellcheck disable=SC2001,SC2004,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2023 Patrick Truffer
@@ -25,9 +25,14 @@
 # Ubuntu 20.04.3 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
-# ./run_install_ubuntu.sh [-h|--help] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
+#
+# The --randomize_hostname option is helpful for people in highly authoritarian
+# countries to avoid their ISP seeing their default hostname. The ISP can
+# see and even block your hostname. When a computer connects to an ISP's
+# network, it sends a DHCP request that includes the hostname.
 #
 # The --select-tor option allows to select a specific tor version. Without
 # this option, the installation script installs the latest stable version.
@@ -118,7 +123,7 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi
+# Wiringpi - DEBIAN / UBUNTU SPECIFIC
 WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # above values will be saved into run/torbox.run #######
@@ -267,7 +272,7 @@ re-connect()
 # NEW v.0.5.3: Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
-# Syntax install_network_drivers <packagenames>
+# Syntax check_install_packages <packagenames>
 check_install_packages()
 {
   packagenames=$1
@@ -494,7 +499,6 @@ select_and_install_tor()
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
-        sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
@@ -520,7 +524,7 @@ clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
 
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_ubuntu\" (without sudo !!) in your home directory (/home/ubuntu).\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -678,7 +682,7 @@ check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
-# tor-geoipdb installiert auch tor
+# IMPORTANT tor-geoipdb installs also the tor package
 check_install_packages "tor-geoipdb"
 sudo systemctl stop tor
 sudo systemctl mask tor
@@ -697,13 +701,13 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
 echo ""
-cd ~
+cd
 git clone $WIRINGPI_USED
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ]; then
 	cd WiringPi
 	sudo ./build
-	cd ~
+	cd
 	sudo rm -r WiringPi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
@@ -726,7 +730,7 @@ clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
-sudo ln /usr/bin/python3 /usr/bin/python
+(sudo ln /usr/bin/python3 /usr/bin/python) 2>/dev/null
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
@@ -783,7 +787,7 @@ if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	clear
 fi
 
-# Additional go
+# Additional installation for go
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
@@ -856,7 +860,7 @@ else
 	sleep 10
 fi
 
-# 4. Install Tor
+# 4. Installing tor
 clear
 echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 select_and_install_tor
@@ -1078,10 +1082,10 @@ else
 fi
 
 echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
-sudo mkdir /var/lib/tor/services
+(sudo mkdir /var/lib/tor/services) 2>/dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/services
 sudo chmod -R go-rwx /var/lib/tor/services
-sudo mkdir /var/lib/tor/onion_auth
+(sudo mkdir /var/lib/tor/onion_auth) 2>/dev/null
 sudo chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
 sudo chmod -R go-rwx /var/lib/tor/onion_auth
 
@@ -1203,7 +1207,7 @@ else
 	sleep 10
 fi
 
-# 13. Adding the user torbox
+# 13. Adding and implementing the user torbox
 clear
 echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"

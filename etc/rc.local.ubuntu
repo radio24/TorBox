@@ -20,19 +20,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/local/go/bin
 sudo dmesg -D
-rfkill unblock all
-rfkill block bluetooth
-bash /home/torbox/torbox/bin/regset
+# To be activated in v.0.5.3
+# bash /home/torbox/torbox/regset
 sudo systemctl stop hostapd
 
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
+echo "$CHECK_OS"
 if [ "$CHECK_OS" = "Ubuntu" ] ; then
 	if ip -o link show | awk -F': ' '{print $2}' | grep end0 ; then
 		# rename interface name from end0 to eth0
-		# See also here: https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
+		# See aöso here: https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
 		sudo ip link set end0 down
 		sudo ip link set end0 name eth0
 	fi
@@ -62,7 +61,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
 		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" = "1" ]; then
+		if [ "$INTERFACE1_DOWN" == "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi
@@ -78,79 +77,62 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 		fi
 		sudo ip link set dev $INTERFACE address $MAC_ADDRESS
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" = "1" ]; then
+		if [ "$INTERFACE1_DOWN" == "1" ]; then
 			sudo ip link set dev $INTERFACE up
 			INTERFACE1_DOWN=0
 		fi
 	fi
 done
 
-# FAILSAFE: To set TorBox's AP to wlan1 is dangerous and may lock someone out. We change that back to wlan0.
-if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
-	if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
-  	sudo ifdown wlan0
-  	sudo ifdown wlan1
-  	sudo sed -i "s/^auto wlan0/auto wlan1/" /etc/network/interfaces
-  	sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
-  	sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
-  	sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
-  	sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
-  	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
-  	sudo ifup wlan0 &>/dev/null &
-  	sudo ifup wlan1 &>/dev/null &
-		sudo systemctl restart hostapd
-		sudo systemctl restart isc-dhcp-server
-		sleep 2
-	fi
-fi
-
 sudo systemctl start hostapd
+
+# To set TorBox's AP is dangerous and may look someone out. We change that back to wlan0
+if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
+  sudo ifdown wlan0
+  sudo ifdown wlan1
+  sudo sed -i "s/^auto wlan0/auto wlan1/" /etc/network/interfaces
+  sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
+  sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
+  sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
+  sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
+  sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
+  sudo ifup wlan0 &>/dev/null &
+  sudo ifup wlan1 &>/dev/null &
+  sudo systemctl restart hostapd
+  sudo systemctl restart isc-dhcp-server
+  sleep 2
+fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
-  if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
-	  exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
-	fi
-fi
-
-# If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
-if grep "WLAN_FAILSAFE=0" /home/torbox/torbox/run/torbox.run ; then
-	if ip link | grep wlan0 ; then
-		if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
-			exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
-		fi
-	fi
+ if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
+	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/torbox_wireless_manager.py -i wlan1 -a)
+ fi
 fi
 
 # If a cellular device is available, and previously used then let's check if we can auto-connect
 if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
 
-# Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
-if ip link | grep eth0 ; then
-	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
-		if ! sudo timeout 5 sudo route | grep -m 1 default; then
-			sudo ifdown eth0 2>/dev/null
-			ip addr flush dev eth0
-			sudo ifup eth0 2>/dev/null
-		fi
-	fi
-fi
-
 # If configured, turn TACA on
 if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null
+  sleep 2
 fi
 
 # Start TFS and TCS, if configured
-if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tfs initial ; fi
-if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/bin/start_tcs initial ; fi
+if grep "^TFS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tfs initial ; fi
+if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torbox/run/start_tcs initial ; fi
 
+sleep 5
 sudo systemctl start dnsmasq
-sudo /bin/ping -c 1 "pool.ntp.org" >/dev/null 2>&1 && sudo /usr/sbin/ntpdate pool.ntp.org
-
-# NEW v.0.5.3
-# Starting domain exclusion, if activated
-if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then sudo /sbin/ipset -q restore -file /home/torbox/torbox/run/clearnet-list -exist ; fi
+if sudo timeout 5 sudo route | grep -m 1 default ; then
+	sudo wget -q --spider "pool.ntp.org"
+	OCHECK=$?
+	echo "$OCHECK"
+	if [ $OCHECK -eq 0 ]; then
+		sudo /usr/sbin/ntpdate pool.ntp.org
+	fi
+fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
 
 # This function opens the ports, after a restart if bridge relay is on
@@ -168,4 +150,6 @@ else
 	if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
 
-exit 0
+# NEW v.0.5.3
+# Starting domain exclusion, if activated
+if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then /home/torbox/torbox/set_interfaces_3 1 ; fi

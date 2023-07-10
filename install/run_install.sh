@@ -413,7 +413,6 @@ select_and_install_tor()
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
 						sudo systemctl mask tor@default.service
-          	sudo make install
 						sudo systemctl stop tor
 						sudo systemctl mask tor
 						# Both tor services have to be masked to block outgoing tor connections
@@ -493,7 +492,6 @@ select_and_install_tor()
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections
 				sudo systemctl mask tor@default.service
-				sudo make install
 				sudo systemctl stop tor
 				sudo systemctl mask tor
 				# Both tor services have to be masked to block outgoing tor connections

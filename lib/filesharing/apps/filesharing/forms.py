@@ -4,6 +4,9 @@ from .models import DownloadFileModel
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
 class UploadFileForm(forms.ModelForm):
     subfolder = forms.IntegerField(required=False, initial=False)
 
