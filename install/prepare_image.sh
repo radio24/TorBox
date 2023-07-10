@@ -117,7 +117,7 @@ echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${
 echo
 echo
 echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
-wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt
+if [ ! -f requirements.txt ]; then wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt; fi
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
