@@ -260,7 +260,7 @@ case "$CHOICE" in
 
   #This changes the admin password
 	1)
-		whiptail --title "TorBox - INFO" --msgbox "\n\nYou will now be asked to enter a new admin password." $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+		whiptail --title "TorBox - INFO" --msgbox "\nYou will now be asked to enter a new admin password." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
   	passwd
 		echo " "
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
