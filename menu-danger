@@ -39,10 +39,10 @@ NO_SPACER=4
 #Set the the variables for the menu
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
-MENU_HEIGHT_25=25
-MENU_HEIGHT_20=20
-MENU_HEIGHT_15=15
 MENU_HEIGHT_10=10
+MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
+MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
@@ -465,7 +465,7 @@ case "$CHOICE" in
 	4)
 		clear
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
 		else
 			exitstatus=$?
@@ -489,6 +489,7 @@ case "$CHOICE" in
 					(sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG) 2>/dev/null
+					echo ""
 					echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
 					echo -e "${RED}[+] Make sure that you are able to log into TorBox with the${SERVICE_NAME}${NOCOLOR}"
 					echo -e "${RED}[+] SSH key before you leave the actual SSH session!${SERVICE_NAME}${NOCOLOR}"
@@ -512,6 +513,7 @@ case "$CHOICE" in
 			echo -e "${RED}[+] Enabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
 			(sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}) 2>/dev/null
 			(sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}) 2>/dev/null
+			echo ""
 			echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
 			echo -e "${RED}[+] DONE! ${SERVICE_NAME}${NOCOLOR}"
 			sleep 5
