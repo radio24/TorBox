@@ -411,6 +411,7 @@ case "$CHOICE" in
 						sleep 2
 					fi
 				fi
+				if grep "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then bin/set_interfaces_3; fi
 			else
 				clear
 				echo -e "${WHITE}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
