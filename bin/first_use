@@ -288,7 +288,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
           ./menu $CHOICE
         fi
       fi
-      # Ask for TACA support
+
+			# Ask for TACA support
       clear
       INPUT=$(cat $TXT_DIR/first_use-TACA-text)
 			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -345,7 +346,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			if [[ $REPLY =~ ^[Yy]$ ]] ; then
 				settime
 			fi
-      # Ask for bridge support
+
+			# Ask for bridge support
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat $TXT_DIR/first_use-add-bridges-text)
