@@ -1071,7 +1071,7 @@ case "$CHOICE" in
       sudo systemctl stop tor
 			if [ "$SPEED" -gt "0" ]; then
 				echo -e "${RED}[+] Deleting the list of excluded slow tor relays${NOCOLOR}"
-				echo -e "${WHITE}[!] To reactivate the exclusion of slow tor relays, please use entry 11!${NOCOLOR}"
+				echo -e "${WHITE}[!] To reactivate the exclusion of slow tor relays, please use entry 12!${NOCOLOR}"
 				sudo rm /etc/tor/torrc.exclude-slow
 				sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}

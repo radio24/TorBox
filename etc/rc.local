@@ -147,6 +147,8 @@ if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torb
 
 sudo systemctl start dnsmasq
 sudo /bin/ping -c 1 "pool.ntp.org" >/dev/null 2>&1 && sudo /usr/sbin/ntpdate pool.ntp.org
+# NEW post-v.0.5.3
+sudo systemctl stop dnsmasq
 
 # NEW v.0.5.3
 # Starting domain exclusion, if activated
