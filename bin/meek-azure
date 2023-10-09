@@ -54,7 +54,7 @@ TXT_DIR="/home/torbox/torbox/text"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 MEEKSTRING=$1
 SNOWSTRING=$2
-EXITID=$(grep "^EXITID=" ${RUNFILE})
+EXITID=$(grep "^EXITID=" ${RUNFILE}) 2>/dev/null
 i=0
 
 
@@ -76,13 +76,13 @@ fi
 case $MEEKSTRING in
 
   "OFF")
-		clear
 		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
+    clear
 		trap "bash meek-azure; exit 0" SIGINT
 		echo -e "${RED}[+] Let's check, if MEEK-AZURE could work for you!${NOCOLOR}"
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
@@ -96,9 +96,9 @@ case $MEEKSTRING in
 			echo -e "${RED}[+] MEEK-AZURE is configured and ready!${NOCOLOR}"
 			number_configured_meekazure_deactivated=${#configured_meekazure_deactivated[*]}
 			sleep 5
-      clear
 		fi
 		echo " "
+    clear
 		online_check $BRIDGE_DB_URL 0 1
 		# IMORTANT: the support to show the ONLINE/OFFLINE status of Meek-Azure bridge is currently disabled because it is not reliable.
 		OCHECK=0

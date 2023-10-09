@@ -247,7 +247,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION
 "18" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
 "19" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"10" "Support for Adafruit's PiTFT displays (reboot required)" \
+"20" "Support for Adafruit's PiTFT displays (reboot required)" \
 "21" "Support for 3.5\" no-name TFT displays (reboot required)" \
 "22" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
@@ -260,10 +260,12 @@ case "$CHOICE" in
 
   #This changes the admin password
 	1)
-		whiptail --title "TorBox - INFO" --msgbox "\nYou will now be asked to enter a new admin password." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
-  	passwd
-		echo " "
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		INPUT=$(cat text/changepasswd-text)
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+  		passwd
+			echo " "
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		fi
 		clear
   ;;
 
@@ -1033,6 +1035,7 @@ case "$CHOICE" in
   20)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      clear
       online_check
       if [ $OCHECK == 1 ]; then
         sudo apt-get -y install python3-dev
@@ -1052,6 +1055,7 @@ case "$CHOICE" in
 
   #This is the support for 3.5" no-name TFT displays
   21)
+		clear
     online_check
     if [ $OCHECK == 1 ]; then
       INPUT=$(cat text/nonametft-text)

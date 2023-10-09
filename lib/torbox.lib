@@ -310,6 +310,7 @@ online_check()
           OCHECK=0;
           TORCONNECT=0
         fi
+				clear
       else
         CLEARNET_DECISSION=0
         OCHECK=0;
@@ -778,7 +779,7 @@ list_all_snowflake_bridges()
   if [ $number_configured_snowflake_bridges_deactivated -gt 0 ]; then
     echo " "
     echo -e "${RED}[+] DEACTIVATED BRIDGES${NOCOLOR}"
-    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
+    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint>${NOCOLOR}"
 		echo -e "${RED}[+] For Snowflake bridges, the status is not available!${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
@@ -809,7 +810,7 @@ list_all_snowflake_bridges()
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
     echo " "
     echo -e "${RED}[+] ACTIVATED BRIDGES${NOCOLOR}"
-    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint> <- STATUS>${NOCOLOR}"
+    echo -e "${RED}[+] Format: <number>: <IP>:<port> <fingerprint>${NOCOLOR}"
 		echo -e "${RED}[+] For Snowflake bridges, the status is not available!${NOCOLOR}"
     echo -e "${RED}[+] Would you like to have more information on a specific bridge?${NOCOLOR}"
     echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
@@ -897,6 +898,7 @@ activate_obfs4_bridges()
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
+		clear
     INPUT=$(cat $TXT_DIR/restart-tor-bridges-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			deactivating_bridge_relay
@@ -926,6 +928,7 @@ activate_snowflake_bridges()
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
+		clear
     INPUT=$(cat $TXT_DIR/restart-tor-bridges-snowflake-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			deactivating_bridge_relay
