@@ -822,6 +822,7 @@ case "$CHOICE" in
 			wget --no-cache "$GO_DL_PATH$GO_FILENAME"
 			DLCHECK=$?
 			if [ $DLCHECK -eq 0 ] ; then
+				sudo rm -rvf /usr/local/go/
 			  sudo tar -C /usr/local -xzvf $GO_FILENAME
 				# NEW v.0.5.3: what if .profile doesn't exist?
 				if [ -f ".profile" ]; then
@@ -859,7 +860,6 @@ case "$CHOICE" in
 			configure_system_service
       echo ""
 			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
-			echo -e "${RED}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			recommended_reboot menu-update

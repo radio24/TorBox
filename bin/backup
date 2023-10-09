@@ -53,7 +53,7 @@ HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 # NEW post-v.0.5.3: Backup the entire directory to preserve also the exlusion files --> SUPPORT NOT YET ADDED TO RESTORE!!!
-RUNFILE="/home/torbox/torbox/run"
+RUNDIR="/home/torbox/torbox/run"
 TXT_DIR="/home/torbox/torbox/text"
 
 
@@ -150,7 +150,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				if [ "$n" == "7" ] && [ "${CHOICE[3]}" == "4" ]; then ONIONAUTH=1; fi
 			fi
 		fi
-		BACKUPSTRING="${TORRC} ${RUNFILE} ${NGINX_DIR}"
+		BACKUPSTRING="${TORRC} ${RUNDIR} ${NGINX_DIR}"
 		if [ "$OBFS4RELAY" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR}/fingerprint ${DATA_DIR}/hashed-fingerprint ${DATA_DIR}/keys ${DATA_DIR}/pt_state"; fi
 		if [ "$ONIONSERVICES" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR_OS}" ; fi
 		if [ "$ONIONAUTH" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${CLIENT_ONION_AUTH_DIR}"; fi
