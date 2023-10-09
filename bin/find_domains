@@ -133,7 +133,8 @@ do
 		echo -e "${WHITE}Domain IP${NOCOLOR}"
 		echo "---------"
 		SAMMEL_IP=""
-		i=0
+		# FIX post-v.0.5.3 - changed from i=0 to index=0 because of possible interferences from other functions
+		index=0
 		for DUMP_STRING in "${DUMP_ARRAY[@]}"
 		do
 			SUBDOMAIN=$(awk -F' ' '{print $1}' <<< "$DUMP_STRING")
@@ -144,7 +145,13 @@ do
 			# In this case, we have to implement a matching routine, as we did above
 			if [ ! -z "$SUBDOMAIN" ]; then
 				# NEW post-v.0.5.3
-				add_open_dns
+				ping -c 1 -q $SUBDOMAIN >&/dev/null
+				OCHECK=$?
+				if [ ! $OCHECK -eq 0 ]; then
+					echo ""
+					add_open_dns;
+					echo ""
+				fi
 				MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
 				# Avoid doubling IPs
 				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
@@ -154,14 +161,17 @@ do
 				# Remove doubling spaces
 				IP=$(xargs <<< "$IP");
 				MORE_IPs=$(xargs <<< "$MORE_IPs");
+				RED='\033[1;31m'
+				WHITE='\033[1;37m'
 				echo -e "${WHITE}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
 				SAMMEL_IP_STRING="$SUBDOMAIN $IP $MORE_IPs"
 				SAMMEL_IP_STRING=$(xargs <<< "$SAMMEL_IP_STRING")
-				SAMMEL_IP[i]="$SAMMEL_IP_STRING"
-				i=$((i+1))
+				SAMMEL_IP[index]="$SAMMEL_IP_STRING"
+				index=$((index+1))
 				# We may have to remove spaces at the beginning and the end of the string
 			fi
 		done
+		echo ""
 		echo "---------"
 		echo ""
 	else
@@ -230,7 +240,7 @@ if [ "$RESCAN" == "1" ]; then
 
 		# Complement old entries
     if [ "$REPLY" == "1" ]; then
-			echo ""
+			clear
 			echo -e "${RED}[+] Complement old entries..."
 			if [ "$LISTE01" == "CLEARNET" ]; then
 				if [ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ]; then

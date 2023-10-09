@@ -54,7 +54,7 @@ TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
-EXITID=$(grep "^EXITID=" ${RUNFILE})
+EXITID=$(grep "^EXITID=" ${RUNFILE}) 2>/dev/null
 bridge_address_list=""
 i=0
 

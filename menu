@@ -730,6 +730,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			tun0up=$(ip link | grep tun0)
 			if [ -z "$tun0up" ] ; then
+        clear
 				online_check default 0 0
 				if [ $OCHECK == 0 ]; then
 					INPUT=$(cat text/tun0-not_connected-text)

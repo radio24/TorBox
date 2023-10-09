@@ -42,7 +42,7 @@ TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
-EXITID=$(grep "^EXITID=" ${RUNFILE})
+EXITID=$(grep "^EXITID=" ${RUNFILE}) 2>/dev/null
 bridge_address_list=""
 NORESTART=$1
 i=0
@@ -84,6 +84,7 @@ fi
 
 # IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
 #            In case that changes, the support of multiple Snowflake bridges can be found in the code archive
+clear
 online_check $BRIDGE_DB_URL 0 1
 clear
 # IMORTANT: the support to show the ONLINE/OFFLINE status of Snowflake bridges is currently disabled because it is not reliable.

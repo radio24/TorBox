@@ -235,28 +235,43 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			HOSTNAME=$(hostname)
 			INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
 			if (whiptail --title "TorBox Installation on Raspberry Pi OS" --defaultno --yes-button "CHANGE!" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
-					# shellcheck disable=SC2002
-					HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
-				else
-					HOSTNAME=$(whiptail --title "TorBox Installation on Raspberry Pi OS" --inputbox "\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-					if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
-						HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
-					fi
-					if ${#HOSTNAME} -gt 64 ; then
-						HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+				exitstatus=$?
+				# exitstatus == 255 means that the ESC key was pressed
+				if [ "$exitstatus" != "255" ]; then
+					if (whiptail --title "TorBox Installation on Raspberry Pi OS" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
+						# shellcheck disable=SC2002
+						HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+					else
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						if [ "$exitstatus" != "255" ]; then
+							HOSTNAME=$(whiptail --title "TorBox Installation on Raspberry Pi OS" --inputbox "\nEnter the hostname:" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+							if [[ $HOSTNAME != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+								HOSTNAME=$(tr -dc 'a-zA-Z0-9' <<<$HOSTNAME)
+							fi
+							if ${#HOSTNAME} -gt 64 ; then
+								HOSTNAME=$(head -c 64 <<<$HOSTNAME)
+							fi
+						fi
 					fi
 				fi
-				clear
-				echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-				(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-				sudo systemctl restart systemd-hostnamed
-				if grep "127.0.1.1.*" /etc/hosts ; then
-					(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
-				else
-					(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+				# exitstatus == 255 means that the ESC key was pressed
+				if [ "$exitstatus" != "255" ] && [ "$HOSTNAME" != "" ]; then
+					clear
+					echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+					sleep 1
+					(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+					clear
+					sudo systemctl restart systemd-hostnamed
+					if grep "127.0.1.1.*" /etc/hosts ; then
+						(sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
+						clear
+					else
+						(sudo sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+						clear
+					fi
+					whiptail --title "TorBox - INFO" --msgbox "TorBox's hostname is now changed to $HOSTNAME\n\nYou have to log out and again log into your console to see the change." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
 				fi
-				whiptail --title "TorBox - INFO" --msgbox "TorBox's hostname is now changed to $HOSTNAME\n\nYou have to log out and again log into your console to see the change." $MENU_HEIGHT_10 $MENU_WIDTH_REDUX
 			fi
 
 			# Will the user keep using the default configured firewall circumvention?
@@ -358,6 +373,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
 				fi
+				clear
 				if (whiptail --title "TorBox - INFO" --no-button "SNOWFLAKE" --yes-button "OBFS4" --yesno "Do you want to use OBFS4 or SNOWFLAKE bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
 					sudo sed -i "s/^#UseBridges/UseBridges/g" ${TORRC}
 					sudo sed -i "s/^#UpdateBridgesFromAuthority/UpdateBridgesFromAuthority/g" ${TORRC}

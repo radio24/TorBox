@@ -60,7 +60,7 @@ TORBOX_PATH="/home/torbox/torbox"
 TXT_DIR="/home/torbox/torbox/text"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 MODE_BRIDGES=$1
-EXITID=$(grep "^EXITID=" ${RUNFILE})
+EXITID=$(grep "^EXITID=" ${RUNFILE}) 2>/dev/null
 bridge_address_list=""
 i=0
 
@@ -216,6 +216,7 @@ case "$CHOICE" in
   3)
     INPUT=$(cat $TXT_DIR/delete-selected-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			clear
 			online_check $BRIDGE_DB_URL 0 1
 			clear
 			if [ $OCHECK == 1 ]; then
