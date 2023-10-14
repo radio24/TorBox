@@ -98,25 +98,35 @@ HOSTNAME="TorBox053"
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
+# NEW post-v.0.5.3: Added
+# Release Page of the official Tor repositories
+TOR_RELEASE="official"
+TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
+TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED="<a class=\"item-title ref-name\" href=\"/tpo/core/tor/-/tags/tor-"
+TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
+
+# NEW post-v.0.5.3: Currently not updated
 # Release Page of the unofficial Tor repositories on GitHub
-TORURL="https://github.com/torproject/tor/tags"
-TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-#WARNING: Sometimes, GitHub will change this prefix!
-#TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
-TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
-TOR_HREF_FOR_SED2="\" data-view-component=.*"
+#TOR_RELEASE="unofficial"
+#TORURL="https://github.com/torproject/tor/tags"
+#TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
+# WARNING: Sometimes, GitHub will change this prefix!
+# TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
+#TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
+#TOR_HREF_FOR_SED2="\" data-view-component=.*"
 # TORURL_DL_PARTIAL is the the partial download path of the tor release packages
 # (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor"
+#TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
 # shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
-# Only until version 2.2.0 - used until Torbox 0.5.0-Update 1
+# Only until version 2.6.0 - used until Torbox 0.5.3
 # shellcheck disable=SC2034
-SNOWFLAKE_PREVIOUS_USED="https://github.com/keroserene/snowflake.git"
-# Version 2.3.0
-SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
+SNOWFLAKE_PREVIOUS_USED="https://github.com/tgragnato/snowflake"
+# Version 2.6.1
+SNOWFLAKE_USED="https://github.com/syphyr/snowflake"
 
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
@@ -283,6 +293,53 @@ check_install_packages()
  done
 }
 
+# This function downloads and updates tor
+# Syntax download_and_compile_tor
+# Used predefined variables: $download_tor_url $filename RED WHITE NOCOLOR TORCONNECT
+download_and_compile_tor()
+{
+	# Difference to the update-function - we cannot use torsocks yet
+	wget $download_tor_url
+	DLCHECK=$?
+	if [ $DLCHECK -eq 0 ]; then
+		echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+		tar xzf $filename
+		cd "$(ls -d -- */)"
+		echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
+		# Give it a touch of git (without these lines the compilation will break with a git error)
+		git init
+		git add -- *
+		git config --global user.name "torbox"
+		git config --global user.email "torbox@localhost"
+		git commit -m "Initial commit"
+		# Don't use ./autogen.sh
+		sh autogen.sh
+		./configure
+		make
+		make install
+		cd
+		rm -r tor-*
+		systemctl stop tor
+		systemctl mask tor
+		# Both tor services have to be masked to block outgoing tor connections
+		systemctl mask tor@default.service
+		systemctl stop tor
+		systemctl mask tor
+		# Both tor services have to be masked to block outgoing tor connections
+		ssystemctl mask tor@default.service
+	else
+		echo -e ""
+		echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
+		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+		exit 0
+	fi
+}
+
 # select_and_install_tor()
 # Syntax select_and_install_tor
 # Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
@@ -310,7 +367,12 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	# NEW post-v.0.5.3: Added
+	if [ "$TOR_RELEASE" == "official" ]; then
+		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+	elif [ "$TOR_RELEASE" == "unofficial" ]; then
+		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
+	fi
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
@@ -382,52 +444,9 @@ select_and_install_tor()
         	clear
         	echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
-        	download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
+        	download_tor_url="$TORURL_DL_PARTIAL$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
-
-					# Difference to the update-function - we cannot use torsocks yet
-        	wget $download_tor_url
-          DLCHECK=$?
-        	if [ $DLCHECK -eq 0 ]; then
-          	echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
-          	tar xzf $filename
-          	cd "$(ls -d -- */)"
-          	echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-						# Give it a touch of git (without these lines the compilation will break with a git error)
-						git init
-						git add -- *
-						git config --global user.name "torbox"
-						git config --global user.email "torbox@localhost"
-						git commit -m "Initial commit"
-						# Don't use ./autogen.sh
-		        sh autogen.sh
-          	./configure
-          	make
-            make install
-            cd
-            rm -r tor-*
-						systemctl stop tor
-						systemctl mask tor
-						# Both tor services have to be masked to block outgoing tor connections
-						systemctl mask tor@default.service
-						systemctl stop tor
-						systemctl mask tor
-						# Both tor services have to be masked to block outgoing tor connections
-						systemctl mask tor@default.service
-          	#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-        	else
-						echo -e ""
-						echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-						echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
-						echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-						echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-						echo ""
-						echo ""
-						echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
-						echo -e "${RED}    the repository.${NOCOLOR}"
-						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-						clear
-					fi
+					download_and_compile_tor
 				else
 					clear
 					echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
@@ -455,7 +474,7 @@ select_and_install_tor()
     	do
 				if grep -v "-" <<< "${torversion_versionsorted_new[$i]}"; then
 					version_string="$(<<< ${torversion_versionsorted_new[$i]} sed -e 's/ //g')"
-					download_tor_url="$TORURL_DL_PARTIAL-$version_string.tar.gz"
+					download_tor_url="$TORURL_DL_PARTIAL$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
 					i=$number_torversion
 				fi
@@ -463,47 +482,7 @@ select_and_install_tor()
 			echo ""
 			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
-
-			# Difference to the update-function - we cannot use torsocks yet
-			wget $download_tor_url
-			DLCHECK=$?
-			if [ $DLCHECK -eq 0 ]; then
-				echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
-				tar xzf $filename
-				cd "$(ls -d -- */)"
-				echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
-				# Give it a touch of git (without these lines the compilation will break with a git error)
-				git init
-				git add -- *
-				git config --global user.name "torbox"
-				git config --global user.email "torbox@localhost"
-				git commit -m "Initial commit"
-				# Don't use ./autogen.sh
-        sh autogen.sh
-				./configure
-				make
-				make install
-				cd
-				rm -r tor-*
-				systemctl stop tor
-				systemctl mask tor
-				# Both tor services have to be masked to block outgoing tor connections
-				systemctl mask tor@default.service
-				systemctl stop tor
-				systemctl mask tor
-				# Both tor services have to be masked to block outgoing tor connections
-				systemctl mask tor@default.service
-			else
-				echo -e ""
-				echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-				echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
-				echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-				echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
-				echo ""
-				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-				clear
-				exit 0
-			fi
+			download_and_compile_tor
 		fi
 	fi
 }
@@ -1127,8 +1106,6 @@ clear
 echo -e "${RED}[+] Step 12: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
 echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
 sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
-sed -i "s/^GO_VERSION_64=.*/GO_VERSION_64=${GO_VERSION_64}/g" ${RUNFILE}
-sed -i "s/^GO_VERSION=.*/GO_VERSION=${GO_VERSION}/g" ${RUNFILE}
 sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
