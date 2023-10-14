@@ -1,6 +1,6 @@
 This menu entry enables TorBox's Web SSH, which means you can connect
-TorBox with a web browser, using 192.168.42.1 on a wifi client and/or
-192.168.43.1 on a cable client.
+TorBox with a web browser, using 192.168.42.1 on a wifi client,
+192.168.43.1 on a cable client and/or 192.168.44.1 when connected via VPN.
 
 However, this comes with a small but manageable risk. Because web browsers
 don't easily support self-signed certificates, webssh is not encrypted.

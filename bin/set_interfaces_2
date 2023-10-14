@@ -24,7 +24,7 @@
 # entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <captive portal> <restarting_tor> <only_reset_ip_tables>
+# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <incoming interface 3> <captive portal> <restarting_tor> <only_reset_ip_tables>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
@@ -32,14 +32,16 @@
 # wlan0 ->  TorBox is connected to the Internet through a wireless network (onboard chip).
 # wlan1 -> 	TorBox is connected to the Internet through a wireless network (USB wlan adapter).
 # usb0  ->  TorBox is connected to the Internet through an USB adapter or a cellular interface.
-# ppp0 ->   TorBox is connected to the Internet through a cellular interface
+# ppp0  ->  TorBox is connected to the Internet through a cellular interface
+# tun0  ->  TorBox is connected to the Internet through a VPN server
 #
-# The <incoming interface 1> and <incoming interface 2> represent the interfaces where the client-devices
+# The <incoming interface 1>, <incoming interface 2> and <incoming interface 3> represent the interfaces where the client-devices
 # are connected to the TorBox. Possible values for <incoming interface 1> and <incoming interface 2>:
 # eth0  -> 	The device is connected with a cable (ethernet interface).
 # eth1  -> 	The device is connected with a cable (USB ethernet adapter).
 # wlan0 -> 	The device is connected via wireless network (onboard chip)
 # wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
+# tun1  ->  The device is a VPN client and connected with TorBox's VPN server
 #
 # Both, <incoming interface 1> and <incoming interface 2>, have to be set.
 # If <incoming interface 1> is not used, the default should be "wlan0".
@@ -71,14 +73,17 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 MY_OWN_IP1="192.168.42.1"
 MY_OWN_IP2="192.168.43.1"
+MY_OWN_IP3="192.168.44.1"
 INT_NET1="$MY_OWN_IP1/8"
 INT_NET2="$MY_OWN_IP2/8"
+INT_NET3="$MY_OWN_IP3/8"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
-CAPTIVE=$4
-RESTARTTOR=$5
-ONLY_RESET=$6
+I_DEVICE3=$4
+CAPTIVE=$5
+RESTARTTOR=$6
+ONLY_RESET=$7
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITLOOP=0
@@ -93,7 +98,7 @@ EXITLOOP=0
 # This function pass through Captive Portals using the TUNNELLING nethod
 captive_tunneling()
 {
-	sudo bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2
+	sudo bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
 	EXITLOOP=$?
 	if [ $EXITLOOP == 0 ]; then
 		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
@@ -173,13 +178,16 @@ $IPTABLES -A INPUT -m state --state INVALID -j DROP
 # Anti-spoofing rules
 $IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j LOG --log-prefix "SPOOFED PKT "
 $IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE3 ! -s $INT_NET3 -j LOG --log-prefix "SPOOFED PKT "
 $IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j DROP
 $IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE3 ! -s $INT_NET3 -j DROP
 # Let packages to the localhost
 $IPTABLES -A INPUT -i lo -j ACCEPT
 # Open access from the internal network (usually my own devices)
 $IPTABLES -A INPUT -i $I_DEVICE1 -j ACCEPT
 $IPTABLES -A INPUT -i $I_DEVICE2 -j ACCEPT
+$IPTABLES -A INPUT -i $I_DEVICE3 -j ACCEPT
 # Allow ICMP Ping
 $IPTABLES -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
 $IPTABLES -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
@@ -211,13 +219,17 @@ echo -e "${RED}[+] Setting up PREROUTING chain...${NOCOLOR}"
 # Access on the box's own IP should be granted (only TCP)
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -d $MY_OWN_IP2 -p tcp -j REDIRECT
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -d $MY_OWN_IP3 -p tcp -j REDIRECT
 # TCP/UDP/DNS over Tor - Attention: 9053 supports only UDP DNS, the rest goes through 9040!
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p tcp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p tcp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp --dport 53 -j REDIRECT --to-ports 9053
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p udp --dport 53 -j REDIRECT --to-ports 9053
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
+$IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p udp -j REDIRECT --to-ports 9040
 ## Masquerading
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 
@@ -229,15 +241,26 @@ else
 	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
 fi
 
+# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
+###### OPENVPN access through Internet ######
+if grep -q "^OPENVPN_FROM_INTERNET=1" ${RUNFILE} ; then
+	echo -e "${RED}[+] Setting up OPENVPN access through the Internet...${NOCOLOR}"
+	$IPTABLES -A INPUT -p tcp --dport 1194 -j ACCEPT
+	$IPTABLES -A INPUT -p udp --dport 1194 -j ACCEPT
+else
+	($IPTABLES -D INPUT -p tcp --dport 1194 -j ACCEPT) 2>/dev/null
+	($IPTABLES -D INPUT -p udp --dport 1194 -j ACCEPT) 2>/dev/null
+fi
+
 ###### HTTP plain text traffic blocker ######
 # PREROUTING 3 guaranties that .onion address are not blocked --> set it permanent
 if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up HTTP plain text traffic blocker...${NOCOLOR}"
-	($IPTABLES -t nat -I PREROUTING 3 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-	($IPTABLES -t nat -I PREROUTING 4 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-	($IPTABLES -t nat -I PREROUTING 5 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
-	($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
-	($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 4 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 7 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	($IPTABLES -t nat -I PREROUTING 8 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 else
 	($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
 	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null

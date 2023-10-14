@@ -76,9 +76,13 @@ read_config()
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		I_DEVICE1=$CLIENT_IFACE
 		if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+	elif [ "$NUMBER_OF_WORD" == "2" ]; then
+		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 	fi
 }
 
@@ -107,7 +111,7 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=8; R2=9; else R1=3; R2=4; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=9; R2=10; R2=11; else R1=4; R2=5; R2=6; fi
 
 	# Remove old rules
 	# Old rules --> they have to be catched by iptables-save
@@ -116,12 +120,20 @@ if [ "$FIRST_RUN" == "0" ]; then
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+	elif [ "$NUMBER_OF_WORD" == "2" ]; then
+		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 	else
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 	fi
 
 	# New rules
@@ -129,16 +141,20 @@ if [ "$FIRST_RUN" == "0" ]; then
 	# If we have no VPN, then only the clearnet list will be used to route packages directly to the destination.
 	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -I PREROUTING $R3 -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 
 	# -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
 	sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 	sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	sudo $IPTABLES -I FORWARD 3 -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 	# -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
+	sudo $IPTABLES -A FORWARD -i $I_DEVICE3 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 
 	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 fi
