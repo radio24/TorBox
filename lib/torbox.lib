@@ -172,7 +172,7 @@ settime()
 finish()
 {
 	EXITID=$(grep "^EXITID=" ${RUNFILE})
-	if [ $EXITID = "EXITID=0" ]; then
+	if [ "$EXITID" = "EXITID=0" ]; then
   	sleep 4
   	check_tor
   	if [ "$TOR_STATUS" = "TOR is working" ]; then
