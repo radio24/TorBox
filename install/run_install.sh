@@ -1004,14 +1004,16 @@ fi
 
 # 11. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
-  sudo systemctl disable hciuart.service
-  sudo systemctl disable bluealsa.service
-  sudo systemctl disable bluetooth.service
-  sudo apt-get -y purge bluez
-  sudo apt-get -y autoremove
+echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+if [ -f "/boot/config.txt" ] ; then
+	if ! grep "# Added by TorBox" /boot/config.txt ; then
+  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
+  	sudo systemctl disable hciuart.service
+  	sudo systemctl disable bluealsa.service
+  	sudo systemctl disable bluetooth.service
+  	sudo apt-get -y purge bluez
+  	sudo apt-get -y autoremove
+	fi
 fi
 sudo rfkill block bluetooth
 

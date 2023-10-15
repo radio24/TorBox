@@ -229,7 +229,7 @@ TUN1_exists()
 	fi
 }
 
-torrc_reset
+torrc_reset()
 {
 	sudo sed -i "s/^TransPort 192.168.42.1:9040/#TransPort 192.168.42.1:9040/" ${TORRC}
 	sudo sed -i "s/^DNSPort 192.168.42.1:9053/#DNSPort 192.168.42.1:9053/" ${TORRC}

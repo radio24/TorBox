@@ -14,6 +14,7 @@
 -A INPUT -i eth1 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
 -A FORWARD -m state --state INVALID -j DROP
 -A FORWARD -p icmp -m icmp --icmp-type 8 -j ACCEPT
 -A FORWARD -p icmp -m icmp --icmp-type 0 -j ACCEPT
@@ -30,6 +31,7 @@ COMMIT
 :POSTROUTING ACCEPT [268:30614]
 -A PREROUTING -d 192.168.42.1/32 -i wlan0 -p tcp -j REDIRECT
 -A PREROUTING -d 192.168.43.1/32 -i eth1 -p tcp -j REDIRECT
+-A PREROUTING -d 192.168.44.1/32 -i tun1 -p tcp -j REDIRECT
 -A PREROUTING -d 10.192.0.0/10 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
 -A PREROUTING -p tcp -m tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-tcp-options --log-ip-options
 -A PREROUTING -p udp -m udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options

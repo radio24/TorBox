@@ -282,6 +282,7 @@ if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 2
 fi
+
 # ==========
 if [ $RESTARTTOR -eq 1 ]; then
 	echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"

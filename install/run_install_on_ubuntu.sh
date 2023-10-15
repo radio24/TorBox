@@ -1083,9 +1083,11 @@ fi
 
 # 10. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
+echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+if [ -f "/boot/firmware/config.txt" ] ; then
+	if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
+	fi
 fi
 sudo rfkill block bluetooth
 
