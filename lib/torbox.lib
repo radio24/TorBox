@@ -949,7 +949,6 @@ activate_snowflake_bridges()
 display_net_reconfiguration_info()
 {
   clear
-  echo ""
   echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
   echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
   echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
