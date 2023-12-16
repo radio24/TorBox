@@ -663,6 +663,13 @@ echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
+
+# NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
+if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
+  rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+fi
+
 # NEW v.0.5.3: New way to install and check Python requirements
 # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
 #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
