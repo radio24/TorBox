@@ -1041,7 +1041,6 @@ sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-sudo systemctl disable dhcpcd
 echo ""
 echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 sudo systemctl stop rsyslog

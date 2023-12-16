@@ -1122,7 +1122,6 @@ sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-# sudo systemctl disable dhcpcd - not installed on Ubuntu
 sudo systemctl restart systemd-resolved
 # We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 # --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
