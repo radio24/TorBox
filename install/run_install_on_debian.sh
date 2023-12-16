@@ -667,7 +667,7 @@ echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: For Debian 12 needed
-PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
+PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi

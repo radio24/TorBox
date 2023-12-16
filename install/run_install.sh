@@ -665,7 +665,7 @@ echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
-PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g")
+PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
