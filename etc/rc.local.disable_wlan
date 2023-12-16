@@ -132,15 +132,16 @@ sudo systemctl stop dnsmasq
 # NEW v.0.5.3
 # Starting domain exclusion, if activated
 if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then
-if [ -f "/home/torbox/torbox/run/clearnet-list" ]; then
-	sudo /sbin/ipset -q restore -file /home/torbox/torbox/run/clearnet-list -exist
-else
-	sudo /sbin/ipset create clearnet-list hash:ip
-fi
-tun0up=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
-if [ ! -z "$tun0up" ] ; then
-	if [ -f "/home/torbox/torbox/run/vpn-list" ]; then
-		sudo ipset -q restore -file /home/torbox/torbox/run/vpn-list -exist
+	if [ -f "/home/torbox/torbox/run/clearnet-list" ]; then
+		sudo /sbin/ipset -q restore -file /home/torbox/torbox/run/clearnet-list -exist
+	else
+		sudo /sbin/ipset create clearnet-list hash:ip
+	fi
+	tun0up=$(sudo timeout 5 sudo route | grep -m 1 tun0 | tr -s " " | cut -d " " -f1)
+	if [ ! -z "$tun0up" ] ; then
+		if [ -f "/home/torbox/torbox/run/vpn-list" ]; then
+			sudo ipset -q restore -file /home/torbox/torbox/run/vpn-list -exist
+		fi
 	fi
 fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
