@@ -1007,7 +1007,6 @@ echo -e "${RED}[+] Step 11: Because of security considerations, we completely di
 if ! grep "# Added by TorBox" /boot/config.txt ; then
   sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
   sudo systemctl disable hciuart.service
-  sudo systemctl disable bluealsa.service
   sudo systemctl disable bluetooth.service
   sudo apt-get -y purge bluez
   sudo apt-get -y autoremove
