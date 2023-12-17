@@ -120,13 +120,11 @@ TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 #TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
-# shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
-# Only until version 2.6.0 - used until Torbox 0.5.3
-# shellcheck disable=SC2034
-SNOWFLAKE_PREVIOUS_USED="https://github.com/tgragnato/snowflake"
-# Version 2.6.1
-SNOWFLAKE_USED="https://github.com/syphyr/snowflake"
+# Only until version 2.6.1
+SNOWFLAKE_PREVIOUS_USED="https://github.com/syphyr/snowflake"
+# Version 2.8.0
+SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
