@@ -122,13 +122,11 @@ TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 #TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
-# shellcheck disable=SC2034
 SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
-# Only until version 2.6.0 - used until Torbox 0.5.3
-# shellcheck disable=SC2034
-SNOWFLAKE_PREVIOUS_USED="https://github.com/tgragnato/snowflake"
-# Version 2.6.1
-SNOWFLAKE_USED="https://github.com/syphyr/snowflake"
+# Only until version 2.6.1
+SNOWFLAKE_PREVIOUS_USED="https://github.com/syphyr/snowflake"
+# Version 2.8.0
+SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
@@ -720,7 +718,7 @@ echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3
-PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g")
+PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
@@ -1130,7 +1128,6 @@ sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-# sudo systemctl disable dhcpcd - not installed on Ubuntu
 sudo systemctl restart systemd-resolved
 # We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 # --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved

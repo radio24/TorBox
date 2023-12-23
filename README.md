@@ -6,15 +6,15 @@
 TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
-* **TorBox Image** (about 1.1 GB): [v.0.5.3 (09.07.2023)](https://www.torbox.ch/data/torbox-20230709-v053.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
-* **TorBox Menu only**: [v.0.5.3 (09.07.2023)](https://www.torbox.ch/data/torbox053-20230709.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Image** (about 1.25 GB): [v.0.5.3 (17.12.2023)](https://www.torbox.ch/data/torbox-20231217-v053.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Menu only**: [v.0.5.3 (17.12.2023)](https://www.torbox.ch/data/torbox053-20231217.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 ![What’s it all about?](https://www.torbox.ch/wp-content/uploads/2019/01/TorBox400-e1548096878388.jpg)
 
 ### Disclaimer
 **Use it at your own risk!**
 
-TorBox is ideal for providing additional protection for the entire data stream and overcoming censorship. However, **anonymity is hard to get – solely using Tor doesn’t guarantee it**. Malware, Cookies, Java, Flash, Javascript and more will most certainly compromise your anonymity. Even the people from the [Tor Project themselves state](https://2019.www.torproject.org/about/overview.html.en#stayinganonymous) that “Tor can’t solve all anonymity problems. It focuses only on protecting the transport of data.” Therefore, **it is strongly advised not to use TorBox alone, should your well-being depend on your anonymity**. In such a situation, it may be better to use [Tails](https://tails.boum.org/). Please, [read in the FAQ more about tracking and fingerprinting in web browsers](https://www.torbox.ch/?page_id=112#can-tor-protect-me-against-tracking-andor-fingerprinting-in-webbrowser-to-guaranty-my-anonymity-accessing-a-website).
+TorBox is ideal for providing additional protection for the entire data stream and overcoming censorship. However, **anonymity is hard to get – solely using Tor doesn’t guarantee it**. Malware, Cookies, Java, Flash, Javascript and more will most certainly compromise your anonymity. Even the people from the [Tor Project themselves state](https://2019.www.torproject.org/about/overview.html.en#stayinganonymous) that “Tor can’t solve all anonymity problems. It focuses only on protecting the transport of data.” Therefore, **it is strongly advised not to use TorBox alone, should your well-being depend on your anonymity**. In such a situation, it may be better to use [Tails](https://tails.boum.org/). Please, [read in the FAQ more about tracking and fingerprinting in web browsers](https://www.torbox.ch/?page_id=112#can-tor-protect-me-against-tracking-andor-fingerprinting-in-web-browser-to-guaranty-my-anonymity-accessing-a-website).
 
 ### Quick Installation Guide
 1. Download the latest TorBox image file and [verify the integrity of the downloaded file](https://www.torbox.ch/?page_id=1128).
@@ -28,7 +28,7 @@ A **Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
-[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2023/01/TorBox-A5-RPI4-052-e1672996368110.png)](https://www.torbox.ch/wp-content/uploads/2023/01/TorBox-A5-RPI4-052.png)
+[![Start-up instructions](https://www.torbox.ch/wp-content/uploads/2023/07/TorBox-A5-RPI4-053-e1689046694198.png)](https://www.torbox.ch/wp-content/uploads/2023/07/TorBox-A5-RPI4-053.png)
 
 ### Features
 * TorBox routes all your network data through the Tor network. At the same time, TorBox acts as an external firewall and prevents IP leakage. It also can block insecure HTTP requests.
@@ -43,7 +43,7 @@ Do you have additional questions? Check out our [Documentation](https://www.torb
 * It allows easy access to .onion websites without client configuration (Chrome and Chromium), with [a minor change in the settings](https://www.torbox.ch/?page_id=112#when-i-start-the-tor-bowser-or-when-i-open-a-window-with-tor-on-brave-both-running-on-a-client-device-of-the-torbox-they-cannot-connect-to-the-tor-network-the-same-happens-if-im-using-tails-behind-a-torbox) (Brave) or [via SOCKS v5 proxy](https://www.torbox.ch/?page_id=112#SOCKS) (Mullvad and Firefox).
 
 ### Alternative installation method with the TorBox installation script
-Alternatively, you can download the latest version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/) or use the [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases) and choose, under Operating System, a Raspberry Pi OS Lite image. With the Raspberry Pi Imager, you can also setup a Hostname, SSH, WiFi AP, username (use **torbox**), and your preferred password for a headless installation. If the username is not set, starting up the Raspberry Pi OS for the first time, the first-boot wizard enforces the creation of a new user account –> use **torbox** and your preferred password. Optionally, localize your installation with raspi-config. Ensure stable Internet connectivity, download and execute our installation script (for options, use ```--help```):
+Alternatively, you can download the latest version of [Raspberry Pi OS Lite (64-bit)](https://www.raspberrypi.com/software/operating-systems/#raspberry-pi-os-64-bit) or use the [Raspberry Pi Imager](https://github.com/raspberrypi/rpi-imager/releases) and choose, under Operating System, Raspberry Pi OS (other), the Raspberry Pi OS Lite (64-bit) image. With the Raspberry Pi Imager, you can also setup a Hostname, SSH, WiFi AP, username (use **torbox**), and your preferred password for a headless installation. If the username is not set, starting up the Raspberry Pi OS for the first time, the first-boot wizard enforces the creation of a new user account –> use **torbox** and your preferred password. Optionally, localize your installation with raspi-config. Ensure stable Internet connectivity, download and execute our installation script (for options, use ```--help```):
 ```bash
 cd
 wget https://raw.githubusercontent.com/radio24/TorBox/master/install/run_install.sh
