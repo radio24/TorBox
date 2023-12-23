@@ -526,7 +526,12 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+if [ -f "/etc/timezone" ]; then
+	mv /etc/timezone /etc/timezone.bak
+	printf "Etc/UTC" | tee /etc/timezone.bak
+fi
 timedatectl set-timezone UTC
+# clear
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
