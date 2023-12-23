@@ -46,10 +46,17 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # 3 - Starts the first_use skript
 FRESH_INSTALLED=0
 
+# NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
 # SSH access from the Internet
-# 0 - SSH access from the Internet is blocked HTTP (default)
-# 1 - SSH access from the Internet is allowed
-SSH_FROM_INTERNET=0
+# 0 - SSH access from the Internet is blocked
+# 1 - SSH access from the Internet is allowed (default)
+SSH_FROM_INTERNET=1
+
+# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
+# OPENVPN access from the Internet
+# 0 - OPENVPN access from the Internet is blocked
+# 1 - OPENVPN access from the Internet is allowed (default)
+OPENVPN_FROM_INTERNET=1
 
 # Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)

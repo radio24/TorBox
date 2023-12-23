@@ -111,9 +111,10 @@ function installUnbound() {
 		if [[ $OS =~ (debian|ubuntu) ]]; then
 			apt-get install -y unbound
 
+			# Changed by torbox: 10.8.0.1 -> 192.168.44.1
 			# Configuration
-			echo 'interface: 10.8.0.1
-access-control: 10.8.0.1/24 allow
+			echo 'interface: 192.168.44.1
+access-control: 192.168.44.1/24 allow
 hide-identity: yes
 hide-version: yes
 use-caps-for-id: yes
@@ -123,8 +124,8 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 			yum install -y unbound
 
 			# Configuration
-			sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+			sed -i 's|# interface: 0.0.0.0$|interface: 192.168.44.1|' /etc/unbound/unbound.conf
+			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 192.168.44.1/24 allow|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
 			sed -i 's|use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
@@ -133,8 +134,8 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 			dnf install -y unbound
 
 			# Configuration
-			sed -i 's|# interface: 0.0.0.0$|interface: 10.8.0.1|' /etc/unbound/unbound.conf
-			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 10.8.0.1/24 allow|' /etc/unbound/unbound.conf
+			sed -i 's|# interface: 0.0.0.0$|interface: 192.168.44.1|' /etc/unbound/unbound.conf
+			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 192.168.44.1/24 allow|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
 			sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
 			sed -i 's|# use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
@@ -149,6 +150,7 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 				mv /etc/unbound/unbound.conf /etc/unbound/unbound.conf.old
 			fi
 
+			# Changed by torbox: 10.8.0.1 -> 192.168.44.1
 			echo 'server:
 	use-syslog: yes
 	do-daemonize: no
@@ -156,8 +158,8 @@ prefetch: yes' >>/etc/unbound/unbound.conf
 	directory: "/etc/unbound"
 	trust-anchor-file: trusted-key.key
 	root-hints: root.hints
-	interface: 10.8.0.1
-	access-control: 10.8.0.1/24 allow
+	interface: 192.168.44.1
+	access-control: 192.168.44.1/24 allow
 	port: 53
 	num-threads: 2
 	use-caps-for-id: yes
@@ -189,10 +191,11 @@ private-address: ::ffff:0:0/96" >>/etc/unbound/unbound.conf
 	else # Unbound is already installed
 		echo 'include: /etc/unbound/openvpn.conf' >>/etc/unbound/unbound.conf
 
+		# Changed by torbox: 10.8.0.1 -> 192.168.44.1
 		# Add Unbound 'server' for the OpenVPN subnet
 		echo 'server:
-interface: 10.8.0.1
-access-control: 10.8.0.1/24 allow
+interface: 192.168.44.1
+access-control: 192.168.44.1/24 allow
 hide-identity: yes
 hide-version: yes
 use-caps-for-id: yes
@@ -660,42 +663,43 @@ function installOpenVPN() {
 		fi
 	fi
 
+	# Changed by torbox: DISABLED, BECAUSE INTEGRATED IN INSTALL SCRIPTS
 	# If OpenVPN isn't installed yet, install it. This script is more-or-less
 	# idempotent on multiple runs, but will only install OpenVPN from upstream
 	# the first time.
-	if [[ ! -e /etc/openvpn/server.conf ]]; then
-		if [[ $OS =~ (debian|ubuntu) ]]; then
-			apt-get update
-			apt-get -y install ca-certificates gnupg
-			# We add the OpenVPN repo to get the latest version.
-			if [[ $VERSION_ID == "16.04" ]]; then
-				echo "deb http://build.openvpn.net/debian/openvpn/stable xenial main" >/etc/apt/sources.list.d/openvpn.list
-				wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
-				apt-get update
-			fi
+	#if [[ ! -e /etc/openvpn/server.conf ]]; then
+	#	if [[ $OS =~ (debian|ubuntu) ]]; then
+	#		apt-get update
+	#		apt-get -y install ca-certificates gnupg
+	#		# We add the OpenVPN repo to get the latest version.
+	#		if [[ $VERSION_ID == "16.04" ]]; then
+	#			echo "deb http://build.openvpn.net/debian/openvpn/stable xenial main" >/etc/apt/sources.list.d/openvpn.list
+	#			wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
+	#			apt-get update
+	#		fi
 			# Ubuntu > 16.04 and Debian > 8 have OpenVPN >= 2.4 without the need of a third party repository.
-			apt-get install -y openvpn iptables openssl wget ca-certificates curl
-		elif [[ $OS == 'centos' ]]; then
-			yum install -y epel-release
-			yum install -y openvpn iptables openssl wget ca-certificates curl tar 'policycoreutils-python*'
-		elif [[ $OS == 'oracle' ]]; then
-			yum install -y oracle-epel-release-el8
-			yum-config-manager --enable ol8_developer_EPEL
-			yum install -y openvpn iptables openssl wget ca-certificates curl tar policycoreutils-python-utils
-		elif [[ $OS == 'amzn' ]]; then
-			amazon-linux-extras install -y epel
-			yum install -y openvpn iptables openssl wget ca-certificates curl
-		elif [[ $OS == 'fedora' ]]; then
-			dnf install -y openvpn iptables openssl wget ca-certificates curl policycoreutils-python-utils
-		elif [[ $OS == 'arch' ]]; then
-			# Install required dependencies and upgrade the system
-			pacman --needed --noconfirm -Syu openvpn iptables openssl wget ca-certificates curl
-		fi
+	#		apt-get install -y openvpn iptables openssl wget ca-certificates curl
+	#	elif [[ $OS == 'centos' ]]; then
+	#		yum install -y epel-release
+	#		yum install -y openvpn iptables openssl wget ca-certificates curl tar 'policycoreutils-python*'
+	#	elif [[ $OS == 'oracle' ]]; then
+	#		yum install -y oracle-epel-release-el8
+	#		yum-config-manager --enable ol8_developer_EPEL
+	#		yum install -y openvpn iptables openssl wget ca-certificates curl tar policycoreutils-python-utils
+	#	elif [[ $OS == 'amzn' ]]; then
+	#		amazon-linux-extras install -y epel
+	#		yum install -y openvpn iptables openssl wget ca-certificates curl
+	#	elif [[ $OS == 'fedora' ]]; then
+	#		dnf install -y openvpn iptables openssl wget ca-certificates curl policycoreutils-python-utils
+	#	elif [[ $OS == 'arch' ]]; then
+	#		# Install required dependencies and upgrade the system
+	#		pacman --needed --noconfirm -Syu openvpn iptables openssl wget ca-certificates curl
+	#	fi
 		# An old version of easy-rsa was available by default in some openvpn packages
-		if [[ -d /etc/openvpn/easy-rsa/ ]]; then
-			rm -rf /etc/openvpn/easy-rsa/
-		fi
-	fi
+	#	if [[ -d /etc/openvpn/easy-rsa/ ]]; then
+	#		rm -rf /etc/openvpn/easy-rsa/
+	#	fi
+	#fi
 
 	# Find out if the machine uses nogroup or nobody for the permissionless group
 	if grep -qs "^nogroup:" /etc/group; then
@@ -775,14 +779,16 @@ function installOpenVPN() {
 		echo "proto ${PROTOCOL}6" >>/etc/openvpn/server.conf
 	fi
 
-	echo "dev tun
+	# Changed by torbox: dev tun -> dev tun1
+	# Changed by torbox: 10.8.0.0 -> 192.168.44.10
+	echo "dev tun1
 user nobody
 group $NOGROUP
 persist-key
 persist-tun
 keepalive 10 120
 topology subnet
-server 10.8.0.0 255.255.255.0
+server 192.168.44.10 255.255.255.0
 ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 
 	# DNS resolvers
@@ -804,7 +810,8 @@ ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 		done
 		;;
 	2) # Self-hosted DNS resolver (Unbound)
-		echo 'push "dhcp-option DNS 10.8.0.1"' >>/etc/openvpn/server.conf
+		 # Changed by torbox: 10.8.0.1 -> 192.168.44.1
+		echo 'push "dhcp-option DNS 192.168.44.1"' >>/etc/openvpn/server.conf
 		if [[ $IPV6_SUPPORT == 'y' ]]; then
 			echo 'push "dhcp-option DNS fd42:42:42:42::1"' >>/etc/openvpn/server.conf
 		fi
@@ -962,35 +969,37 @@ verb 3" >>/etc/openvpn/server.conf
 	# Add iptables rules in two scripts
 	mkdir -p /etc/iptables
 
+	# Changed by torbox: dev tun0 -> dev tun1
+	# Changed by torbox: 10.8.0.0 -> 192.168.44.0
 	# Script to add rules
 	echo "#!/bin/sh
-iptables -t nat -I POSTROUTING 1 -s 10.8.0.0/24 -o $NIC -j MASQUERADE
-iptables -I INPUT 1 -i tun0 -j ACCEPT
-iptables -I FORWARD 1 -i $NIC -o tun0 -j ACCEPT
-iptables -I FORWARD 1 -i tun0 -o $NIC -j ACCEPT
+iptables -t nat -I POSTROUTING 1 -s 192.168.44.0/24 -o $NIC -j MASQUERADE
+iptables -I INPUT 1 -i tun1 -j ACCEPT
+iptables -I FORWARD 1 -i $NIC -o tun1 -j ACCEPT
+iptables -I FORWARD 1 -i tun1 -o $NIC -j ACCEPT
 iptables -I INPUT 1 -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >/etc/iptables/add-openvpn-rules.sh
 
 	if [[ $IPV6_SUPPORT == 'y' ]]; then
 		echo "ip6tables -t nat -I POSTROUTING 1 -s fd42:42:42:42::/112 -o $NIC -j MASQUERADE
-ip6tables -I INPUT 1 -i tun0 -j ACCEPT
-ip6tables -I FORWARD 1 -i $NIC -o tun0 -j ACCEPT
-ip6tables -I FORWARD 1 -i tun0 -o $NIC -j ACCEPT
+ip6tables -I INPUT 1 -i tun1 -j ACCEPT
+ip6tables -I FORWARD 1 -i $NIC -o tun1 -j ACCEPT
+ip6tables -I FORWARD 1 -i tun1 -o $NIC -j ACCEPT
 ip6tables -I INPUT 1 -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/add-openvpn-rules.sh
 	fi
 
 	# Script to remove rules
 	echo "#!/bin/sh
-iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o $NIC -j MASQUERADE
-iptables -D INPUT -i tun0 -j ACCEPT
-iptables -D FORWARD -i $NIC -o tun0 -j ACCEPT
-iptables -D FORWARD -i tun0 -o $NIC -j ACCEPT
+iptables -t nat -D POSTROUTING -s 192.168.44.0/24 -o $NIC -j MASQUERADE
+iptables -D INPUT -i tun1 -j ACCEPT
+iptables -D FORWARD -i $NIC -o tun1 -j ACCEPT
+iptables -D FORWARD -i tun1 -o $NIC -j ACCEPT
 iptables -D INPUT -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >/etc/iptables/rm-openvpn-rules.sh
 
 	if [[ $IPV6_SUPPORT == 'y' ]]; then
 		echo "ip6tables -t nat -D POSTROUTING -s fd42:42:42:42::/112 -o $NIC -j MASQUERADE
-ip6tables -D INPUT -i tun0 -j ACCEPT
-ip6tables -D FORWARD -i $NIC -o tun0 -j ACCEPT
-ip6tables -D FORWARD -i tun0 -o $NIC -j ACCEPT
+ip6tables -D INPUT -i tun1 -j ACCEPT
+ip6tables -D FORWARD -i $NIC -o tun1 -j ACCEPT
+ip6tables -D FORWARD -i tun1 -o $NIC -j ACCEPT
 ip6tables -D INPUT -i $NIC -p $PROTOCOL --dport $PORT -j ACCEPT" >>/etc/iptables/rm-openvpn-rules.sh
 	fi
 

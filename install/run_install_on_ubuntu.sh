@@ -655,7 +655,8 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 # Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
 # Installation of standard packages
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger"
+# NEW post-v.0.5.3: openssl ca-certificates added
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -664,6 +665,11 @@ sudo systemctl stop tor
 sudo systemctl mask tor
 # Both tor services have to be masked to block outgoing tor connections
 sudo systemctl mask tor@default.service
+# NEW post-v.0.5.3: Added
+# An old version of easy-rsa was available by default in some openvpn packages
+if [[ -d /etc/openvpn/easy-rsa/ ]]; then
+	rm -rf /etc/openvpn/easy-rsa/
+fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
@@ -1075,9 +1081,11 @@ fi
 
 # 10. Disabling Bluetooth
 clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we disable Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-  sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
+echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+if [ -f "/boot/firmware/config.txt" ] ; then
+	if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
+	fi
 fi
 sudo rfkill block bluetooth
 
