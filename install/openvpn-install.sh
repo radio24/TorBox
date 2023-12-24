@@ -23,7 +23,7 @@ function checkOS() {
 
 		if [[ $ID == "debian" || $ID == "raspbian" ]]; then
 			if [[ $VERSION_ID -lt 9 ]]; then
-				echo "⚠️ Your version of Debian is not supported."
+				echo "Your version of Debian is not supported."
 				echo ""
 				echo "However, if you're using Debian >= 9 or unstable/testing then you can continue, at your own risk."
 				echo ""
@@ -38,7 +38,7 @@ function checkOS() {
 			OS="ubuntu"
 			MAJOR_UBUNTU_VERSION=$(echo "$VERSION_ID" | cut -d '.' -f1)
 			if [[ $MAJOR_UBUNTU_VERSION -lt 16 ]]; then
-				echo "⚠️ Your version of Ubuntu is not supported."
+				echo "Your version of Ubuntu is not supported."
 				echo ""
 				echo "However, if you're using Ubuntu >= 16.04 or beta, then you can continue, at your own risk."
 				echo ""
@@ -50,44 +50,9 @@ function checkOS() {
 				fi
 			fi
 		fi
-	elif [[ -e /etc/system-release ]]; then
-		source /etc/os-release
-		if [[ $ID == "fedora" || $ID_LIKE == "fedora" ]]; then
-			OS="fedora"
-		fi
-		if [[ $ID == "centos" || $ID == "rocky" || $ID == "almalinux" ]]; then
-			OS="centos"
-			if [[ $VERSION_ID -lt 7 ]]; then
-				echo "⚠️ Your version of CentOS is not supported."
-				echo ""
-				echo "The script only support CentOS 7 and CentOS 8."
-				echo ""
-				exit 1
-			fi
-		fi
-		if [[ $ID == "ol" ]]; then
-			OS="oracle"
-			if [[ ! $VERSION_ID =~ (8) ]]; then
-				echo "Your version of Oracle Linux is not supported."
-				echo ""
-				echo "The script only support Oracle Linux 8."
-				exit 1
-			fi
-		fi
-		if [[ $ID == "amzn" ]]; then
-			OS="amzn"
-			if [[ $VERSION_ID != "2" ]]; then
-				echo "⚠️ Your version of Amazon Linux is not supported."
-				echo ""
-				echo "The script only support Amazon Linux 2."
-				echo ""
-				exit 1
-			fi
-		fi
-	elif [[ -e /etc/arch-release ]]; then
-		OS=arch
 	else
-		echo "Looks like you aren't running this installer on a Debian, Ubuntu, Fedora, CentOS, Amazon Linux 2, Oracle Linux 8 or Arch Linux system"
+		echo "Looks like you aren't running this installer on a Rapberry PI OS, Debian or Ubuntu system."
+		echo "Please report this error to anonym@torbox.ch"
 		exit 1
 	fi
 }
@@ -104,11 +69,10 @@ function initialCheck() {
 	checkOS
 }
 
+# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
 function installUnbound() {
 	# If Unbound isn't installed, install it
 	if [[ ! -e /etc/unbound/unbound.conf ]]; then
-
-		if [[ $OS =~ (debian|ubuntu) ]]; then
 			apt-get install -y unbound
 
 			# Changed by torbox: 10.8.0.1 -> 192.168.44.1
@@ -120,63 +84,12 @@ hide-version: yes
 use-caps-for-id: yes
 prefetch: yes' >>/etc/unbound/unbound.conf
 
-		elif [[ $OS =~ (centos|amzn|oracle) ]]; then
-			yum install -y unbound
-
-			# Configuration
-			sed -i 's|# interface: 0.0.0.0$|interface: 192.168.44.1|' /etc/unbound/unbound.conf
-			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 192.168.44.1/24 allow|' /etc/unbound/unbound.conf
-			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
-			sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
-			sed -i 's|use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
-
-		elif [[ $OS == "fedora" ]]; then
-			dnf install -y unbound
-
-			# Configuration
-			sed -i 's|# interface: 0.0.0.0$|interface: 192.168.44.1|' /etc/unbound/unbound.conf
-			sed -i 's|# access-control: 127.0.0.0/8 allow|access-control: 192.168.44.1/24 allow|' /etc/unbound/unbound.conf
-			sed -i 's|# hide-identity: no|hide-identity: yes|' /etc/unbound/unbound.conf
-			sed -i 's|# hide-version: no|hide-version: yes|' /etc/unbound/unbound.conf
-			sed -i 's|# use-caps-for-id: no|use-caps-for-id: yes|' /etc/unbound/unbound.conf
-
-		elif [[ $OS == "arch" ]]; then
-			pacman -Syu --noconfirm unbound
-
-			# Get root servers list
-			curl -o /etc/unbound/root.hints https://www.internic.net/domain/named.cache
-
-			if [[ ! -f /etc/unbound/unbound.conf.old ]]; then
-				mv /etc/unbound/unbound.conf /etc/unbound/unbound.conf.old
-			fi
-
-			# Changed by torbox: 10.8.0.1 -> 192.168.44.1
-			echo 'server:
-	use-syslog: yes
-	do-daemonize: no
-	username: "unbound"
-	directory: "/etc/unbound"
-	trust-anchor-file: trusted-key.key
-	root-hints: root.hints
-	interface: 192.168.44.1
-	access-control: 192.168.44.1/24 allow
-	port: 53
-	num-threads: 2
-	use-caps-for-id: yes
-	harden-glue: yes
-	hide-identity: yes
-	hide-version: yes
-	qname-minimisation: yes
-	prefetch: yes' >/etc/unbound/unbound.conf
-		fi
-
 		# IPv6 DNS for all OS
 		if [[ $IPV6_SUPPORT == 'y' ]]; then
 			echo 'interface: fd42:42:42:42::1
 access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/unbound.conf
 		fi
 
-		if [[ ! $OS =~ (fedora|centos|amzn|oracle) ]]; then
 			# DNS Rebinding fix
 			echo "private-address: 10.0.0.0/8
 private-address: fd42:42:42:42::/112
@@ -187,7 +100,7 @@ private-address: fd00::/8
 private-address: fe80::/10
 private-address: 127.0.0.0/8
 private-address: ::ffff:0:0/96" >>/etc/unbound/unbound.conf
-		fi
+
 	else # Unbound is already installed
 		echo 'include: /etc/unbound/openvpn.conf' >>/etc/unbound/unbound.conf
 
@@ -209,6 +122,7 @@ private-address: fd00::/8
 private-address: fe80::/10
 private-address: 127.0.0.0/8
 private-address: ::ffff:0:0/96' >/etc/unbound/openvpn.conf
+
 		if [[ $IPV6_SUPPORT == 'y' ]]; then
 			echo 'interface: fd42:42:42:42::1
 access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
@@ -274,29 +188,29 @@ function installQuestions() {
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
 		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
-	echo ""
-	echo "What port do you want OpenVPN to listen to?"
-	echo "   1) Default: 1194"
-	echo "   2) Custom"
-	echo "   3) Random [49152-65535]"
-	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
-	done
-	case $PORT_CHOICE in
-	1)
+	#echo ""
+	#echo "What port do you want OpenVPN to listen to?"
+	#echo "   1) Default: 1194"
+	#echo "   2) Custom"
+	#echo "   3) Random [49152-65535]"
+	#until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
+	#	read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+	#done
+	#case $PORT_CHOICE in
+	#1)
 		PORT="1194"
-		;;
-	2)
-		until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
-			read -rp "Custom port [1-65535]: " -e -i 1194 PORT
-		done
-		;;
-	3)
-		# Generate random number within private ports range
-		PORT=$(shuf -i49152-65535 -n1)
-		echo "Random Port: $PORT"
-		;;
-	esac
+	#	;;
+	#2)
+	#	until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
+	#		read -rp "Custom port [1-65535]: " -e -i 1194 PORT
+	#	done
+	#	;;
+	#3)
+	#	# Generate random number within private ports range
+	#	PORT=$(shuf -i49152-65535 -n1)
+	#	echo "Random Port: $PORT"
+	#	;;
+	#esac
 	echo ""
 	echo "What protocol do you want OpenVPN to use?"
 	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
@@ -780,7 +694,7 @@ function installOpenVPN() {
 	fi
 
 	# Changed by torbox: dev tun -> dev tun1
-	# Changed by torbox: 10.8.0.0 -> 192.168.44.10
+	# Changed by torbox: 10.8.0.0 -> 192.168.44.0
 	echo "dev tun1
 user nobody
 group $NOGROUP
@@ -788,7 +702,7 @@ persist-key
 persist-tun
 keepalive 10 120
 topology subnet
-server 192.168.44.10 255.255.255.0
+server 192.168.44.0 255.255.255.0
 ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 
 	# DNS resolvers
@@ -931,24 +845,6 @@ verb 3" >>/etc/openvpn/server.conf
 	fi
 
 	# Finally, restart and enable OpenVPN
-	if [[ $OS == 'arch' || $OS == 'fedora' || $OS == 'centos' || $OS == 'oracle' ]]; then
-		# Don't modify package-provided service
-		cp /usr/lib/systemd/system/openvpn-server@.service /etc/systemd/system/openvpn-server@.service
-
-		# Workaround to fix OpenVPN service on OpenVZ
-		sed -i 's|LimitNPROC|#LimitNPROC|' /etc/systemd/system/openvpn-server@.service
-		# Another workaround to keep using /etc/openvpn/
-		sed -i 's|/etc/openvpn/server|/etc/openvpn|' /etc/systemd/system/openvpn-server@.service
-
-		systemctl daemon-reload
-		systemctl enable openvpn-server@server
-		systemctl restart openvpn-server@server
-	elif [[ $OS == "ubuntu" ]] && [[ $VERSION_ID == "16.04" ]]; then
-		# On Ubuntu 16.04, we use the package from the OpenVPN repo
-		# This package uses a sysvinit service
-		systemctl enable openvpn
-		systemctl start openvpn
-	else
 		# Don't modify package-provided service
 		cp /lib/systemd/system/openvpn\@.service /etc/systemd/system/openvpn\@.service
 
@@ -960,8 +856,8 @@ verb 3" >>/etc/openvpn/server.conf
 		systemctl daemon-reload
 		systemctl enable openvpn@server
 		systemctl restart openvpn@server
-	fi
 
+	# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
 	if [[ $DNS == 2 ]]; then
 		installUnbound
 	fi
@@ -1199,6 +1095,7 @@ function revokeClient() {
 	echo "Certificate for client $CLIENT revoked."
 }
 
+# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
 function removeUnbound() {
 	# Remove OpenVPN-related config
 	sed -i '/include: \/etc\/unbound\/openvpn.conf/d' /etc/unbound/unbound.conf
@@ -1299,6 +1196,7 @@ function removeOpenVPN() {
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -rf /var/log/openvpn
 
+		# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
 		# Unbound
 		if [[ -e /etc/unbound/openvpn.conf ]]; then
 			removeUnbound
