@@ -993,7 +993,7 @@ cp etc/network/interfaces /etc/network/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
 # Added for TorBox on a Cloud -- has to be tested with a common Debian image
-if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub); then
+if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
 	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX="//g' | sed 's/"//g')
 	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
 		if [ "$GRUB_CONFIG" == "" ]; then
@@ -1004,7 +1004,7 @@ if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub); then
 		update-grub
 	fi
 else
-	(sudo printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | sudo tee -a /etc/default/grub) 2>&1
+	(sudo printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | sudo tee -a /etc/default/grub 2>&1
 	update-grub
 fi
 # With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.

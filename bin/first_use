@@ -441,7 +441,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 		# This will install additional network drivers (only, if not on a cloud)
     4)
 			clear
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g"); fi
+			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
 				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
 				FRESHINSTALLED=0
