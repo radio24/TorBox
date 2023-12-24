@@ -123,5 +123,8 @@ WLAN_FAILSAFE=1
 # will be displayed in the main menu.
 FORWARDING_ONLY=0
 
+# TorBox is running on a cloud or as a cloud service
+ON_A_CLOUD=0
+
 # Exit controll variable
 EXITID=0

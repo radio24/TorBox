@@ -32,6 +32,7 @@
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
+# 4 - Will install additional network drivers
 #
 # If SOURCE SCRIPT is empty, the default is menu
 #
@@ -179,6 +180,9 @@ finish_bridge_start1()
 ######## PREPARATIONS ########
 # Resetting
 shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
 
 # Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
@@ -193,7 +197,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-			# DON'T REMOVE IT! This is necessary because of possible kernel updates
 			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
       sleep 5
       sudo reboot
@@ -435,15 +438,18 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			stty intr ^c
     ;;
 
-		# This will install additional network drivers
+		# This will install additional network drivers (only, if not on a cloud)
     4)
 			clear
-			INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-			FRESHINSTALLED=0
-			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-			if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				bash $TORBOX_PATH/install/install_network_drivers install
-				recommended_reboot first_use
+			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g"); fi
+			if [ "$ON_A_CLOUD" -eq "0" ]; then
+				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
+				FRESHINSTALLED=0
+				sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+				if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+					bash $TORBOX_PATH/install/install_network_drivers install
+					recommended_reboot first_use
+				fi
 			fi
     ;;
 

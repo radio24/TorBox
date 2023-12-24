@@ -25,7 +25,7 @@
 # Ubuntu 20.04.3 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -42,6 +42,9 @@
 #
 # The --select-branch option allows to install a specific TorBox branch.
 # Without this option, the installation script installs the master branch.
+#
+# The --on_a_cloud option has to be used if you install TorBox on a cloud or
+# as a cloud service. This will enable/disable some features.
 #
 # The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
@@ -152,12 +155,13 @@ SELECT_TOR=
 SELECT_BRANCH=
 TORBOXMENU_BRANCHNAME=
 TORBOXMENU_FORKNAME=
+ON_A_CLOUD=
 STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--step_by_step]"
+			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -166,6 +170,7 @@ while true; do
 			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
 			echo "         --select-branch branch_name"
 			echo "                        : Let select a specific TorBox branch (default: master)"
+			echo "         --on_a_cloud   : Installing on a cloud or as a cloud service"
 			echo "         --step_by_step : Executes the installation step by step"
 			echo ""
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
@@ -185,6 +190,7 @@ while true; do
 			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
+		--on_a_cloud ) ON_A_CLOUD=="--on_a_cloud"; shift ;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
 		-- ) shift; break ;;
 		* ) break ;;
@@ -500,7 +506,7 @@ clear
 # Only Ubuntu - Sets the background of TorBox menu to dark blue
 sudo rm /etc/alternatives/newt-palette; sudo ln -s /etc/newt/palette.original /etc/alternatives/newt-palette
 
-if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_ubuntu\" (without sudo !!) in your home directory (/home/ubuntu).\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON UBUNTU\n\nPlease make sure that you started this script as \"./run_install_ubuntu\" (without sudo !!) in your home directory (/home/ubuntu).\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--step_by_step : Executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -539,7 +545,12 @@ re-connect
 
 # 1b. Adjusting time, if needed
 clear
+if [ -f "/etc/timezone" ]; then
+	sudo mv /etc/timezone /etc/timezone.bak
+	(printf "Etc/UTC" | sudo tee /etc/timezone) 2>&1
+fi
 sudo timedatectl set-timezone UTC
+clear
 echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
@@ -1179,6 +1190,7 @@ sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFI
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}; fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
