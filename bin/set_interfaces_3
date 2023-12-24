@@ -109,7 +109,7 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=9; R2=10; R2=11; else R1=4; R2=5; R2=6; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=10; R2=11; R2=12; else R1=4; R2=5; R2=6; fi
 
 	# Remove old rules
 	# Old rules --> they have to be catched by iptables-save
