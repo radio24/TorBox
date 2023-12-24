@@ -69,70 +69,6 @@ function initialCheck() {
 	checkOS
 }
 
-# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
-function installUnbound() {
-	# If Unbound isn't installed, install it
-	if [[ ! -e /etc/unbound/unbound.conf ]]; then
-			apt-get install -y unbound
-
-			# Changed by torbox: 10.8.0.1 -> 192.168.44.1
-			# Configuration
-			echo 'interface: 192.168.44.1
-access-control: 192.168.44.1/24 allow
-hide-identity: yes
-hide-version: yes
-use-caps-for-id: yes
-prefetch: yes' >>/etc/unbound/unbound.conf
-
-		# IPv6 DNS for all OS
-		if [[ $IPV6_SUPPORT == 'y' ]]; then
-			echo 'interface: fd42:42:42:42::1
-access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/unbound.conf
-		fi
-
-			# DNS Rebinding fix
-			echo "private-address: 10.0.0.0/8
-private-address: fd42:42:42:42::/112
-private-address: 172.16.0.0/12
-private-address: 192.168.0.0/16
-private-address: 169.254.0.0/16
-private-address: fd00::/8
-private-address: fe80::/10
-private-address: 127.0.0.0/8
-private-address: ::ffff:0:0/96" >>/etc/unbound/unbound.conf
-
-	else # Unbound is already installed
-		echo 'include: /etc/unbound/openvpn.conf' >>/etc/unbound/unbound.conf
-
-		# Changed by torbox: 10.8.0.1 -> 192.168.44.1
-		# Add Unbound 'server' for the OpenVPN subnet
-		echo 'server:
-interface: 192.168.44.1
-access-control: 192.168.44.1/24 allow
-hide-identity: yes
-hide-version: yes
-use-caps-for-id: yes
-prefetch: yes
-private-address: 10.0.0.0/8
-private-address: fd42:42:42:42::/112
-private-address: 172.16.0.0/12
-private-address: 192.168.0.0/16
-private-address: 169.254.0.0/16
-private-address: fd00::/8
-private-address: fe80::/10
-private-address: 127.0.0.0/8
-private-address: ::ffff:0:0/96' >/etc/unbound/openvpn.conf
-
-		if [[ $IPV6_SUPPORT == 'y' ]]; then
-			echo 'interface: fd42:42:42:42::1
-access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
-		fi
-	fi
-
-	systemctl enable unbound
-	systemctl restart unbound
-}
-
 function installQuestions() {
 	echo "Welcome to the OpenVPN installer!"
 	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
@@ -188,29 +124,7 @@ function installQuestions() {
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
 		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
-	#echo ""
-	#echo "What port do you want OpenVPN to listen to?"
-	#echo "   1) Default: 1194"
-	#echo "   2) Custom"
-	#echo "   3) Random [49152-65535]"
-	#until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-	#	read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
-	#done
-	#case $PORT_CHOICE in
-	#1)
-		PORT="1194"
-	#	;;
-	#2)
-	#	until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
-	#		read -rp "Custom port [1-65535]: " -e -i 1194 PORT
-	#	done
-	#	;;
-	#3)
-	#	# Generate random number within private ports range
-	#	PORT=$(shuf -i49152-65535 -n1)
-	#	echo "Random Port: $PORT"
-	#	;;
-	#esac
+	PORT="1194"
 	echo ""
 	echo "What protocol do you want OpenVPN to use?"
 	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
@@ -227,51 +141,6 @@ function installQuestions() {
 		PROTOCOL="tcp"
 		;;
 	esac
-	echo ""
-	echo "What DNS resolvers do you want to use with the VPN?"
-	echo "   1) Current system resolvers (from /etc/resolv.conf)"
-	echo "   2) Self-hosted DNS Resolver (Unbound)"
-	echo "   3) Cloudflare (Anycast: worldwide)"
-	echo "   4) Quad9 (Anycast: worldwide)"
-	echo "   5) Quad9 uncensored (Anycast: worldwide)"
-	echo "   6) FDN (France)"
-	echo "   7) DNS.WATCH (Germany)"
-	echo "   8) OpenDNS (Anycast: worldwide)"
-	echo "   9) Google (Anycast: worldwide)"
-	echo "   10) Yandex Basic (Russia)"
-	echo "   11) AdGuard DNS (Anycast: worldwide)"
-	echo "   12) NextDNS (Anycast: worldwide)"
-	echo "   13) Custom"
-	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "DNS [1-12]: " -e -i 11 DNS
-		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
-			echo ""
-			echo "Unbound is already installed."
-			echo "You can allow the script to configure it in order to use it from your OpenVPN clients"
-			echo "We will simply add a second server to /etc/unbound/unbound.conf for the OpenVPN subnet."
-			echo "No changes are made to the current configuration."
-			echo ""
-
-			until [[ $CONTINUE =~ (y|n) ]]; do
-				read -rp "Apply configuration changes to Unbound? [y/n]: " -e CONTINUE
-			done
-			if [[ $CONTINUE == "n" ]]; then
-				# Break the loop and cleanup
-				unset DNS
-				unset CONTINUE
-			fi
-		elif [[ $DNS == "13" ]]; then
-			until [[ $DNS1 =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-				read -rp "Primary DNS: " -e DNS1
-			done
-			until [[ $DNS2 =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; do
-				read -rp "Secondary DNS (optional): " -e DNS2
-				if [[ $DNS2 == "" ]]; then
-					break
-				fi
-			done
-		fi
-	done
 	echo ""
 	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
@@ -577,44 +446,6 @@ function installOpenVPN() {
 		fi
 	fi
 
-	# Changed by torbox: DISABLED, BECAUSE INTEGRATED IN INSTALL SCRIPTS
-	# If OpenVPN isn't installed yet, install it. This script is more-or-less
-	# idempotent on multiple runs, but will only install OpenVPN from upstream
-	# the first time.
-	#if [[ ! -e /etc/openvpn/server.conf ]]; then
-	#	if [[ $OS =~ (debian|ubuntu) ]]; then
-	#		apt-get update
-	#		apt-get -y install ca-certificates gnupg
-	#		# We add the OpenVPN repo to get the latest version.
-	#		if [[ $VERSION_ID == "16.04" ]]; then
-	#			echo "deb http://build.openvpn.net/debian/openvpn/stable xenial main" >/etc/apt/sources.list.d/openvpn.list
-	#			wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg | apt-key add -
-	#			apt-get update
-	#		fi
-			# Ubuntu > 16.04 and Debian > 8 have OpenVPN >= 2.4 without the need of a third party repository.
-	#		apt-get install -y openvpn iptables openssl wget ca-certificates curl
-	#	elif [[ $OS == 'centos' ]]; then
-	#		yum install -y epel-release
-	#		yum install -y openvpn iptables openssl wget ca-certificates curl tar 'policycoreutils-python*'
-	#	elif [[ $OS == 'oracle' ]]; then
-	#		yum install -y oracle-epel-release-el8
-	#		yum-config-manager --enable ol8_developer_EPEL
-	#		yum install -y openvpn iptables openssl wget ca-certificates curl tar policycoreutils-python-utils
-	#	elif [[ $OS == 'amzn' ]]; then
-	#		amazon-linux-extras install -y epel
-	#		yum install -y openvpn iptables openssl wget ca-certificates curl
-	#	elif [[ $OS == 'fedora' ]]; then
-	#		dnf install -y openvpn iptables openssl wget ca-certificates curl policycoreutils-python-utils
-	#	elif [[ $OS == 'arch' ]]; then
-	#		# Install required dependencies and upgrade the system
-	#		pacman --needed --noconfirm -Syu openvpn iptables openssl wget ca-certificates curl
-	#	fi
-		# An old version of easy-rsa was available by default in some openvpn packages
-	#	if [[ -d /etc/openvpn/easy-rsa/ ]]; then
-	#		rm -rf /etc/openvpn/easy-rsa/
-	#	fi
-	#fi
-
 	# Find out if the machine uses nogroup or nobody for the permissionless group
 	if grep -qs "^nogroup:" /etc/group; then
 		NOGROUP=nogroup
@@ -706,77 +537,23 @@ server 192.168.44.0 255.255.255.0
 ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 
 	# DNS resolvers
-	case $DNS in
-	1) # Current system resolvers
-		# Locate the proper resolv.conf
-		# Needed for systems running systemd-resolved
-		if grep -q "127.0.0.53" "/etc/resolv.conf"; then
-			RESOLVCONF='/run/systemd/resolve/resolv.conf'
-		else
-			RESOLVCONF='/etc/resolv.conf'
+	# Current system resolvers
+	# Locate the proper resolv.conf
+	# Needed for systems running systemd-resolved
+	if grep -q "127.0.0.53" "/etc/resolv.conf"; then
+		RESOLVCONF='/run/systemd/resolve/resolv.conf'
+	else
+		RESOLVCONF='/etc/resolv.conf'
+	fi
+	# Obtain the resolvers from resolv.conf and use them for OpenVPN
+	sed -ne 's/^nameserver[[:space:]]\+\([^[:space:]]\+\).*$/\1/p' $RESOLVCONF | while read -r line
+	do
+		# Copy, if it's a IPv4 |or| if IPv6 is enabled, IPv4/IPv6 does not matter
+		if [[ $line =~ ^[0-9.]*$ ]] || [[ $IPV6_SUPPORT == 'y' ]]; then
+			# Not sure if this is really necessary (remove it, if clients don't resolve domain names)
+			echo "push \"dhcp-option DNS $line\"" >>/etc/openvpn/server.conf
 		fi
-		# Obtain the resolvers from resolv.conf and use them for OpenVPN
-		sed -ne 's/^nameserver[[:space:]]\+\([^[:space:]]\+\).*$/\1/p' $RESOLVCONF | while read -r line; do
-			# Copy, if it's a IPv4 |or| if IPv6 is enabled, IPv4/IPv6 does not matter
-			if [[ $line =~ ^[0-9.]*$ ]] || [[ $IPV6_SUPPORT == 'y' ]]; then
-				echo "push \"dhcp-option DNS $line\"" >>/etc/openvpn/server.conf
-			fi
-		done
-		;;
-	2) # Self-hosted DNS resolver (Unbound)
-		 # Changed by torbox: 10.8.0.1 -> 192.168.44.1
-		echo 'push "dhcp-option DNS 192.168.44.1"' >>/etc/openvpn/server.conf
-		if [[ $IPV6_SUPPORT == 'y' ]]; then
-			echo 'push "dhcp-option DNS fd42:42:42:42::1"' >>/etc/openvpn/server.conf
-		fi
-		;;
-	3) # Cloudflare
-		echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 1.1.1.1"' >>/etc/openvpn/server.conf
-		;;
-	4) # Quad9
-		echo 'push "dhcp-option DNS 9.9.9.9"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 149.112.112.112"' >>/etc/openvpn/server.conf
-		;;
-	5) # Quad9 uncensored
-		echo 'push "dhcp-option DNS 9.9.9.10"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 149.112.112.10"' >>/etc/openvpn/server.conf
-		;;
-	6) # FDN
-		echo 'push "dhcp-option DNS 80.67.169.40"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 80.67.169.12"' >>/etc/openvpn/server.conf
-		;;
-	7) # DNS.WATCH
-		echo 'push "dhcp-option DNS 84.200.69.80"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 84.200.70.40"' >>/etc/openvpn/server.conf
-		;;
-	8) # OpenDNS
-		echo 'push "dhcp-option DNS 208.67.222.222"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 208.67.220.220"' >>/etc/openvpn/server.conf
-		;;
-	9) # Google
-		echo 'push "dhcp-option DNS 8.8.8.8"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 8.8.4.4"' >>/etc/openvpn/server.conf
-		;;
-	10) # Yandex Basic
-		echo 'push "dhcp-option DNS 77.88.8.8"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 77.88.8.1"' >>/etc/openvpn/server.conf
-		;;
-	11) # AdGuard DNS
-		echo 'push "dhcp-option DNS 94.140.14.14"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 94.140.15.15"' >>/etc/openvpn/server.conf
-		;;
-	12) # NextDNS
-		echo 'push "dhcp-option DNS 45.90.28.167"' >>/etc/openvpn/server.conf
-		echo 'push "dhcp-option DNS 45.90.30.167"' >>/etc/openvpn/server.conf
-		;;
-	13) # Custom DNS
-		echo "push \"dhcp-option DNS $DNS1\"" >>/etc/openvpn/server.conf
-		if [[ $DNS2 != "" ]]; then
-			echo "push \"dhcp-option DNS $DNS2\"" >>/etc/openvpn/server.conf
-		fi
-		;;
-	esac
+	done
 	echo 'push "redirect-gateway def1 bypass-dhcp"' >>/etc/openvpn/server.conf
 
 	# IPv6 network settings if needed
@@ -856,11 +633,6 @@ verb 3" >>/etc/openvpn/server.conf
 		systemctl daemon-reload
 		systemctl enable openvpn@server
 		systemctl restart openvpn@server
-
-	# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
-	if [[ $DNS == 2 ]]; then
-		installUnbound
-	fi
 
 	# Add iptables rules in two scripts
 	mkdir -p /etc/iptables
@@ -1095,43 +867,6 @@ function revokeClient() {
 	echo "Certificate for client $CLIENT revoked."
 }
 
-# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
-function removeUnbound() {
-	# Remove OpenVPN-related config
-	sed -i '/include: \/etc\/unbound\/openvpn.conf/d' /etc/unbound/unbound.conf
-	rm /etc/unbound/openvpn.conf
-
-	until [[ $REMOVE_UNBOUND =~ (y|n) ]]; do
-		echo ""
-		echo "If you were already using Unbound before installing OpenVPN, I removed the configuration related to OpenVPN."
-		read -rp "Do you want to completely remove Unbound? [y/n]: " -e REMOVE_UNBOUND
-	done
-
-	if [[ $REMOVE_UNBOUND == 'y' ]]; then
-		# Stop Unbound
-		systemctl stop unbound
-
-		if [[ $OS =~ (debian|ubuntu) ]]; then
-			apt-get remove --purge -y unbound
-		elif [[ $OS == 'arch' ]]; then
-			pacman --noconfirm -R unbound
-		elif [[ $OS =~ (centos|amzn|oracle) ]]; then
-			yum remove -y unbound
-		elif [[ $OS == 'fedora' ]]; then
-			dnf remove -y unbound
-		fi
-
-		rm -rf /etc/unbound/
-
-		echo ""
-		echo "Unbound removed!"
-	else
-		systemctl restart unbound
-		echo ""
-		echo "Unbound wasn't removed."
-	fi
-}
-
 function removeOpenVPN() {
 	echo ""
 	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i n REMOVE
@@ -1196,11 +931,6 @@ function removeOpenVPN() {
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -rf /var/log/openvpn
 
-		# !!! Diese Function braucht es nur, wenn Unbound als DNS resolver installiert wird --> fixen auf /etc/resolve.conf
-		# Unbound
-		if [[ -e /etc/unbound/openvpn.conf ]]; then
-			removeUnbound
-		fi
 		echo ""
 		echo "OpenVPN removed!"
 	else
