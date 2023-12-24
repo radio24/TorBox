@@ -190,7 +190,7 @@ while true; do
 			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
-		--on_a_cloud ) ON_A_CLOUD=="--on_a_cloud"; shift ;;
+		--on_a_cloud ) ON_A_CLOUD="--on_a_cloud"; shift ;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
 		-- ) shift; break ;;
 		* ) break ;;
@@ -385,6 +385,7 @@ select_and_install_tor()
 	if [ "$TOR_RELEASE" == "official" ]; then
 		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 	elif [ "$TOR_RELEASE" == "unofficial" ]; then
+		# shellcheck disable=SC2153
     readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
 	fi
 
