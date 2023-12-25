@@ -106,7 +106,9 @@ check_bridge_relay()
   	fi
 	else
 		if iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
+    clear
 		if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
+    clear
 	fi
 }
 
@@ -297,6 +299,7 @@ if [[ $INTERNETSELECTION -gt 4 && $INTERNETSELECTION -lt 11 ]]; then
 else
 	#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
 	if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+
   ###### DISPLAY THE MAIN MENU ######
   CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   " 1" "Tor statistics (press m for menu / q to quit)" \
@@ -304,7 +307,7 @@ else
   " 3" "Restart Tor - check if it is working (press q to quit)"  \
   " 4" "Display the Tor log file - quick and dirty (press q to quit)" \
   "===" "===================================[Where is the Internet?]===" \
-  " 5" "Ethernet cable (eth0)                                      "$FLASH_ETH0 \
+  " 5" "Ethernet cable (eth0) or on a cloud                        "$FLASH_ETH0 \
   " 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
   " 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
   " 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
@@ -371,7 +374,7 @@ case "$CHOICE" in
   # Ethernet cable internet eth0 --> wlan0 / eth1 / tun1
   5)
     INPUT=$(cat text/cable-text)
-    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -412,6 +415,7 @@ case "$CHOICE" in
       		fi
       		if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       		(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
 				fi
 			else
 				whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -464,6 +468,7 @@ case "$CHOICE" in
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -572,6 +577,7 @@ case "$CHOICE" in
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
 				fi
 
 			# The interface to the Internet is called pppd
@@ -644,6 +650,7 @@ case "$CHOICE" in
           	fi
           	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
 					fi
         else
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -697,6 +704,7 @@ case "$CHOICE" in
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -764,6 +772,7 @@ case "$CHOICE" in
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX

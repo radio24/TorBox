@@ -1183,7 +1183,6 @@ echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen passwor
 echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
 echo ""
 
-# NEW v.0.5.3: Test - if this is working we don't need FRESH_INSTALLED=1 --> FRESH_INSTALLED=3 (+removing pi)
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
