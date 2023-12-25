@@ -162,16 +162,14 @@ read_config()
     TOGGLE09="Disable"
   fi
 
-  # TOGGLE10 / TOGGLE11 shows if TorBox can be accessed from the Internet
+  # TOGGLE10 shows if TorBox can be accessed from the Internet
   RULE_CHECK=0
   ($IPTABLES -C INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
   RULE_CHECK=$?
   if [ $RULE_CHECK = 1 ]; then
     TOGGLE10="Enable"
-    TOGGLE11="(not recommended)"
   else
     TOGGLE10="Disable"
-    TOGGLE11="(recommended!)"
   fi
 
   # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
@@ -208,6 +206,14 @@ read_config()
 	else
 		TOGGLE18="Stop"
 	fi
+
+	# TOGGLE22 shows if the OpenVPN server is configured
+	if [[ -e /etc/openvpn/server.conf ]]; then
+		TOGGLE22="Manage the OpenVPN server"
+	else
+		TOGGLE22="Install the OpenVPN server"
+	fi
+
 }
 
 ######## PREPARATIONS ########
@@ -238,7 +244,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION
 "11" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
 "12" "$TOGGLE17 Torbox's WebSSH access" \
-"13" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"13" "$TOGGLE10 SSH access from the Internet" \
 "14" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
 "15" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
@@ -248,9 +254,10 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION
 "18" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
 "19" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"20" "Support for Adafruit's PiTFT displays (reboot required)" \
-"21" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"22" "Support for Sixfab Shields/HATs for cellular connections" \
+"20" "$TOGGLE22" \
+"21" "Support for Adafruit's PiTFT displays (reboot required)" \
+"22" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"23" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -773,19 +780,26 @@ case "$CHOICE" in
         whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     else
-      INPUT=$(cat text/enable_wlan-text)
-      if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-        echo " "
-        echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
-        sudo cp etc/rc.local /etc/rc.local
-				sudo chmod a+x /etc/rc.local
-        sudo systemctl unmask hostapd
-        sudo systemctl enable hostapd
-        sudo systemctl start hostapd
-        sudo systemctl daemon-reload
-        sleep 2
+			# NEW v.0.5.4: TEST only allow to enable, if wifi hardware is present
+			COUNT_WLAN=0
+			COUNT_WLAN=$(sudo lshw | grep ethernet | grep wireless | wc -l)
+			if [ "$COUNT_WLAN" -gt "0" ]; then
+      	INPUT=$(cat text/enable_wlan-text)
+      	if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        	clear
+        	echo " "
+        	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
+        	# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+        	sudo cp etc/rc.local /etc/rc.local
+					sudo chmod a+x /etc/rc.local
+        	sudo systemctl unmask hostapd
+        	sudo systemctl enable hostapd
+        	sudo systemctl start hostapd
+        	sudo systemctl daemon-reload
+        	sleep 2
+				fi
+			else
+				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
     read_config
@@ -1035,8 +1049,15 @@ case "$CHOICE" in
     sleep 2
   ;;
 
-  #This is the support for Adafruit's PiTFT displays
+	#This is for installing, managing or removing the OpenVPN server
   20)
+		clear
+		sudo bash install/openvpn-install.sh
+		read_config
+	;;
+
+  #This is the support for Adafruit's PiTFT displays
+  21)
     INPUT=$(cat text/pitft-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       clear
@@ -1058,7 +1079,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  21)
+  22)
 		clear
     online_check
     if [ $OCHECK == 1 ]; then
@@ -1117,7 +1138,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.3 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  22)
+  23)
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh

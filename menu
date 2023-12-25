@@ -307,7 +307,7 @@ else
   " 3" "Restart Tor - check if it is working (press q to quit)"  \
   " 4" "Display the Tor log file - quick and dirty (press q to quit)" \
   "===" "===================================[Where is the Internet?]===" \
-  " 5" "Ethernet cable (eth0) or on a cloud                        "$FLASH_ETH0 \
+  " 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
   " 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
   " 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
   " 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
@@ -374,7 +374,7 @@ case "$CHOICE" in
   # Ethernet cable internet eth0 --> wlan0 / eth1 / tun1
   5)
     INPUT=$(cat text/cable-text)
-    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -781,17 +781,19 @@ case "$CHOICE" in
   ;;
 
   # Sub-menues
-  11) bash menu-bridges;;
-  12) bash menu-config;;
-	13) bash menu-server;;
-	14) bash menu-onion;;
+  11) clear; bash menu-bridges;;
+  12) clear; bash menu-config;;
+	13) clear; bash menu-server;;
+	14) clear; bash menu-onion;;
 	15)
+		clear
 		INPUT=$(cat text/menu_danger-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
 		bash menu-danger
 	;;
   16)
-    screen bash menu-update
+		clear
+		screen bash menu-update
     clear
     # shellcheck disable=SC2164
     cd
@@ -801,18 +803,21 @@ case "$CHOICE" in
 
 	# How to support Tor
 	17)
+		clear
 		INPUT=$(cat text/support-tor-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
 	# How to support TorBox
 	18)
+		clear
 		INPUT=$(cat text/support-torbox-text)
 		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
   # Reboot or Shotdown TorBox
   19)
+		clear
     CHOICE_EXIT=$(whiptail --nocancel --title "TorBox v.0.5.3 - EXIT MENU" --menu "Reboot or Shutdown (ESC to quit)" 10 $MENU_WIDTH_REDUX 2 \
     "  1" "REBOOT   TorBox" \
     "  2" "SHUTDOWN TorBox" \

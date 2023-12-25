@@ -119,7 +119,7 @@ function installQuestions() {
 	echo -e "${RED}[+] I need to know the IPv4 address of the network interface you want OpenVPN listening to.${NOCOLOR}"
 	echo -e "${RED}[+] Unless your server is behind NAT, it should be your public IPv4 address, inserted below.${NOCOLOR}"
 
-	# Detect public IPv4 address and pre-fill for the user
+	# Detect public IPv4 address and pre-fill for the client
 	IP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | head -1)
 
 	if [[ -z $IP ]]; then
@@ -412,10 +412,8 @@ function installQuestions() {
 	echo -e "${NOCOLOR}     Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/."
 	echo ""
 	echo -e "${WHITE}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
-	APPROVE_INSTALL=${APPROVE_INSTALL:-n}
-	if [[ $APPROVE_INSTALL =~ n ]]; then
-		read -n1 -r -p "Press any key to continue..."
-	fi
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
 }
 
 function installOpenVPN() {
@@ -724,10 +722,10 @@ function newClient() {
 	clear
 	echo -e "${WHITE}[+] Creating a ovpn-file for one (1) client...${NOCOLOR}"
 	echo -e "${RED}[+] Tell me a name for the client.${NOCOLOR}"
-	echo "The name must consist of alphanumeric character. It may also include an underscore or a dash."
+	echo "    The name must consist of alphanumeric character. It may also include an underscore or a dash."
 
 	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
-		read -rp "Client name: " -e CLIENT
+		read -rp "    Client name: " -e CLIENT
 	done
 
 	echo ""
@@ -737,7 +735,7 @@ function newClient() {
 	echo "    2) Use a password for the client"
 
 	until [[ $PASS =~ ^[1-2]$ ]]; do
-		read -rp "Select an option [1-2]: " -e -i 1 PASS
+		read -rp "    Select an option [1-2]: " -e -i 1 PASS
 	done
 
 	# Changed based on https://github.com/angristan/openvpn-install/pull/1185/files
@@ -755,13 +753,15 @@ function newClient() {
 			./easyrsa --batch build-client-full "$CLIENT" nopass
 			;;
 		2)
-			# Change or remove:
-			echo "⚠️ You will be asked for the client password below ⚠️"
+			echo ""
+			echo -e "${WHITE}[!] You will be asked for the client password below...${NOCOLOR}"
 			./easyrsa --batch build-client-full "$CLIENT"
 			;;
 		esac
-		# Change or remove:
-		echo "Client $CLIENT added."
+		echo ""
+		echo -e "${WHITE}[+] Done! Client $CLIENT added.${NOCOLOR}"
+		echo ""
+		read -n1 -r -p "Press any key to continue..."
 	fi
 
 	# Home directory of the user, where the client configuration will be written
@@ -803,6 +803,7 @@ function newClient() {
 			;;
 		esac
 	} >>"$homeDir/$CLIENT.ovpn"
+	chown torbox:torbox "$homeDir/$CLIENT.ovpn"
 
 	clear
 	echo -e "${WHITE}[+] All done! The ovpn-file has been written to $homeDir/$CLIENT.ovpn.${NOCOLOR}"
@@ -812,10 +813,8 @@ function newClient() {
 	echo -e "${RED}[+] Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/.${NOCOLOR}"
 	echo ""
 	echo -e "${WHITE}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
-	APPROVE_INSTALL=${APPROVE_INSTALL:-n}
-	if [[ $APPROVE_INSTALL =~ n ]]; then
-		read -n1 -r -p "Press any key to continue..."
-	fi
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
 	exit 0
 }
 
@@ -834,9 +833,9 @@ function revokeClient() {
 	stty intr q
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
 		if [[ $CLIENTNUMBER == '1' ]]; then
-			read -rp "Select one client [1]: " CLIENTNUMBER
+			read -rp "    Select one client [1; q->quit]: " CLIENTNUMBER
 		else
-			read -rp "Select one client [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
+			read -rp "    Select one client [1-$NUMBEROFCLIENTS; q->quit]]: " CLIENTNUMBER
 		fi
 	done
 	stty intr ^c
@@ -854,7 +853,9 @@ function revokeClient() {
 	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo -e "${WHITE}[+] Certificate for client $CLIENT revoked.${NOCOLOR}"
+	echo -e "${WHITE}[+] Done! Certificate for client $CLIENT revoked.${NOCOLOR}"
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
 }
 
 function removeOpenVPN() {
@@ -950,7 +951,7 @@ function manageMenu() {
 # Check for root, TUN, OS...
 initialCheck
 
-# Check if OpenVPN is already installed
+# Check if OpenVPN is already installed and configures
 if [[ -e /etc/openvpn/server.conf ]]; then
 	manageMenu
 else

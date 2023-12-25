@@ -634,7 +634,7 @@ clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # Installation of standard packages
 # NEW post-v.0.5.3: openssl ca-certificates added
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
