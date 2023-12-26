@@ -197,9 +197,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     1)
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-			echo -e "${WHITE}[+] Fresh installation detected - we will reboot TorBox!${NOCOLOR}"
-      sleep 5
-      sudo reboot
+			FRESHINSTALLED=3
+      sudo bash $TORBOX_PATH/install/openvpn-install.sh
+      #sudo reboot
     ;;
 
     # This will generate new unique SSH server keys (only for images)
@@ -447,8 +447,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
 				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-				FRESHINSTALLED=0
 				sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+				FRESHINSTALLED=0
 				if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 					bash $TORBOX_PATH/install/install_network_drivers install
 					recommended_reboot first_use

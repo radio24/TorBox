@@ -41,6 +41,12 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# Other variables
+OPENVPN_CONF_PATH="/etc/openvpn"
+OPENVPN_CONF="$OPENVPN_CONF_PATH/server.conf"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+TXT_DIR="$TORBOX_PATH/text"
 
 ##############################
 ######## FUNCTIONS ###########
@@ -447,15 +453,15 @@ function installOpenVPN() {
 	fi
 
 	# Install the latest version of easy-rsa from source, if not already installed.
-	if [[ ! -d /etc/openvpn/easy-rsa/ ]]; then
+	if [[ ! -d $OPENVPN_CONF_PATH/easy-rsa/ ]]; then
 		# There are new versions, but compatibility could be a problem --> may check later
 		local version="3.1.2"
 		wget -O ~/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v${version}/EasyRSA-${version}.tgz
-		mkdir -p /etc/openvpn/easy-rsa
-		tar xzf ~/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/easy-rsa
+		mkdir -p $OPENVPN_CONF_PATH/easy-rsa
+		tar xzf ~/easy-rsa.tgz --strip-components=1 --no-same-owner --directory $OPENVPN_CONF_PATH/easy-rsa
 		rm -f ~/easy-rsa.tgz
 
-		cd /etc/openvpn/easy-rsa/ || return
+		cd $OPENVPN_CONF_PATH/easy-rsa/ || return
 		case $CERT_TYPE in
 		1)
 			echo "set_var EASYRSA_ALGO ec" >vars
@@ -487,35 +493,35 @@ function installOpenVPN() {
 		case $TLS_SIG in
 		1)
 			# Generate tls-crypt key
-			openvpn --genkey --secret /etc/openvpn/tls-crypt.key
+			openvpn --genkey --secret $OPENVPN_CONF_PATH/tls-crypt.key
 			;;
 		2)
 			# Generate tls-auth key
-			openvpn --genkey --secret /etc/openvpn/tls-auth.key
+			openvpn --genkey --secret $OPENVPN_CONF_PATH/tls-auth.key
 			;;
 		esac
 	else
 		# If easy-rsa is already installed, grab the generated SERVER_NAME
 		# for client configs
-		cd /etc/openvpn/easy-rsa/ || return
+		cd $OPENVPN_CONF_PATH/easy-rsa/ || return
 		SERVER_NAME=$(cat SERVER_NAME_GENERATED)
 	fi
 
 	# Move all the generated files
-	cp pki/ca.crt pki/private/ca.key "pki/issued/$SERVER_NAME.crt" "pki/private/$SERVER_NAME.key" /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn
+	cp pki/ca.crt pki/private/ca.key "pki/issued/$SERVER_NAME.crt" "pki/private/$SERVER_NAME.key" $OPENVPN_CONF_PATH/easy-rsa/pki/crl.pem $OPENVPN_CONF_PATH
 	if [[ $DH_TYPE == "2" ]]; then
-		cp dh.pem /etc/openvpn
+		cp dh.pem $OPENVPN_CONF_PATH
 	fi
 
 	# Make cert revocation list readable for non-root
-	chmod 644 /etc/openvpn/crl.pem
+	chmod 644 $OPENVPN_CONF_PATH/crl.pem
 
 	# Generate server.conf
-	echo "port $PORT" >/etc/openvpn/server.conf
+	echo "port $PORT" >$OPENVPN_CONF
 	if [[ $IPV6_SUPPORT == 'n' ]]; then
-		echo "proto $PROTOCOL" >>/etc/openvpn/server.conf
+		echo "proto $PROTOCOL" >>$OPENVPN_CONF
 	elif [[ $IPV6_SUPPORT == 'y' ]]; then
-		echo "proto ${PROTOCOL}6" >>/etc/openvpn/server.conf
+		echo "proto ${PROTOCOL}6" >>$OPENVPN_CONF
 	fi
 
 	# Changed by torbox: dev tun -> dev tun1
@@ -528,7 +534,7 @@ persist-tun
 keepalive 10 120
 topology subnet
 server 192.168.44.0 255.255.255.0
-ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
+ifconfig-pool-persist ipp.txt" >>$OPENVPN_CONF
 
 	# DNS resolvers
 	# Current system resolvers
@@ -545,10 +551,10 @@ ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 		# Copy, if it's a IPv4 |or| if IPv6 is enabled, IPv4/IPv6 does not matter
 		if [[ $line =~ ^[0-9.]*$ ]] || [[ $IPV6_SUPPORT == 'y' ]]; then
 			# Not sure if this is really necessary (remove it, if clients don't resolve domain names)
-			echo "push \"dhcp-option DNS $line\"" >>/etc/openvpn/server.conf
+			echo "push \"dhcp-option DNS $line\"" >>$OPENVPN_CONF
 		fi
 	done
-	echo 'push "redirect-gateway def1 bypass-dhcp"' >>/etc/openvpn/server.conf
+	echo 'push "redirect-gateway def1 bypass-dhcp"' >>$OPENVPN_CONF
 
 	# IPv6 network settings if needed
 	if [[ $IPV6_SUPPORT == 'y' ]]; then
@@ -556,22 +562,22 @@ ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 tun-ipv6
 push tun-ipv6
 push "route-ipv6 2000::/3"
-push "redirect-gateway ipv6"' >>/etc/openvpn/server.conf
+push "redirect-gateway ipv6"' >>$OPENVPN_CONF
 	fi
 
 	if [[ $DH_TYPE == "1" ]]; then
-		echo "dh none" >>/etc/openvpn/server.conf
-		echo "ecdh-curve $DH_CURVE" >>/etc/openvpn/server.conf
+		echo "dh none" >>$OPENVPN_CONF
+		echo "ecdh-curve $DH_CURVE" >>$OPENVPN_CONF
 	elif [[ $DH_TYPE == "2" ]]; then
-		echo "dh dh.pem" >>/etc/openvpn/server.conf
+		echo "dh dh.pem" >>$OPENVPN_CONF
 	fi
 
 	case $TLS_SIG in
 	1)
-		echo "tls-crypt tls-crypt.key" >>/etc/openvpn/server.conf
+		echo "tls-crypt tls-crypt.key" >>$OPENVPN_CONF
 		;;
 	2)
-		echo "tls-auth tls-auth.key 0" >>/etc/openvpn/server.conf
+		echo "tls-auth tls-auth.key 0" >>$OPENVPN_CONF
 		;;
 	esac
 
@@ -585,12 +591,12 @@ ncp-ciphers $CIPHER
 tls-server
 tls-version-min 1.2
 tls-cipher $CC_CIPHER
-client-config-dir /etc/openvpn/ccd
+client-config-dir $OPENVPN_CONF_PATH/ccd
 status /var/log/openvpn/status.log
-verb 3" >>/etc/openvpn/server.conf
+verb 3" >>$OPENVPN_CONF
 
 	# Create client-config-dir dir
-	mkdir -p /etc/openvpn/ccd
+	mkdir -p $OPENVPN_CONF_PATH/ccd
 	# Create log dir
 	mkdir -p /var/log/openvpn
 
@@ -691,9 +697,9 @@ verb 3" >>/etc/openvpn/server.conf
 	fi
 
 	# client-template.txt is created so we have a template to add further users later
-	echo "client" >/etc/openvpn/client-template.txt
-	echo "proto udp" >>/etc/openvpn/client-template.txt
-	echo "explicit-exit-notify" >>/etc/openvpn/client-template.txt
+	echo "client" >$OPENVPN_CONF_PATH/client-template.txt
+	echo "proto udp" >>$OPENVPN_CONF_PATH/client-template.txt
+	echo "explicit-exit-notify" >>$OPENVPN_CONF_PATH/client-template.txt
 	echo "remote $IP $PORT
 dev tun
 resolv-retry infinite
@@ -710,7 +716,7 @@ tls-version-min 1.2
 tls-cipher $CC_CIPHER
 ignore-unknown-option block-outside-dns
 setenv opt block-outside-dns # Prevent Windows 10 DNS leak
-verb 3" >>/etc/openvpn/client-template.txt
+verb 3" >>$OPENVPN_CONF_PATH/client-template.txt
 
 	# Generate the custom client.ovpn
 	newClient
@@ -741,13 +747,13 @@ function newClient() {
 	# Changed based on https://github.com/angristan/openvpn-install/pull/1185/files
 	# CLIENTEXISTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c -E "/CN=$CLIENT\$")
 	# if [[ $CLIENTEXISTS == '1' ]]; then
-	CLIENTEXISTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -E "^V" | grep -c -E "/CN=$CLIENT\$")
+	CLIENTEXISTS=$(tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep -E "^V" | grep -c -E "/CN=$CLIENT\$")
 	if [[ $CLIENTEXISTS != '0' ]]; then
 		echo ""
 		echo -e "${WHITE}[!] The specified client name was already found, please choose another one.${NOCOLOR}"
 		exit
 	else
-		cd /etc/openvpn/easy-rsa/ || return
+		cd $OPENVPN_CONF_PATH/easy-rsa/ || return
 		case $PASS in
 		1)
 			./easyrsa --batch build-client-full "$CLIENT" nopass
@@ -768,37 +774,37 @@ function newClient() {
 	homeDir="/home/torbox"
 
 	# Determine if we use tls-auth or tls-crypt
-	if grep -qs "^tls-crypt" /etc/openvpn/server.conf; then
+	if grep -qs "^tls-crypt" $OPENVPN_CONF; then
 		TLS_SIG="1"
-	elif grep -qs "^tls-auth" /etc/openvpn/server.conf; then
+	elif grep -qs "^tls-auth" $OPENVPN_CONF; then
 		TLS_SIG="2"
 	fi
 
 	# Generates the custom client.ovpn
-	cp /etc/openvpn/client-template.txt "$homeDir/$CLIENT.ovpn"
+	cp $OPENVPN_CONF_PATH/client-template.txt "$homeDir/$CLIENT.ovpn"
 	{
 		echo "<ca>"
-		cat "/etc/openvpn/easy-rsa/pki/ca.crt"
+		cat "$OPENVPN_CONF_PATH/easy-rsa/pki/ca.crt"
 		echo "</ca>"
 
 		echo "<cert>"
-		awk '/BEGIN/,/END CERTIFICATE/' "/etc/openvpn/easy-rsa/pki/issued/$CLIENT.crt"
+		awk '/BEGIN/,/END CERTIFICATE/' "$OPENVPN_CONF_PATH/easy-rsa/pki/issued/$CLIENT.crt"
 		echo "</cert>"
 
 		echo "<key>"
-		cat "/etc/openvpn/easy-rsa/pki/private/$CLIENT.key"
+		cat "$OPENVPN_CONF_PATH/easy-rsa/pki/private/$CLIENT.key"
 		echo "</key>"
 
 		case $TLS_SIG in
 		1)
 			echo "<tls-crypt>"
-			cat /etc/openvpn/tls-crypt.key
+			cat $OPENVPN_CONF_PATH/tls-crypt.key
 			echo "</tls-crypt>"
 			;;
 		2)
 			echo "key-direction 1"
 			echo "<tls-auth>"
-			cat /etc/openvpn/tls-auth.key
+			cat $OPENVPN_CONF_PATH/tls-auth.key
 			echo "</tls-auth>"
 			;;
 		esac
@@ -819,7 +825,7 @@ function newClient() {
 }
 
 function revokeClient() {
-	NUMBEROFCLIENTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c "^V")
+	NUMBEROFCLIENTS=$(tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep -c "^V")
 	if [[ $NUMBEROFCLIENTS == '0' ]]; then
 		clear
 		echo -e "${WHITE}[!] You have no existing clients!${NOCOLOR}"
@@ -828,7 +834,7 @@ function revokeClient() {
 
 	clear
 	echo -e "${RED}[+] Select the existing client certificate you want to revoke${NOCOLOR}"
-	tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
+	tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
 	trap "sudo bash /home/torbox/torbox/install/openvpn-install.sh; exit 0" SIGINT
 	stty intr q
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
@@ -839,18 +845,18 @@ function revokeClient() {
 		fi
 	done
 	stty intr ^c
-	CLIENT=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
-	cd /etc/openvpn/easy-rsa/ || return
+	CLIENT=$(tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
+	cd $OPENVPN_CONF_PATH/easy-rsa/ || return
 	./easyrsa --batch revoke "$CLIENT"
 	# Added based on https://github.com/angristan/openvpn-install/pull/1185/files
 	./easyrsa upgrade ca
 	EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl
-	rm -f /etc/openvpn/crl.pem
-	cp /etc/openvpn/easy-rsa/pki/crl.pem /etc/openvpn/crl.pem
-	chmod 644 /etc/openvpn/crl.pem
+	rm -f $OPENVPN_CONF_PATH/crl.pem
+	cp $OPENVPN_CONF_PATH/easy-rsa/pki/crl.pem $OPENVPN_CONF_PATH/crl.pem
+	chmod 644 $OPENVPN_CONF_PATH/crl.pem
 	if [ -f "/home/torbox/$CLIENT.ovpn" ]; then rm "/home/torbox/$CLIENT.ovpn"; fi
-	sed -i "/^$CLIENT,.*/d" /etc/openvpn/ipp.txt
-	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
+	sed -i "/^$CLIENT,.*/d" $OPENVPN_CONF_PATH/ipp.txt
+	cp $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
 	echo -e "${WHITE}[+] Done! Certificate for client $CLIENT revoked.${NOCOLOR}"
@@ -863,8 +869,8 @@ function removeOpenVPN() {
 	read -rp $'\e[1;37mDo you really want to remove OpenVPN? [y/n]: \e[0m' -e -i n REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
-		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
-		PROTOCOL=$(grep '^proto ' /etc/openvpn/server.conf | cut -d " " -f 2)
+		PORT=$(grep '^port ' $OPENVPN_CONF | cut -d " " -f 2)
+		PROTOCOL=$(grep '^proto ' $OPENVPN_CONF | cut -d " " -f 2)
 
 		# Stop OpenVPN
 		if [[ $OS == "ubuntu" ]] && [[ $VERSION_ID == "16.04" ]]; then
@@ -897,7 +903,7 @@ function removeOpenVPN() {
 
 		# Cleanup
 		# rm -rf /etc/openvpn
-		rm -rf /etc/openvpn/server.conf
+		rm -rf $OPENVPN_CONF
 		# rm -rf /usr/share/doc/openvpn*
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -rf /var/log/openvpn
@@ -952,8 +958,21 @@ function manageMenu() {
 initialCheck
 
 # Check if OpenVPN is already installed and configures
-if [[ -e /etc/openvpn/server.conf ]]; then
+if [[ -e $OPENVPN_CONF ]]; then
 	manageMenu
 else
+	clear
+	INPUT=$(cat $TXT_DIR/openvpn_server-text)
+	if (whiptail --title "TorBox - INFO (scroll down!)" --defaultno --no-button "ON A REAL BOX" --yes-button "ON A CLOUD" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		exitstatus=$?
+		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+	else
+		exitstatus=$?
+		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+	fi
 	installOpenVPN
 fi
