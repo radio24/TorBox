@@ -135,7 +135,7 @@ case "$CHOICE" in
 		if [ "$TOGGLE19" == "Start" ]; then
 			clear
     	INPUT=$(cat text/domains_without_tor-text)
-    	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    	if (whiptail --title "TorBox - DOMAIN EXCLUSION" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed
 				[ "$exitstatus" == "255" ] && exit 1
@@ -152,48 +152,43 @@ case "$CHOICE" in
 				# At the end sudo ipset create $CLEARNET_LIST hash:ip AND sudo ipset create $VPN_LIST hash:ip has to be executed
 				# Always both lists have to be loaded, even if one of them isn't used
 				clear
-				if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then
-					if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
-							sudo ipset create $CLEARNET_LIST hash:ip
-							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-						else
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							[ -f "$CLEARNET_LIST_FILE_OWN" ] && (rm $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST_FILE) 2>/dev/null
-							[ -f "$CLEARNET_LIST_FILE" ] && (rm $CLEARNET_LIST_FILE) 2>/dev/null
-							(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
-							sudo ipset create $CLEARNET_LIST hash:ip
-						fi
-					else
+				if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
 						sudo ipset create $CLEARNET_LIST hash:ip
-					fi
-					if [ -f "$VPN_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							(sudo ipset destroy $VPN_LIST) 2>/dev/null
-							sudo ipset create $VPN_LIST hash:ip
-							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						else
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							[ -f "$VPN_LIST_FILE" ] && (rm $VPN_LIST_FILE_OWN $VPN_LIST_FILE) 2>/dev/null
-							(sudo ipset destroy $VPN_LIST) 2>/dev/null
-							sudo ipset create $VPN_LIST hash:ip
-						fi
+						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 					else
-						sudo ipset create $VPN_LIST hash:ip
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						[ -f "$CLEARNET_LIST_FILE_OWN" ] && (rm $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST_FILE) 2>/dev/null
+						[ -f "$CLEARNET_LIST_FILE" ] && (rm $CLEARNET_LIST_FILE) 2>/dev/null
+						(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
+						sudo ipset create $CLEARNET_LIST hash:ip
 					fi
 				else
 					sudo ipset create $CLEARNET_LIST hash:ip
+				fi
+				if [ -f "$VPN_LIST_FILE_OWN" ]; then
+					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						(sudo ipset destroy $VPN_LIST) 2>/dev/null
+						sudo ipset create $VPN_LIST hash:ip
+						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
+					else
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						[ -f "$VPN_LIST_FILE" ] && (rm $VPN_LIST_FILE_OWN $VPN_LIST_FILE) 2>/dev/null
+						(sudo ipset destroy $VPN_LIST) 2>/dev/null
+						sudo ipset create $VPN_LIST hash:ip
+					fi
+				else
 					sudo ipset create $VPN_LIST hash:ip
 				fi
 				(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}) 2>/dev/null
@@ -228,7 +223,7 @@ case "$CHOICE" in
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
 			[ "$exitstatus" == "255" ] && exit 1
-			DOMAINNAME=$(whiptail --title "Domainname to be excluded from routed through tor" --inputbox "\nEnter the Domainname to be excluded from routed through tor (for example: netflix.com)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			DOMAINNAME=$(whiptail --title "Domainname" --inputbox "\nEnter the Domainname (for example: netflix.com):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
 			[ "$exitstatus" == "255" ] && exit 1
@@ -282,7 +277,7 @@ case "$CHOICE" in
 						# Rescan and add more subdomains and IPs connected to the domain
 						1)
 						  INPUT=$(cat text/rescan_domain-text)
-							whiptail --title "TorBox - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
+							whiptail --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
 					    bin/find_domains "$DOMAINNAME" 1
 							clear
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
@@ -324,7 +319,7 @@ case "$CHOICE" in
 						3)
 							clear
 							INPUT=$(cat text/remove_domain-text)
-							if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+							if (whiptail --title "TorBox - DOMAIN EXCLUSION" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 								exitstatus=$?
 								# exitstatus == 255 means that the ESC key was pressed
 								[ "$exitstatus" == "255" ] && exit 1
@@ -403,7 +398,7 @@ case "$CHOICE" in
 						exit 0
 					fi
 					INPUT=$(cat text/rescan_domain_after_adding-text)
-					if (whiptail --title "TorBox - (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - DOMAIN EXCLUSION (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						exitstatus=$?
 						# exitstatus == 255 means that the ESC key was pressed
 						[ "$exitstatus" == "255" ] && exit 1

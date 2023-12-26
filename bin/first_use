@@ -372,7 +372,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat $TXT_DIR/first_use-add-bridges-text)
-			if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
 					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -449,7 +449,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
 				sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 				FRESHINSTALLED=0
-				if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 					bash $TORBOX_PATH/install/install_network_drivers install
 					recommended_reboot first_use
 				fi
