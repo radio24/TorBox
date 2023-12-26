@@ -109,11 +109,11 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=10; R2=11; R2=12; else R1=4; R2=5; R2=6; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=10; else R1=4; fi
 
 	# Remove old rules
-	# Old rules --> they have to be catched by iptables-save
-	D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING" | grep "\-p tcp -j REDIRECT --to-ports 9040" | cut -d ' ' -f4)
+	# Old rules from set_interfaces_2 have to be catched and replaced by new rules (see below)
+	(D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING" | grep "\-p tcp -j REDIRECT --to-ports 9040" | cut -d ' ' -f4)) 2>/dev/null
 	NUMBER_OF_WORD=$(wc -w <<< "${D_DEVICE_T}")
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
@@ -138,8 +138,8 @@ if [ "$FIRST_RUN" == "0" ]; then
 	# If we have VPN, then the clearnet list and the VPN list will be used to route packages through VPN.
 	# If we have no VPN, then only the clearnet list will be used to route packages directly to the destination.
 	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -I PREROUTING $R2 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -I PREROUTING $R3 -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
@@ -154,5 +154,6 @@ if [ "$FIRST_RUN" == "0" ]; then
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE3 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+	# shellcheck disable=SC2034
+	(TRASH=$(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat")) 2>/dev/null
 fi

@@ -375,6 +375,17 @@ case "$CHOICE" in
   5)
     INPUT=$(cat text/cable-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if ! ip link | grep eth0; then
+				INPUT=$(cat text/no_interface_try_it_anyway-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 0 ; fi
+				else
+					trap "bash menu; exit 0" EXIT
+					exit 0
+				fi
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -427,6 +438,17 @@ case "$CHOICE" in
   6)
     INPUT=$(cat text/wlan1-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if ! ip link | grep wlan1; then
+				INPUT=$(cat text/no_interface_try_it_anyway-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu; exit 0" EXIT
+					exit 0
+				fi
+			fi
       display_net_reconfiguration_info
       (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -482,6 +504,17 @@ case "$CHOICE" in
   7)
     INPUT=$(cat text/wlan0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if ! ip link | grep wlan0; then
+				INPUT=$(cat text/no_interface_try_it_anyway-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu; exit 0" EXIT
+					exit 0
+				fi
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -534,6 +567,18 @@ case "$CHOICE" in
   8)
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+			if [ "$ON_A_CLOUD" -eq "1" ]; then
+				INPUT=$(cat text/on_a_cloud_warning-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu; exit 0" EXIT
+					exit 0
+				fi
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
@@ -663,6 +708,17 @@ case "$CHOICE" in
   9)
     INPUT=$(cat text/tethering-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if ! ip link | grep eth1; then
+				INPUT=$(cat text/no_interface_try_it_anyway-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu; exit 0" EXIT
+					exit 0
+				fi
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
