@@ -486,7 +486,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 
 			# Should we activate domain exclusion lists?
 			if grep "UNPROTECTED_DOMAIN=1" ${RUNFILE} || grep "UNPROTECTED_DOMAIN=1" "restore${RUNFILE}"; then
-				if (whiptail --title "TorBox - RESTORE" --yesno "On the source system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are enabled.\n\nDo you want to activate these exclusion lists on the restored system?" $MENU_HEIGHT_10 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - RESTORE" --yesno "On the target system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are active.\n\nDo you want to activate these exclusion lists on the restored system?" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					exitstatus=$?
 					clear
 					# exitstatus == 255 means that the ESC key was pressed
@@ -539,7 +539,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 					sudo ipset destroy 2>/dev/null
 				fi
 			else
-				if (whiptail --title "TorBox - RESTORE" --yesno "On the source system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are enabled.\n\nDo you want to keep these exclusion lists on the restored system (we will not activate them)?" $MENU_HEIGHT_10 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - RESTORE" --yesno "On the target system and/or on the backed up system, lists which contain domains to be excluded from tor-routing were/are present, but not active.\n\nDo you want to keep these exclusion lists on the restored system (we will not activate them)?" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					exitstatus=$?
 					clear
 					# exitstatus == 255 means that the ESC key was pressed

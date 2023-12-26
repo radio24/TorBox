@@ -113,7 +113,8 @@ if [ "$FIRST_RUN" == "0" ]; then
 
 	# Remove old rules
 	# Old rules from set_interfaces_2 have to be catched and replaced by new rules (see below)
-	(D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING" | grep "\-p tcp -j REDIRECT --to-ports 9040" | cut -d ' ' -f4)) 2>/dev/null
+	# The line below will create a iptables-legacy warning, but YOU SHOULDN'T CHANGE IT!!!
+	D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING" | grep "\-p tcp -j REDIRECT --to-ports 9040" | cut -d ' ' -f4)
 	NUMBER_OF_WORD=$(wc -w <<< "${D_DEVICE_T}")
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null

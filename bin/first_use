@@ -198,7 +198,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 			FRESHINSTALLED=3
-      sudo bash $TORBOX_PATH/install/openvpn-install.sh
+			if [[ ! -e /etc/openvpn/server.conf ]]; then sudo bash $TORBOX_PATH/install/openvpn-install.sh; fi
       #sudo reboot
     ;;
 

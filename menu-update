@@ -57,7 +57,9 @@ HOSTNAME="TorBox053"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
+if grep -q --text 'Raspberry Pi 5' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 5" ; fi
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
+if grep -q "Raspberry Pi 5" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 5" ; fi
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
@@ -190,6 +192,7 @@ update_tor_preparations()
 		fi
 	elif [ "$TOR_RELEASE" == "unofficial" ]; then
   	if [ $TORCONNECT -eq 0 ]; then
+			# shellcheck disable=SC2153
     	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
   	else
     	readarray -t torversion_versionsorted < <(curl -x socks5h://127.0.0.1:9050 --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
@@ -868,9 +871,22 @@ case "$CHOICE" in
 
 	# This updates additional network drivers (done through clearnet because this is not sensitive)
 	2)
-    clear
+		clear
 		INPUT=$(cat text/install_network_drivers-text)
 		if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
+			clear
+			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+			if [ "$ON_A_CLOUD" -eq "1" ]; then
+				INPUT=$(cat text/on_a_cloud_warning-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu-config; exit 0" EXIT
+					exit 0
+				fi
+			fi
 			clear
 			# A connection through tor is not necessary - <no_connection_warning> missing && <clearnet_warning> missing -> checks ONLY clearnet
 			online_check
@@ -1323,7 +1339,12 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	14)
   	clear
-		bin/first_use 3 menu-update
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			bin/first_use 1 menu-update
+		else
+			bin/first_use 3 menu-update
+		fi
 		exit 0
 	;;
 
