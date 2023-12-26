@@ -619,7 +619,7 @@ update_torbox_menu()
 			sudo rm -r $TMP_DIR
 		fi
 		cd torbox
-    echo -e "${WHITE}[+] SUCCESS! TorBox menu is now updated!${NOCOLOR}"
+    echo -e "${WHITE}[+] DONE! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
   else
     echo -e "${RED} ${NOCOLOR}"
@@ -1084,7 +1084,7 @@ case "$CHOICE" in
 		  (sudo rm /var/log/tor/notices.log) 2>/dev/null
 		  (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 			(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
-		  echo -e "${RED}[+] Done!${NOCOLOR}"
+		  echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 		  sleep 4
 		  restarting_tor menu-update
 	  fi
@@ -1316,7 +1316,7 @@ case "$CHOICE" in
 		sudo ./bin/start_tfs
     sudo ./bin/start_tcs
 		[ -f nohup.out ] && sudo rm nohup.out
-		echo -e "${RED}[+] Done!${NOCOLOR}"
+		echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 		sleep 5
 	;;
 

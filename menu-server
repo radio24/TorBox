@@ -381,7 +381,7 @@ case "$CHOICE" in
 		 	(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
 		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
 		 	(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
-		 	echo -e "${RED}[+] Done!${NOCOLOR}"
+		 	echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 		 	sleep 4
 		 	restarting_tor menu-server
 		 fi

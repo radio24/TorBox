@@ -347,7 +347,7 @@ case "$CHOICE" in
     echo ""
     sleep 2
     sudo -u debian-tor tor-prompt --run 'SIGNAL NEWNYM'
-    echo -e "${RED}[+] Done!${NOCOLOR}"
+    echo -e "${WHITE}[+] DONE!${NOCOLOR}"
     sleep 4
   ;;
 

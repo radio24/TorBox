@@ -765,7 +765,7 @@ function newClient() {
 			;;
 		esac
 		echo ""
-		echo -e "${WHITE}[+] Done! Client $CLIENT added.${NOCOLOR}"
+		echo -e "${WHITE}[+] DONE! Client $CLIENT added.${NOCOLOR}"
 		echo ""
 		read -n1 -r -p "Press any key to continue..."
 	fi

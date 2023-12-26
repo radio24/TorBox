@@ -287,7 +287,7 @@ case "$CHOICE" in
 							clear
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${RED}[+] Done!${NOCOLOR}"
+							echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
@@ -316,7 +316,7 @@ case "$CHOICE" in
 							fi
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${RED}[+] Done!${NOCOLOR}"
+							echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
@@ -390,7 +390,7 @@ case "$CHOICE" in
 						fi
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${RED}[+] Done!${NOCOLOR}"
+						echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 						sleep 3
 					else
 						clear
@@ -410,7 +410,7 @@ case "$CHOICE" in
 						bin/find_domains "$DOMAINNAME" 1
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${RED}[+] Done!${NOCOLOR}"
+						echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 						sleep 3
 					fi
 				fi
