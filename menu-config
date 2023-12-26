@@ -62,6 +62,10 @@ DEFAULT_SPEED=4000
 if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
 
+#Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
+if grep -q --text 'Raspberry' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi" ; fi
+if grep -q "Raspberry" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi" ; fi
+
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
@@ -363,104 +367,137 @@ case "$CHOICE" in
 
   #This changes the name of the WLAN
   5)
-    INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter the new name for TorBox's WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-    if [ ! -z "$INPUT" ]; then
-      clear
-      sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-      echo -e "${RED}[+] Changing SSID...${NOCOLOR}"
-      SSID="ssid=$INPUT"
-      sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
-      sleep 2
-      if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        clear
-        echo " "
-        echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
-        echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
-        (nohup bin/hostapd_fallback) 2>/dev/null
-      fi
-    fi
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nEnter the new name for TorBox's WLAN:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				if [ ! -z "$INPUT" ]; then
+					clear
+					sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+					echo -e "${RED}[+] Changing SSID...${NOCOLOR}"
+					SSID="ssid=$INPUT"
+					sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
+					sleep 2
+					if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+						clear
+						echo " "
+						echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
+						echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
+						(nohup bin/hostapd_fallback) 2>/dev/null
+					fi
+				fi
+			fi
+		fi
   ;;
 
   #This sets the WLAN regulatory domain.
   6)
-    REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
-    TLC=$(echo "$REGDOMAIN"|cut -c11-12)
-    if [ "$TLC" != "00" ] && [ ! -z "$TLC" ]; then
-      COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
-			INPUT=$(cat text/wrd-text)
-	    if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then
-	      change_crda
-	    fi
-    elif [ -z "$TLC" ]; then
-			INPUT=$(cat text/wrd-text)
-			if (whiptail --yesno "The WLAN regulatory domain is not set yet.\n\n$INPUT" 16 $MENU_WIDTH); then
-				change_crda
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
+				TLC=$(echo "$REGDOMAIN"|cut -c11-12)
+				if [ "$TLC" != "00" ] && [ ! -z "$TLC" ]; then
+					COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
+					INPUT=$(cat text/wrd-text)
+					if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then change_crda; fi
+				elif [ -z "$TLC" ]; then
+					INPUT=$(cat text/wrd-text)
+					if (whiptail --yesno "The WLAN regulatory domain is not set yet.\n\n$INPUT" 16 $MENU_WIDTH); then change_crda; fi
+				elif [ "$TLC" != "00" ]; then
+					INPUT=$(cat text/wrd-text)
+					if (whiptail --yesno "The WLAN regulatory domain is set to GLOBAL.\n\n$INPUT" 16 $MENU_WIDTH); then change_crda; fi
+				fi
 			fi
-		elif [ "$TLC" != "00" ]; then
-			INPUT=$(cat text/wrd-text)
-			if (whiptail --yesno "The WLAN regulatory domain is set to GLOBAL.\n\n$INPUT" 16 $MENU_WIDTH); then
-				change_crda
-			fi
-    fi
+		fi
   ;;
 
   #This changes the frequency band
   7)
-    if [ "$TOGGLE05" = "2.5 GHz" ]; then
-      if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
-        clear
-        echo " "
-        echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
-        echo -e "${WHITE}[!] We stay on the 2.5 GHz band!${NOCOLOR}"
-        echo " "
-        read -n 1 -s -r -p "Press any key to continue"
-        echo " "
-      else
-        REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
-        TLC=$(echo "$REGDOMAIN"|cut -c11-12)
-        if [ "$TLC" = "00" ]; then
-          clear
-          cho " "
-          echo -e "${WHITE}[!] To enable the 5 GHz band, you have to set the WLAN regulatory domain first (don't choose \"00 Global\"!).${NOCOLOR}"
-          echo " "
-          read -n 1 -s -r -p "Press any key to continue"
-          echo " "
-          change_crda
-        fi
-        INPUT=$(cat text/5ghz-text)
-        if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-          sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
-          sudo sed -i "s/^hw_mode=g/hw_mode=a/" ${HOSTAPD}
-          sudo sed -i "s/^channel.*/channel=36/" ${HOSTAPD}
-          sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/" ${HOSTAPD}
-          if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-            clear
-            echo " "
-            echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-            (nohup bin/hostapd_fallback) 2>/dev/null
-            (sudo rm nohup.out) &>/dev/null
-          fi
-        fi
-      fi
-    else
-      sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
-      sudo sed -i "s/^channel.*/channel=6/" ${HOSTAPD}
-      sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
-      sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
-      if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 2.5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-        clear
-        echo " "
-        echo -e "${RED}[+] Activating the 2.5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-        echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
-        sudo systemctl restart hostapd
-      fi
-    fi
-    read_config
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				if [ "$TOGGLE05" = "2.5 GHz" ]; then
+					if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
+						clear
+						echo " "
+						echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
+						echo -e "${WHITE}[!] We stay on the 2.5 GHz band!${NOCOLOR}"
+						echo " "
+						read -n 1 -s -r -p "Press any key to continue"
+						echo " "
+					else
+						REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
+						TLC=$(echo "$REGDOMAIN"|cut -c11-12)
+						if [ "$TLC" = "00" ]; then
+							clear
+							cho " "
+							echo -e "${WHITE}[!] To enable the 5 GHz band, you have to set the WLAN regulatory domain first (don't choose \"00 Global\"!).${NOCOLOR}"
+							echo " "
+							read -n 1 -s -r -p "Press any key to continue"
+							echo " "
+							change_crda
+						fi
+						INPUT=$(cat text/5ghz-text)
+						if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+							sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
+							sudo sed -i "s/^hw_mode=g/hw_mode=a/" ${HOSTAPD}
+							sudo sed -i "s/^channel.*/channel=36/" ${HOSTAPD}
+							sudo sed -i "s/^#ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/ht_capab=\[HT40-\]\[HT40+\]\[SHORT-GI-20\]\[SHORT-GI-40\]\[DSSS_CCK-40\]/" ${HOSTAPD}
+							if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+								clear
+								echo " "
+								echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
+								echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+								(nohup bin/hostapd_fallback) 2>/dev/null
+								(sudo rm nohup.out) &>/dev/null
+							fi
+						fi
+					fi
+				else
+					sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
+					sudo sed -i "s/^channel.*/channel=6/" ${HOSTAPD}
+					sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
+					sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+					if (whiptail --yesno "The frequency of TorBox's WLAN is now changed to 2.5 GHz.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+						clear
+						echo " "
+						echo -e "${RED}[+] Activating the 2.5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
+						echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+						sudo systemctl restart hostapd
+					fi
+				fi
+				read_config
+			fi
+		fi
   ;;
 
   #Change the WLAN channel
   8)
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
     if [ "$TOGGLE05" = "2.5 GHz" ]; then
       if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
         CHOICE=$(whiptail --nocancel --title "Changing the configuration of the WLAN" --radiolist "\nATTENTION! The Raspberry Pi 3 Model B does NOT support 40 Mhz (we removed the affected entries)!\n\nChoose a channel (default is 6)" 18 60 8 \
@@ -705,6 +742,18 @@ case "$CHOICE" in
 
   #This hides / unhides the WLAN
   10)
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
     if [ "$TOGGLE08" = "Hide" ]; then
       INPUT=$(cat text/hide_wlan-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -741,6 +790,18 @@ case "$CHOICE" in
 
   #This disables / enables the WLAN
   11)
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
       if [ -z "$CABLE" ]; then
@@ -782,7 +843,7 @@ case "$CHOICE" in
     else
 			# NEW v.0.5.4: TEST only allow to enable, if wifi hardware is present
 			COUNT_WLAN=0
-			COUNT_WLAN=$(sudo lshw | grep ethernet | grep wireless | wc -l)
+			COUNT_WLAN=$(sudo lshw | grep ethernet | grep -c wireless)
 			if [ "$COUNT_WLAN" -gt "0" ]; then
       	INPUT=$(cat text/enable_wlan-text)
       	if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -799,7 +860,7 @@ case "$CHOICE" in
         	sleep 2
 				fi
 			else
-				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+				whiptail --title "TorBox - INFO" --textbox text/no_wireless_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
     read_config
@@ -906,7 +967,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -I PREROUTING 4 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.44.0/10 -j REDIRECT --to-ports 80) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
 				($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
 				($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 				($IPTABLES -t nat -I PREROUTING 8 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -921,7 +982,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.44.0/10 -j REDIRECT --to-ports 80) 2>/dev/null
+				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -1058,28 +1119,59 @@ case "$CHOICE" in
 
   #This is the support for Adafruit's PiTFT displays
   21)
-    INPUT=$(cat text/pitft-text)
-    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-      clear
-      online_check
-      if [ $OCHECK == 1 ]; then
-        sudo apt-get -y install python3-dev
-        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
-        chmod +x adafruit-pitft.py
-        sudo pip3 install Click adafruit-python-shell
-        sudo python3 adafruit-pitft.py -u /home/torbox
-        rm adafruit-pitft.py
-      else
-        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-        echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-        echo " "
-        read -n 1 -s -r -p "Press any key to continue"
-      fi
-    fi
+		if [ -z "$CHECK_HD3" ]; then
+			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			trap "bash menu-config; exit 0" EXIT
+			exit 0
+		fi
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				INPUT=$(cat text/pitft-text)
+		    if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		     	clear
+		     	online_check
+		     	if [ $OCHECK == 1 ]; then
+		       	sudo apt-get -y install python3-dev
+		       	wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
+		       	chmod +x adafruit-pitft.py
+		      	sudo pip3 install Click adafruit-python-shell
+		       	sudo python3 adafruit-pitft.py -u /home/torbox
+		       	rm adafruit-pitft.py
+	      	else
+		       	echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+		       	echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
+		       	echo " "
+		       	read -n 1 -s -r -p "Press any key to continue"
+		     	fi
+		   	fi
+			fi
+		fi
   ;;
 
   #This is the support for 3.5" no-name TFT displays
   22)
+		if [ -z "$CHECK_HD3" ]; then
+			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			trap "bash menu-config; exit 0" EXIT
+			exit 0
+		fi
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
 		clear
     online_check
     if [ $OCHECK == 1 ]; then
@@ -1139,6 +1231,23 @@ case "$CHOICE" in
   #Remark for TorBox v.0.5.3 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
   23)
+		if [ -z "$CHECK_HD3" ]; then
+			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			trap "bash menu-config; exit 0" EXIT
+			exit 0
+		fi
+		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
