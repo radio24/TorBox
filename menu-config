@@ -828,7 +828,7 @@ case "$CHOICE" in
       3>&1 1>&2 2>&3)
       exitstatus=$?
       if [ $exitstatus = 0 ]; then
-        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g | sed s/192.168.44.1[[:space:]]//g)
+        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g)
         clear
         echo " "
         echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
@@ -873,7 +873,6 @@ case "$CHOICE" in
       sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=1/TOR_CONTROL_PORT_ACCESS=0/" ${RUNFILE}
       sudo sed -i "s/^ControlPort 192.168.42.1:9051/#ControlPort 192.168.42.1:9051/" ${TORRC}
       sudo sed -i "s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/" ${TORRC}
-      sudo sed -i "s/^ControlPort 192.168.44.1:9051/#ControlPort 192.168.44.1:9051/" ${TORRC}
       sleep 5
       echo -e "${RED}[+] Restart Tor...${NOCOLOR}"
       sudo systemctl stop tor

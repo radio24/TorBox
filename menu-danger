@@ -215,7 +215,7 @@ case "$CHOICE" in
 			fi
 			clear
 			(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}) 2>/dev/null
-			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 tun1 0 0 1
+			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 0 0 1
 			sudo ipset destroy 2>/dev/null
 		fi
   ;;
@@ -535,15 +535,11 @@ case "$CHOICE" in
 		if [ "$NUMBER_OF_WORD" == "1" ]; then
 			I_DEVICE1=$CLIENT_IFACE
 			if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
-		elif [ "$NUMBER_OF_WORD" == "2" ]; then
-			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		else
 			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
-			I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 		fi
-    sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
+    sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2
 	;;
 
   *)
