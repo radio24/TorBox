@@ -57,7 +57,9 @@ HOSTNAME="TorBox053"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
+if grep -q --text 'Raspberry Pi 5' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 5" ; fi
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
+if grep -q "Raspberry Pi 5" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 5" ; fi
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"

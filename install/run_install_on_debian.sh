@@ -324,7 +324,7 @@ download_and_compile_tor()
 		systemctl stop tor
 		systemctl mask tor
 		# Both tor services have to be masked to block outgoing tor connections
-		ssystemctl mask tor@default.service
+		systemctl mask tor@default.service
 	else
 		echo -e ""
 		echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"

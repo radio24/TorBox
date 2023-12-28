@@ -228,7 +228,7 @@ case "$CHOICE" in
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
 			[ "$exitstatus" == "255" ] && exit 1
-			DOMAINNAME=$(whiptail --title "Domainname to be excluded from routed through tor" --inputbox "\nEnter the Domainname to be excluded from routed through tor (for example: netflix.com)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			DOMAINNAME=$(whiptail --title "Domainname" --inputbox "\nEnter the Domainname (for example: netflix.com):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
 			[ "$exitstatus" == "255" ] && exit 1

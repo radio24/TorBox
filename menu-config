@@ -161,16 +161,14 @@ read_config()
     TOGGLE09="Disable"
   fi
 
-  # TOGGLE10 / TOGGLE11 shows if TorBox can be accessed from the Internet
+  # TOGGLE10 shows if TorBox can be accessed from the Internet
   RULE_CHECK=0
   (sudo iptables -C INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
   RULE_CHECK=$?
   if [ $RULE_CHECK = 1 ]; then
     TOGGLE10="Enable"
-    TOGGLE11="(not recommended)"
   else
     TOGGLE10="Disable"
-    TOGGLE11="(recommended!)"
   fi
 
   # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
@@ -237,7 +235,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION
 "11" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
 "12" "$TOGGLE17 Torbox's WebSSH access" \
-"13" "$TOGGLE10 SSH access from the Internet $TOGGLE11" \
+"13" "$TOGGLE10 SSH access from the Internet" \
 "14" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
 "15" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
