@@ -60,11 +60,15 @@ DEFAULT_SPEED=4000
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
+clear
 if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
+clear
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi" ; fi
+clear
 if grep -q "Raspberry" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi" ; fi
+clear
 
 # Identify the Operation System
 CHECK_OS="$(lsb_release -si)"
@@ -140,6 +144,7 @@ read_config()
     TOGGLE06="2.5 Ghz band"
   fi
 
+	clear
   if grep -q "^hw_mode=a" ${HOSTAPD}; then
     TOGGLE05="5 GHz"
   else
@@ -147,10 +152,13 @@ read_config()
   fi
 
   # TOGGLE07 represents the WLAN channel;
+	clear
   TOGGLE07=$(grep "^channel=" ${HOSTAPD})
+	clear
   TOGGLE07=$(echo "$TOGGLE07" | cut -c9-10 | sed 's/ //')
 
   # TOGGLE08 shows if the SSID is hidden or not
+	clear
   if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
     TOGGLE08="Unhide"
   else
@@ -189,6 +197,7 @@ read_config()
   fi
 
   # TOGGLE14 / TOGGLE15 shows if the Tor control port access is enabled/disabled for clients
+	clear
   if grep "^TOR_CONTROL_PORT_ACCESS=0" ${RUNFILE} ; then
     TOGGLE14="Enable"
     TOGGLE15="(not recommended)"
@@ -198,6 +207,7 @@ read_config()
   fi
 
 	# TOGGLE17 shows if TWEBSSH is enabled or disabled
+	clear
 	if grep "TWEBSSH=1" ${RUNFILE} ; then
 		TOGGLE17="Disable"
 	else
@@ -205,6 +215,7 @@ read_config()
 	fi
 
 	# TOGGLE18 shows if slow tor relays are excluded or not
+	clear
 	if grep "EX_SLOW=0" ${RUNFILE} ; then
 		TOGGLE18="Start"
 	else
@@ -212,6 +223,7 @@ read_config()
 	fi
 
 	# TOGGLE22 shows if the OpenVPN server is configured
+	clear
 	if [[ -e /etc/openvpn/server.conf ]]; then
 		TOGGLE22="Manage the OpenVPN server"
 	else
@@ -222,6 +234,7 @@ read_config()
 
 ######## PREPARATIONS ########
 read_config
+clear
 
 # Resetting
 shopt -s checkwinsize
@@ -1124,6 +1137,7 @@ case "$CHOICE" in
 		clear
 		sudo bash install/openvpn-install.sh
 		read_config
+		clear
 	;;
 
   #This is the support for Adafruit's PiTFT displays
