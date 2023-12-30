@@ -428,37 +428,41 @@ case "$CHOICE" in
 	# List the exclusion lists
 	3)
 		clear
-		if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
-			echo " "
-			echo -e "${WHITE}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
-			echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
-			echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
-			echo " "
-			trap "bash menu-danger; exit 0" SIGINT
-			readarray -t CLEARNET_LIST_FILE_OWN_ARRAY < "$CLEARNET_LIST_FILE_OWN"
-			for CLEARNET_LIST_FILE_OWN_STRING in "${CLEARNET_LIST_FILE_OWN_ARRAY[@]}"
-			do
-				SUBDOMAIN=$(cut -d ' ' -f1 <<< $CLEARNET_LIST_FILE_OWN_STRING)
-				IP_ROW=$(cut -d ' ' -f2- <<< $CLEARNET_LIST_FILE_OWN_STRING)
-				echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
-			done
-			echo " "
+		if [ -f $CLEARNET_LIST_FILE_OWN ]; then
+			if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
+				echo " "
+				echo -e "${WHITE}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
+				echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
+				echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
+				echo " "
+				trap "bash menu-danger; exit 0" SIGINT
+				readarray -t CLEARNET_LIST_FILE_OWN_ARRAY < "$CLEARNET_LIST_FILE_OWN"
+				for CLEARNET_LIST_FILE_OWN_STRING in "${CLEARNET_LIST_FILE_OWN_ARRAY[@]}"
+				do
+					SUBDOMAIN=$(cut -d ' ' -f1 <<< $CLEARNET_LIST_FILE_OWN_STRING)
+					IP_ROW=$(cut -d ' ' -f2- <<< $CLEARNET_LIST_FILE_OWN_STRING)
+					echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+				done
+				echo " "
+			fi
 		fi
-		if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
-			echo " "
-			echo -e "${WHITE}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
-			echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
-			echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
-			echo " "
-			trap "bash menu-danger; exit 0" SIGINT
-			readarray -t VPN_LIST_FILE_OWN_ARRAY < "$VPN_LIST_FILE_OWN"
-			for VPN_LIST_FILE_OWN_STRING in "${VPN_LIST_FILE_OWN_ARRAY[@]}"
-			do
-				SUBDOMAIN=$(cut -d ' ' -f1 <<< $VPN_LIST_FILE_OWN_STRING)
-				IP_ROW=$(cut -d ' ' -f2- <<< $VPN_LIST_FILE_OWN_STRING)
-				echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
-			done
-			echo " "
+		if [ -f $VPN_LIST_FILE_OWN ]; then
+			if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
+				echo " "
+				echo -e "${WHITE}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
+				echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
+				echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
+				echo " "
+				trap "bash menu-danger; exit 0" SIGINT
+				readarray -t VPN_LIST_FILE_OWN_ARRAY < "$VPN_LIST_FILE_OWN"
+				for VPN_LIST_FILE_OWN_STRING in "${VPN_LIST_FILE_OWN_ARRAY[@]}"
+				do
+					SUBDOMAIN=$(cut -d ' ' -f1 <<< $VPN_LIST_FILE_OWN_STRING)
+					IP_ROW=$(cut -d ' ' -f2- <<< $VPN_LIST_FILE_OWN_STRING)
+					echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+				done
+				echo " "
+			fi
 		fi
 		read -n 1 -s -r -p "Press any key to continue"
 	;;

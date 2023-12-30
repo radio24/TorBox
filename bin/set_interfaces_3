@@ -119,12 +119,20 @@ if [ "$FIRST_RUN" == "0" ]; then
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i $D_DEVICE_T -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	elif [ "$NUMBER_OF_WORD" == "2" ]; then
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[0]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[1]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	else
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
@@ -133,6 +141,13 @@ if [ "$FIRST_RUN" == "0" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[0]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[1]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[2]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	fi
 
 	# New rules
