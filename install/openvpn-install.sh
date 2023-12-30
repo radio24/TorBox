@@ -25,13 +25,14 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=3
+NO_ITEMS=4
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
@@ -114,6 +115,17 @@ function initialCheck() {
 		exit 1
 	fi
 	checkOS
+
+	# TOGGLE01 shows if the OpenVPN server is disabled or not
+	LOG_STATUS=""
+	LOG_STATUS=$(sudo systemctl is-active openvpn)
+	if [ $LOG_STATUS = inactive ] || [ $LOG_STATUS = failed ] ; then
+		TOGGLE01="Enable"
+		TOGGLE02=""
+	else
+		TOGGLE01="Disable"
+		TOGGLE02="without touching the configuration"
+	fi
 }
 
 function installQuestions() {
@@ -413,9 +425,9 @@ function installQuestions() {
 	echo -e "${RED}[+] Okay, that was all I needed. We are ready to configure your OpenVPN server now.${NOCOLOR}"
 	echo -e "${RED}[+] You will be able to generate a client ovpn-file at the end of the configuration.${NOCOLOR}"
 	echo ""
-	echo -e "${NOCOLOR}     After the generation, download the ovpn-file from the TorBox's home directory to your client machine."
-	echo -e "${NOCOLOR}     You can access it by using an SFTP client (it uses the same login and password as your SSH client)."
-	echo -e "${NOCOLOR}     Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/."
+	echo -e "${NOCOLOR}    After the generation, download the ovpn-file from the TorBox's home directory to your client machine."
+	echo -e "${NOCOLOR}    You can access it by using an SFTP client (it uses the same login and password as your SSH client)."
+	echo -e "${NOCOLOR}    Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/."
 	echo ""
 	echo -e "${WHITE}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
 	echo ""
@@ -627,8 +639,13 @@ verb 3" >>$OPENVPN_CONF
 		sed -i 's|/etc/openvpn/server|/etc/openvpn|' /etc/systemd/system/openvpn\@.service
 
 		systemctl daemon-reload
+		systemctl unmask openvpn@server
 		systemctl enable openvpn@server
 		systemctl restart openvpn@server
+		systemctl unmask openvpn
+		systemctl enable openvpn
+		systemctl restart openvpn
+		systemctl daemon-reload
 
 	# NOT NECESSARY --> we have our own iptables rules
 	# Add iptables rules in two scripts
@@ -864,6 +881,53 @@ function revokeClient() {
 	read -n1 -r -p "Press any key to continue..."
 }
 
+function stopOpenVPN() {
+	clear
+	if [ "$TOGGLE01" = "Disable" ]; then
+		INPUT=$(cat text/disable_openvpn-text)
+		DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" 26 $MENU_WIDTH 2 \
+		"1" "Temporary   - Disable the OpenVPN server until next boot" OFF \
+		"2" "Permanently - Disable the OpenVPN server until enabled again" OFF 3>&1 1>&2 2>&3)
+		exitstatus=$?
+		if [ $exitstatus = 0 ]; then
+			if [ ! -z "$DISABLED_CHOICE" ]; then
+				if [ $DISABLED_CHOICE = 1 ]; then
+					clear
+					echo " "
+					echo -e "${RED}[+] Temporary disabling the OpenVPN server...${NOCOLOR}"
+					sudo systemctl stop openvpn@server
+					sudo systemctl stop openvpn
+					sudo systemctl daemon-reload
+					sleep 2
+				elif [ $DISABLED_CHOICE = 2 ]; then
+					clear
+					echo -e "${RED}[+] Permanently disabling the OpenVPN server...${NOCOLOR}"
+					sudo systemctl mask --now openvpn@server
+					sudo systemctl mask --now openvpn
+					sudo systemctl daemon-reload
+					sleep 2
+				fi
+			fi
+		else
+			clear
+		fi
+	else
+		clear
+		read -rp $'\e[1;37mDo you want to enable OpenVPN? [y/n]: \e[0m' -e ENABLE
+		if [[ $ENABLE == 'y' ]]; then
+				clear
+				echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
+				sudo systemctl unmask openvpn@server
+				sudo systemctl unmask openvpn
+				sudo systemctl enable openvpn@server
+				sudo systemctl enable openvpn
+				sudo systemctl start openvpn@server
+				sudo systemctl start openvpn
+				sleep 2
+			fi
+	fi
+}
+
 function removeOpenVPN() {
 	clear
 	read -rp $'\e[1;37mDo you really want to remove OpenVPN? [y/n]: \e[0m' -e -i n REMOVE
@@ -874,23 +938,19 @@ function removeOpenVPN() {
 
 		# Stop OpenVPN
 		if [[ $OS == "ubuntu" ]] && [[ $VERSION_ID == "16.04" ]]; then
-			systemctl disable openvpn
-			systemctl stop openvpn
+			sudo systemctl disable openvpn
+			sudo systemctl stop openvpn
 		else
-			systemctl disable openvpn@server
-			systemctl stop openvpn@server
+			sudo systemctl disable openvpn@server
+			sudo systemctl stop openvpn@server
 			# Remove customised service
-			rm /etc/systemd/system/openvpn\@.service
+			if [ -f /etc/systemd/system/openvpn\@.service ]; then rm /etc/systemd/system/openvpn\@.service; fi
+			sudo systemctl mask --now openvpn@server
+			sudo systemctl disable openvpn
+			sudo systemctl stop openvpn
+			sudo systemctl mask --now openvpn
 		fi
-
-		# Remove the iptables rules related to the script
-		# systemctl stop iptables-openvpn
-		# Cleanup
-		# systemctl disable iptables-openvpn
-		# rm /etc/systemd/system/iptables-openvpn.service
-		systemctl daemon-reload
-#		rm /etc/iptables/add-openvpn-rules.sh
-#		rm /etc/iptables/rm-openvpn-rules.sh
+		sudo systemctl daemon-reload
 
 		# SELinux
 		if hash sestatus 2>/dev/null; then
@@ -902,17 +962,25 @@ function removeOpenVPN() {
 		fi
 
 		# Cleanup
-		# rm -rf /etc/openvpn
-		rm -rf $OPENVPN_CONF
-		# rm -rf /usr/share/doc/openvpn*
+		rm -r $OPENVPN_CONF_PATH/ca.crt
+		rm -r $OPENVPN_CONF_PATH/ca.key
+		rm -r $OPENVPN_CONF_PATH/client-template.txt
+		# Not sure - to check
+		# rm -rf $OPENVPN_CONF_PATH/crl.pem
+		rm -r $OPENVPN_CONF_PATH/easy-rsa
+		rm -r $OPENVPN_CONF_PATH/ipp.txt
+		rm -r $OPENVPN_CONF
+		rm -r $OPENVPN_CONF_PATH/server_*
+		rm -f $OPENVPN_CONF_PATH/tls-crypt.key
 		rm -f /etc/sysctl.d/99-openvpn.conf
-		rm -rf /var/log/openvpn
-
+		rm -r /var/log/openvpn
 		echo ""
 		echo -e "${WHITE}[+] OpenVPN removed!${NOCOLOR}"
+		sleep 2
 	else
 		echo ""
 		echo -e "${WHITE}[+] OpenVPN removal aborted!${NOCOLOR}"
+		sleep 2
 	fi
 }
 
@@ -930,7 +998,8 @@ function manageMenu() {
 	"==" "===============================================================" \
 	" 1" "Add a new client"  \
 	" 2" "Revoke existing client"  \
-	" 3" "Remove the OpenVPN server capability" \
+	" 3" "$TOGGLE01 the OpenVPN server $TOGGLE02"  \
+	" 4" "Remove the OpenVPN server capability and configuration" \
 	"==" "===============================================================" \
 	3>&1 1>&2 2>&3)
 	exitstatus=$?
@@ -946,6 +1015,9 @@ function manageMenu() {
 		revokeClient
 		;;
 	3)
+		stopOpenVPN
+		;;
+	4)
 		removeOpenVPN
 		;;
 	4)
