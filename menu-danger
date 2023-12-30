@@ -198,19 +198,22 @@ case "$CHOICE" in
     if [ "$TOGGLE19" == "Stop" ]; then
 			# Where is the Internet
 			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
+			if [ ! -z "$tun0up" ]; then O_DEVICE="tun0"; else O_DEVICE=$INTERNET_IFACE; fi
 			# Where are the clients
 			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
 			NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
 			if [ "$NUMBER_OF_WORD" == "1" ]; then
 				I_DEVICE1=$CLIENT_IFACE
 				if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+				I_DEVICE3="tun1"
 			else
 				I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 				I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+				I_DEVICE3="tun1"
 			fi
 			clear
 			(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}) 2>/dev/null
-			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 tun1 0 0 1
+			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3 0 0 1
 			sudo ipset destroy 2>/dev/null
 		fi
   ;;

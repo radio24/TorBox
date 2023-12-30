@@ -5,12 +5,12 @@
 :OUTPUT ACCEPT [3859:3275084]
 -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -m state --state INVALID -j DROP
--A INPUT ! -s 192.0.0.0/8 -i wlan0 -j LOG --log-prefix "SPOOFED PKT "
--A INPUT ! -s 192.0.0.0/8 -i eth1 -j LOG --log-prefix "SPOOFED PKT "
--A INPUT ! -s 192.0.0.0/8 -i tun1 -j LOG --log-prefix "SPOOFED PKT "
--A INPUT ! -s 192.0.0.0/8 -i wlan0 -j DROP
--A INPUT ! -s 192.0.0.0/8 -i eth1 -j DROP
--A INPUT ! -s 192.0.0.0/8 -i tun1 -j DROP
+-A INPUT ! -s 192.168.0.0/16 -i wlan0 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.168.0.0/16 -i eth1 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.168.0.0/16 -i tun1 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.168.0.0/16 -i wlan0 -j DROP
+-A INPUT ! -s 192.168.0.0/16 -i eth1 -j DROP
+-A INPUT ! -s 192.168.0.0/16 -i tun1 -j DROP
 -A INPUT -i lo -j ACCEPT
 -A INPUT -i wlan0 -j ACCEPT
 -A INPUT -i eth1 -j ACCEPT
@@ -38,7 +38,6 @@ COMMIT
 -A PREROUTING -d 192.168.43.1/32 -i eth1 -p tcp -j REDIRECT
 -A PREROUTING -d 192.168.44.1/32 -i tun1 -p tcp -j REDIRECT
 -A PREROUTING -d 10.192.0.0/10 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
--A PREROUTING -d 192.168.0.0/16 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 80
 -A PREROUTING -p tcp -m tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-tcp-options --log-ip-options
 -A PREROUTING -p udp -m udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
 -A PREROUTING -p tcp -m tcp --dport 80 -j DNAT --to-destination 0.0.0.0

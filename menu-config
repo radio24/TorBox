@@ -59,10 +59,15 @@ NOCOLOR='\033[0m'
 DEFAULT_SPEED=4000
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
-if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
-clear
-if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
-clear
+CHECK_HD1=""
+if [ -f /proc/device-tree/model ]; then
+	if grep -q --text 'Raspberry Pi 3 Model B Rev' /proc/device-tree/model ; then CHECK_HD1="Raspberry Pi 3 Model B Rev" ; fi
+	clear
+fi
+if [ -f /proc/cpuinfo ]; then
+	if grep -q "Raspberry Pi 3 Model B Rev" /proc/cpuinfo ; then CHECK_HD2="Raspberry Pi 3 Model B Rev" ; fi
+	clear
+fi
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi" ; fi
@@ -139,15 +144,19 @@ read_config()
 
   # TOGGLE05 / TOGGLE06 / represents the 2.4 GHz and 5 GHz Band
   if grep -q "^hw_mode=g" ${HOSTAPD}; then
+		clear
     TOGGLE05="2.5 GHz"
   else
+		clear
     TOGGLE06="2.5 Ghz band"
   fi
 
 	clear
   if grep -q "^hw_mode=a" ${HOSTAPD}; then
+		clear
     TOGGLE05="5 GHz"
   else
+		clear
     TOGGLE06="5 Ghz band"
   fi
 
@@ -160,8 +169,10 @@ read_config()
   # TOGGLE08 shows if the SSID is hidden or not
 	clear
   if grep -q "ignore_broadcast_ssid=1" ${HOSTAPD}; then
+		clear
     TOGGLE08="Unhide"
   else
+		clear
     TOGGLE08="Hide"
   fi
 
@@ -198,27 +209,33 @@ read_config()
 
   # TOGGLE14 / TOGGLE15 shows if the Tor control port access is enabled/disabled for clients
 	clear
-  if grep "^TOR_CONTROL_PORT_ACCESS=0" ${RUNFILE} ; then
+  if grep -q "^TOR_CONTROL_PORT_ACCESS=0" ${RUNFILE} ; then
+		clear
     TOGGLE14="Enable"
     TOGGLE15="(not recommended)"
   else
+		clear
     TOGGLE14="Disable"
     TOGGLE15="(recommended!)"
   fi
 
 	# TOGGLE17 shows if TWEBSSH is enabled or disabled
 	clear
-	if grep "TWEBSSH=1" ${RUNFILE} ; then
+	if grep -q "TWEBSSH=1" ${RUNFILE} ; then
+		clear
 		TOGGLE17="Disable"
 	else
+		clear
 		TOGGLE17="Enable"
 	fi
 
 	# TOGGLE18 shows if slow tor relays are excluded or not
 	clear
-	if grep "EX_SLOW=0" ${RUNFILE} ; then
+	if grep -q "EX_SLOW=0" ${RUNFILE} ; then
+		clear
 		TOGGLE18="Start"
 	else
+		clear
 		TOGGLE18="Stop"
 	fi
 
@@ -370,8 +387,10 @@ case "$CHOICE" in
       INPUTHASH=HashedControlPassword\ $(tor --hash-password ${INPUT})
       INPUT=PASSWORD=\"${INPUT}\"
       if grep -q "^HashedControlPassword\ " ${TORRC}; then
+				clear
         sudo sed -i "s/^HashedControlPassword\ .*/${INPUTHASH}/" ${TORRC}
       else
+				clear
         (printf %s"${INPUTHASH}\n" | sudo tee -a $TORRC) 2>/dev/null
       fi
       restarting_tor menu-config
@@ -381,6 +400,7 @@ case "$CHOICE" in
   #This changes the name of the WLAN
   5)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -413,6 +433,7 @@ case "$CHOICE" in
   #This sets the WLAN regulatory domain.
   6)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -425,9 +446,11 @@ case "$CHOICE" in
 			fi
 		fi
 		REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
+		clear
 		TLC=$(echo "$REGDOMAIN"|cut -c11-12)
 		if [ "$TLC" != "00" ] && [ ! -z "$TLC" ]; then
 			COUNTRY=$(grep ^$TLC /usr/share/zoneinfo/iso3166.tab | tr '\t' '!' | sed "s/^${TLC}!//")
+			clear
 			INPUT=$(cat text/wrd-text)
 			if (whiptail --yesno "The WLAN regulatory domain is set to $COUNTRY.\n\n$INPUT" 16 $MENU_WIDTH); then change_crda; fi
 		elif [ -z "$TLC" ]; then
@@ -442,6 +465,7 @@ case "$CHOICE" in
   #This changes the frequency band
   7)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -464,6 +488,7 @@ case "$CHOICE" in
 				echo " "
 			else
 				REGDOMAIN=$(grep "^REGDOMAIN=" ${CRDAFILE})
+				clear
 				TLC=$(echo "$REGDOMAIN"|cut -c11-12)
 				if [ "$TLC" = "00" ]; then
 					clear
@@ -509,6 +534,7 @@ case "$CHOICE" in
   #Change the WLAN channel
   8)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -765,6 +791,7 @@ case "$CHOICE" in
   #This hides / unhides the WLAN
   10)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -794,6 +821,7 @@ case "$CHOICE" in
     if [ $CHANGE = 1 ]; then
       sudo cp ${HOSTAPD} ${HOSTAPD_SAV}
       if grep -q "^ignore_broadcast_ssid=" ${HOSTAPD}; then
+				clear
         sudo sed -i "s/^ignore_broadcast_ssid=.*/${INPUT}/" ${HOSTAPD}
       else
         (printf %s"${INPUT}\n" | sudo tee -a ${HOSTAPD}) 2>/dev/null
@@ -813,6 +841,7 @@ case "$CHOICE" in
   #This disables / enables the WLAN
   11)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -826,8 +855,10 @@ case "$CHOICE" in
 		fi
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
+			clear
       if [ -z "$CABLE" ]; then
         CABLE=$(ip addr show eth1 | grep -w 192.168.43.1)
+				clear
       fi
       clear
       if [ -n "$CABLE" ]; then
@@ -866,6 +897,7 @@ case "$CHOICE" in
 			# NEW v.0.5.4: TEST only allow to enable, if wifi hardware is present
 			COUNT_WLAN=0
 			COUNT_WLAN=$(sudo lshw | grep ethernet | grep -c wireless)
+			clear
 			if [ "$COUNT_WLAN" -gt "0" ]; then
       	INPUT=$(cat text/enable_wlan-text)
       	if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -896,6 +928,7 @@ case "$CHOICE" in
 				sudo pkill -f "twebssh"
 				sudo rm /etc/nginx/sites-enabled/webssh.conf
         sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+				clear
 				sudo systemctl restart nginx
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
 			fi
@@ -905,6 +938,7 @@ case "$CHOICE" in
 				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				clear
 				sleep 5
 				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 				clear
@@ -989,11 +1023,13 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -I PREROUTING 4 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 6 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 7 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 8 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 9 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				# Not necessary, as all local connections to the box port 22 and 80 etc. are accepted.
+				# All TCP connection requests from devices in the 192.168.0.0/16 network are redirected to the web server on port 80 (webssh).
+				# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 7 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 8 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
         sleep 2
@@ -1004,7 +1040,7 @@ case "$CHOICE" in
         clear
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
+				# ($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -1148,6 +1184,7 @@ case "$CHOICE" in
 			exit 0
 		fi
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -1187,6 +1224,7 @@ case "$CHOICE" in
 			exit 0
 		fi
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -1221,7 +1259,7 @@ case "$CHOICE" in
         fi
         cd
         if (whiptail --defaultno --yesno "Do you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-          if ! grep "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
+          if ! grep -q "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
             sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin torbox --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
             sudo systemctl enable getty@tty1.service
             sudo systemctl daemon-reload
@@ -1263,6 +1301,7 @@ case "$CHOICE" in
 			exit 0
 		fi
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
 			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
