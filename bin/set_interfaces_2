@@ -71,8 +71,7 @@ IPTABLES="/sbin/iptables"
 MODPROBE="/sbin/modprobe"
 MY_OWN_IP1="192.168.42.1"
 MY_OWN_IP2="192.168.43.1"
-INT_NET1="$MY_OWN_IP1/8"
-INT_NET2="$MY_OWN_IP2/8"
+INT_NET="192.168.0.0/16"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
@@ -171,10 +170,10 @@ echo -e "${RED}[+] Setting up INPUT chain...${NOCOLOR}"
 $IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 $IPTABLES -A INPUT -m state --state INVALID -j DROP
 # Anti-spoofing rules
-$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j LOG --log-prefix "SPOOFED PKT "
-$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j LOG --log-prefix "SPOOFED PKT "
-$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET1 -j DROP
-$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET2 -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET -j LOG --log-prefix "SPOOFED PKT "
+$IPTABLES -A INPUT -i $I_DEVICE1 ! -s $INT_NET -j DROP
+$IPTABLES -A INPUT -i $I_DEVICE2 ! -s $INT_NET -j DROP
 # Let packages to the localhost
 $IPTABLES -A INPUT -i lo -j ACCEPT
 # Open access from the internal network (usually my own devices)

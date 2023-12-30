@@ -5,10 +5,10 @@
 :OUTPUT ACCEPT [1039297:768247214]
 -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -m state --state INVALID -j DROP
--A INPUT ! -s 192.0.0.0/8 -i wlan0 -j LOG --log-prefix "SPOOFED PKT "
--A INPUT ! -s 192.0.0.0/8 -i eth1 -j LOG --log-prefix "SPOOFED PKT "
--A INPUT ! -s 192.0.0.0/8 -i wlan0 -j DROP
--A INPUT ! -s 192.0.0.0/8 -i eth1 -j DROP
+-A INPUT ! -s 192.168.0.0/16 -i wlan0 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.168.0.0/16 -i eth1 -j LOG --log-prefix "SPOOFED PKT "
+-A INPUT ! -s 192.168.0.0/16 -i wlan0 -j DROP
+-A INPUT ! -s 192.168.0.0/16 -i eth1 -j DROP
 -A INPUT -i lo -j ACCEPT
 -A INPUT -i wlan0 -j ACCEPT
 -A INPUT -i eth1 -j ACCEPT
