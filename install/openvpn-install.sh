@@ -48,6 +48,18 @@ OPENVPN_CONF="$OPENVPN_CONF_PATH/server.conf"
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 TXT_DIR="$TORBOX_PATH/text"
+ON_A_CLOUD=$1
+
+######## PREPARATIONS ########
+# Resetting
+clear
+sleep 1
+shopt -s checkwinsize
+[ -f nohup.out ] && sudo rm nohup.out
+stty intr ^c
+trap
+clear
+sleep 1
 
 ##############################
 ######## FUNCTIONS ###########
@@ -1034,17 +1046,25 @@ if [[ -e $OPENVPN_CONF ]]; then
 	manageMenu
 else
 	clear
-	INPUT=$(cat $TXT_DIR/openvpn_server-text)
-	if (whiptail --title "TorBox - INFO (scroll down!)" --defaultno --no-button "ON A REAL BOX" --yes-button "ON A CLOUD" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-		exitstatus=$?
-		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
-		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+	if [ "$ON_A_CLOUD" == "on_a_cloud" ]; then
+		INPUT=$(cat $TXT_DIR/openvpn_server_at_install-text)
+		if (whiptail --title "TorBox - INFO (scroll down!)" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			installOpenVPN
+		else
+			exit 0
+		fi
 	else
-		exitstatus=$?
-		# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
-		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		INPUT=$(cat $TXT_DIR/openvpn_server-text)
+		if (whiptail --title "TorBox - INFO (scroll down!)" --defaultno --no-button "ON A REAL BOX" --yes-button "ON A CLOUD" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			exitstatus=$?
+			# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+			if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+			sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+		else
+			exitstatus=$?
+			# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+			if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+			sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		fi
+		installOpenVPN
 	fi
-	installOpenVPN
-fi
