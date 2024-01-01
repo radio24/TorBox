@@ -73,8 +73,6 @@ BLOCK_HTTP=1
 # 1 - TorBox's automatic counteractions are activated
 LOGCHECK=0
 
-## Global variables to help inter-script communication - don't change them!!
-
 # Where is the Internet?
 INTERNET_IFACE=eth0
 
@@ -126,5 +124,7 @@ FORWARDING_ONLY=0
 # TorBox is running on a cloud or as a cloud service
 ON_A_CLOUD=0
 
-# Exit controll variable
+## Global variables to help inter-script communication - don't change them!!
+
+# Exit control variable
 EXITID=0
