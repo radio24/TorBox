@@ -29,10 +29,11 @@
 # ./first_use <NUMBER> <SOURCE SCRIPT>
 #
 # Following NUMBERs are supported:
-# 1 - Will completely remove pi (only for Raspbian OS).
-# 2 - Will generate new unique SSH server keys.
-# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
-# 4 - Will install additional network drivers
+# 0 - Not a fresh installation - does nothing
+# 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
+# 2 - Will generate new unique SSH server keys (currently: 2 -> 3)
+# 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated (currently: 3 -> 0)
+# 4 - Will install additional network drivers (internally set with FRESHINSTALLED=4, not used in torbox.run)
 #
 # If SOURCE SCRIPT is empty, the default is menu
 #
@@ -437,9 +438,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report by pressing q."
       echo ""
+			stty intr q
 			# shellcheck disable=SC2064
       trap "finish_bridge_start1 $DEFAULT_BRIDGE_SUPPORT" SIGINT
-			stty intr q
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
