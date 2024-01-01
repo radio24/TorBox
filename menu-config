@@ -785,7 +785,21 @@ case "$CHOICE" in
 	# Change / randomize the MAC adresses of TorBox's interfaces
   9)
 		INPUT=$(cat text/help-change-MAC)
-		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then bash bin/change_MAC; fi
+		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+			clear
+			if [ "$ON_A_CLOUD" -eq "1" ]; then
+				INPUT=$(cat text/on_a_cloud_warning_mac-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu-config; exit 0" EXIT
+					exit 0
+			fi
+			bash bin/change_MAC;
+		fi
 	;;
 
   #This hides / unhides the WLAN
