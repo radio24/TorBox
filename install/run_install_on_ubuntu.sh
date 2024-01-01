@@ -1035,6 +1035,26 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup do
 if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
 sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
 echo -e "${RED}[+]${NOCOLOR}         Predictable Network Interface Names disabled"
+# NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
+# Added for TorBox on a Cloud -- has to be tested with a common Debian image
+if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+		if [ "$GRUB_CONFIG" == "" ]; then
+			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+			#This is necessary to work with special characters in sed
+			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		else
+			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+			#This is necessary to work with special characters in sed
+			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		fi
+	fi
+else
+	(sudo printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | sudo tee -a /etc/default/grub) 2>&1
+fi
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
