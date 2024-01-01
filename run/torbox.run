@@ -90,7 +90,7 @@ TWEBSSH=1
 
 # Exclude slow tor relays (Important: DO NOT ACTIVATE IF YOUR ANONYMITY HAS THE HIGHEST PRIORITY!)
 #  0 - Not excluded
-# >0 - Exclude tor relays with less bandwith than this number in kb/s
+#  1 - Exclude tor relays with less bandwith than this number in kb/s
 EX_SLOW=0
 
 # TFS starting commands
