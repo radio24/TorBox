@@ -22,7 +22,7 @@
 #
 # DESCRIPTION
 # This script installs the newest version of TorBox on a clean, running
-# Ubuntu 20.04.3 LTS (32/64bit; https://ubuntu.com/download/raspberry-pi).
+# Ubuntu.
 #
 # SYNTAX
 # ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]
