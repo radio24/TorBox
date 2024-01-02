@@ -1341,11 +1341,10 @@ case "$CHOICE" in
   	clear
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
-			bin/first_use 1 menu-update
+			bin/first_use 1
 		else
-			bin/first_use 3 menu-update
+			bin/first_use 3
 		fi
-		exit 0
 	;;
 
 	# This erases all log files

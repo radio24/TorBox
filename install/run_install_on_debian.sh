@@ -123,10 +123,11 @@ TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 #TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
-SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
+# Official: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/
+SNOWFLAKE_ORIGINAL_WEB="https://git.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.6.1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/syphyr/snowflake"
-# Version 2.8.0
+# Version 2.8.0+
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4 repository

@@ -59,7 +59,8 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 			sleep 2
 		fi
 		#
-		if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
+		# NEW v.0.5.4: After a restart, the default MAC address is already set. Executing the comand result in a error.
+		# if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
 		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
 		# NEW v.0.5.3: We have only to put an interface up, if it was up before
 		if [ "$INTERFACE1_DOWN" = "1" ]; then
@@ -104,7 +105,9 @@ if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
 	fi
 fi
 
-sudo systemctl start hostapd
+# If the configured interface is available, we will start hostapd
+INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
+if ip link | grep "$INTERFACE" ; then sudo systemctl start hostapd; fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then

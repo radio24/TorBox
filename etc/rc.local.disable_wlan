@@ -85,8 +85,6 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-sudo systemctl start hostapd
-
 # Let's check if we can auto-connect to a wireless network
 if ip link | grep wlan0 ; then
  if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then

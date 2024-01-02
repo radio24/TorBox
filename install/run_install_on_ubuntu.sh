@@ -125,10 +125,11 @@ TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 #TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
-SNOWFLAKE_ORIGINAL_WEB="https://gitweb.torproject.org/pluggable-transports/snowflake.git"
+# Official: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/
+SNOWFLAKE_ORIGINAL_WEB="https://git.torproject.org/pluggable-transports/snowflake.git"
 # Only until version 2.6.1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/syphyr/snowflake"
-# Version 2.8.0
+# Version 2.8.0+
 SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4PROXY
@@ -745,7 +746,7 @@ sleep 5
 
 clear
 echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
-if [ -f requirements.failed ]; then rm requirements.failed; fi
+if [ -f "requirements.failed" ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	REPLY=""
@@ -759,7 +760,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
 		fi
 	done
-	if [ -f requirements.failed ]; then
+	if [ -f "requirements.failed" ]; then
 		echo ""
 		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
 		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
@@ -910,6 +911,7 @@ else
 fi
 
 # 6. Install Snowflake
+# NEW v.0.5.4: Under Ubuntu, snowflake-client has to be added to the aparmor configuration. We will do that under Pt 11
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
@@ -1193,6 +1195,14 @@ sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 #sudo systemctl start nginx
 sudo systemctl daemon-reload
 
+# NEW v.0.5.3: snowflake-client has to be added to aparmor
+if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
+	if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor; fi
+else
+	cd
+	if [ -d "/etc/apparmor.d/abstractions" ]; then sudo cp torbox/etc/aparmor.d/abstractions/tor /etc/apparmor.d/abstractions; fi
+fi
+
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1298,8 +1308,10 @@ else
 fi
 #
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
-sudo mv /home/ubuntu/* /home/torbox/
-(sudo mv /home/ubuntu/.profile /home/torbox/) 2>/dev/null
+# TEST v.0.5.4: what is if another user is installing torbox?
+cd
+sudo mv * /home/torbox/
+(sudo mv .profile /home/torbox/) 2>/dev/null
 sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2>/dev/null
 sudo chown -R torbox:torbox /home/torbox/
