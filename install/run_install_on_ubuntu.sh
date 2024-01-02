@@ -1197,10 +1197,16 @@ sudo systemctl daemon-reload
 
 # NEW v.0.5.3: snowflake-client has to be added to aparmor
 if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
-	if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor; fi
+	if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then
+		sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor;
+		sudo systemctl restart apparmor
+	fi
 else
 	cd
-	if [ -d "/etc/apparmor.d/abstractions" ]; then sudo cp torbox/etc/aparmor.d/abstractions/tor /etc/apparmor.d/abstractions; fi
+	if [ -d "/etc/apparmor.d/abstractions" ]; then
+		sudo cp torbox/etc/aparmor.d/abstractions/tor /etc/apparmor.d/abstractions;
+		sudo systemctl restart apparmor
+	fi
 fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
