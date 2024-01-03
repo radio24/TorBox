@@ -911,7 +911,7 @@ else
 fi
 
 # 6. Install Snowflake
-# NEW v.0.5.4: Under Ubuntu, snowflake-client has to be added to the aparmor configuration. We will do that under Pt 11
+# NEW v.0.5.4: Under Ubuntu, snowflake-client has to be added to the apparmor configuration. We will do that under Pt 11
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
@@ -1195,7 +1195,7 @@ sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 #sudo systemctl start nginx
 sudo systemctl daemon-reload
 
-# NEW v.0.5.3: snowflake-client has to be added to aparmor
+# NEW v.0.5.3: snowflake-client has to be added to apparmor
 if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
 	if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then
 		sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor;
@@ -1204,7 +1204,7 @@ if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
 else
 	cd
 	if [ -d "/etc/apparmor.d/abstractions" ]; then
-		sudo cp torbox/etc/aparmor.d/abstractions/tor /etc/apparmor.d/abstractions;
+		sudo cp torbox/etc/apparmor.d/abstractions/tor /etc/apparmor.d/abstractions;
 		sudo systemctl restart apparmor
 	fi
 fi
