@@ -26,14 +26,12 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use <NUMBER> <SOURCE SCRIPT>
+# ./first_use <NUMBER>
 #
 # Following NUMBERs are supported:
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
-#
-# If SOURCE SCRIPT is empty, the default is menu
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
@@ -68,111 +66,99 @@ FRESHINSTALLED=$1
 .  /home/torbox/torbox/lib/torbox.lib
 
 # This function is used for the step 1 as a trap for q
-# Syntax finish_bridge_start2 <DEFAULT_BRIDGE_SUPPORT>
+# Syntax finish_bridge_start2
 # Used predefined variables: RED, NOCOLOR, TORRC
 finish_bridge_start2()
 {
-	DEFAULT_BRIDGE_SUPPORT=$1
-	trap
-	if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
-   	# Did tor with bridge-support start up?
-		REPLY=""
-		while true
-		do
-			read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
-			# The following line is for the prompt to appear on a new line.
-			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-				echo
-				echo
-				break
-			fi
-		done
-		if [[ $REPLY =~ ^[Yy]$ ]] ; then
-			echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+  # Did tor with bridge-support start up?
+	REPLY=""
+	while true
+	do
+		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+		# The following line is for the prompt to appear on a new line.
+		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			echo
 			echo
-			sleep 5
-			trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
-			exit 0
+			break
+		fi
+	done
+	if [[ $REPLY =~ ^[Yy]$ ]] ; then
+		echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+		echo
+		echo
+		sleep 5
+		exit 0
+	else
+		clear
+		whiptail --textbox $TXT_DIR/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
+		CHECK=$(grep "^#ReachableAddresses" ${TORRC})
+		if [ -z ${CHECK} ] ; then
+			sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 		else
-			clear
-			whiptail --textbox $TXT_DIR/first_use-not_working-text $MENU_HEIGHT_15 $MENU_WIDTH
+			sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
+		fi
+		clear
+		trap "bash menu-bridges; trap; exit 0" EXIT
+		exit 0
+	fi
+}
+
+# This function is used for the main program as a trap for q
+# Syntax finish_bridge_start1
+# Used predefined variables: RED, NOCOLOR, TORRC
+finish_bridge_start1()
+{
+  # Did tor with bridge-support start up?
+  echo ""
+ 	while true
+ 	do
+ 		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+ 		# The following line is for the prompt to appear on a new line.
+ 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+ 			echo
+ 			echo
+ 			break
+ 		fi
+ 	done
+ 	if [[ $REPLY =~ ^[Yy]$ ]] ; then
+ 		echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
+ 		echo
+ 		echo
+ 		sleep 5
+ 		exit 0
+ 	else
+    INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
+    if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			CHECK=$(grep "^#ReachableAddresses" ${TORRC})
 			if [ -z ${CHECK} ] ; then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			fi
+      clear
+      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+      echo -e "    Ignore any error messages, this can take minutes just wait..."
+      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
+      echo -e "    You can leave the progress report by pressing q."
+      echo ""
+			stty intr q
+			# shellcheck disable=SC2064
+			trap "finish_bridge_start2 $DEFAULT_BRIDGE_SUPPORT" SIGINT
+      sudo systemctl restart tor &
+      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			stty intr ^c
+		else
 			clear
+			echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
+			echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
+		 	echo
+			echo
+			read -n 1 -s -r -p "Press any key to continue"
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 			trap "bash menu-bridges; trap; exit 0" EXIT
 			exit 0
 		fi
-	else
-		exit 0
 	fi
-}
-
-# This function is used for the main program as a trap for q
-# Syntax finish_bridge_start1 <DEFAULT_BRIDGE_SUPPORT>
-# Used predefined variables: RED, NOCOLOR, TORRC
-finish_bridge_start1()
-{
- DEFAULT_BRIDGE_SUPPORT=$1
- trap
- if [ "$DEFAULT_BRIDGE_SUPPORT" = "1" ]; then
-   # Did tor with bridge-support start up?
-   echo ""
- 	 while true
- 	 do
- 		 read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
- 		 # The following line is for the prompt to appear on a new line.
- 		 if [[ $REPLY =~ ^[YyNn]$ ]] ; then
- 			 echo
- 			 echo
- 			 break
- 		 fi
- 	 done
- 	 if [[ $REPLY =~ ^[Yy]$ ]] ; then
- 		 echo -e "${RED}[+] DONE! TorBox is ready to work! Be careful with using it!${NOCOLOR}"
- 		 echo
- 		 echo
- 		 sleep 5
- 		 trap "bash $SOURCE_SCRIPT; trap; exit 0" EXIT
- 		 exit 0
- 	 else
-     INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
-     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-			 CHECK=$(grep "^#ReachableAddresses" ${TORRC})
-			 if [ -z ${CHECK} ] ; then
-				 sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
-			 else
-				 sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
-			 fi
-       clear
-       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-       echo -e "    Ignore any error messages, this can take minutes just wait..."
-       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-       echo -e "    You can leave the progress report by pressing q."
-       echo ""
-			 # shellcheck disable=SC2064
-			 trap "finish_bridge_start2 $DEFAULT_BRIDGE_SUPPORT" SIGINT
-			 stty intr q
-       sudo systemctl restart tor &
-       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
-			 stty intr ^c
-		 else
-			 clear
-			 echo -e "${RED}[+] We are starting now the Countermeasure sub-menu${NOCOLOR}"
-			 echo -e "${RED}[+] For more information see here: https://www.torbox.ch/?page_id=797${NOCOLOR}"
-			 echo
-			 echo
-			 read -n 1 -s -r -p "Press any key to continue"
-			 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-			 trap "bash menu-bridges; trap; exit 0" EXIT
-			 exit 0
-		 fi
-	 fi
- fi
 }
 
 
@@ -390,7 +376,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					sudo sed -i "s/^Bridge obfs4 /#Bridge obfs4 /g" ${TORRC}
 					sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 					clear
-					sudo bash bridges_activate_snowflake norestart
+					sudo bash bin/bridges_activate_snowflake norestart
 				fi
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear
@@ -427,9 +413,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report by pressing q."
       echo ""
-			# shellcheck disable=SC2064
-      trap "finish_bridge_start1 $DEFAULT_BRIDGE_SUPPORT" SIGINT
 			stty intr q
+			# shellcheck disable=SC2064
+      if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then trap "finish_bridge_start1" SIGINT; fi
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c

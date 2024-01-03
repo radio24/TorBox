@@ -892,6 +892,7 @@ else
 fi
 
 # 6. Install Snowflake
+# NEW v.0.5.4: Under Ubuntu, snowflake-client has to be added to the apparmor configuration. We will do that under Pt 11
 clear
 echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
@@ -1173,6 +1174,20 @@ sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 #sudo systemctl start nginx
 sudo systemctl daemon-reload
 
+# NEW v.0.5.3: snowflake-client has to be added to apparmor
+if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
+	if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then
+		sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor;
+		sudo systemctl restart apparmor
+	fi
+else
+	cd
+	if [ -d "/etc/apparmor.d/abstractions" ]; then
+		sudo cp torbox/etc/apparmor.d/abstractions/tor /etc/apparmor.d/abstractions;
+		sudo systemctl restart apparmor
+	fi
+fi
+
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1269,8 +1284,10 @@ else
 fi
 #
 echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
-sudo mv /home/ubuntu/* /home/torbox/
-(sudo mv /home/ubuntu/.profile /home/torbox/) 2>/dev/null
+# TEST v.0.5.4: what is if another user is installing torbox?
+cd
+sudo mv * /home/torbox/
+(sudo mv .profile /home/torbox/) 2>/dev/null
 sudo mkdir /home/torbox/openvpn
 (sudo rm .bash_history) 2>/dev/null
 sudo chown -R torbox:torbox /home/torbox/
