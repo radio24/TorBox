@@ -797,6 +797,7 @@ case "$CHOICE" in
 				else
 					trap "bash menu-config; exit 0" EXIT
 					exit 0
+				fi
 			fi
 			bash bin/change_MAC;
 		fi
