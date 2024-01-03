@@ -1046,12 +1046,12 @@ if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
 			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
 			#This is necessary to work with special characters in sed
 			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+			sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
 		else
 			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
 			#This is necessary to work with special characters in sed
 			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+			sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
 		fi
 	fi
 else
