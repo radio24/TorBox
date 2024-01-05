@@ -1140,7 +1140,7 @@ case "$CHOICE" in
 					echo ""
 					for (( i=0; i<number_bridges; i++ ))
 					do
-						[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges OBFS4 bridge(s) - probably some are duplicates${NOCOLOR}"
+						[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges OBFS4 bridge(s) - probably some are duplicates${NOCOLOR}"
 						n=$((n+1))
 						if grep -q "${bridge_address[$i]}" $TORRC ; then
 							sleep 1
@@ -1167,7 +1167,7 @@ case "$CHOICE" in
 					echo ""
 					for (( i=0; i<number_bridges; i++ ))
 					do
-						[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges Snowflake bridge(s)${NOCOLOR}"
+						[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges Snowflake bridge(s)${NOCOLOR}"
 						n=$((n+1))
 						if grep -q "${bridge_address[$i]}" $TORRC ; then
 							sleep 1
@@ -1192,7 +1192,7 @@ case "$CHOICE" in
 					# shellcheck disable=SC2128
 					if [ ! -z "$bridge_address" ]; then
 						echo ""
-						echo -e "${WHITE}[!] Sucess!. We fetched a Meek bridge${NOCOLOR}"
+						echo -e "${WHITE}[!] Success! We fetched a Meek bridge${NOCOLOR}"
 						echo -e "${RED}[+] Adding, bridge...${NOCOLOR}"
 						bridge_address="$(<<< "${bridge_address}" sed -e 's`meek_lite `#Bridge meek_lite `g')"
 						#This is necessary to work with special characters in sed

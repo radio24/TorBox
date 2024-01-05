@@ -157,7 +157,7 @@ case "$CHOICE" in
 				n=0
 				for (( i=0; i<number_bridges; i++ ))
 				do
-					[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges bridge(s)${NOCOLOR}"
+					[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges bridge(s)${NOCOLOR}"
 					n=$((n+1))
 					if grep -q "${bridge_address[$i]}" $TORRC ; then
 						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
@@ -165,8 +165,8 @@ case "$CHOICE" in
 						echo -e "${RED}[+] Adding, bridge number $n...${NOCOLOR}"
 						if [ "$COUNTRY" != "00" ]; then
 							COUNTRY=$(echo $COUNTRY | tr '[:lower:]' '[:upper:]')
-							COUNTRY=$(cat ${ZONEINFO} | tail -n +26 | grep "$COUNTRY" | cut -d$'\t' -f2 | sed "s/ /_/g" )
-							country_string="#Specific Snowflake bridge for $COUNTRY"
+							COUNTRY_LONG=$(cat ${ZONEINFO} | tail -n +26 | grep "$COUNTRY" | cut -d$'\t' -f2 | sed "s/ /_/g" )
+							country_string="#Specific Snowflake bridge for $COUNTRY_LONG"
 						fi
           	if [ "$MODE_BRIDGES" = "UseBridges 1" ] && [ "$OBFS4STRING" = "OFF" ] && [ "$MEEKSTRING" = "OFF" ]; then
             	bridge_address[$i]="$(<<< "${bridge_address[$i]}" sed -e 's`snowflake `Bridge snowflake `g')"
