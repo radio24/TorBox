@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
-TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
+TorBox is an easy to use, anonymizing router based on Raspberry Pi, which also runs on Debian and Ubuntu based systems. TorBox can create a separate WiFi that routes the encrypted network data over the Tor network. However, TorBox also supports clients that are connected with a cable. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
 * **TorBox Image** (about 1.25 GB): [v.0.5.3 (17.12.2023)](https://www.torbox.ch/data/torbox-20231217-v053.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
@@ -24,7 +24,7 @@ TorBox is ideal for providing additional protection for the entire data stream a
 5. Login to the TorBox by using a [SSH client](https://www.torbox.ch/?page_id=112#how-can-i-access-the-torbox-menu) (**192.168.42.1** on a WiFi client, **192.168.43.1** on a cable client or **192.168.44.1** when connected via VPN) or a web browser (http://192.168.42.1 on a WiFi client, http://192.168.43.1 on a cable client or http://192.168.44.1 when connected via VPN; username: **torbox** / password: **CHANGE-IT**).
 6. After [seeing a welcome screen and answering some initial questions during the first start-up](https://www.torbox.ch/?page_id=2637), you should see the [TorBox Main Menu](https://www.torbox.ch/?page_id=775). Immediately, you should **change the default passwords** (the associated entries are placed in the [configuration sub-menu](https://www.torbox.ch/?page_id=875).
 
-A **Raspberry Pi 3 ([Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) / [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/))** or a **[Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)** is recommended. TorBox should also work on a new **[Raspberry Pi 5](https://www.raspberrypi.com/news/introducing-raspberry-pi-5/)**, but we couldn't verify this yet. However, we offer also [installation script for other systems](https://www.torbox.ch/?page_id=1168), which might run on older (32bit) or other hardware platforms.
+At least a **Raspberry Pi 3 [Model B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/))** or a **[Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)** is recommended. TorBox should also work on a new **[Raspberry Pi 5](https://www.raspberrypi.com/news/introducing-raspberry-pi-5/)**, but we couldn't verify this yet. However, we offer also [installation script for other systems](https://www.torbox.ch/?page_id=1168), which might run on older (32bit) or other hardware platforms.
 
 Do you have additional questions? Check out our [Documentation](https://www.torbox.ch/?page_id=775), our [FAQ on the TorBox website](https://www.torbox.ch/?page_id=112) or [contact us](mailto:anonym@torbox.ch).
 
