@@ -3,7 +3,7 @@
 [![Latest Release](https://img.shields.io/github/release/radio24/torbox.svg?style=flat-square)](https://github.com/radio24/TorBox/releases/latest)
 - - -
 # TorBox
-TorBox is an easy to use, anonymizing router based on a Raspberry Pi. TorBox creates a separate WiFi that routes the encrypted network data over the Tor network. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client do not matter.
+TorBox is an easy to use, anonymizing router based on Raspberry Pi, which also runs on Debian and Ubuntu based systems. TorBox can create a separate WiFi that routes the encrypted network data over the Tor network. However, TorBox also supports clients that are connected with a cable. Additionally, TorBox helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and operating system on the client don’t matter.
 
 For more information, visit the [TorBox website](https://www.torbox.ch).<br />
 * **TorBox Image** (about 1.25 GB): [v.0.5.3 (17.12.2023)](https://www.torbox.ch/data/torbox-20231217-v053.gz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
