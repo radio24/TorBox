@@ -217,29 +217,34 @@ case "$CHOICE" in
     INPUT=$(cat $TXT_DIR/delete-selected-bridges-text)
     if (whiptail --title "TorBox - BRIDGE REMOVAL" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			clear
-			online_check $BRIDGE_DB_URL 0 1
-			clear
-			if [ $OCHECK == 1 ]; then
-				if (whiptail --title "TorBox - BRIDGE REMOVAL" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-					echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
-					echo " "
-					sleep 2
-					STATUS=1
-				else
+			OCHECK=0
+			# IMORTANT: the support to show the ONLINE/OFFLINE status of Snowflake bridges is currently disabled because it is not reliable.
+			# online_check $BRIDGE_DB_URL 0 1
+			# clear
+			# if [ $OCHECK == 1 ]; then
+			# 	if (whiptail --title "TorBox - BRIDGE REMOVAL" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+			#		echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+			#		echo " "
+			#		sleep 2
+			#		STATUS=1
+			#	else
 					STATUS=0
-				fi
-			else
-				echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
-        echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
-        echo " "
-				sleep 2
-			fi
+			#	fi
+			# else
+			# 	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+      #   echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
+      #   echo " "
+			# 	sleep 2
+			# fi
 			trap break SIGINT
+
+			# 1: This is for reading the bridge adresses and preparing the display for calling the menu (bridge_address is the short variable)
 			i=0
 			while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
 			do
 				n=$((i+1))
 				echo -e "${RED}[+] Checking bridge $n of $number_configured_snowflake_bridges_total bridges${NOCOLOR}"
+				configured_snowflake_bridges_deactivated_more[$i]=${configured_snowflake_bridges_deactivated[$i]}
 				bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_deactivated[$i]})
 				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 				COUNTRY_LINE=""
@@ -254,8 +259,8 @@ case "$CHOICE" in
 						bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
 					fi
 					if [ $bridge_status == 1 ]; then bridge_status="_-_ONLINE"
-				elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
-			elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
+					elif [ $bridge_status == 0 ]; then bridge_status="_-_OFFLINE"
+					elif [ $bridge_status == 2 ]; then bridge_status="_-_REMOVED"
 					fi
 				else bridge_status=""
 				fi
@@ -317,6 +322,21 @@ case "$CHOICE" in
 			service_menu checklist "${bridge_address_display_list}" "\nImportant: If available, the bridge status is not always accurate!"
 			if [ "$exitstatus" == "0" ]; then
 				clear
+
+				# 2: This is for choosing the right bridge line (bridge_address_ore is the long variable)
+				i=0
+				bridge_address_list=""
+				while [ $i -lt $number_configured_snowflake_bridges_deactivated ]
+				do
+					bridge_address_more=$(cut -d ' ' -f3- <<< ${configured_snowflake_bridges_deactivated_more[$i]})
+					bridge_address_more=$(sed "s/ /_/g" <<< "$bridge_address_more")
+					if [ "$bridge_address_list" == "" ]; then
+						bridge_address_list="$(printf "%s\n" "${bridge_address_more}")"
+					else
+						bridge_address_list="$(printf "%s\n%s\n" "${bridge_address_list}" "${bridge_address_more}")"
+					fi
+					i=$((i+1))
+				done
 				sudo cp ${TORRC} ${BAK}
 				i=0
 				for bridge_address in $bridge_address_list; do

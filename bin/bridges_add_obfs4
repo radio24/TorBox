@@ -162,7 +162,7 @@ case "$CHOICE" in
 				n=0
 				for (( i=0; i<number_bridges; i++ ))
 				do
-					[ "$i" == "0" ] && echo -e "${WHITE}[!] Sucess!. We fetched $number_bridges bridge(s)${NOCOLOR}"
+					[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges bridge(s)${NOCOLOR}"
 					n=$((n+1))
 					if grep -q "${bridge_address[$i]}" $TORRC ; then
 						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
