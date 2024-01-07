@@ -1057,6 +1057,7 @@ if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
 else
 	(sudo printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | sudo tee -a /etc/default/grub) 2>&1
 fi
+sudo update-grub
 # See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null

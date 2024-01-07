@@ -47,7 +47,7 @@ WHICH PLUGGABLE TRANSPORT I'M CURRENTLY USING?
 Check the top right corner of the menu. It should display "Bridge mode OFF!" if no bridges and pluggable transports are used or the name of the currently used pluggable transport.
 
 HOW CAN I CHECK THE VALIDITY OF A BRIDGE?
-Use menu entry 4 or 9. You can also go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number after the ip:port). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid. Often Snowflake bridges are labeled as OFFLINE, which is not the case.
+This is only possible for OBFS4 bridges. Use menu entry 4. You can also go to https://metrics.torproject.org/rs.html and search for the fingerprint (this is the long number after the ip:port). Tor Metrics should then show you the information of that particular server. If it doesn't show up, the bridge is no longer valid.
 
 HOW DO I KNOW IF IT IS WORKING?
 Check the terminal output when tor is restarting. PLEASE BE PATIENT! The process to build circuits could last for several minutes, depending on your network! At the end, you should see "Bootstrapped 100%: Done".
