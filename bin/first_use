@@ -26,12 +26,15 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use <NUMBER>
+# ./first_use <NUMBER> <SOURCE_SCRIPT>
 #
 # Following NUMBERs are supported:
 # 1 - Will completely remove pi (only for Raspbian OS).
 # 2 - Will generate new unique SSH server keys.
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated.
+# 4 - Will install additional network drivers
+#
+# If SOURCE_SCRIPT is empty, the default is then the script was started from the shell or at the beginning --> starts menu at the end
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
@@ -109,7 +112,6 @@ finish_bridge_start2()
 finish_bridge_start1()
 {
   # Did tor with bridge-support start up?
-  echo ""
  	while true
  	do
  		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
@@ -404,8 +406,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      FRESHINSTALLED=4
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
       sleep 5
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
@@ -414,8 +415,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "    You can leave the progress report by pressing q."
       echo ""
 			stty intr q
-			# shellcheck disable=SC2064
-      if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then trap "finish_bridge_start1" SIGINT; fi
+			if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then
+				trap "finish_bridge_start1" SIGINT;
+			else
+				trap "bash $SOURCE_SCRIPT; exit 0" SIGINT;
+			fi
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
@@ -424,9 +428,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 		# This will install additional network drivers
     4)
 			clear
-			INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-			FRESHINSTALLED=0
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+			FRESHINSTALLED=0
+			INPUT=$(cat $TXT_DIR/install_network_drivers-text)
 			if (whiptail --title "TorBox v.0.5.3 - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				bash $TORBOX_PATH/install/install_network_drivers install
 				recommended_reboot first_use

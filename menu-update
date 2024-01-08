@@ -1325,7 +1325,7 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	14)
   	clear
-		bin/first_use 3
+		bin/first_use 3 menu-update
 		exit 0
 	;;
 
