@@ -128,7 +128,7 @@ finish_bridge_start1()
  		echo
  		echo
  		sleep 5
- 		break
+ 		exit 0
  	else
     INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -413,8 +413,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       (sudo systemctl enable tor) 2>/dev/null
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      FRESHINSTALLED=4
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
@@ -436,11 +435,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 		# This will install additional network drivers (only, if not on a cloud)
     4)
 			clear
+			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+			FRESHINSTALLED=0
 			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
 				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-				sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-				FRESHINSTALLED=0
 				if (whiptail --title "TorBox - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 					bash $TORBOX_PATH/install/install_network_drivers install
 					recommended_reboot first_use
