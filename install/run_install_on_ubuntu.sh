@@ -512,11 +512,7 @@ if (whiptail --title "TorBox Installation on Ubuntu (scroll down!)" --scrolltext
 	clear
 	exit
 fi
-exitstatus=$?
-# exitstatus == 255 means that the ESC key was pressed
-[ "$exitstatus" == "255" ] && exit 0
 
-# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
 if [ -z "$RANDOMIZE_HOSTNAME" ]; then
 	if (whiptail --title "TorBox Installation on Ubuntu" --defaultno --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is \"TorBox<nnn>\" (<nnn> representing the version).\n\nWhen a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.\n\nWe recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.\n\nDo you want to use the DEFAULT hostname or to CHANGE it?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 		if (whiptail --title "TorBox Installation on Ubuntu" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then

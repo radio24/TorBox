@@ -1341,9 +1341,9 @@ case "$CHOICE" in
   	clear
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
-			bin/first_use 1
+			bin/first_use 1 menu-update
 		else
-			bin/first_use 3
+			bin/first_use 3 menu-update
 		fi
 	;;
 

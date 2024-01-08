@@ -26,7 +26,7 @@
 # connecting the tor network (for example OBFS4, Tor Automatic Counteractions...)
 #
 # SYNTAX
-# ./first_use <NUMBER>
+# ./first_use <NUMBER> <SOURCE_SCRIPT>
 #
 # Following NUMBERs are supported:
 # 0 - Not a fresh installation - does nothing
@@ -34,6 +34,8 @@
 # 2 - Will generate new unique SSH server keys (currently: 2 -> 3)
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated (currently: 3 -> 0)
 # 4 - Will install additional network drivers (internally set with FRESHINSTALLED=4, not used in torbox.run)
+#
+# If SOURCE_SCRIPT is empty, the default is then the script was started from the shell or at the beginning --> starts menu at the end
 #
 ##### SET VARIABLES ######
 #Set the the variables for the menu
@@ -59,6 +61,7 @@ TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 TXT_DIR="$TORBOX_PATH/text"
 FRESHINSTALLED=$1
+[ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 
 ##############################
 ######## FUNCTIONS ###########
@@ -110,7 +113,6 @@ finish_bridge_start2()
 finish_bridge_start1()
 {
   # Did tor with bridge-support start up?
-  echo ""
  	while true
  	do
  		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
@@ -126,7 +128,7 @@ finish_bridge_start1()
  		echo
  		echo
  		sleep 5
- 		exit 0
+ 		break
  	else
     INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
     if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -218,7 +220,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       if (whiptail --title "TorBox - FIRST START UP (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
-        sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
+        sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
         exit 0
       fi
 
@@ -390,7 +392,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear
         echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} bridge support...${NOCOLOR}"
-        sleep 2
+        sleep 1
 			else
 				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
 				sudo sed -i "s/^UpdateBridgesFromAuthority/#UpdateBridgesFromAuthority/g" ${TORRC}
@@ -402,20 +404,17 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				DEFAULT_BRIDGE_SUPPORT=0
 				clear
 				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
-				sleep 2
+				sleep 1
 			fi
       (sudo systemctl unmask tor) 2>/dev/null
 			(sudo systemctl unmask tor@default.service) 2>/dev/null
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
-      sleep 2
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
       (sudo systemctl enable tor) 2>/dev/null
-      sleep 2
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       FRESHINSTALLED=4
-      sleep 5
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
@@ -424,7 +423,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo ""
 			stty intr q
 			# shellcheck disable=SC2064
-      if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then trap "finish_bridge_start1" SIGINT; fi
+      if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then
+				trap "finish_bridge_start1" SIGINT;
+			else
+				trap "bash $SOURCE_SCRIPT; exit 0" SIGINT;
+			fi
       sudo systemctl restart tor &
       sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
