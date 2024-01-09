@@ -1139,7 +1139,7 @@ echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    After this last step, TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
+echo -e "${WHITE}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear
@@ -1185,7 +1185,7 @@ echo ""
 echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
 echo -e "${WHITE}    TorBox has to be rebooted.${NOCOLOR}"
 echo -e "${WHITE}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-echo -e "${WHITE}    Use \"CHANGE-IT\" as password to connect the TorBox WiFi (TorBox053) ${NOCOLOR}"
+echo -e "${WHITE}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
 echo ""
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
