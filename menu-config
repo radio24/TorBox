@@ -857,26 +857,16 @@ case "$CHOICE" in
   11)
 		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
-		if [ "$ON_A_CLOUD" -eq "1" ]; then
-			INPUT=$(cat text/on_a_cloud_warning-text)
-			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-				exitstatus=$?
-				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
-			else
-				trap "bash menu-config; exit 0" EXIT
-				exit 0
-			fi
-		fi
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
+			VPN=$(ip addr show tun1 | grep -w 192.168.44.1)
 			clear
       if [ -z "$CABLE" ]; then
         CABLE=$(ip addr show eth1 | grep -w 192.168.43.1)
 				clear
       fi
       clear
-      if [ -n "$CABLE" ]; then
+      if [ -n "$CABLE" ] || [ -n "$VPN" ]; then
         INPUT=$(cat text/disable_wlan-text)
         DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
         "1" "Temporary   - Disable TorBox's WLAN until next boot" OFF \
