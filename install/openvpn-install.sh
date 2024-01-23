@@ -730,6 +730,7 @@ verb 3" >>$OPENVPN_CONF
 	echo "proto udp" >>$OPENVPN_CONF_PATH/client-template.txt
 	echo "explicit-exit-notify" >>$OPENVPN_CONF_PATH/client-template.txt
 	echo "remote $IP $PORT
+dhcp-option DNS 192.168.44.1
 dev tun
 resolv-retry infinite
 nobind
