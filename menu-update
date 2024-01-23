@@ -1329,8 +1329,11 @@ case "$CHOICE" in
 		sleep 5
 		sudo systemctl restart nginx
 		echo -e "${RED}[+] Starting TFS and TCS again and reload Nginx...${NOCOLOR}"
+    sleep 2
 		sudo ./bin/start_tfs
+    clear
     sudo ./bin/start_tcs
+    clear
 		[ -f nohup.out ] && sudo rm nohup.out
 		echo -e "${WHITE}[+] DONE!${NOCOLOR}"
 		sleep 5
