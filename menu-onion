@@ -979,8 +979,8 @@ case "$CHOICE" in
                 HIDDENSSERVICEPORT_STRING="$(<<< "${HIDDENSSERVICEPORT}" sed -e 's`[][\\/.*^$]`\\&`g')"
                 sudo sed -i "/$HIDDENSSERVICEPORT_STRING/d" ${TORRC}
 								echo -e "${RED}[+] Removing Nginx configuration for shared folders...${NOCOLOR}"
-								(sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
-								(sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf") >/dev/null
+                if [ -f "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ]; then sudo rm "/etc/nginx/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf"; fi
+                if [ -f "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ]; then sudo rm "/etc/nginx/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf"; fi
                 echo ""
 								if [ -d "${WEBSITE_DIR}/${SERVICE_NAME}" ]; then
                 	echo -e "${RED}[+] Delete shared folder $WEBSITE_DIR/$SERVICE_NAME in 5 seconds...${NOCOLOR}"
