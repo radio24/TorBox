@@ -622,6 +622,18 @@ shopt -s checkwinsize
 stty intr ^c
 trap
 
+# NEW v.0.5.4: To be sure that the necessary directories exist
+if ! sudo test -d /var/lib/tor/services; then
+  (sudo mkdir /var/lib/tor/services) 2>/dev/null
+  sudo chown -R debian-tor:debian-tor /var/lib/tor/services
+  sudo chmod -R go-rwx /var/lib/tor/services
+fi
+if ! sudo test -d /var/lib/tor/onion_auth; then
+  (mkdir /var/lib/tor/onion_auth) 2>/dev/null
+  chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+  chmod -R go-rwx /var/lib/tor/onion_auth
+fi
+
 ###### DISPLAY THE MENU ######
 clear
 
