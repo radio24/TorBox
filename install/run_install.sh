@@ -668,6 +668,9 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 
+# NEW v.0.5.4: opencv-python-headless hangs when installed with pip
+check_install_packages "python3-opencv"
+
 # NEW v.0.5.3: New way to install and check Python requirements
 # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
 #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
