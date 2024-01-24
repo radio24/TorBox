@@ -32,6 +32,7 @@ NO_SPACER=2
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
+MENU_HEIGHT_20=20
 MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
@@ -898,7 +899,7 @@ function stopOpenVPN() {
 	clear
 	if [ "$TOGGLE01" = "Disable" ]; then
 		INPUT=$(cat text/disable_openvpn-text)
-		DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" 26 $MENU_WIDTH 2 \
+		DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 		"1" "Temporary   - Disable the OpenVPN server until next boot" OFF \
 		"2" "Permanently - Disable the OpenVPN server until enabled again" OFF 3>&1 1>&2 2>&3)
 		exitstatus=$?
