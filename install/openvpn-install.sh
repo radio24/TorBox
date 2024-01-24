@@ -1058,13 +1058,13 @@ else
 		INPUT=$(cat $TXT_DIR/openvpn_server-text)
 		if (whiptail --title "TorBox - INFO (scroll down!)" --defaultno --no-button "ON A REAL BOX" --yes-button "ON A CLOUD" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			exitstatus=$?
-			# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-			if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+			# exitstatus = 255 means that the ESC key was pressed
+			if [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
 			sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
 		else
 			exitstatus=$?
 			# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-			if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
+			if [ "$exitstatus" = "255" ] ; then	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}; exit 1 ; fi
 			sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 		fi
 		installOpenVPN
