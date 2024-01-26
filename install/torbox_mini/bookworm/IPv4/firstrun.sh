@@ -39,7 +39,7 @@ cat >/etc/network/interfaces.d/usb0 <<'GADGET'
 auto usb0
 allow-hotplug usb0
 iface usb0 inet static
-address 192.168.45.1
+address 192.168.44.1
 netmask 255.255.255.0
 
 GADGET

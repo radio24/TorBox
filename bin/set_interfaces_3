@@ -76,11 +76,23 @@ read_config()
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		I_DEVICE1=$CLIENT_IFACE
 		if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
-		I_DEVICE3="tun1"
+		if grep "^TORBOX_MINI=0" ${RUNFILE} ; then
+			I_DEVICE3="usb0"
+		else
+			I_DEVICE3="tun1"
+		fi
+	elif [ "$NUMBER_OF_WORD" == "2" ]; then
+		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		if grep "^TORBOX_MINI=0" ${RUNFILE} ; then
+			I_DEVICE3="usb0"
+		else
+			I_DEVICE3="tun1"
+		fi
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
-		I_DEVICE3="tun1"
+		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 	fi
 }
 

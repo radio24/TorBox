@@ -202,6 +202,7 @@ ETH1_exists()
 	fi
 }
 
+# This function is used for TorBox on a Cloud (tun1) and for TorBox mini (usb0)
 TUN1_exists()
 {
 	sudo sed -i "s/^#TransPort 192.168.44.1:9040/TransPort 192.168.44.1:9040/" ${TORRC}
@@ -211,23 +212,23 @@ TUN1_exists()
 	sudo sed -i "$CONTROLPORT_TUN" ${TORRC}
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan0 " ${RUNFILE})
 	if [ -n "$CLIENT_IFACE" ] ; then
-		CLIENT_IFACE="${CLIENT_IFACE} tun1"
+		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
 	fi
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan1 " ${RUNFILE})
 	if [ -n "$CLIENT_IFACE" ] ; then
-		CLIENT_IFACE="${CLIENT_IFACE} tun1"
+		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
 	fi
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
 	if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 tun1/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 tun1/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth0" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 tun1/" ${RUNFILE}
+			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth1" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 tun1/" ${RUNFILE}
+			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	else
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=tun1/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=$CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	fi
 }
 
@@ -402,12 +403,17 @@ case "$CHOICE" in
         	ETH1_IP=$(ip addr show eth1 | grep -w 192.168.43.1)
         	clear
       	fi
-				# To check: can I switch from UNNOWN
+				# To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] ; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -465,12 +471,17 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-				# To check: can I switch from UNNOWN
+        # To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -531,12 +542,17 @@ case "$CHOICE" in
         	ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
         	clear
       	fi
-				# To check: can I switch from UNNOWN
+        # To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -597,12 +613,17 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-				# To check: can I switch from UNNOWN
+        # To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -670,12 +691,17 @@ case "$CHOICE" in
             ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
             clear
           fi
-					# To check: can I switch from UNNOWN
-					if ip link | grep tun1 | grep "state UNKNOWN" ; then
-						TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
-						clear
-					fi
-
+          # To check: can I switch from UNKNOWN
+          # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+  				if ip link | grep tun1 | grep "state UNKNOWN" ; then
+  					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+            CLIENT_IFACE_TUN1_IP="tun1"
+  					clear
+          else
+            TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+            CLIENT_IFACE_TUN1_IP="usb0"
+            clear
+  				fi
 					# Configure torrc depending on the present interfaces
 					if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -735,12 +761,17 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-				# To check: can I switch from UNNOWN
+        # To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] ; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -803,12 +834,17 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-				# To check: can I switch from UNNOWN
+        # To check: can I switch from UNKNOWN
+        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="tun1"
 					clear
+        else
+          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          CLIENT_IFACE_TUN1_IP="usb0"
+          clear
 				fi
-
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX

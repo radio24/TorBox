@@ -125,6 +125,9 @@ FORWARDING_ONLY=0
 # TorBox is running on a cloud or as a cloud service
 ON_A_CLOUD=0
 
+# TorBox is running on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget
+TORBOX_MINI=0
+
 ## Global variables to help inter-script communication - don't change them!!
 
 # Exit control variable

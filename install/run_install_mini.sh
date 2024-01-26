@@ -24,9 +24,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
-# This script installs the newest version of TorBox on a clean, running
-# Raspberry Pi OS lite. Please before starting the installation ensure that
-# the user account "torbox" is already created and that you are logged in as such.
+# This script installs the newest version of TorBox on a Raspberry Pi Zero 2 W.
+# Before the script can be started, the Raspberry Pi OS lite 32-bit must be installed
+# on the SD card running in the Raspberry Pi Zero 2 W.
 #
 # SYNTAX
 # ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]
@@ -952,37 +952,37 @@ echo ""
 #(sudo cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
 #sudo cp etc/default/hostapd /etc/default/
 #echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
-#(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
-#sudo cp etc/default/isc-dhcp-server /etc/default/
-#echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
+(sudo cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
+sudo cp etc/default/isc-dhcp-server /etc/default/
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
 (sudo cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
 sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
 (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
-sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
+sudo cp etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
 #(sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
 #sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
 #echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
-#(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-#sudo cp etc/iptables.ipv4.nat /etc/
-#echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
+(sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
+sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 (sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
 sudo cp etc/motd /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-#(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-#sudo cp etc/network/interfaces /etc/network/
-#echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+sudo cp etc/network/interfaces.mini /etc/network/interfaces
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 #sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 #(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 #sudo cp etc/rc.local /etc/
 #sudo chmod a+x /etc/rc.local
 #echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
-#if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
-#  sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
-#  sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-#  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
-#fi
+if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+  sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
+  sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
+fi
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
 sudo cp etc/tor/torrc /etc/tor/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
@@ -1050,9 +1050,9 @@ sudo systemctl daemon-reload
 #sudo systemctl unmask hostapd
 #sudo systemctl enable hostapd
 #sudo systemctl start hostapd
-#sudo systemctl unmask isc-dhcp-server
-#sudo systemctl enable isc-dhcp-server
-#sudo systemctl start isc-dhcp-server
+sudo systemctl unmask isc-dhcp-server
+sudo systemctl enable isc-dhcp-server
+sudo systemctl start isc-dhcp-server
 sudo systemctl stop tor
 sudo systemctl mask tor
 # Both tor services have to be masked to block outgoing tor connections
@@ -1115,6 +1115,8 @@ else
 	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 fi
+# NEW for TorBox mini: Set a flag (only in this installation script!)
+sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
 
 echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
 sudo mkdir /home/torbox/openvpn
