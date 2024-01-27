@@ -426,9 +426,9 @@ case "$CHOICE" in
       		# The following line should minimize those cases where a restart is required.
       		sudo systemctl restart isc-dhcp-server
       		if [ -z "$INTERNETSELECTION" ]; then
-        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 tun1 $CAPTIVE 1
+        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
       		else
-        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 tun1 $CAPTIVE 0
+        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
       		fi
       		if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       		(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -495,9 +495,9 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 tun1 $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
         	else
-          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 tun1 $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -566,9 +566,9 @@ case "$CHOICE" in
       		# The following line should minimize those cases where a restart is required.
       		sudo systemctl restart isc-dhcp-server
       		if [ -z "$INTERNETSELECTION" ]; then
-        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 tun1 $CAPTIVE 1
+        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
       		else
-        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 tun1 $CAPTIVE 0
+        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
       		fi
       		if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
       		# iptables cannot be saved !!
@@ -637,9 +637,9 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 tun1 $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
         	else
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 tun1 $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -715,9 +715,9 @@ case "$CHOICE" in
           	# The following line should minimize those cases where a restart is required.
           	sudo systemctl restart isc-dhcp-server
           	if [ -z "$INTERNETSELECTION" ]; then
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 tun1 $CAPTIVE 1
+            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
           	else
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 tun1 $CAPTIVE 0
+            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
           	fi
           	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
           	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -785,9 +785,9 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 tun1 $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
         	else
-          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 tun1 $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
         	fi
         	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
         	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
