@@ -410,7 +410,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
@@ -478,7 +478,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
@@ -549,7 +549,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
@@ -620,7 +620,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
@@ -698,7 +698,7 @@ case "$CHOICE" in
             CLIENT_IFACE_TUN1_IP="tun1"
   					clear
           else
-            TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+            TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
             CLIENT_IFACE_TUN1_IP="usb0"
             clear
   				fi
@@ -768,7 +768,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
@@ -841,7 +841,7 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="tun1"
 					clear
         else
-          TUN1_IP=$(ip addr show ubs0 | grep -w 192.168.44.1)
+          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
