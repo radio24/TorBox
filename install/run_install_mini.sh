@@ -1047,6 +1047,10 @@ fi
 clear
 echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
 sudo systemctl daemon-reload
+# Temporary to test TorBox TorBox mini
+sudo systemctl stop hostapd
+sudo systemctl disable hostapd
+sudo systemctl mask hostapd
 #sudo systemctl unmask hostapd
 #sudo systemctl enable hostapd
 #sudo systemctl start hostapd
@@ -1060,16 +1064,17 @@ sudo systemctl mask tor@default.service
 sudo systemctl unmask ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
-echo ""
-echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
-sudo systemctl stop rsyslog
-sudo systemctl disable rsyslog
-sudo systemctl mask rsyslog
-sudo systemctl stop systemd-journald-dev-log.socket
-sudo systemctl stop systemd-journald-audit.socket
-sudo systemctl stop systemd-journald.socket
-sudo systemctl stop systemd-journald.service
-sudo systemctl mask systemd-journald.service
+# Temporary to test TorBox TorBox mini
+#echo ""
+#echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
+#sudo systemctl stop rsyslog
+#sudo systemctl disable rsyslog
+#sudo systemctl mask rsyslog
+#sudo systemctl stop systemd-journald-dev-log.socket
+#sudo systemctl stop systemd-journald-audit.socket
+#sudo systemctl stop systemd-journald.socket
+#sudo systemctl stop systemd-journald.service
+#sudo systemctl mask systemd-journald.service
 echo""
 
 # Make Nginx ready for Webssh and Onion Services

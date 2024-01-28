@@ -6,8 +6,10 @@
 
 auto lo
 auto wlan0
+auto usb0
 
-iface lo inet loopback
+allow-hotplug usb0
+
 iface wlan0 inet dhcp
 
 iface usb0 inet static
