@@ -130,6 +130,7 @@ cp chat-disconnect /etc/chatscripts/
 mkdir -p /etc/ppp/peers
 sed -i "s/#APN/$carrierapn/" provider
 mv provider /etc/ppp/peers/provider
+sed -i "s/^auth/#auth/" /etc/ppp/options
 
 if ! (grep -q 'sudo route' /etc/ppp/ip-up ); then
     echo "sudo route add default ppp0" >> /etc/ppp/ip-up
