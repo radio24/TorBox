@@ -1,0 +1,89 @@
+#!/bin/bash
+
+source functions.sh
+source configs.sh
+
+# Pinout for cellulariot hat
+STATUS=19
+POWERKEY=26
+
+
+# Configure pins
+gpio -g mode $STATUS in
+gpio -g mode $POWERKEY out
+gpio -g mode $ENABLE out
+
+
+function power_up_module()
+{
+	for i in {1..20}; do
+		if [[ $(gpio -g read $STATUS) -eq 1 ]]; then
+			debug "Module is powering up..."
+
+			gpio -g write $POWERKEY 0
+			gpio -g write $POWERKEY 1
+			sleep 2
+			gpio -g write $POWERKEY 0
+			sleep 5
+
+			if [[ $(gpio -g read $STATUS) -eq 0 ]]; then
+				debug "Module is powered up."
+				return 0
+				break
+			else
+				debug "Module couldn't be powered up!"
+				sleep 2
+			fi
+		else
+			debug "Module is just powered up."
+			return 0
+			break
+		fi
+	done
+	return 1 
+}
+
+# Modem power up
+if power_up_module -eq 0 ; then sleep 0.1; else debug "Module couldn't be powered up! Check the hardware setup!"; fi
+
+if check_network -eq 0; then 
+    debug "PPP chatscript is starting...";
+    sudo pon;
+
+	# check default interface
+	route | grep ppp | grep default > /dev/null
+	PPP_IS_DEFAULT=$?
+	if [[ $PPP_IS_DEFAULT -ne 0 ]]; then sudo route add default ppp0; debug "ppp0 is added as default interface manually."; fi
+else 
+    debug "Network registration is failed!";
+fi 
+
+while true; do
+    # Checking cellular internet connection
+    ping -q -c 1 -s 0 -w $PING_TIMEOUT -I ppp0 8.8.8.8 > /dev/null 2>&1
+    PINGG=$?
+
+    if [[ $PINGG -eq 0 ]]; then
+        printf "."
+    else
+        printf "/"
+        sleep $DOUBLE_CHECK_WAIT
+	    # Checking cellular internet connection
+        ping -q -c 1 -s 0 -w $PING_TIMEOUT -I ppp0 8.8.8.8 > /dev/null 2>&1
+        PINGG=$?
+
+        if [[ $PINGG -eq 0 ]]; then
+            printf "+"
+        else
+	        debug "Connection is down, reconnecting..."
+            if check_network -eq 0; then sleep 0.1; else debug "Network registration is failed!"; fi
+	        sudo pon
+
+			# check default interface
+			route | grep ppp | grep default > /dev/null
+			PPP_IS_DEFAULT=$?
+			if [[ $PPP_IS_DEFAULT -ne 0 ]]; then sudo route add default ppp0; debug "ppp0 is added as default interface manually."; fi
+	    fi
+    fi
+	sleep $INTERVAL
+done
