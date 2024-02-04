@@ -100,8 +100,8 @@ sleep 3
 
 #Downloading setup files as will as ppp wiringpi is not necessary, because they are alredy there
 #However, we have to copy some unchanged configuration files
-sudo cp unchanged_files/provider .
-sudo cp unchanged_files/configure_modem.sh .
+sudo cp /home/torbox/torbox/install/Sixfab_PPP_Installer-master/ppp_installer/unchanged_files/provider .
+sudo cp /home/torbox/torbox/install/Sixfab_PPP_Installer-master/ppp_installer/unchanged_files/configure_modem.sh .
 
 clear
 echo -e "${RED}Enter your carrier APN:${SET}"
