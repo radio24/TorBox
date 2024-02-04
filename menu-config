@@ -1115,9 +1115,8 @@ case "$CHOICE" in
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
-      cd install/Sixfab_PPP_Installer-master/ppp_installer
-      chmod +x install.sh
-      sudo ./install.sh
+      chmod +x install/Sixfab_PPP_Installer-master/install.sh
+      sudo ./install/Sixfab_PPP_Installer-master/install.sh
     fi
   ;;
 
