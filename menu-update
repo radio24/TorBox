@@ -723,7 +723,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
-" 3" "Update the firmware of the RPI 4 (reboot required!)"  \
+" 3" "Update the firmware of the RPI 4 or 5 (reboot required!)"  \
 " 4" "Update or change the version of tor" \
 " 5" "Update the TorBox menu (whitout touching the configuration)"  \
 "==" "==========================================[Backup & Restore]===" \
@@ -904,7 +904,7 @@ case "$CHOICE" in
 		fi
 	;;
 
-	# This updates the firmware on a RPI4 (done through clearnet because this is not sensitive)
+	# This updates the firmware on a RPI4 or RPI5 (done through clearnet because this is not sensitive)
 	3)
 		clear
     if [ ! -z "$CHECK_HD3" ]; then
@@ -916,8 +916,8 @@ case "$CHOICE" in
       fi
     else
       clear
-      echo -e "${WHITE}[!] ATTENTION! Updating the firmware is only supported by the RPI4!${NOCOLOR}"
-      echo -e "${WHITE}[!] The used hardware was not identified as a RPI4, why we don't try ${NOCOLOR}"
+      echo -e "${WHITE}[!] ATTENTION! Updating the firmware is only supported by the RPI4 and RPI5!${NOCOLOR}"
+      echo -e "${WHITE}[!] The used hardware was not identified as a RPI4 or RPI5. We don't try ${NOCOLOR}"
       echo -e "${WHITE}[!] to update the firmware. ${NOCOLOR}"
       sleep 10
     fi
