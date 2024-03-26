@@ -38,6 +38,10 @@
 # wlan1 entries in the configuration fails and substitutet them with wlan0.
 #
 #
+# EXCEPTION: don't run on TorBox mini (will replace /etc/network/interfaces) --> asuming that we don't have clients on the wifi
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+if grep "^TORBOX_MINI=1" ${RUNFILE} ; then exit; fi
+
 ##### SET VARIABLES ######
 
 #Other variables

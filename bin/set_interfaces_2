@@ -41,7 +41,8 @@
 # eth1  -> 	The device is connected with a cable (USB ethernet adapter).
 # wlan0 -> 	The device is connected via wireless network (onboard chip)
 # wlan1 -> 	The device is connected via wireless network (USB wlan adapter)
-# tun1  ->  The device is a VPN client and connected with TorBox's VPN server
+# tun1  ->  The device is a VPN client and connected with TorBox's VPN server (only <incoming interface 3>)
+# usb0  ->  The TorBox is a RNDIS/Ethernet Gadget (TorBox mini, only <incoming interface 3>)
 #
 # Both, <incoming interface 1> and <incoming interface 2>, have to be set.
 # If <incoming interface 1> is not used, the default should be "wlan0".
