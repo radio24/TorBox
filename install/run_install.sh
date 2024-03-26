@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2023 Patrick Truffer
+# Copyright (C) 2024 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -158,7 +158,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
+			echo "Copyright (C) 2024 Patrick Truffer, nyxnor (Contributor)"
 			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
