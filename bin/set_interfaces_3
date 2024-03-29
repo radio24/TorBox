@@ -35,7 +35,7 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables - because of rc.local, all paths have to be absolute
@@ -59,7 +59,7 @@ read_config()
 	# TOGGLE19 shows if domain exclusion active or not
 	if grep "UNPROTECTED_DOMAIN=0" ${RUNFILE} ; then
 	  echo ""
-	  echo -e "${WHITE}[!] ERROR: The use of unprotected domains are not supported ${SERVICE_NAME}${NOCOLOR}"
+	  echo -e "${YELLOW}[!] ERROR: The use of unprotected domains are not supported ${SERVICE_NAME}${NOCOLOR}"
 		echo -e "${RED}[!] To use this feature, you have to activate it through the TorBox Menu. ${SERVICE_NAME}${NOCOLOR}"
 	  echo " "
 	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

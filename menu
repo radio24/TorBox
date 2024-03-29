@@ -49,7 +49,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Identify the Operation System
@@ -344,11 +344,11 @@ case "$CHOICE" in
   # This enforces a new exit node
   2)
     clear
-    echo -e "${RED}[+] Requesting new identity...${WHITE}"
+    echo -e "${RED}[+] Requesting new identity...${YELLOW}"
     echo ""
     sleep 2
     sudo -u debian-tor tor-prompt --run 'SIGNAL NEWNYM'
-    echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+    echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
     sleep 4
   ;;
 
@@ -389,9 +389,9 @@ case "$CHOICE" in
 			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth0; then
 				ask_captive
@@ -457,9 +457,9 @@ case "$CHOICE" in
 			fi
       display_net_reconfiguration_info
       (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep wlan1; then
         ask_captive
@@ -528,9 +528,9 @@ case "$CHOICE" in
 			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup bin/hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep wlan0; then
 				ask_captive
@@ -597,9 +597,9 @@ case "$CHOICE" in
 			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
 
@@ -747,9 +747,9 @@ case "$CHOICE" in
 			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-			echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth1 ; then
 				ask_captive
@@ -812,9 +812,9 @@ case "$CHOICE" in
 					if (whiptail --title "TorBox - INFO" --yesno --no-button "CONTINUE" --yes-button "CONNECT WLAN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						display_net_reconfiguration_info
 						(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-						echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+						echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 						(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
-						echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+						echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 						sleep 2
 						ask_captive
 						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
@@ -918,7 +918,7 @@ case "$CHOICE" in
       if [ $CHOICE_EXIT = 1 ]; then
         clear
         echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+        echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
         echo ""
         sleep 2
         sudo reboot
@@ -926,8 +926,8 @@ case "$CHOICE" in
       elif [ $CHOICE_EXIT = 2 ]; then
         clear
         echo -e "${RED}[+] Shutting down TorBox...${NOCOLOR}"
-        echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
-        echo -e "${WHITE}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
+        echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+        echo -e "${YELLOW}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
         echo ""
         sleep 2
         sudo shutdown -h now

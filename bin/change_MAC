@@ -57,7 +57,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 #
 #Other variables
@@ -164,7 +164,7 @@ change_mac_address()
 				 	[[ "$MAC_ADDRESS" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] && MAC_CHECK="valid" || MAC_CHECK="invalid"
 				 	if [ "$MAC_CHECK" == "invalid" ]; then
 					 	clear
-					 	echo -e "${WHITE}[!] THIS IS NOT A VALID MAC ADDRESS!${NOCOLOR}"
+					 	echo -e "${YELLOW}[!] THIS IS NOT A VALID MAC ADDRESS!${NOCOLOR}"
 					 	echo ""
 					 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					 	clear
@@ -194,7 +194,7 @@ change_mac_address()
 					sleep 5
 				else
 					clear
-					echo -e "${WHITE}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"
+					echo -e "${YELLOW}[!] YOU DIDN'T ENTER A MAC ADDRESS!${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					exit 1
@@ -219,7 +219,7 @@ change_mac_address_finish()
 		sudo systemctl restart hostapd
 	elif [[ "$INTERNET_IFACE" == "$O_DEVICE" ]]; then
 		echo
-		echo -e "${WHITE}[!] YOU MUST RECONNECT TO THE INTERNET IN THE MAIN MENU!${NOCOLOR}"
+		echo -e "${YELLOW}[!] YOU MUST RECONNECT TO THE INTERNET IN THE MAIN MENU!${NOCOLOR}"
 	fi
 	echo " "
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -268,7 +268,7 @@ case "$CHOICE3" in
 			if [ ! -z "$O_DEVICE" ] && [ ! -z "$CHOICE2" ]; then change_mac_address_finish; fi
 		else
 			clear
-			echo -e "${RED}[!] Interface ${WHITE}$O_DEVICE is not available - skipping!${NOCOLOR}"
+			echo -e "${RED}[!] Interface ${YELLOW}$O_DEVICE is not available - skipping!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		fi
@@ -278,7 +278,7 @@ case "$CHOICE3" in
 	# "List the MAC adresses of TorBox's interfaces
 	2)
 		clear
-		echo -e "${WHITE}List wireless / ethernet interfaces with MAC status and adress:${NOCOLOR}"
+		echo -e "${YELLOW}List wireless / ethernet interfaces with MAC status and adress:${NOCOLOR}"
 		echo ""
 		O_DEVICE="wlan0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then

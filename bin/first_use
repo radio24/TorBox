@@ -48,7 +48,8 @@ MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+BRED='\033[1;91m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Identify the Operation System
@@ -78,7 +79,7 @@ finish_bridge_start2()
 	REPLY=""
 	while true
 	do
-		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+		read -r -p $'\e[1;91mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
 		# The following line is for the prompt to appear on a new line.
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			echo
@@ -115,7 +116,7 @@ finish_bridge_start1()
   # Did tor with bridge-support start up?
  	while true
  	do
- 		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+ 		read -r -p $'\e[1;91mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
  		# The following line is for the prompt to appear on a new line.
  		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
  			echo
@@ -141,7 +142,7 @@ finish_bridge_start1()
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
+      echo -e "    At the end, you should see \"${BRED}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report by pressing q."
       echo ""
 			stty intr q
@@ -197,12 +198,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     2)
       clear
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-      echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
-      echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
+      echo -e "${BRED}[+] First time starting your TorBox!${NOCOLOR}"
+      echo -e "${BRED}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
       (sudo rm -r /etc/ssh/ssh_host_*) 2>/dev/null
       sudo ssh-keygen -A
       echo ""
-      echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
+      echo -e "${BRED}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
       FRESHINSTALLED=3
       sleep 10
     ;;
@@ -336,14 +337,14 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
 			sudo timedatectl set-timezone UTC
 			if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-			echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
+			echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 			echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 			echo
 			echo  "             Date: $(date '+%Y-%m-%d')"
 			$TORBOX_PATH/bin/clock.py
 			echo
-			echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
+			echo -e "${RED}    You can find the correct time here: ${YELLOW}https://time.is/UTC${NOCOLOR}"
 			echo
 			while true
 			do
@@ -391,7 +392,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				fi
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} bridge support...${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${YELLOW}WITH${RED} bridge support...${NOCOLOR}"
         sleep 1
 			else
 				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
@@ -403,7 +404,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 				DEFAULT_BRIDGE_SUPPORT=0
 				clear
-				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
+				echo -e "${RED}[+] Starting Tor ${YELLOW}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
 				sleep 1
 			fi
       (sudo systemctl unmask tor) 2>/dev/null
@@ -417,7 +418,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       clear
       echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
       echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
+      echo -e "    At the end, you should see \"${BRED}Bootstrapped 100%: Done${NOCOLOR}\"."
       echo -e "    You can leave the progress report by pressing q."
       echo ""
 			stty intr q

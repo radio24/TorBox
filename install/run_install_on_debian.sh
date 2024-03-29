@@ -85,7 +85,7 @@ MENU_HEIGHT_10=10
 
 # Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Changes in the variables below (until the ####### delimiter) will be saved
@@ -244,7 +244,7 @@ re-connect()
 	if [ $OCHECK -eq 0 ]; then
 	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 	else
-	  echo -e "${WHITE}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
+	  echo -e "${YELLOW}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
 	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
 	  sleep 30
 	  echo ""
@@ -253,7 +253,7 @@ re-connect()
 	  if [ $? -eq 0 ]; then
 	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	  else
-	    echo -e "${WHITE}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${YELLOW}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
 	    (dhclient -r) 2>&1
 	    sleep 5
@@ -287,7 +287,7 @@ check_install_packages()
 	 	clear
 	 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 	 	echo ""
-	 	echo -e "${RED}[+]         Installing ${WHITE}$packagename${NOCOLOR}"
+	 	echo -e "${RED}[+]         Installing ${YELLOW}$packagename${NOCOLOR}"
 	 	echo ""
 	 	apt-get -y install $packagename
 		check=$(dpkg-query -s $packagename | grep "Status" | grep -o "installed")
@@ -334,10 +334,10 @@ download_and_compile_tor()
 		systemctl mask tor@default.service
 	else
 		echo -e ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
 		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -357,14 +357,14 @@ select_and_install_tor()
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
-		echo -e "${WHITE}[!]         YES!${NOCOLOR}"
+		echo -e "${YELLOW}[!]         YES!${NOCOLOR}"
 		echo ""
 	else
-		echo -e "${WHITE}[!]         NO!${NOCOLOR}"
+		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
 		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
 		echo -e "${RED}    the repository.${NOCOLOR}"
@@ -384,10 +384,10 @@ select_and_install_tor()
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
-		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
 		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
 		echo -e "${RED}    the repository.${NOCOLOR}"
@@ -434,7 +434,7 @@ select_and_install_tor()
     #Display and chose a tor version
 		if [ "$SELECT_TOR" = "--select-tor" ]; then
 			clear
-			echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
+			echo -e "${YELLOW}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
     	echo ""
     	for (( i=0; i<$number_torversion; i++ ))
     	do
@@ -455,7 +455,7 @@ select_and_install_tor()
 					download_and_compile_tor
 				else
 					clear
-					echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
+					echo -e "${YELLOW}[!] WRONG SELECTION!${NOCOLOR}"
 	       	echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
 					echo ""
 					sleep 5
@@ -464,7 +464,7 @@ select_and_install_tor()
 				fi
     	else
 				clear
-				echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
+				echo -e "${YELLOW}[!] WRONG SELECTION!${NOCOLOR}"
 				echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
 				echo ""
 				sleep 5
@@ -486,7 +486,7 @@ select_and_install_tor()
 				fi
     	done
 			echo ""
-			echo -e "${RED}[+]         Selected tor version ${WHITE}$version_string${RED}...${NOCOLOR}"
+			echo -e "${RED}[+]         Selected tor version ${YELLOW}$version_string${RED}...${NOCOLOR}"
 			echo -e "${RED}[+]         Download the selected tor version...... ${NOCOLOR}"
 			download_and_compile_tor
 		fi
@@ -537,14 +537,14 @@ if [ -f "/etc/timezone" ]; then
 fi
 timedatectl set-timezone UTC
 clear
-echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
+echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
 echo
-echo -e "             Date: ${WHITE}$(date '+%Y-%m-%d')${NOCOLOR}"
-echo -e "             Time: ${WHITE}$(date '+%H:%M')${NOCOLOR}"
+echo -e "             Date: ${YELLOW}$(date '+%Y-%m-%d')${NOCOLOR}"
+echo -e "             Time: ${YELLOW}$(date '+%H:%M')${NOCOLOR}"
 echo
-echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
+echo -e "${RED}    You can find the correct time here: ${YELLOW}https://time.is/UTC${NOCOLOR}"
 echo
 while true
 do
@@ -575,14 +575,14 @@ if [[ $REPLY =~ ^[Yy]$ ]] ; then
 			clear
 		else
 			echo ""
-			echo -e "${WHITE}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+			echo -e "${YELLOW}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
 			echo ""
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
 		fi
 	else
 		echo ""
-		echo -e "${WHITE}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+		echo -e "${YELLOW}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -645,7 +645,7 @@ fi
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
-echo -e "${RED}[+]         Installing ${WHITE}WiringPi${NOCOLOR}"
+echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
 echo ""
 cd
 git clone $WIRINGPI_USED
@@ -662,10 +662,10 @@ if [ $DLCHECK -eq 0 ]; then
 	fi
 else
 	echo ""
-	echo -e "${WHITE}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
+	echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
 	echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
@@ -677,7 +677,7 @@ echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
 echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
 ln /usr/bin/python3 /usr/bin/python
-echo -e "${RED}[+]         Installing ${WHITE}Python modules${NOCOLOR}"
+echo -e "${RED}[+]         Installing ${YELLOW}Python modules${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: For Debian 12 needed
@@ -698,7 +698,7 @@ pip3 install -r requirements.txt
 sleep 5
 
 clear
-echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
@@ -707,7 +707,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
 		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
-  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+  	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		if [ -z "$VERSION" ]; then
 			# shellcheck disable=SC2059
 			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
@@ -715,7 +715,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	done
 	if [ -f requirements.failed ]; then
 		echo ""
-		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
 		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
@@ -739,7 +739,7 @@ fi
 clear
 echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 echo ""
-echo -e "${RED}[+]         Installing ${WHITE}go${NOCOLOR}"
+echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
 echo ""
 
 # NEW v.0.5.3: New way to download the current version of go
@@ -756,7 +756,7 @@ DLCHECK=$?
 # NEW v.0.5.3: if the download failed, install the package from the distribution
 if [ "$DLCHECK" != "0" ] ; then
 	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
 	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
 	echo
@@ -782,7 +782,7 @@ if [ "$DLCHECK" != "0" ] ; then
 		fi
 		if [ "$GO_VERSION_NR" -lt "17" ]; then
 			echo ""
-			echo -e "${WHITE}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+			echo -e "${YELLOW}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
 			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
 			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
 			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
@@ -848,10 +848,10 @@ if [ $DLCHECK -eq 0 ]; then
 	rm -rf go*
 else
 	echo ""
-	echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+	echo -e "${YELLOW}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
 	echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -901,10 +901,10 @@ if [ $DLCHECK -eq 0 ]; then
 	rm -rf go*
 else
 	echo ""
-	echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
+	echo -e "${YELLOW}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
 	echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	clear
@@ -927,7 +927,7 @@ re-connect
 sleep 10
 clear
 echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
-echo -e "${RED}[+]         Selected branch ${WHITE}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
+echo -e "${RED}[+]         Selected branch ${YELLOW}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
 cd
 wget $TORBOXURL
 DLCHECK=$?
@@ -945,10 +945,10 @@ if [ $DLCHECK -eq 0 ] ; then
 	echo ""
 else
 	echo ""
-	echo -e "${WHITE}[!] COULDN'T DOWNLOAD TORBOX!${NOCOLOR}"
+	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TORBOX!${NOCOLOR}"
 	echo -e "${RED}[+] The TorBox repositories may be blocked or offline!${NOCOLOR}"
 	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	exit 0
@@ -1175,11 +1175,11 @@ echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
 echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
 echo ""
-echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
-echo -e "${WHITE}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${YELLOW}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
+echo -e "${YELLOW}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
+echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 adduser --disabled-password --gecos "" torbox
 echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
@@ -1212,8 +1212,8 @@ echo -e "${RED}[+] Step 14: Setting/changing the root password...${NOCOLOR}"
 echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
 echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
 echo
-echo -e "${WHITE}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${WHITE}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
+echo -e "${YELLOW}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+echo -e "${YELLOW}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
 echo ""
 passwd
 
@@ -1223,13 +1223,13 @@ clear
 echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
 echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
 echo ""
-echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
-echo -e "${WHITE}    After this last step, TorBox will restart.${NOCOLOR}"
-echo -e "${WHITE}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
-echo -e "${WHITE}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${WHITE}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
-echo -e "${WHITE}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${WHITE}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+echo -e "${YELLOW}    After this last step, TorBox will restart.${NOCOLOR}"
+echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
+echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
+echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
+echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
+echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 echo ""
 read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 clear

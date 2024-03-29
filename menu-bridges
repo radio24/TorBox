@@ -53,7 +53,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors (don't change it!)
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -244,7 +244,7 @@ case "$CHOICE" in
   5)
     if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
-      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to delete!${NOCOLOR}"
+      echo -e "${YELLOW}[!] There are no configured OBFS4 bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
       whiptail --title "TorBox - INFO" --textbox $TXT_DIR/remove-obfs4-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
@@ -257,12 +257,12 @@ case "$CHOICE" in
   6)
     if [ -z $number_configured_bridges_total ] || [ "$number_configured_bridges_total" == "0" ]; then
       clear
-      echo -e "${WHITE}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
+      echo -e "${YELLOW}[!] There are no configured OBFS4 bridges -> nothing to deactivate!${NOCOLOR}"
       sleep 5
     else
       if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_SNOW" = "Bridge snowflake " ]; then
         clear
-        echo -e "${WHITE}[!] No OBFS4 bridges are activated!${NOCOLOR}"
+        echo -e "${YELLOW}[!] No OBFS4 bridges are activated!${NOCOLOR}"
         echo -e "${RED}[+] If you want to use OBFS4 bridges, you have to activate them first with menu entry 2 or 3.${NOCOLOR}"
         sleep 5
       else
@@ -323,7 +323,7 @@ case "$CHOICE" in
   10)
     if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
       clear
-      echo -e "${WHITE}[!] There are no configured Snowflake bridges -> nothing to delete!${NOCOLOR}"
+      echo -e "${YELLOW}[!] There are no configured Snowflake bridges -> nothing to delete!${NOCOLOR}"
       sleep 5
     else
       whiptail --title "TorBox - INFO" --textbox $TXT_DIR/remove-snowflake-bridges-text $MENU_HEIGHT_20 $MENU_WIDTH
@@ -336,12 +336,12 @@ case "$CHOICE" in
   11)
     if [ -z $number_configured_snowflake_bridges_total ] || [ "$number_configured_snowflake_bridges_total" == "0" ]; then
       clear
-      echo -e "${WHITE}[!] There are no configured Snowflake bridges -> nothing to deactivate!${NOCOLOR}"
+      echo -e "${YELLOW}[!] There are no configured Snowflake bridges -> nothing to deactivate!${NOCOLOR}"
       sleep 5
     else
       if [ "$MODE_MEEK" = "Bridge meek_lite " ] || [ "$MODE_OBFS4" = "Bridge obfs4 " ]; then
         clear
-        echo -e "${WHITE}[!] No Snowflake bridges are activated!${NOCOLOR}"
+        echo -e "${YELLOW}[!] No Snowflake bridges are activated!${NOCOLOR}"
         echo -e "${RED}[+] If you want to use Snowflake bridges, you have to activate them first with menu entry 7 or 8.${NOCOLOR}"
         sleep 5
       else

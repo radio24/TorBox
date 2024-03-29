@@ -49,7 +49,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Default hostname
@@ -144,10 +144,10 @@ update_firmware()
     echo " "
     sudo rpi-eeprom-update -a
     echo " "
-    echo -e "${WHITE}[+] DONE! ${NOCOLOR}"
+    echo -e "${YELLOW}[+] DONE! ${NOCOLOR}"
     sleep 5
   else
-    echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+    echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
     echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
     echo " "
     sleep 5
@@ -164,7 +164,7 @@ check_install_packages()
 	 clear
 	 echo -e "${RED}[+] Installing all necessary packages....${NOCOLOR}"
 	 echo ""
-	 echo -e "${RED}[+] Installing ${WHITE}$packagename${NOCOLOR}"
+	 echo -e "${RED}[+] Installing ${YELLOW}$packagename${NOCOLOR}"
 	 echo ""
 	 sudo apt-get -y install $packagename
 #   echo ""
@@ -203,10 +203,10 @@ update_tor_preparations()
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
-		echo -e "${WHITE}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
 		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
 		echo -e "${RED}    the Raspberry PI OS repository.${NOCOLOR}"
@@ -290,10 +290,10 @@ download_and_compile_tor()
 		return 1
 	else
 		echo -e ""
-		echo -e "${WHITE}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
 		echo -e "${RED}[+] The (unofficial) Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		return 0
@@ -364,7 +364,7 @@ select_and_install_tor()
   update_tor_preparations
   #Display and chose a tor version
   clear
-  echo -e "${WHITE}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
+  echo -e "${YELLOW}Choose a tor version (alpha versions are not recommended!):${NOCOLOR}"
   echo ""
   for (( i=0; i<number_torversion; i++ ))
   do
@@ -388,7 +388,7 @@ select_and_install_tor()
 			return $FINISHING
     else
       clear
-      echo -e "${WHITE}[!] ABORTED OR WRONG SELECTION!${NOCOLOR}"
+      echo -e "${YELLOW}[!] ABORTED OR WRONG SELECTION!${NOCOLOR}"
       echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
       echo ""
       sleep 5
@@ -396,7 +396,7 @@ select_and_install_tor()
     fi
   else
     clear
-    echo -e "${WHITE}[!] WRONG SELECTION!${NOCOLOR}"
+    echo -e "${YELLOW}[!] WRONG SELECTION!${NOCOLOR}"
     echo -e "${RED}[+] Restart the installation and try again! ${NOCOLOR}"
     echo ""
     sleep 5
@@ -532,7 +532,7 @@ update_torcfg()
 	fi
 	#
   echo ""
-  echo -e "${WHITE}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
+  echo -e "${YELLOW}[+] FINISHED! TorBox's configuration files are now updated / reset! ${NOCOLOR}"
   sleep 5
 }
 
@@ -622,14 +622,14 @@ update_torbox_menu()
 			sudo rm -r $TMP_DIR
 		fi
 		cd torbox
-    echo -e "${WHITE}[+] DONE! TorBox menu is now updated!${NOCOLOR}"
+    echo -e "${YELLOW}[+] DONE! TorBox menu is now updated!${NOCOLOR}"
     sleep 5
   else
     echo -e "${RED} ${NOCOLOR}"
-    echo -e "${WHITE}[!] FAILED!${NOCOLOR}"
-    echo -e "${WHITE}[!] Downloading TorBox menu from GitHub has failed !!${NOCOLOR}"
-    echo -e "${WHITE}[!] I can't update TorBox menu !!${NOCOLOR}"
-    echo -e "${WHITE}[!] You may try it later or manually !!${NOCOLOR}"
+    echo -e "${YELLOW}[!] FAILED!${NOCOLOR}"
+    echo -e "${YELLOW}[!] Downloading TorBox menu from GitHub has failed !!${NOCOLOR}"
+    echo -e "${YELLOW}[!] I can't update TorBox menu !!${NOCOLOR}"
+    echo -e "${YELLOW}[!] You may try it later or manually !!${NOCOLOR}"
     sleep 5
   fi
 }
@@ -652,10 +652,10 @@ re_installing_obfs4proxy()
 		sudo rm -rf go*
 	else
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
 		echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -688,10 +688,10 @@ re_installing_snowflake()
 		sudo rm -rf go*
 	else
 		echo ""
-		echo -e "${WHITE}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
+		echo -e "${YELLOW}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
 		echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -762,7 +762,7 @@ case "$CHOICE" in
 			online_check
 			if [ $OCHECK == 0 ]; then
 				clear
-				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+				echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -781,7 +781,7 @@ case "$CHOICE" in
 			sleep 5
 
 			clear
-			echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
 			if [ -f requirements.failed ]; then rm requirements.failed; fi
 			REPLY="Y"
 			while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
@@ -790,7 +790,7 @@ case "$CHOICE" in
 				for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 					if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
 					VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
-			  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+			  	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 					if [ -z "$VERSION" ]; then
 						# shellcheck disable=SC2059
 						(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
@@ -798,7 +798,7 @@ case "$CHOICE" in
 				done
 				if [ -f requirements.failed ]; then
 					echo ""
-					echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+					echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
 					read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
 					if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 						if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
@@ -814,7 +814,7 @@ case "$CHOICE" in
 			sleep 10
 			clear
 			echo ""
-			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
+			echo -e "${RED}[+] Re-installing ${YELLOW}go${NOCOLOR}"
 			# NEW v.0.5.3: New way to download the current version of go
 			if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
 			elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
@@ -839,10 +839,10 @@ case "$CHOICE" in
 			  sudo rm $GO_FILENAME
 			else
 			  echo ""
-			  echo -e "${WHITE}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+			  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
 			  echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
 			  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-			  echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
+			  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 			  echo ""
 			  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			fi
@@ -862,7 +862,7 @@ case "$CHOICE" in
 			echo ""
 			configure_system_service
       echo ""
-			echo -e "${WHITE}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
+			echo -e "${YELLOW}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			recommended_reboot menu-update
@@ -892,7 +892,7 @@ case "$CHOICE" in
 			online_check
 			if [ $OCHECK == 0 ]; then
 				clear
-				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+				echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -916,9 +916,9 @@ case "$CHOICE" in
       fi
     else
       clear
-      echo -e "${WHITE}[!] ATTENTION! Updating the firmware is only supported by the RPI4 and RPI5!${NOCOLOR}"
-      echo -e "${WHITE}[!] The used hardware was not identified as a RPI4 or RPI5. We don't try ${NOCOLOR}"
-      echo -e "${WHITE}[!] to update the firmware. ${NOCOLOR}"
+      echo -e "${YELLOW}[!] ATTENTION! Updating the firmware is only supported by the RPI4 and RPI5!${NOCOLOR}"
+      echo -e "${YELLOW}[!] The used hardware was not identified as a RPI4 or RPI5. We don't try ${NOCOLOR}"
+      echo -e "${YELLOW}[!] to update the firmware. ${NOCOLOR}"
       sleep 10
     fi
 	;;
@@ -942,8 +942,8 @@ case "$CHOICE" in
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         clear
-        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${YELLOW}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${YELLOW}    to use clearnet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -952,7 +952,7 @@ case "$CHOICE" in
       fi
       if [ $OCHECK == 0 ]; then
         clear
-        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -983,7 +983,7 @@ case "$CHOICE" in
         TOR_VERS=""
         TOR_VERS=$(tor --version|head -n 1|rev|cut -c2-|rev|cut -d " " -f3)
         echo ""
-        echo -e "${WHITE}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
+        echo -e "${YELLOW}[+] FINISHED! Installed Tor version: $TOR_VERS${NOCOLOR}"
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				cd ~/torbox
       fi
@@ -1008,8 +1008,8 @@ case "$CHOICE" in
       # We can only use Clearnet if allowed!
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         clear
-        echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
-        echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
+        echo -e "${YELLOW}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
+        echo -e "${YELLOW}    to use clearnet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1018,7 +1018,7 @@ case "$CHOICE" in
       fi
       if [ $OCHECK == 0 ]; then
         clear
-        echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+        echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1063,7 +1063,7 @@ case "$CHOICE" in
 	    (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
 	    (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
 	    sleep 2
-	    echo -e "${WHITE}[+] FINISHED!${NOCOLOR}"
+	    echo -e "${YELLOW}[+] FINISHED!${NOCOLOR}"
 			sleep 2
 			recommended_reboot menu-update
 		fi
@@ -1079,7 +1079,7 @@ case "$CHOICE" in
       sudo systemctl stop tor
 			if [ "$SPEED" -gt "0" ]; then
 				echo -e "${RED}[+] Deleting the list of excluded slow tor relays${NOCOLOR}"
-				echo -e "${WHITE}[!] To reactivate the exclusion of slow tor relays, please use entry 12!${NOCOLOR}"
+				echo -e "${YELLOW}[!] To reactivate the exclusion of slow tor relays, please use entry 12!${NOCOLOR}"
 				sudo rm /etc/tor/torrc.exclude-slow
 				sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=0/" ${RUNFILE}
@@ -1100,7 +1100,7 @@ case "$CHOICE" in
 		  (sudo rm /var/log/tor/notices.log) 2>/dev/null
 		  (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 			(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
-		  echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+		  echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 		  sleep 4
 		  restarting_tor menu-update
 	  fi
@@ -1123,7 +1123,7 @@ case "$CHOICE" in
 	    	fi
 				if [ "$bridge_address" = "-1" ]; then
 					echo " "
-					echo -e "${WHITE}[!] NETWORK ERROR!${NOCOLOR}"
+					echo -e "${YELLOW}[!] NETWORK ERROR!${NOCOLOR}"
 					echo -e "${RED}[+] Sorry, I couldn't fetch anything! Please, try again later!${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p "Press any key to continue"
@@ -1154,7 +1154,7 @@ case "$CHOICE" in
 					echo ""
 					for (( i=0; i<number_bridges; i++ ))
 					do
-						[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges OBFS4 bridge(s) - probably some are duplicates${NOCOLOR}"
+						[ "$i" == "0" ] && echo -e "${YELLOW}[!] Success! We fetched $number_bridges OBFS4 bridge(s) - probably some are duplicates${NOCOLOR}"
 						n=$((n+1))
 						if grep -q "${bridge_address[$i]}" $TORRC ; then
 							sleep 1
@@ -1181,7 +1181,7 @@ case "$CHOICE" in
 					echo ""
 					for (( i=0; i<number_bridges; i++ ))
 					do
-						[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges Snowflake bridge(s)${NOCOLOR}"
+						[ "$i" == "0" ] && echo -e "${YELLOW}[!] Success! We fetched $number_bridges Snowflake bridge(s)${NOCOLOR}"
 						n=$((n+1))
 						if grep -q "${bridge_address[$i]}" $TORRC ; then
 							sleep 1
@@ -1206,7 +1206,7 @@ case "$CHOICE" in
 					# shellcheck disable=SC2128
 					if [ ! -z "$bridge_address" ]; then
 						echo ""
-						echo -e "${WHITE}[!] Success! We fetched a Meek bridge${NOCOLOR}"
+						echo -e "${YELLOW}[!] Success! We fetched a Meek bridge${NOCOLOR}"
 						echo -e "${RED}[+] Adding, bridge...${NOCOLOR}"
 						bridge_address="$(<<< "${bridge_address}" sed -e 's`meek_lite `#Bridge meek_lite `g')"
 						#This is necessary to work with special characters in sed
@@ -1226,8 +1226,8 @@ case "$CHOICE" in
 				fi
 	    else
 	      echo ""
-	      echo -e "${WHITE}[!] OH NO! - no connection :( ${NOCOLOR}"
-	      echo -e "${WHITE}[!] Can't fetch bridges - ABORTING :( ${NOCOLOR}"
+	      echo -e "${YELLOW}[!] OH NO! - no connection :( ${NOCOLOR}"
+	      echo -e "${YELLOW}[!] Can't fetch bridges - ABORTING :( ${NOCOLOR}"
 	      echo " "
 	      read -n 1 -s -r -p "Press any key to continue"
 	      clear
@@ -1252,7 +1252,7 @@ case "$CHOICE" in
 					# exitstatus == 1 means that $SPEED is not an integer
 					if [ "$exitstatus" == "1" ]; then
 						clear
-						echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+						echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 						sleep 5
 						clear
@@ -1295,7 +1295,7 @@ case "$CHOICE" in
 		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
-				echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+				echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
 				PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
 				(sudo kill $PID) &>/dev/null
 			done
@@ -1305,7 +1305,7 @@ case "$CHOICE" in
     TCS_NAME_LIST=$(ls lib/chatsecure/pid/ | sed "s/.pid//")
     if [ ! -z "$TCS_NAME_LIST" ]; then
       for TCS_NAME in $TCS_NAME_LIST; do
-        echo -e "${RED}[+] Stopping TCS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+        echo -e "${RED}[+] Stopping TCS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
         PID=$(cat lib/chatsecure/pid/${TCS_NAME}.pid)
         (sudo kill $PID) &>/dev/null
       done
@@ -1335,7 +1335,7 @@ case "$CHOICE" in
     sudo ./bin/start_tcs
     clear
 		[ -f nohup.out ] && sudo rm nohup.out
-		echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+		echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 		sleep 5
 	;;
 
@@ -1355,7 +1355,7 @@ case "$CHOICE" in
   	clear
     erase_logs
     echo ""
-    echo -e "${WHITE}[+] FINISHED! All log files erased!${NOCOLOR}"
+    echo -e "${YELLOW}[+] FINISHED! All log files erased!${NOCOLOR}"
     sleep 5
 	;;
 

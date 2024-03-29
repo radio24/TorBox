@@ -40,7 +40,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors (don't change it!)
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Other variables
@@ -143,7 +143,7 @@ function initialCheck() {
 
 function installQuestions() {
 	clear
-	echo -e "${WHITE}[+] Hello!${NOCOLOR}"
+	echo -e "${YELLOW}[+] Hello!${NOCOLOR}"
 	echo -e "${RED}[+] I need to ask you a few questions before starting the setup.${NOCOLOR}"
 	echo -e "${RED}[+] You can leave the default options and just press enter if you are ok with them.${NOCOLOR}"
 	echo ""
@@ -165,8 +165,8 @@ function installQuestions() {
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
 		sleep 3
 		echo ""
-		echo -e "${WHITE}[!] It seems this server is behind NAT. What is its public IPv4 address or hostname?${NOCOLOR}"
-		echo -e "${WHITE}[!] We need it for the clients to connect to the server.${NOCOLOR}"
+		echo -e "${YELLOW}[!] It seems this server is behind NAT. What is its public IPv4 address or hostname?${NOCOLOR}"
+		echo -e "${YELLOW}[!] We need it for the clients to connect to the server.${NOCOLOR}"
 
 		PUBLICIP=$(curl -s https://api.ipify.org)
 		until [[ $ENDPOINT != "" ]]; do
@@ -184,10 +184,10 @@ function installQuestions() {
 		PING6="ping -6 -c3 ipv6.google.com > /dev/null 2>&1"
 	fi
 	if eval "$PING6"; then
-		echo -e "${WHITE}[!] Your host appears to have IPv6 connectivity.${NOCOLOR}"
+		echo -e "${YELLOW}[!] Your host appears to have IPv6 connectivity.${NOCOLOR}"
 		SUGGESTION="y"
 	else
-		echo -e "${WHITE}[!] Your host does not appear to have IPv6 connectivity.${NOCOLOR}"
+		echo -e "${YELLOW}[!] Your host does not appear to have IPv6 connectivity.${NOCOLOR}"
 		SUGGESTION="n"
 	fi
 	echo ""
@@ -201,7 +201,7 @@ function installQuestions() {
 	PORT="1194"
 	PROTOCOL="udp"
 	clear
-	echo -e "${WHITE}[+] Do you want to customize encryption settings?${NOCOLOR}"
+	echo -e "${YELLOW}[+] Do you want to customize encryption settings?${NOCOLOR}"
 	echo -e "${RED}[+] Unless you know what you're doing, you should stick with the default parameters provided.${NOCOLOR}"
 	echo -e "${RED}[+] Note that whatever you choose, all the choices presented in the script are safe.${NOCOLOR}"
 	#echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
@@ -221,7 +221,7 @@ function installQuestions() {
 		TLS_SIG="1" # tls-crypt
 	else
 		clear
-		echo -e "${WHITE}[!] Choose which cipher you want to use for the data channel:${NOCOLOR}"
+		echo -e "${YELLOW}[!] Choose which cipher you want to use for the data channel:${NOCOLOR}"
 		echo "   1) AES-128-GCM (recommended)"
 		echo "   2) AES-192-GCM"
 		echo "   3) AES-256-GCM"
@@ -253,7 +253,7 @@ function installQuestions() {
 			;;
 		esac
 		clear
-		echo -e "${WHITE}[!] Choose what kind of certificate you want to use:${NOCOLOR}"
+		echo -e "${YELLOW}[!] Choose what kind of certificate you want to use:${NOCOLOR}"
 		echo "   1) ECDSA (recommended)"
 		echo "   2) RSA"
 		echo ""
@@ -263,7 +263,7 @@ function installQuestions() {
 		case $CERT_TYPE in
 		1)
 			clear
-			echo -e "${WHITE}[!] Choose which curve you want to use for the certificate's key:${NOCOLOR}"
+			echo -e "${YELLOW}[!] Choose which curve you want to use for the certificate's key:${NOCOLOR}"
 			echo "   1) prime256v1 (recommended)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
@@ -285,7 +285,7 @@ function installQuestions() {
 			;;
 		2)
 			clear
-			echo -e "${WHITE}[!] Choose which size you want to use for the certificate's RSA key:${NOCOLOR}"
+			echo -e "${YELLOW}[!] Choose which size you want to use for the certificate's RSA key:${NOCOLOR}"
 			echo "   1) 2048 bits (recommended)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
@@ -307,7 +307,7 @@ function installQuestions() {
 			;;
 		esac
 		clear
-		echo -e "${WHITE}[!] Choose which cipher you want to use for the control channel:${NOCOLOR}"
+		echo -e "${YELLOW}[!] Choose which cipher you want to use for the control channel:${NOCOLOR}"
 		case $CERT_TYPE in
 		1)
 			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (recommended)"
@@ -343,7 +343,7 @@ function installQuestions() {
 			;;
 		esac
 		clear
-		echo -e "${WHITE}[!] Choose what kind of Diffie-Hellman key you want to use:${NOCOLOR}"
+		echo -e "${YELLOW}[!] Choose what kind of Diffie-Hellman key you want to use:${NOCOLOR}"
 		echo "   1) ECDH (recommended)"
 		echo "   2) DH"
 		echo ""
@@ -353,7 +353,7 @@ function installQuestions() {
 		case $DH_TYPE in
 		1)
 			clear
-			echo -e "${WHITE}[!] Choose which curve you want to use for the ECDH key:${NOCOLOR}"
+			echo -e "${YELLOW}[!] Choose which curve you want to use for the ECDH key:${NOCOLOR}"
 			echo "   1) prime256v1 (recommended)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
@@ -375,7 +375,7 @@ function installQuestions() {
 			;;
 		2)
 			clear
-			echo -e "${WHITE}[!] Choose what size of Diffie-Hellman key you want to use:${NOCOLOR}"
+			echo -e "${YELLOW}[!] Choose what size of Diffie-Hellman key you want to use:${NOCOLOR}"
 			echo "   1) 2048 bits (recommended)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
@@ -405,7 +405,7 @@ function installQuestions() {
 		fi
 		sleep 3
 		clear
-		echo -e "${WHITE}[!] Which digest algorithm do you want to use for HMAC?${NOCOLOR}"
+		echo -e "${YELLOW}[!] Which digest algorithm do you want to use for HMAC?${NOCOLOR}"
 		echo "   1) SHA-256 (recommended)"
 		echo "   2) SHA-384"
 		echo "   3) SHA-512"
@@ -425,8 +425,8 @@ function installQuestions() {
 			;;
 		esac
 		clear
-		echo -e "${WHITE}[!] You can add an additional layer of security to the control channel with tls-auth and tls-crypt;${NOCOLOR}"
-		echo -e "${WHITE}[!] tls-auth authenticates the packets, while tls-crypt authenticate and encrypt them.${NOCOLOR}"
+		echo -e "${YELLOW}[!] You can add an additional layer of security to the control channel with tls-auth and tls-crypt;${NOCOLOR}"
+		echo -e "${YELLOW}[!] tls-auth authenticates the packets, while tls-crypt authenticate and encrypt them.${NOCOLOR}"
 		echo "   1) tls-crypt (recommended)"
 		echo "   2) tls-auth"
 		echo ""
@@ -442,7 +442,7 @@ function installQuestions() {
 	echo -e "${NOCOLOR}    You can access it by using an SFTP client (it uses the same login and password as your SSH client)."
 	echo -e "${NOCOLOR}    Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/."
 	echo ""
-	echo -e "${WHITE}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+	echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 }
@@ -757,7 +757,7 @@ verb 3" >>$OPENVPN_CONF_PATH/client-template.txt
 
 function newClient() {
 	clear
-	echo -e "${WHITE}[+] Creating a ovpn-file for one (1) client...${NOCOLOR}"
+	echo -e "${YELLOW}[+] Creating a ovpn-file for one (1) client...${NOCOLOR}"
 	echo -e "${RED}[+] Tell me a name for the client.${NOCOLOR}"
 	echo "    The name must consist of alphanumeric character. It may also include an underscore or a dash."
 
@@ -781,7 +781,7 @@ function newClient() {
 	CLIENTEXISTS=$(tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep -E "^V" | grep -c -E "/CN=$CLIENT\$")
 	if [[ $CLIENTEXISTS != '0' ]]; then
 		echo ""
-		echo -e "${WHITE}[!] The specified client name was already found, please choose another one.${NOCOLOR}"
+		echo -e "${YELLOW}[!] The specified client name was already found, please choose another one.${NOCOLOR}"
 		exit
 	else
 		cd $OPENVPN_CONF_PATH/easy-rsa/ || return
@@ -791,12 +791,12 @@ function newClient() {
 			;;
 		2)
 			echo ""
-			echo -e "${WHITE}[!] You will be asked for the client password below...${NOCOLOR}"
+			echo -e "${YELLOW}[!] You will be asked for the client password below...${NOCOLOR}"
 			./easyrsa --batch build-client-full "$CLIENT"
 			;;
 		esac
 		echo ""
-		echo -e "${WHITE}[+] DONE! Client $CLIENT added.${NOCOLOR}"
+		echo -e "${YELLOW}[+] DONE! Client $CLIENT added.${NOCOLOR}"
 		echo ""
 		read -n1 -r -p "Press any key to continue..."
 	fi
@@ -843,13 +843,13 @@ function newClient() {
 	chown torbox:torbox "$homeDir/$CLIENT.ovpn"
 
 	clear
-	echo -e "${WHITE}[+] All done! The ovpn-file has been written to $homeDir/$CLIENT.ovpn.${NOCOLOR}"
+	echo -e "${YELLOW}[+] All done! The ovpn-file has been written to $homeDir/$CLIENT.ovpn.${NOCOLOR}"
 	echo -e "${RED}[+] Download the ovpn-file to your client machine.${NOCOLOR}"
 	echo -e "${RED}[+] You will be able to generate a client ovpn-file at the end of the configuration.${NOCOLOR}"
 	echo -e "${RED}[+] You can access it by using an SFTP client (it uses the same login and password as your SSH client).${NOCOLOR}"
 	echo -e "${RED}[+] Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/.${NOCOLOR}"
 	echo ""
-	echo -e "${WHITE}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+	echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 	exit 0
@@ -859,7 +859,7 @@ function revokeClient() {
 	NUMBEROFCLIENTS=$(tail -n +2 $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt | grep -c "^V")
 	if [[ $NUMBEROFCLIENTS == '0' ]]; then
 		clear
-		echo -e "${WHITE}[!] You have no existing clients!${NOCOLOR}"
+		echo -e "${YELLOW}[!] You have no existing clients!${NOCOLOR}"
 		exit 1
 	fi
 
@@ -890,7 +890,7 @@ function revokeClient() {
 	cp $OPENVPN_CONF_PATH/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo -e "${WHITE}[+] Done! Certificate for client $CLIENT revoked.${NOCOLOR}"
+	echo -e "${YELLOW}[+] Done! Certificate for client $CLIENT revoked.${NOCOLOR}"
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 }
@@ -989,11 +989,11 @@ function removeOpenVPN() {
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -r /var/log/openvpn
 		echo ""
-		echo -e "${WHITE}[+] OpenVPN removed!${NOCOLOR}"
+		echo -e "${YELLOW}[+] OpenVPN removed!${NOCOLOR}"
 		sleep 2
 	else
 		echo ""
-		echo -e "${WHITE}[+] OpenVPN removal aborted!${NOCOLOR}"
+		echo -e "${YELLOW}[+] OpenVPN removal aborted!${NOCOLOR}"
 		sleep 2
 	fi
 }

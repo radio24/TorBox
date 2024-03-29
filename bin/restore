@@ -39,7 +39,7 @@ MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -137,7 +137,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		cd
 		if [ ! -e "$OS_BK_TAR" ]; then
 			clear
-			echo -e "${WHITE}[!] File not found!${NOCOLOR}"
+			echo -e "${YELLOW}[!] File not found!${NOCOLOR}"
 			echo -e "${RED}[+]Did you enter the right filename with the right extension?${NOCOLOR}"
 			echo -e "${RED}[+]Is the backup file stored in TorBox's home directory (/home/torbox)?${NOCOLOR}"
 			echo ""
@@ -154,7 +154,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		AVAILABLE_SIZE=$((AVAILABLE_SIZE*1024))
 		if [ $NEEDED_SIZE -ge $AVAILABLE_SIZE ]; then
 			clear
-			echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+			echo -e "${YELLOW}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
@@ -426,7 +426,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 			if [ "$SHAREDFOLDERS" == "1" ]; then
 				echo ""
 				echo -e "${RED}[+] Restoring shared folders (old existing folder will be kept)...${NOCOLOR}"
-				echo -e "${WHITE}[!] Old existing folder will be kept and have to be removed manually!${NOCOLOR}"
+				echo -e "${YELLOW}[!] Old existing folder will be kept and have to be removed manually!${NOCOLOR}"
 				FOLDER_LIST=$(sudo ls "restore${WEBSITE_DIR}")
 				for FOLDER in $FOLDER_LIST; do
 					[ -d "${WEBSITE_DIR}/${FOLDER}" ] && (sudo mv "${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}/$FOLDER.BAK") 2>/dev/null

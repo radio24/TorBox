@@ -34,7 +34,7 @@
 YELLOW='\033[1;33m'
 RED='\033[1;31m'
 BLUE='\033[1;34m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 SET='\033[0m'
 
 # Global Varibales
@@ -76,7 +76,7 @@ sleep 5
 
 # Menu
 clear
-echo -e "${WHITE}Please choose your Sixfab Shield/HAT:${SET}"
+echo -e "${YELLOW}Please choose your Sixfab Shield/HAT:${SET}"
 echo -e "${RED}1: GSM/GPRS Shield${SET}"
 echo -e "${RED}2: 3G, 4G/LTE Base Shield${SET}"
 echo -e "${RED}3: Cellular IoT App Shield${SET}"
@@ -94,7 +94,7 @@ case $shield_hat in
     4)    echo -e "${RED}[+] You chose CellularIoT HAT${SET}";;
 	  5)    echo -e "${RED}[+] You chose Tracker HAT${SET}";;
 	  6)    echo -e "${RED}[+] You chose 3G/4G Base HAT${SET}";;
-    *)    echo -e "${WHITE}[!] Wrong Selection, exiting${SET}"; exit 1;
+    *)    echo -e "${YELLOW}[!] Wrong Selection, exiting${SET}"; exit 1;
 esac
 sleep 3
 
@@ -130,7 +130,7 @@ do
         break;;
 
 		[Nn]* )  break;;
-		*)  echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
+		*)  echo -e "${YELLOW}Wrong Selection, Select among Y or n${SET}";;
 	esac
 done
 
@@ -207,9 +207,9 @@ fi
 #            break;;
 #
 #		[Nn]* ) echo -e ""
-#            echo -e "${WHITE}To connect to internet use main menu entry 8${SET}"
+#            echo -e "${YELLOW}To connect to internet use main menu entry 8${SET}"
 #			  break;;
-#		*)   echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
+#		*)   echo -e "${YELLOW}Wrong Selection, Select among Y or n${SET}";;
 #	esac
 # done
 
@@ -217,7 +217,7 @@ fi
 
 sleep 2
 clear
-echo -e "${WHITE}The installation of the Sixfab Shield/HATs support is done!${SET}"
+echo -e "${YELLOW}The installation of the Sixfab Shield/HATs support is done!${SET}"
 echo -e "${RED}To connect to internet use main menu entry 8${SET}"
 echo -e ""
 read -n 1 -s -r -p "Press any key to continue"

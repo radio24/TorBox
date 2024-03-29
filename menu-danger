@@ -49,7 +49,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -247,7 +247,7 @@ case "$CHOICE" in
 				DOMAINNAME=$(grep -P '(?=^.{4,253}$)(^(?:[a-zA-Z0-9](?:(?:[a-zA-Z0-9\-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,}|xn--[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$)' <<< "$DOMAINNAME")
 				if [ "$DOMAINNAME" == "" ] ; then
 					clear
-					echo -e "${WHITE}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
 					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -297,14 +297,14 @@ case "$CHOICE" in
 							clear
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+							echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
 						# Move the entries from one list to another
 						2)
 							if [ "$LISTE01" == "CLEARNET" ]; then
-								echo -e "${RED}Moving ${WHITE}$DOMAINNAME${RED} from ${WHITE}$LISTE01${RED} to ${WHITE}$LISTE02${RED}...${NOCOLOR}"
+								echo -e "${RED}Moving ${YELLOW}$DOMAINNAME${RED} from ${YELLOW}$LISTE01${RED} to ${YELLOW}$LISTE02${RED}...${NOCOLOR}"
 								readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
 								(printf "%s\n" "${DOMAIN_NOT_EXIST_CLEAR[@]}" >> ${VPN_LIST_FILE_OWN}) &>/dev/null
 								readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep -v "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
@@ -314,7 +314,7 @@ case "$CHOICE" in
 								sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}
 								sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
 							elif [ "$LISTE01" == "VPN" ]; then
-								echo -e "${RED}Moving ${WHITE}$DOMAINNAME${RED} from ${WHITE}$LISTE01${RED} to ${WHITE}$LISTE02${RED}...${NOCOLOR}"
+								echo -e "${RED}Moving ${YELLOW}$DOMAINNAME${RED} from ${YELLOW}$LISTE01${RED} to ${YELLOW}$LISTE02${RED}...${NOCOLOR}"
 								readarray -t DOMAIN_NOT_EXIST_VPN < <(grep "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
 								(printf "%s\n" "${DOMAIN_NOT_EXIST_VPN[@]}" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
 								readarray -t DOMAIN_NOT_EXIST_VPN < <(grep -v "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
@@ -326,7 +326,7 @@ case "$CHOICE" in
 							fi
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+							echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
@@ -338,7 +338,7 @@ case "$CHOICE" in
 								exitstatus=$?
 								# exitstatus == 255 means that the ESC key was pressed
 								[ "$exitstatus" == "255" ] && exit 1
-								echo -e "${RED}Remove ${WHITE}$DOMAINNAME${RED} from the exclusion lists...${NOCOLOR}"
+								echo -e "${RED}Remove ${YELLOW}$DOMAINNAME${RED} from the exclusion lists...${NOCOLOR}"
 								if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
 									readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep -v "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
 									(printf "%s\n" "${DOMAIN_NOT_EXIST_CLEAR[@]}" > ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
@@ -381,13 +381,13 @@ case "$CHOICE" in
 							;;
 					esac
 					clear
-					echo -e "${RED}[+] Finding obvious IPs for ${WHITE}$DOMAINNAME${NOCOLOR}"
+					echo -e "${RED}[+] Finding obvious IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
 					# NEW post-v.0.5.3
 					add_open_dns
 					echo ""
 					MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
 					if [ ! -z "$MORE_IPs" ]; then
-						echo -e "${RED}[+] Adding IPs for ${WHITE}$DOMAINNAME${NOCOLOR}"
+						echo -e "${RED}[+] Adding IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
 						MORE_IPs="$DOMAINNAME $MORE_IPs"
 						if [ "$LISTE01" == "CLEARNET" ]; then
 							(printf "%s\n" "$MORE_IPs" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
@@ -400,11 +400,11 @@ case "$CHOICE" in
 						fi
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+						echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 						sleep 3
 					else
 						clear
-						echo -e "${WHITE}[!] NO IP FOUND!${NOCOLOR}"
+						echo -e "${YELLOW}[!] NO IP FOUND!${NOCOLOR}"
 						echo -e "${RED}[!] There is something wrong! The domain name may not exist!${NOCOLOR}"
 						echo -e "${RED}[!] Possibly, there is no Internet connection or DNS resolution is broken.${NOCOLOR}"
 						echo " "
@@ -420,14 +420,14 @@ case "$CHOICE" in
 						bin/find_domains "$DOMAINNAME" 1
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+						echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 						sleep 3
 					fi
 				fi
 				if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then bin/set_interfaces_3; fi
 			else
 				clear
-				echo -e "${WHITE}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
 				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -443,7 +443,7 @@ case "$CHOICE" in
 		if [ -f $CLEARNET_LIST_FILE_OWN ]; then
 			if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
 				echo " "
-				echo -e "${WHITE}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
+				echo -e "${YELLOW}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
 				echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
 				echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
 				echo " "
@@ -453,7 +453,7 @@ case "$CHOICE" in
 				do
 					SUBDOMAIN=$(cut -d ' ' -f1 <<< $CLEARNET_LIST_FILE_OWN_STRING)
 					IP_ROW=$(cut -d ' ' -f2- <<< $CLEARNET_LIST_FILE_OWN_STRING)
-					echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+					echo -e "${YELLOW}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
 				done
 				echo " "
 			fi
@@ -461,7 +461,7 @@ case "$CHOICE" in
 		if [ -f $VPN_LIST_FILE_OWN ]; then
 			if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
 				echo " "
-				echo -e "${WHITE}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
+				echo -e "${YELLOW}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
 				echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
 				echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
 				echo " "
@@ -471,7 +471,7 @@ case "$CHOICE" in
 				do
 					SUBDOMAIN=$(cut -d ' ' -f1 <<< $VPN_LIST_FILE_OWN_STRING)
 					IP_ROW=$(cut -d ' ' -f2- <<< $VPN_LIST_FILE_OWN_STRING)
-					echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+					echo -e "${YELLOW}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
 				done
 				echo " "
 			fi
@@ -519,7 +519,7 @@ case "$CHOICE" in
 			else
 				cd torbox
 				clear
-				echo -e "${WHITE}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
 				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys"
 				echo -e "${RED}[!] keys are generated, and the public key is on the TorBox ready to work."
 				echo " "

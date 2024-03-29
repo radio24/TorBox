@@ -32,7 +32,7 @@
 #Colors
 RED='\033[1;31m'
 GREEN='\033[1;32m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 ##############################
@@ -101,16 +101,16 @@ fi
 SNOWFLAKE_VERS=$(snowflake-proxy --version 2>&1 | grep snowflake)
 
 clear
-echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
+echo -e "${YELLOW}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
-echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
-echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
-echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                                    :${WHITE} ${SNOWFLAKE_VERS}${NOCOLOR}"
-echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
-echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
+echo -e "${RED}Hostname                                     :${YELLOW} $(cat /etc/hostname)${NOCOLOR}"
+echo -e "${RED}Kernel version                               :${YELLOW} $(uname -a)${NOCOLOR}"
+echo -e "${RED}Tor version                                  :${YELLOW} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
+echo -e "${RED}Obfs4proxy version                           :${YELLOW} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
+echo -e "${RED}Snowflake                                    :${YELLOW} ${SNOWFLAKE_VERS}${NOCOLOR}"
+echo -e "${RED}Nyx version                                  :${YELLOW} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
+echo -e "${RED}Go version                                   :${YELLOW} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Installed time zone                          :${YELLOW} $(cat /etc/timezone)${NOCOLOR}"
 echo -e "${RED}Firewall countermeasures                     :$FIREWALL${NOCOLOR}"
 echo -e "${RED}Disconnection when idle countermeasure       :$PING${NOCOLOR}"
 echo -e "${RED}TorBox's automatic counteractions are        :$LOGCHECK${NOCOLOR}"
@@ -119,7 +119,7 @@ echo -e "${RED}Bridge Relay                                 :$BRIDGE_RELAY${NOCO
 echo -e "${RED}Onion Services                               :$MODE_OS${NOCOLOR}"
 echo
 echo
-echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
 if [ ! -f requirements.txt ]; then wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt; fi
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
@@ -129,7 +129,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
 		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
-  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
+  	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		if [ -z "$VERSION" ]; then
 			# shellcheck disable=SC2059
 			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
@@ -137,7 +137,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	done
 	if [ -f requirements.failed ]; then
 		echo ""
-		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+		echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
 		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
@@ -153,7 +153,7 @@ done
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
-echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
+echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
 sudo /usr/sbin/ntpdate pool.ntp.org
@@ -211,7 +211,7 @@ echo
 echo -e "${RED}[+] Setting the right start trigger${NOCOLOR}"
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
 echo ""
-echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
+echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
 echo -e "${RED}[+] We will shutdown the TorBox now.${NOCOLOR}"
 echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

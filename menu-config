@@ -50,7 +50,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # The minimum bandwidth a relay should have, in kilobytes. Relays with less
@@ -120,7 +120,7 @@ change_crda()
 #    sudo sed -i "s/^country_code=.*/${INPUT}/" ${HOSTAPD}
 #  fi
 #  echo -e "${RED}[+] We have to restart the TorBox's WLAN!${NOCOLOR}"
-#  echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
+#  echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to reboot TorBox.${NOCOLOR}"
 #  (nohup bin/hostapd_fallback) 2>/dev/null
 }
 
@@ -353,14 +353,14 @@ case "$CHOICE" in
       if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
         clear
         echo " "
-        echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
-        echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
+        echo -e "${YELLOW}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+        echo -e "${YELLOW}[!] We didn't change anything - try again!${NOCOLOR}"
         sleep 5
 			elif ${#INPUT} -lt 8 || ${#INPUT} -gt 63 ; then
 				clear
 				echo " "
-				echo -e "${WHITE}[!] The password has to be between 8 and 63 charcters.${NOCOLOR}"
-				echo -e "${WHITE}[!] We didn't change anything - try again!${NOCOLOR}"
+				echo -e "${YELLOW}[!] The password has to be between 8 and 63 charcters.${NOCOLOR}"
+				echo -e "${YELLOW}[!] We didn't change anything - try again!${NOCOLOR}"
 				sleep 5
       else
         clear
@@ -372,7 +372,7 @@ case "$CHOICE" in
           clear
           echo " "
           echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
-          echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+          echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
           sudo reboot
           exit 0
         fi
@@ -424,7 +424,7 @@ case "$CHOICE" in
 				clear
 				echo " "
 				echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
-				echo -e "${WHITE}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
+				echo -e "${YELLOW}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
 				(nohup bin/hostapd_fallback) 2>/dev/null
 			fi
 		fi
@@ -481,8 +481,8 @@ case "$CHOICE" in
 			if [ ! -z "$CHECK_HD1" ] || [ ! -z "$CHECK_HD2" ]; then
 				clear
 				echo " "
-				echo -e "${WHITE}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
-				echo -e "${WHITE}[!] We stay on the 2.5 GHz band!${NOCOLOR}"
+				echo -e "${YELLOW}[!] ATTENTION! The Raspberry Pi 3 Model B does NOT support the 5 GHz band!${NOCOLOR}"
+				echo -e "${YELLOW}[!] We stay on the 2.5 GHz band!${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p "Press any key to continue"
 				echo " "
@@ -493,7 +493,7 @@ case "$CHOICE" in
 				if [ "$TLC" = "00" ]; then
 					clear
 					cho " "
-					echo -e "${WHITE}[!] To enable the 5 GHz band, you have to set the WLAN regulatory domain first (don't choose \"00 Global\"!).${NOCOLOR}"
+					echo -e "${YELLOW}[!] To enable the 5 GHz band, you have to set the WLAN regulatory domain first (don't choose \"00 Global\"!).${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p "Press any key to continue"
 					echo " "
@@ -509,7 +509,7 @@ case "$CHOICE" in
 						clear
 						echo " "
 						echo -e "${RED}[+] Activating the 5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-						echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+						echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
 						(nohup bin/hostapd_fallback) 2>/dev/null
 						(sudo rm nohup.out) &>/dev/null
 					fi
@@ -524,7 +524,7 @@ case "$CHOICE" in
 				clear
 				echo " "
 				echo -e "${RED}[+] Activating the 2.5 GHz band of TorBox's WLAN, now...${NOCOLOR}"
-				echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+				echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
 				sudo systemctl restart hostapd
 			fi
 		fi
@@ -688,7 +688,7 @@ case "$CHOICE" in
             clear
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+            echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
             (sudo rm nohup.out) 2>/dev/null
           fi
@@ -698,7 +698,7 @@ case "$CHOICE" in
             clear
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+            echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
             (sudo rm nohup.out) 2>/dev/null
           fi
@@ -761,7 +761,7 @@ case "$CHOICE" in
             clear
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+            echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
             (sudo rm nohup.out) 2>/dev/null
           fi
@@ -772,7 +772,7 @@ case "$CHOICE" in
             clear
             echo " "
             echo -e "${RED}[+] Activating the new WLAN channel, now...${NOCOLOR}"
-            echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+            echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
             (nohup bin/hostapd_fallback) 2>/dev/null
             (sudo rm nohup.out) 2>/dev/null
           fi
@@ -845,7 +845,7 @@ case "$CHOICE" in
         clear
         echo " "
         echo -e "${RED}[+] Activating changes, now...${NOCOLOR}"
-        echo -e "${WHITE}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
+        echo -e "${YELLOW}[!] Please wait, usually the client reconnects automatically. However, you may have to disconnect and reconnect with TorBox's wireless network.${NOCOLOR}"
         (nohup bin/hostapd_fallback) 2>/dev/null
         (sudo rm nohup.out) 2>/dev/null
       fi
@@ -971,7 +971,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
         echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
         echo ""
-        echo -e "${WHITE}[!] $INTERNET_IP"
+        echo -e "${YELLOW}[!] $INTERNET_IP"
         echo ""
         read -n 1 -s -r -p "Press any key to continue"
         ($IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
@@ -1015,7 +1015,7 @@ case "$CHOICE" in
       echo -e "${RED}[+] Restart Tor...${NOCOLOR}"
       sudo systemctl stop tor
       sudo systemctl restart tor
-      echo -e "${WHITE}[+] DONE! The access to the Tor control port from clients is disabled!${NOCOLOR}"
+      echo -e "${YELLOW}[+] DONE! The access to the Tor control port from clients is disabled!${NOCOLOR}"
       sleep 5
     fi
   ;;
@@ -1072,7 +1072,7 @@ case "$CHOICE" in
 					# exitstatus == 1 means that $SPEED is not an integer
 					if [ "$exitstatus" == "1" ]; then
 						clear
-						echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+						echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 						sleep 5
 						clear
@@ -1138,7 +1138,7 @@ case "$CHOICE" in
           clear
           echo " "
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-          echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+          echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
           sleep 2
           sudo reboot
           exit 0
@@ -1213,7 +1213,7 @@ case "$CHOICE" in
 				sudo python3 adafruit-pitft.py -u /home/torbox
 				rm adafruit-pitft.py
 			else
-				echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+				echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p "Press any key to continue"
@@ -1282,14 +1282,14 @@ case "$CHOICE" in
         if (whiptail --yesno "Would you like to reboot TorBox now to use the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
           clear
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
-          echo -e "${WHITE}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+          echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
           sleep 2
           sudo reboot
           exit 0
         fi
       fi
     else
-      echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
+      echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
       echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"

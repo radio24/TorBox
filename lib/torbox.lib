@@ -38,7 +38,7 @@ MENU_HEIGHT_15=15
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 GREEN='\033[1;32m'
 NOCOLOR='\033[0m'
 
@@ -132,7 +132,7 @@ settime()
 		MANUAL=1
 	fi
 	if [ $MANUAL == 1 ]; then
-		echo -e "${WHITE}[!] CANNOT SYNCHRONIZE DATE/TIME AUTOMATICALLY${NOCOLOR}"
+		echo -e "${YELLOW}[!] CANNOT SYNCHRONIZE DATE/TIME AUTOMATICALLY${NOCOLOR}"
 		echo ""
 		read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
 		echo ""
@@ -151,14 +151,14 @@ settime()
 				clear
 			else
 				echo ""
-				echo -e "${WHITE}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+				echo -e "${YELLOW}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
 				echo ""
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				clear
 			fi
 		else
 			echo ""
-			echo -e "${WHITE}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+			echo -e "${YELLOW}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
 			echo ""
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
@@ -468,13 +468,13 @@ restarting_tor()
   echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
   echo -e "    Ignore any error messages, this can take minutes just wait..."
-  echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
+  echo -e "    At the end, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
   echo -e "    You can leave the progress report by pressing q."
   echo ""
 	if [ ! -z "$SOURCE_SCRIPT" ]; then trap "bash $SOURCE_SCRIPT; exit 0" SIGINT; fi
 	stty intr q
   sudo systemctl restart tor &
-  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 	stty intr ^c
 }
 
@@ -500,7 +500,7 @@ connecting_to_VPN()
     menu_content="$menu_content${RED}$menu_item${NOCOLOR} - ${ovpnlist[$i]}\n"
   done
   clear
-  echo -e "${WHITE}Choose an OpenVPN configuration:${NOCOLOR}"
+  echo -e "${YELLOW}Choose an OpenVPN configuration:${NOCOLOR}"
   echo ""
   echo -e "$menu_content"
   echo ""
@@ -524,7 +524,7 @@ connecting_to_VPN()
 		if wget -q --spider "$CHECK_URL"; then
 			echo -e "${RED}[+] Yes, DNS seems to work! :-)${NOCOLOR}"
 		else
-			echo -e "${WHITE}[!] DNS doesn't seem to work :-(${NOCOLOR}"
+			echo -e "${YELLOW}[!] DNS doesn't seem to work :-(${NOCOLOR}"
 			echo -e "${RED}[+] Let's try to fix it!${NOCOLOR}"
 			echo ""
 			add_open_dns
@@ -533,7 +533,7 @@ connecting_to_VPN()
 			if wget -q --spider "$CHECK_URL"; then
 				echo -e "${RED}[+] Yes, DNS seems to work, now! :-)${NOCOLOR}"
 			else
-				echo -e "${WHITE}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
+				echo -e "${YELLOW}[!] Sorry, DNS doesn't seem to work - giving up :-(${NOCOLOR}"
 			fi
 		fi
   else
@@ -678,10 +678,10 @@ list_all_obfs4_bridges()
   online_check $BRIDGE_DB_URL 0 1
   clear
   if [ $OCHECK == 1 ]; then
-    echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+    echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
     sleep 2
   else
-    echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+    echo -e "${YELLOW}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 		echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
     sleep 3
   fi
@@ -742,14 +742,14 @@ list_all_obfs4_bridges()
         fi
         j=$((j+1))
         n=$((i+j))
-        bridge_address="${WHITE}$n : $bridge_address${NOCOLOR} $bridge_status"
+        bridge_address="${YELLOW}$n : $bridge_address${NOCOLOR} $bridge_status"
         echo -e "$bridge_address"
     done
   fi
   if [ "$number_configured_bridges_total" == "0" ]; then
     echo " "
     echo " "
-    echo -e "${WHITE}[!] SORRY! - there are no configured OBFS4 bridges!${NOCOLOR}"
+    echo -e "${YELLOW}[!] SORRY! - there are no configured OBFS4 bridges!${NOCOLOR}"
   fi
   echo " "
   read -n 1 -s -r -p "Press any key to continue"
@@ -767,10 +767,10 @@ list_all_snowflake_bridges()
   # clear
 	# IMORTANT: the support to show the ONLINE/OFFLINE status of Snowflake bridges is currently disabled because it is not reliable.
   # if [ $OCHECK == 1 ]; then
-    # echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+    # echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
     # sleep 2
   # else
-    # echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+    # echo -e "${YELLOW}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 		# echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
     # sleep 3
   # fi
@@ -811,7 +811,7 @@ list_all_snowflake_bridges()
 				echo -e "$bridge_address\n"
 			else
 				bridge_address="${RED}$i${NOCOLOR} : $bridge_address $bridge_status"
-				echo -e "$bridge_address ${WHITE}-> for_$COUNTRY_LINE${NOCOLOR}\n"
+				echo -e "$bridge_address ${YELLOW}-> for_$COUNTRY_LINE${NOCOLOR}\n"
 			fi
 		done
 		echo " "
@@ -847,18 +847,18 @@ list_all_snowflake_bridges()
 			COUNTRY_LINE=$(grep "^#Specific Snowflake bridge for " <<< "$COUNTRY_LINE")
 			COUNTRY_LINE=$(sed "s/#Specific Snowflake bridge for //g" <<< "$COUNTRY_LINE")
 			if [ -z $COUNTRY_LINE ]; then
-				bridge_address="${WHITE}$n${NOCOLOR} : $bridge_address $bridge_status"
+				bridge_address="${YELLOW}$n${NOCOLOR} : $bridge_address $bridge_status"
 				echo -e "$bridge_address\n"
 			else
-				bridge_address="${WHITE}$n${NOCOLOR} : $bridge_address $bridge_status"
-				echo -e "$bridge_address ${WHITE}-> for_$COUNTRY_LINE${NOCOLOR}\n"
+				bridge_address="${YELLOW}$n${NOCOLOR} : $bridge_address $bridge_status"
+				echo -e "$bridge_address ${YELLOW}-> for_$COUNTRY_LINE${NOCOLOR}\n"
 			fi
     done
   fi
   if [ "$number_configured_snowflake_bridges_total" == "0" ]; then
     echo " "
     echo " "
-    echo -e "${WHITE}[!] SORRY! - there are no configured Snowflake bridges!${NOCOLOR}"
+    echo -e "${YELLOW}[!] SORRY! - there are no configured Snowflake bridges!${NOCOLOR}"
   fi
   echo " "
   read -n 1 -s -r -p "Press any key to continue"
@@ -966,10 +966,10 @@ activate_snowflake_bridges()
 display_net_reconfiguration_info()
 {
   clear
-  echo -e "${WHITE}[!] IMPORTANT${NOCOLOR}"
+  echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
   echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
   echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
-  echo -e "${RED}    this can take up to ${WHITE}two minutes.${NOCOLOR}"
+  echo -e "${RED}    this can take up to ${YELLOW}two minutes.${NOCOLOR}"
   echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh session, but${NOCOLOR}"
   echo -e "${RED}    disconnect and reconnect your client device from the TorBox${NOCOLOR}"
   echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
@@ -1008,7 +1008,7 @@ stopping_tfs()
 {
 	TFS_NAME_LIST=$1
 	for TFS_NAME in $TFS_NAME_LIST; do
-		echo -e "${RED}[+] Stopping TFS named ${WHITE}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
+		echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
 		PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${TFS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
 		sudo sed -E -i "/^TFS-$TFS_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
@@ -1027,7 +1027,7 @@ stopping_tcs()
 {
 	TCS_NAME_LIST=$1
 	for TCS_NAME in $TCS_NAME_LIST; do
-		echo -e "${RED}[+] Stopping TCS named ${WHITE}${TCS_NAME}${RED} on Onion domain...${NOCOLOR}"
+		echo -e "${RED}[+] Stopping TCS named ${YELLOW}${TCS_NAME}${RED} on Onion domain...${NOCOLOR}"
 		PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
 		sudo sed -E -i "/^TCS-$TCS_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
@@ -1058,7 +1058,7 @@ config_ipset()
 		do
 			SUBDOMAIN=$(cut -d ' ' -f1 <<< $LIST_FILE_OWN_STRING)
 			LIST_FILE_OWN_STRING=$(sed "s/${SUBDOMAIN}//g" <<< $LIST_FILE_OWN_STRING)
-			echo -e "${RED}[+] Excluding from tor routing: ${WHITE}$SUBDOMAIN${NOCOLOR}"
+			echo -e "${RED}[+] Excluding from tor routing: ${YELLOW}$SUBDOMAIN${NOCOLOR}"
 			IFS=' ' read -ra IP_ARRAY <<< "$LIST_FILE_OWN_STRING"
 			for IP in "${IP_ARRAY[@]}"; do sudo ipset -exist add $IPSET_NAME $IP; done
 		done

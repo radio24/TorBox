@@ -66,7 +66,7 @@
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -111,14 +111,14 @@ captive_tunneling()
 		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
 		echo ""
 		if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ] ; then
-			echo -e "${WHITE}[!] In TWM, please reselect the SSID, to get the latest IP,"
-			echo -e "${WHITE}    even if it shows already an IP!${NOCOLOR}"
+			echo -e "${YELLOW}[!] In TWM, please reselect the SSID, to get the latest IP,"
+			echo -e "${YELLOW}    even if it shows already an IP!${NOCOLOR}"
 			echo ""
 		fi
 		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-		echo -e "${WHITE}[+] Step 1 of 2 done${NOCOLOR}"
+		echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
 		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
-		echo -e "${WHITE}[+] Step 2 of 2 done${NOCOLOR}"
+		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 	fi
 }

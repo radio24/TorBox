@@ -41,7 +41,7 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -130,7 +130,7 @@ do
 	  clear
 		echo -e "${RED}[+] Displaying the result${NOCOLOR}"
 		echo ""
-		echo -e "${WHITE}Domain IP${NOCOLOR}"
+		echo -e "${YELLOW}Domain IP${NOCOLOR}"
 		echo "---------"
 		SAMMEL_IP=""
 		# FIX post-v.0.5.3 - changed from i=0 to index=0 because of possible interferences from other functions
@@ -162,8 +162,8 @@ do
 				IP=$(xargs <<< "$IP");
 				MORE_IPs=$(xargs <<< "$MORE_IPs");
 				RED='\033[1;31m'
-				WHITE='\033[1;37m'
-				echo -e "${WHITE}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
+				YELLOW='\033[1;93m'
+				echo -e "${YELLOW}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
 				SAMMEL_IP_STRING="$SUBDOMAIN $IP $MORE_IPs"
 				SAMMEL_IP_STRING=$(xargs <<< "$SAMMEL_IP_STRING")
 				SAMMEL_IP[index]="$SAMMEL_IP_STRING"
@@ -198,7 +198,7 @@ if [ "$RESCAN" == "1" ]; then
 		touch "$VPN_LIST_FILE_OWN"
 	fi
 	if [ -z "$LISTE01" ]; then
-		echo -e "${WHITE}[!] The domain is not added, yet!${NOCOLOR}"
+		echo -e "${YELLOW}[!] The domain is not added, yet!${NOCOLOR}"
 		echo -e "${RED}    You have to chose in which exceptionslist you want to add the domain:${NOCOLOR}"
 		echo ""
 		echo "    1 - CLEARNET - direct connection, no protection"
@@ -221,8 +221,8 @@ if [ "$RESCAN" == "1" ]; then
 		fi
 	fi
 
-	echo -e "${WHITE}[!] Do you want to complement or replace old entries?${NOCOLOR}"
-	echo -e "${RED}    The old/new entries are in ${WHITE}$LISTE01${NOCOLOR}"
+	echo -e "${YELLOW}[!] Do you want to complement or replace old entries?${NOCOLOR}"
+	echo -e "${RED}    The old/new entries are in ${YELLOW}$LISTE01${NOCOLOR}"
 	echo ""
 	echo "    1 - Complement old entries (recommended)"
 	echo "    2 - Replace old entries"

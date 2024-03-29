@@ -35,7 +35,7 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Identify the Operation System
@@ -395,8 +395,8 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 
 elif [ "$CHECK_OS" == "OTHER" ]; then
 	clear
-	echo -e "${WHITE}[+] It seems that your Operation System is not supported, yet!!${NOCOLOR}"
-	echo -e "${WHITE}[+] Please, contact anonym@torbox.ch for help! ${NOCOLOR}"
+	echo -e "${YELLOW}[+] It seems that your Operation System is not supported, yet!!${NOCOLOR}"
+	echo -e "${YELLOW}[+] Please, contact anonym@torbox.ch for help! ${NOCOLOR}"
 	read -n 1 -s -r -p "Press any key to continue"
 	exit 1
 fi
