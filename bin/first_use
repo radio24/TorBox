@@ -149,7 +149,7 @@ finish_bridge_start1()
 			# shellcheck disable=SC2064
 			trap "finish_bridge_start2" SIGINT
       sudo systemctl restart tor &
-      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
 		else
 			clear
@@ -429,7 +429,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				trap "bash $SOURCE_SCRIPT; exit 0" SIGINT;
 			fi
       sudo systemctl restart tor &
-      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
     ;;
 
