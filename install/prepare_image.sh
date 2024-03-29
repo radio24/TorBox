@@ -31,6 +31,7 @@
 
 #Colors
 RED='\033[1;31m'
+GREEN='\033[1;32m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
@@ -43,55 +44,57 @@ NOCOLOR='\033[0m'
 # Is the automatic counteractions feature activated?
 if pgrep -f "log_check.py" ; then
   clear
-  LOGCHECK="Activated!"
+  LOGCHECK="${GREEN} Activated!"
 else
     clear
-  LOGCHECK="Deactivated!"
+  LOGCHECK="${RED} Deactivated!"
 fi
 
 # Are bridges activated?
 if grep "^UseBridges" ${TORRC}; then
 	if grep -o "^Bridge obfs4 " ${TORRC}; then
-			MODE_BRIDGES="OBFS4 is running - will be deactivated."
+			MODE_BRIDGES="${RED} OBFS4 is running - will be deactivated."
 	elif grep -o "^Bridge meek_lite " ${TORRC}; then
-			MODE_BRIDGES="Meek-Azure is running - will be deactivated."
+			MODE_BRIDGES="${RED} Meek-Azure is running - will be deactivated."
 	elif grep -o "^Bridge snowflake " ${TORRC} | head -1; then
-				MODE_BRIDGES="Snowflake is running - will be deactivated."
+				MODE_BRIDGES="${RED} Snowflake is running - will be deactivated."
 	else
-			MODE_BRIDGES="Are not running."
+			MODE_BRIDGES="${GREEN} Are not running."
 	fi
 else
-		MODE_BRIDGES="Are not running."
+		MODE_BRIDGES="${GREEN} Are not running."
 fi
 
 # Is the Bridge Relay activated?
 if grep "^BridgeRelay" ${TORRC}; then
-	BRIDGE_RELAY="Is running - will be deactivated"
+	BRIDGE_RELAY="=${RED} Is running - will be deactivated"
 else
-	BRIDGE_RELAY="Is not running"
+	BRIDGE_RELAY="${GREEN} Is not running"
 fi
 
 # Are Onion Services Running?
 if grep "^HiddenServiceDir" ${TORRC}; then
-	MODE_OS="Are running"
+	MODE_OS="${RED} Are running"
 else
-	MODE_OS="Are not running"
+	MODE_OS="${GREEN} Are not running"
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
 if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
-	FIREWALL="Are running"
+	FIREWALL="${RED} Are running - will be deactivated"
+  sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 else
-	FIREWALL="Are not running"
+	FIREWALL="${GREEN} Are not running"
 fi
 
 # Is the Countermeasure against a disconnection when idle feature active?
 	if pgrep -f "ping -q $PING_SERVER" ; then
 		clear
-		PING="Is running"
+		PING="${RED} Is running - will be deactivated"
+    sudo killall ping
 	else
 		clear
-		PING="Is not running"
+		PING="${GREEN} Is not running"
 	fi
 
 # Snowflake version
@@ -108,12 +111,12 @@ echo -e "${RED}Snowflake                                    :${WHITE} ${SNOWFLAK
 echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
 echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
-echo -e "${RED}Firewall countermeasures                     :${WHITE} $FIREWALL${NOCOLOR}"
-echo -e "${RED}Disconnection when idle countermeasure       :${WHITE} $PING${NOCOLOR}"
-echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK${NOCOLOR}"
-echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
-echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
-echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
+echo -e "${RED}Firewall countermeasures                     :$FIREWALL${NOCOLOR}"
+echo -e "${RED}Disconnection when idle countermeasure       :$PING${NOCOLOR}"
+echo -e "${RED}TorBox's automatic counteractions are        :$LOGCHECK${NOCOLOR}"
+echo -e "${RED}Bridges                                      :$MODE_BRIDGES${NOCOLOR}"
+echo -e "${RED}Bridge Relay                                 :$BRIDGE_RELAY${NOCOLOR}"
+echo -e "${RED}Onion Services                               :$MODE_OS${NOCOLOR}"
 echo
 echo
 echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"

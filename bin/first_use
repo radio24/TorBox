@@ -270,7 +270,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat $TXT_DIR/first_use-firewall-text)
-			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
