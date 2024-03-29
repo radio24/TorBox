@@ -33,7 +33,6 @@
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
 # 2 - Will generate new unique SSH server keys (currently: 2 -> 3)
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated (currently: 3 -> 0)
-# 4 - Will install additional network drivers (internally set with FRESHINSTALLED=4, not used in torbox.run)
 #
 # If SOURCE_SCRIPT is empty, the default is then the script was started from the shell or at the beginning --> starts menu at the end
 #
@@ -431,21 +430,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sudo systemctl restart tor &
 			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
-    ;;
-
-		# This will install additional network drivers (only, if not on a cloud)
-    4)
-			clear
-			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-			FRESHINSTALLED=0
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
-			if [ "$ON_A_CLOUD" -eq "0" ]; then
-				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-				if (whiptail --title "TorBox - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-					bash $TORBOX_PATH/install/install_network_drivers install
-					recommended_reboot first_use
-				fi
-			fi
     ;;
 
     *) exit 1

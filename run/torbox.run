@@ -43,8 +43,7 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # 0 - Not a fresh installation - does nothing
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard (currently: 2 -> 3)
-# 3 - Starts the first_use skript (currently: 3 -> 4)
-# 4 - Will install additional network drivers (currently: 4 -> 0)
+# 3 - Starts the first_use skript (currently: 3 -> 0)
 FRESH_INSTALLED=0
 
 # NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
