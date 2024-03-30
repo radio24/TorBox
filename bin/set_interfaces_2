@@ -24,7 +24,7 @@
 # entire data stream from the connected clients through the Tor network.
 #
 # SYNTAX
-# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <incoming interface 3> <captive portal> <restarting_tor> <only_reset_ip_tables>
+# ./set_interfaces_2 <outgoing interface> <incoming interface 1> <incoming interface 2> <incoming interface 3> <captive portal> <only_reset_ip_tables>
 #
 # The <outgoing interface> is the door to the internet. Possible values for the <outgoing interface>:
 # eth0  -> 	TorBox is connected to the Internet with a cable (ethernet interface).
@@ -53,10 +53,6 @@
 # 1	-> To pass through the Captive Portal the TUNNELLING method is used.
 # 2 -> To pass through the Captive Portal the SPOOFING method is used.
 #
-# Possible values for <restarting_tor>:
-# 0	->	Don't restart tor.
-# 1	->	Restart tor
-#
 # The <only_reset_ip_tables> is set, if set_interfaces_2 was only called to reset the iptables rules (for example to stop the domains without to exclusion)
 # Possible values for <only_reset_ip_tables>:
 # 0 -> Default, started after changing the Internet source
@@ -81,8 +77,7 @@ I_DEVICE1=$2
 I_DEVICE2=$3
 I_DEVICE3=$4
 CAPTIVE=$5
-RESTARTTOR=$6
-ONLY_RESET=$7
+ONLY_RESET=$6
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITLOOP=0
@@ -294,11 +289,4 @@ if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	sleep 2
 	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 2
-fi
-
-# ==========
-if [ $RESTARTTOR -eq 1 ]; then
-	echo -e "${RED}[+] Restarting TOR...${NOCOLOR}"
-	sudo systemctl stop tor
-	sudo systemctl restart tor
 fi

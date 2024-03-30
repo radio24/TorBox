@@ -225,7 +225,7 @@ case "$CHOICE" in
 			fi
 			clear
 			(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}) 2>/dev/null
-			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3 0 0 1
+			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3 0 1
 			sudo ipset destroy 2>/dev/null
 		fi
   ;;

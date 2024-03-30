@@ -426,13 +426,16 @@ case "$CHOICE" in
       		# The following line should minimize those cases where a restart is required.
       		sudo systemctl restart isc-dhcp-server
       		if [ -z "$INTERNETSELECTION" ]; then
-        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            sleep 2
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
+            restarting_tor menu
+            exit 0
       		else
-        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+        		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            exit 0
       		fi
-      		if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-      		(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          clear
 				fi
 			else
 				whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -495,13 +498,16 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            sleep 2
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
+            restarting_tor menu
+            exit 0
         	else
-          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            exit 0
         	fi
-        	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -566,12 +572,16 @@ case "$CHOICE" in
       		# The following line should minimize those cases where a restart is required.
       		sudo systemctl restart isc-dhcp-server
       		if [ -z "$INTERNETSELECTION" ]; then
-        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            sleep 2
+            # iptables cannot be saved !!
+            clear
+            restarting_tor menu
+            exit 0
       		else
-        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+        		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            exit 0
       		fi
-      		if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-      		# iptables cannot be saved !!
 				fi
 			else
 				whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -637,13 +647,16 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            sleep 2
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
+            restarting_tor menu
+            exit 0
         	else
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            exit 0
         	fi
-        	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          clear
 				fi
 
 			# The interface to the Internet is called pppd
@@ -715,13 +728,16 @@ case "$CHOICE" in
           	# The following line should minimize those cases where a restart is required.
           	sudo systemctl restart isc-dhcp-server
           	if [ -z "$INTERNETSELECTION" ]; then
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+              sleep 2
+              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+              clear
+              restarting_tor menu
+              exit 0
           	else
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+              exit 0
           	fi
-          	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-            clear
 					fi
         else
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -785,13 +801,16 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 1
+          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            sleep 2
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
+            restarting_tor menu
+            exit 0
         	else
-          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE 0
+          	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+            exit 0
         	fi
-        	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -818,7 +837,7 @@ case "$CHOICE" in
 						sleep 2
 						ask_captive
 						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
-						sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0 0
+						sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
 			  	fi
 				fi
 				connecting_to_VPN
@@ -858,13 +877,15 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1 1
+            sleep 2
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            clear
+            restarting_tor menu
+            exit 0
         	else
-          	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 0 1
+          	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
+            exit 0
         	fi
-        	if [ -z "$INTERNETSELECTION" ]; then finish; else exit; fi
-        	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          clear
 				fi
       else
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX

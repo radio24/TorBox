@@ -139,16 +139,16 @@ finish_bridge_start1()
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			fi
       clear
-      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-      echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${BRED}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report by pressing q."
-      echo ""
+			echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+		  echo -e "    Ignore any error messages; this can take a while; please wait..."
+		  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
+		  echo -e "    You can leave the progress report by pressing q."
+		  echo ""
 			stty intr q
 			# shellcheck disable=SC2064
 			trap "finish_bridge_start2" SIGINT
       sudo systemctl restart tor &
-			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
 		else
 			clear
@@ -415,11 +415,11 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       sudo systemctl daemon-reload
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
       clear
-      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-      echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${BRED}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report by pressing q."
-      echo ""
+			echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+		  echo -e "    Ignore any error messages; this can take a while; please wait..."
+		  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
+		  echo -e "    You can leave the progress report by pressing q."
+		  echo ""
 			stty intr q
 			# shellcheck disable=SC2064
       if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then
@@ -428,7 +428,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				trap "bash $SOURCE_SCRIPT; exit 0" SIGINT;
 			fi
       sudo systemctl restart tor &
-			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
     ;;
 

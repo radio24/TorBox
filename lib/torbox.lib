@@ -166,26 +166,6 @@ settime()
 	fi
 }
 
-# finish()
-# Used predefined variables: RUNFILE, MENU_HEIGHT_25 MENU_WIDTH
-# This function displays, if we have a working connection to the Tor network
-finish()
-{
-	EXITID=$(grep "^EXITID=" ${RUNFILE})
-	if [ "$EXITID" = "EXITID=0" ]; then
-  	sleep 4
-  	check_tor
-  	if [ "$TOR_STATUS" = "TOR is working" ]; then
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-ok-text $MENU_HEIGHT_25 $MENU_WIDTH
-  	else
-    	whiptail --title "TorBox - INFO (scroll down!)" --textbox --scrolltext $TXT_DIR/finish-fail-text $MENU_HEIGHT_25 $MENU_WIDTH
-  	fi
-	else
-  	EXITID="EXITID=0"
-  	sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
-	fi
-}
-
 # This function checks if a variable is an integer
 # Syntax is_integer [<variable_to_check>]
 is_integer()
@@ -465,16 +445,16 @@ deactivating_bridge_relay()
 restarting_tor()
 {
   SOURCE_SCRIPT=$1
-  echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
+  echo -e "${RED}[+] (Re)starting Tor!${NOCOLOR}"
   echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-  echo -e "    Ignore any error messages, this can take minutes just wait..."
-  echo -e "    At the end, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
+  echo -e "    Ignore any error messages; this can take a while; please wait..."
+  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
   echo -e "    You can leave the progress report by pressing q."
   echo ""
 	if [ ! -z "$SOURCE_SCRIPT" ]; then trap "bash $SOURCE_SCRIPT; exit 0" SIGINT; fi
 	stty intr q
   sudo systemctl restart tor &
-  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+  sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 	stty intr ^c
 }
 

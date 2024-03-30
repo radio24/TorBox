@@ -704,7 +704,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	readarray -t REQUIREMENTS < requirements.txt
 	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+		VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
   	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		if [ -z "$VERSION" ]; then
 			# shellcheck disable=SC2059
