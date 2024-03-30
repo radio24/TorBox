@@ -324,7 +324,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 
 			# Restoring TORRC
 			echo ""
-			read -r -p $'\e[1;37mDo you really want to overwrite the basic torbox configration (/etc/torrc)? [y/N]? -> \e[0m' -e -i N REPLY
+			read -r -p $'\e[1;93mDo you really want to overwrite the basic torbox configration (/etc/torrc)? [y/N]? -> \e[0m' -e -i N REPLY
 			# The following line is for the prompt to appear on a new line.
 			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 				if [[ $REPLY =~ ^[Yy]$ ]] ; then

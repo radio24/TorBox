@@ -130,9 +130,9 @@ function initialCheck() {
 	checkOS
 
 	# TOGGLE01 shows if the OpenVPN server is disabled or not
-	LOG_STATUS=""
-	LOG_STATUS=$(sudo systemctl is-active openvpn)
-	if [ $LOG_STATUS = inactive ] || [ $LOG_STATUS = failed ] ; then
+	VPN_STATUS=""
+	VPN_STATUS=$(sudo systemctl is-active openvpn)
+	if [ $VPN_STATUS = inactive ] || [ $VPN_STATUS = failed ] ; then
 		TOGGLE01="Enable"
 		TOGGLE02=""
 	else
@@ -927,7 +927,7 @@ function stopOpenVPN() {
 		fi
 	else
 		clear
-		read -rp $'\e[1;37mDo you want to enable OpenVPN? [y/n]: \e[0m' -e ENABLE
+		read -rp $'\e[1;93mDo you want to enable OpenVPN? [y/n]: \e[0m' -e ENABLE
 		if [[ $ENABLE == 'y' ]]; then
 				clear
 				echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
@@ -944,7 +944,7 @@ function stopOpenVPN() {
 
 function removeOpenVPN() {
 	clear
-	read -rp $'\e[1;37mDo you really want to remove OpenVPN? [y/n]: \e[0m' -e -i n REMOVE
+	read -rp $'\e[1;93mDo you really want to remove OpenVPN? [y/n]: \e[0m' -e -i n REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' $OPENVPN_CONF | cut -d " " -f 2)

@@ -286,7 +286,8 @@ if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfa
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	echo -e "${RED}[+] Finishing...${NOCOLOR}"
 	(sudo ifdown $O_DEVICE) 2>/dev/null
-	sleep 2
+	# Test lowered sleep from 2 to 1
+	sleep 1
 	(sudo ifup $O_DEVICE) 2>/dev/null
-	sleep 2
+	sleep 1
 fi

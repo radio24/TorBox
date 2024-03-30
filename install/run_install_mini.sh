@@ -446,7 +446,7 @@ select_and_install_tor()
       	echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
     	done
     	echo ""
-    	read -r -p $'\e[1;37mWhich tor version (number) would you like to use? -> \e[0m'
+    	read -r -p $'\e[1;93mWhich tor version (number) would you like to use? -> \e[0m'
     	echo
     	if [[ $REPLY =~ ^[1234567890]$ ]]; then
 				if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
@@ -714,7 +714,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	if [ -f requirements.failed ]; then
 		echo ""
 		echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
-		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+		read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
 				sudo pip3 install -r requirements.failed
@@ -1155,6 +1155,7 @@ read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key.
 clear
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
+sudo apt-get -y --purge remove exim4 exim4-base exim4-config exim4-daemon-light
 sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern
 sudo apt-get -y clean
 sudo apt-get -y autoclean

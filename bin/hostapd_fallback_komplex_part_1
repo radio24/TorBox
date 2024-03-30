@@ -137,8 +137,8 @@ if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 	sudo sed -i "s/^interface=.*/interface=$INTERFACE1/" ${HOSTAPD}
 	sudo systemctl restart hostapd
 	sleep 5
-	LOG_STATUS=$(sudo systemctl is-active hostapd)
-	if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
+	AP_STATUS=$(sudo systemctl is-active hostapd)
+	if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
 		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
 		sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
 		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}

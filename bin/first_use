@@ -336,29 +336,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
 			sudo timedatectl set-timezone UTC
 			if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-			echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
-			echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
-			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
-			echo
-			echo  "             Date: $(date '+%Y-%m-%d')"
-			$TORBOX_PATH/bin/clock.py
-			echo
-			echo -e "${RED}    You can find the correct time here: ${YELLOW}https://time.is/UTC${NOCOLOR}"
-			echo
-			while true
-			do
-				read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
-				# The following line is for the prompt to appear on a new line.
-				if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-					echo
-					echo
-					break
-				fi
-			done
-			if [[ $REPLY =~ ^[Yy]$ ]] ; then
-				settime
-			fi
-
+			settime
 			# Ask for bridge support
 			clear
       DEFAULT_BRIDGE_SUPPORT=0

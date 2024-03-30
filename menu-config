@@ -128,9 +128,9 @@ change_crda()
 read_config()
 {
   # TOGGLE03 / TOGGLE04 represents the extent of logging
-  LOG_STATUS=$(sudo systemctl is-active rsyslog)
-	[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
-  if [ $LOG_STATUS = inactive ]; then
+	LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
+	LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
+  if [[ $LOG_STATUS_001 = inactive && $LOG_STATUS_002 = inactive ]]; then
       TOGGLE03="LOW✔︎]==="
       TOGGLE03b="LOW"
       TOGGLE04="HIGH]==="
@@ -177,9 +177,8 @@ read_config()
   fi
 
   # TOGGLE09 shows if TorBox's WLAN is disabled or not
-  LOG_STATUS=""
-  LOG_STATUS=$(sudo systemctl is-active hostapd)
-  if [ $LOG_STATUS = inactive ] || [ $LOG_STATUS = failed ] ; then
+  AP_STATUS=$(sudo systemctl is-active hostapd)
+  if [ $AP_STATUS = inactive ] || [ $AP_STATUS = failed ] ; then
     TOGGLE09="Enable"
   else
     TOGGLE09="Disable"
@@ -1125,9 +1124,9 @@ case "$CHOICE" in
   #This changes the extent of the logging
   18)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
-      LOG_STATUS=$(sudo systemctl is-active rsyslog)
-			[ $LOG_STATUS = inactive ] && LOG_STATUS=$(sudo systemctl is-active systemd-journald.service)
-      if [ $LOG_STATUS = inactive ]; then
+			LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
+			LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
+			if [ "$LOG_STATUS_001" == "inactive" ] && [ "$LOG_STATUS_002" == "inactive" ]; then
 				sudo systemctl unmask rsyslog
         sudo systemctl enable rsyslog
         sudo systemctl start rsyslog

@@ -372,7 +372,7 @@ select_and_install_tor()
     echo -e "${RED}$menuitem${NOCOLOR} - ${torversion_versionsorted_new[$i]}"
   done
   echo ""
-  read -r -p $'\e[1;37mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
+  read -r -p $'\e[1;93mWhich tor version (number) would you like to use (0 = EXIT)? -> \e[0m'
   echo
   if [[ $REPLY =~ ^[1234567890]$ ]]; then
     if [ $REPLY -gt 0 ] && [ $((REPLY-1)) -le $number_torversion ]; then
@@ -784,7 +784,6 @@ case "$CHOICE" in
 			# NEW v.0.5.3: New way to install and check Python requirements
 			sudo pip3 install --upgrade -r requirements.txt
 			sleep 5
-
 			clear
 			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
 			if [ -f requirements.failed ]; then rm requirements.failed; fi
@@ -804,7 +803,7 @@ case "$CHOICE" in
 				if [ -f requirements.failed ]; then
 					echo ""
 					echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
-					read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
+					read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 					if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 						if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
 							sudo pip3 install -r requirements.failed

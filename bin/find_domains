@@ -207,7 +207,7 @@ if [ "$RESCAN" == "1" ]; then
 		echo ""
 		while true
 		do
-			read -r -p $'\e[1;37mChoose the desired list -> \e[0m'
+			read -r -p $'\e[1;93mChoose the desired list -> \e[0m'
 			if [[ $REPLY =~ ^[120]$ ]] ; then
 				echo
 				break
@@ -230,7 +230,7 @@ if [ "$RESCAN" == "1" ]; then
 	echo ""
 	while true
 	do
-  	read -r -p $'\e[1;37mChoose the desired menu entry -> \e[0m'
+  	read -r -p $'\e[1;93mChoose the desired menu entry -> \e[0m'
 		if [[ $REPLY =~ ^[120]$ ]] ; then
 			echo
 			break
