@@ -551,6 +551,7 @@ recommended_reboot()
   if (whiptail --title "TorBox - INFO" --yes-button "REBOOT" --yesno "A reboot of the system is not only recomendend, but necessary!" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX) ; then
     clear
     echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
+		sync
     sleep 2
     sudo reboot
   else

@@ -711,5 +711,6 @@ if [[ ! "$REPLY" =~ ^(yes|y|Y)$ ]]; then
         exit 0
 fi
 echo "Reboot started..."
+sync
 reboot
 exit 0

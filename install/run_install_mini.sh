@@ -1206,5 +1206,6 @@ else
 	sleep 10
 fi
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sync
 sleep 3
 sudo reboot

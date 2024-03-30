@@ -920,6 +920,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
         echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
         echo ""
+        sync
         sleep 2
         sudo reboot
         exit 0
@@ -929,6 +930,7 @@ case "$CHOICE" in
         echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
         echo -e "${YELLOW}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
         echo ""
+        sync
         sleep 2
         sudo shutdown -h now
         exit 0

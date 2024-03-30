@@ -655,7 +655,7 @@ echo ""
 read -r -p $'\e[1;37mWould you like to reboot the system now [Y/n]? -> \e[0m'
 echo
 if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-  if [[ $REPLY =~ ^[Yy]$ ]] ; then reboot ; fi
+  if [[ $REPLY =~ ^[Yy]$ ]] ; then sync; reboot ; fi
 else exit 0 ; fi
 
 # 3. Installing all necessary packages
@@ -1345,5 +1345,6 @@ else
 	sleep 10
 fi
 echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+sync
 sleep 3
 sudo reboot

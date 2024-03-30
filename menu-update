@@ -776,6 +776,11 @@ case "$CHOICE" in
 			sleep 10
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
+      # NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+      PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
+      if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
+        sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+      fi
 			# NEW v.0.5.3: New way to install and check Python requirements
 			sudo pip3 install --upgrade -r requirements.txt
 			sleep 5
@@ -862,6 +867,7 @@ case "$CHOICE" in
 			echo ""
 			configure_system_service
       echo ""
+      sync
 			echo -e "${YELLOW}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

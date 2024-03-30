@@ -373,6 +373,8 @@ case "$CHOICE" in
           echo " "
           echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
           echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+					sync
+					sleep 2
           sudo reboot
           exit 0
         fi
@@ -1139,6 +1141,7 @@ case "$CHOICE" in
           echo " "
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+					sync
           sleep 2
           sudo reboot
           exit 0
@@ -1283,6 +1286,7 @@ case "$CHOICE" in
           clear
           echo -e "${RED}[+] Rebooting TorBox...${NOCOLOR}"
           echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+					sync
           sleep 2
           sudo reboot
           exit 0
