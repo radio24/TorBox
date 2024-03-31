@@ -27,17 +27,6 @@ rfkill block bluetooth
 bash /home/torbox/torbox/bin/regset
 sudo systemctl stop hostapd
 
-CHECK_OS="$(lsb_release -si)"
-CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
-if [ "$CHECK_OS" = "Ubuntu" ] ; then
-	if ip -o link show | awk -F': ' '{print $2}' | grep end0 ; then
-		# rename interface name from end0 to eth0
-		# See aöso here: https://unix.stackexchange.com/questions/396382/how-can-i-show-the-old-eth0-names-and-also-rename-network-interfaces-in-debian-9
-		sudo ip link set end0 down
-		sudo ip link set end0 name eth0
-	fi
-fi
-
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
@@ -94,30 +83,6 @@ if ip link | grep wlan0 ; then
 		 systemctl restart tor
 	 fi
  fi
-fi
-
-# If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
-if ip link | grep wlan1 ; then
- if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
-	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
-	 if [ "$exitstatus" == "1" ]; then
-		 systemctl restart tor
-	 fi
- fi
-fi
-
-# If a cellular device is available, and previously used then let's check if we can auto-connect
-if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
-
-# Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
-if ip link | grep eth0 ; then
-	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
-		if ! sudo timeout 5 sudo route | grep -m 1 default; then
-			sudo ifdown eth0 2>/dev/null
-			ip addr flush dev eth0
-			sudo ifup eth0 2>/dev/null
-		fi
-	fi
 fi
 
 # If configured, turn TACA on

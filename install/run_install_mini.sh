@@ -29,7 +29,7 @@
 # on the SD card running in the Raspberry Pi Zero 2 W.
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--step_by_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -46,9 +46,6 @@
 #
 # The --select-branch option allows to install a specific TorBox branch.
 # Without this option, the installation script installs the master branch.
-#
-# The --on_a_cloud option has to be used if you install TorBox on a cloud or
-# as a cloud service. This will enable/disable some features.
 #
 # The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
@@ -145,7 +142,7 @@ CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,on_a_cloud,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -159,7 +156,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2023 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]"
+			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -168,7 +165,6 @@ while true; do
 			echo "                        : Let select a specific fork from a GitHub user (fork_owner_name)"
 			echo "         --select-branch branch_name"
 			echo "                        : Let select a specific TorBox branch (default: master)"
-			echo "         --on_a_cloud   : Installing on a cloud or as a cloud service"
 			echo "         --step_by_step : Executes the installation step by step"
 			echo ""
 			echo "Please before starting the installation ensure that the user account \"torbox\" is already created"
@@ -190,7 +186,6 @@ while true; do
 			[ ! -z "$2" ] && TORBOXMENU_BRANCHNAME="$2"
 			shift 2
 		;;
-		--on_a_cloud ) ON_A_CLOUD="--on_a_cloud"; shift ;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
 		-- ) shift; break ;;
 		* ) break ;;
@@ -499,7 +494,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Raspberry Pi OS (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON RASPBERRY PI OS\n\nBefore we start, please ensure that you have already created a user account \"torbox\" and are currently logged in as such. Also, at the end of the installation, we will remove Rasperi Pi OS's auto-login feature - be sure you know your password for \"torbox\"!!\n\nBy the way, this script should be started as \"./run_install\" (without sudo !!) in your home directory, which is \"/home/torbox\".The installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomizes the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -630,8 +625,9 @@ fi
 clear
 echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
 # Installation of standard packages
-# NEW post-v.0.5.3: openssl ca-certificates added
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+# check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+# NEW for TorBox mini: raspberrypi-kernel-headers dkms removed
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
 # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -973,11 +969,11 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 sudo cp etc/network/interfaces.mini /etc/network/interfaces
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
-#sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-#(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-#sudo cp etc/rc.local /etc/
-#sudo chmod a+x /etc/rc.local
-#echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
+sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
+sudo cp etc/rc.local.mini /etc/rc.local
+sudo chmod a+x /etc/rc.local
+echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
 if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
@@ -1110,16 +1106,9 @@ sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
 sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
 sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-# NEW v.0.5.4: Specifc configurations for an installation on a cloud
-# Important: Randomizing MAC addresses could prevent the assignement of an IP address
-if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
-	sed -i "s/=random/=permanent/" ${RUNFILE}
-else
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
-fi
+sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+
 # NEW for TorBox mini: Set a flag (only in this installation script!)
 sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
 

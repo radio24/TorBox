@@ -1229,12 +1229,12 @@ sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
 # NEW v.0.5.4: Specifc configurations for an installation on a cloud
 # Important: Randomizing MAC addresses could prevent the assignement of an IP address
 if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
-	sed -i "s/=random/=permanent/" ${RUNFILE}
+	sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+	sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+	sudo sed -i "s/=random/=permanent/" ${RUNFILE}
 else
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+	sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+	sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 fi
 
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
