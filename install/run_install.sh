@@ -249,7 +249,7 @@ re-connect()
 	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 	else
 	  echo -e "${YELLOW}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  echo -e "${RED}[+]        We will check again in about 30 seconds...${NOCOLOR}"
 	  sleep 30
 	  echo ""
 	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"

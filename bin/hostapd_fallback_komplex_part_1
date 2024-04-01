@@ -135,17 +135,25 @@ fi
 # If wlan0 or wlan1 is not acting as AP then we have to do something about it!
 if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 	sudo sed -i "s/^interface=.*/interface=$INTERFACE1/" ${HOSTAPD}
-	sudo systemctl restart hostapd
-	sleep 5
-	AP_STATUS=$(sudo systemctl is-active hostapd)
-	if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
-		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
-		sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
-		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
-		sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
-		sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+		# New v.0.5.4 avoid to run hostapd if it is masked
+	AP_STATUS=$(sudo systemctl is-enable hostapd)
+	if [ "$AP_STATUS" != "masked" ] ; then
 		sudo systemctl restart hostapd
 		sleep 5
+	fi
+	# New v.0.5.4 avoid to run hostapd if it is masked
+	AP_STATUS=$(sudo systemctl is-enable hostapd)
+	if [ "$AP_STATUS" != "masked" ] ; then
+		AP_STATUS=$(sudo systemctl is-active hostapd)
+		if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
+			sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
+			sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
+			sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
+			sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
+			sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+			sudo systemctl restart hostapd
+			sleep 5
+		fi
 	fi
 fi
 

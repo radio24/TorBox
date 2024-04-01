@@ -215,8 +215,12 @@ change_mac_address_finish()
 	# I guess the old one was wrong
 	# if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
 	if [[ "$CLIENT_IFACE" =~ "$O_DEVICE" ]]; then
-		echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
-		sudo systemctl restart hostapd
+		# New v.0.5.4 avoid to run hostapd if it is masked
+		AP_STATUS=$(sudo systemctl is-enable hostapd)
+		if [ "$AP_STATUS" != "masked" ] ; then
+			echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
+			sudo systemctl restart hostapd
+		fi
 	elif [[ "$INTERNET_IFACE" == "$O_DEVICE" ]]; then
 		echo
 		echo -e "${YELLOW}[!] YOU MUST RECONNECT TO THE INTERNET IN THE MAIN MENU!${NOCOLOR}"

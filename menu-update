@@ -101,6 +101,8 @@ TORBOXMENU_FORKNAME="radio24"
 TORBOXMENU_BRANCHNAME="master"
 TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
 SPEED=$(grep "^EX_SLOW=" ${RUNFILE} | sed "s/EX_SLOW=//g") 2>/dev/null
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
 #Other variables
 TORRC="/etc/tor/torrc"
@@ -434,8 +436,8 @@ update_torcfg()
   (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
   sudo cp etc/network/interfaces /etc/network/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
+  sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-  # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
   sudo cp etc/rc.local /etc/rc.local
   sudo chmod a+x /etc/rc.local
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
@@ -521,7 +523,6 @@ update_torcfg()
 	echo ""
 	echo -e "${RED}[+] Configure Nginx${NOCOLOR}"
 	(sudo sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"/g" /etc/init.d/nginx)
-	# NEW v.0.5.3
 	# This has to be at the end to avoid unnecessary error messages
 	(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 	sudo systemctl restart systemd-hostnamed
@@ -853,9 +854,15 @@ case "$CHOICE" in
 			sleep 5
 			echo ""
 			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
-			sudo systemctl unmask hostapd
-			sudo systemctl enable hostapd
-			sudo systemctl enable isc-dhcp-server
+      if [ "$TORBOX_MINI" -eq "1" ] || [ "$TORBOX_ON_A_CLOUD" -eq "1" ] ; then
+        sudo systemctl stop hostapd
+        sudo systemctl disable hostapd
+        sudo systemctl mask hostapd
+      else
+			  sudo systemctl unmask hostapd
+			  sudo systemctl enable hostapd
+			  sudo systemctl enable isc-dhcp-server
+      fi
 			# Copy not moving!
 			(sudo cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
 			sudo chmod a+x /usr/bin/geoip*
@@ -880,7 +887,6 @@ case "$CHOICE" in
 		INPUT=$(cat text/install_network_drivers-text)
 		if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT $MENU_WIDTH); then
 			clear
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			if [ "$ON_A_CLOUD" -eq "1" ]; then
 				INPUT=$(cat text/on_a_cloud_warning-text)
 				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -888,7 +894,18 @@ case "$CHOICE" in
 					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
 					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
 				else
-					trap "bash menu-config; exit 0" EXIT
+					trap "bash menu-update; exit 0" EXIT
+					exit 0
+				fi
+			fi
+      if [ "$TORBOX_MINI" -eq "1" ]; then
+				INPUT=$(cat text/torbox_mini_warning-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu-update; exit 0" EXIT
 					exit 0
 				fi
 			fi
@@ -1347,7 +1364,6 @@ case "$CHOICE" in
 	# Rerun the "First Start-up" script
 	14)
   	clear
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			bin/first_use 1 menu-update
 		else

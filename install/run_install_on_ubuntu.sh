@@ -251,7 +251,7 @@ re-connect()
 	  echo -e "${RED}[+]         Yes, we have Internet! :-)${NOCOLOR}"
 	else
 	  echo -e "${YELLOW}[!]        Hmmm, no we don't have Internet... :-(${NOCOLOR}"
-	  echo -e "${RED}[+]         We will check again in about 30 seconds...${NOCOLOR}"
+	  echo -e "${RED}[+]        We will check again in about 30 seconds...${NOCOLOR}"
 	  sleep 30
 	  echo ""
 	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
@@ -752,7 +752,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	readarray -t REQUIREMENTS < requirements.txt
 	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
+		VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
   	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		if [ -z "$VERSION" ]; then
 			# shellcheck disable=SC2059

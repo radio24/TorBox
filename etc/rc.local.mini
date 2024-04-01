@@ -26,6 +26,8 @@ rfkill unblock all
 rfkill block bluetooth
 bash /home/torbox/torbox/bin/regset
 sudo systemctl stop hostapd
+sudo systemctl disable hostapd
+sudo systemctl mask hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
