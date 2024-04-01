@@ -180,11 +180,11 @@ clear
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
-printf ("Setting the correct time zone: ")
+printf "Setting the correct time zone: "
 if [ -f "/etc/timezone" ]; then
 	sudo mv /etc/timezone /etc/timezone.bak
 	(printf "Etc/UTC" | sudo tee /etc/timezone) 2>&1
-  printf (" ")
+  printf " "
 fi
 sudo timedatectl set-timezone UTC
 echo
