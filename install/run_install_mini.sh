@@ -196,13 +196,15 @@ while true; do
     --continue_with_step )
       # shellcheck disable=SC2034
       CONTINUE_WITH_STEP="--continue_with_step"
-      [ ! -z "$2" ] && STEP_NUMBER="$2" || STEP_NUMBER="1"
+      [ ! -z "$2" ] && STEP_NUMBER="$2"
       shift 2
     ;;
 		-- ) shift; break ;;
 		* ) break ;;
   esac
 done
+
+[ ! -z "$STEP_NUMBER" ] && STEP_NUMBER="1"
 
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
