@@ -39,7 +39,7 @@ fi
 
 # Change the MAC address if needed
 # List all available network interfaces
-AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d")
+AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^wlan0/d"))
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
 		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
@@ -77,16 +77,6 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-# Let's check if we can auto-connect to a wireless network
-if ip link | grep wlan0 ; then
- if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
-	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
-	 if [ "$exitstatus" == "1" ]; then
-		 systemctl restart tor
-	 fi
- fi
-fi
-
 # If configured, turn TACA on
 if grep "LOGCHECK=1" /home/torbox/torbox/run/torbox.run ; then
   (nohup sudo /usr/bin/python3 /home/torbox/torbox/log_check.py &) 2>/dev/null
@@ -98,10 +88,8 @@ if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torb
 
 sudo systemctl start dnsmasq
 sudo /bin/ping -c 1 "pool.ntp.org" >/dev/null 2>&1 && sudo /usr/sbin/ntpdate pool.ntp.org
-# NEW post-v.0.5.3
 sudo systemctl stop dnsmasq
 
-# NEW v.0.5.3
 # Starting domain exclusion, if activated
 if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then
 	if [ -f "/home/torbox/torbox/run/clearnet-list" ]; then
