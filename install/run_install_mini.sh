@@ -146,7 +146,7 @@ CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,step_by_step,continue_with_step: -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -195,7 +195,7 @@ while true; do
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
     --continue_with_step )
       # shellcheck disable=SC2034
-      CONTINUE_WITH_STEP="--select-branch"
+      CONTINUE_WITH_STEP="--continue_with_step"
       [ ! -z "$2" ] && STEP_NUMBER="$2" || STEP_NUMBER="1"
       shift 2
     ;;
