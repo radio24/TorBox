@@ -204,7 +204,7 @@ while true; do
   esac
 done
 
-[ ! -z "$STEP_NUMBER" ] && STEP_NUMBER="1"
+[ -z "$STEP_NUMBER" ] && STEP_NUMBER="1"
 
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
