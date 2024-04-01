@@ -70,34 +70,34 @@ fi
 
 # Is the Bridge Relay activated?
 if grep "^BridgeRelay" ${TORRC}; then
-	BRIDGE_RELAY="=${RED} Is running - will be deactivated"
+	BRIDGE_RELAY="=${RED} Is running - will be deactivated."
 else
-	BRIDGE_RELAY="${GREEN} Is not running"
+	BRIDGE_RELAY="${GREEN} Is not running."
 fi
 
 # Are Onion Services Running?
 if grep "^HiddenServiceDir" ${TORRC}; then
-	MODE_OS="${RED} Are running"
+	MODE_OS="${RED} Are running."
 else
-	MODE_OS="${GREEN} Are not running"
+	MODE_OS="${GREEN} Are not running."
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
 if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
-	FIREWALL="${RED} Are running - will be deactivated"
+	FIREWALL="${RED} Are running - will be deactivated."
   sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 else
-	FIREWALL="${GREEN} Are not running"
+	FIREWALL="${GREEN} Are not running."
 fi
 
 # Is the Countermeasure against a disconnection when idle feature active?
 	if pgrep -f "ping -q $PING_SERVER" ; then
 		clear
-		PING="${RED} Is running - will be deactivated"
+		PING="${RED} Is running - will be deactivated."
     sudo killall ping
 	else
 		clear
-		PING="${GREEN} Is not running"
+		PING="${GREEN} Is not running."
 	fi
 
 # Snowflake version
@@ -166,8 +166,7 @@ echo -e "${YELLOW}The following additional network drivers are installed:${NOCOL
 dkms status
 echo
 echo -e "${RED}Does it look right?${NOCOLOR}"
-echo -e "${RED}Would you like to  re-install the asditional network drivers?${NOCOLOR}"
-read -r -p $'\e[1;93mWould you like to  re-install the asditional network drivers [y/N]? -> \e[0m'
+read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
 if [[ $REPLY =~ ^[YyNn]$ ]] ; then
   if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
     sudo dkms remove --all
@@ -176,16 +175,18 @@ if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 fi
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+unset REPLY
 clear
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
+printf ("Setting the correct time zone: ")
 if [ -f "/etc/timezone" ]; then
 	sudo mv /etc/timezone /etc/timezone.bak
 	(printf "Etc/UTC" | sudo tee /etc/timezone) 2>&1
+  printf (" ")
 fi
 sudo timedatectl set-timezone UTC
-echo -e "${RED}Installed time zone:${YELLOW} $(cat /etc/timezone)${NOCOLOR}"
 echo
 settime
 clear

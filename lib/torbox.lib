@@ -113,6 +113,7 @@ check_interface_with_internet()
 # Used predefined function: check_interface_with_internet()
 settime()
 {
+	unset REPLY
 	echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
 	echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
 	echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
