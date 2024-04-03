@@ -35,9 +35,6 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
-# Other variables
-TORBOX_PATH="/home/torbox/torbox"
-
 ##############################
 ######## FUNCTIONS ###########
 
@@ -228,9 +225,17 @@ echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
 echo -e "${RED}[+] Copy default iptables.ipv4.nat${NOCOLOR}"
-sudo cp etc/iptables.ipv4.nat /etc/
+if [ "$TORBOX_MINI" -eq "1" ]; then
+  sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+else
+  sudo cp etc/iptables.ipv4.nat /etc/
+fi
 echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
-sudo cp etc/network/interfaces /etc/network/
+if [ "$TORBOX_MINI" -eq "1" ]; then
+  sudo cp etc/network/interfaces.mini /etc/network/interfaces
+else
+  sudo cp etc/network/interfaces /etc/network/
+fi
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
 (sudo apt-get -y --purge remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
