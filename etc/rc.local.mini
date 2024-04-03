@@ -39,7 +39,7 @@ fi
 
 # Change the MAC address if needed
 # List all available network interfaces
-AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^wlan0/d"))
+AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^wlan0/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
 		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
@@ -77,7 +77,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-# NEW v.0.5.4: This should work without problem - has to be tested !!! 
+# NEW v.0.5.4: This should work without problem - has to be tested !!!
 # If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan0 ; then
 	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then

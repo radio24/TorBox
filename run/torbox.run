@@ -48,9 +48,9 @@ FRESH_INSTALLED=0
 
 # NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
 # SSH access from the Internet
-# 0 - SSH access from the Internet is blocked
-# 1 - SSH access from the Internet is allowed (default)
-SSH_FROM_INTERNET=1
+# 0 - SSH access from the Internet is blocked (default)
+# 1 - SSH access from the Internet is allowed 
+SSH_FROM_INTERNET=0
 
 # NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
 # OPENVPN access from the Internet

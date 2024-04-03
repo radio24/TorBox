@@ -161,21 +161,24 @@ done
 unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-clear
-echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"
-dkms status
-echo
-echo -e "${RED}Does it look right?${NOCOLOR}"
-read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
-if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-  if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-    sudo dkms remove --all
-    sudo bash install_network_drivers
+# the additional network drivers are not installed on a TorBox mini installation
+if [ "$TORBOX_MINI" -eq "0" ]; then
+  clear
+  echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"
+  dkms status
+  echo
+  echo -e "${RED}Does it look right?${NOCOLOR}"
+  read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
+  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+    if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+      sudo dkms remove --all
+      sudo bash install_network_drivers
+    fi
   fi
+  echo ""
+  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  unset REPLY
 fi
-echo ""
-read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-unset REPLY
 clear
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
