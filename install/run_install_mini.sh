@@ -61,21 +61,22 @@
 ##########################################################
 
 # Table of contents for this script:
-#  0. Checking for Internet connection
-#  1. Adjusting time, if needed
-#  2. Checking for the WLAN regulatory domain
-#  3. Updating the system
-#  4. Installing all necessary packages
-#  5. Install Tor
-#  6. Configuring Tor with its pluggable transports
-#  7. Install Snowflake
-#  8. Re-checking Internet connectivity
-#  9. Downloading and installing the latest version of TorBox
-# 10. Installing all configuration files
-# 11. Disabling Bluetooth
-# 12. Configure the system services
-# 13. Updating run/torbox.run
-# 14. Finishing, cleaning and booting
+#  0.  Checking for Internet connection
+#  1.  Adjusting time, if needed
+#  2a. Checking for the WLAN regulatory domain
+#  2b. Removing Networkmanager and ModemManager
+#  3.  Updating the system
+#  4.  Installing all necessary packages
+#  5.  Install Tor
+#  6.  Configuring Tor with its pluggable transports
+#  7.  Install Snowflake
+#  8.  Re-checking Internet connectivity
+#  9.  Downloading and installing the latest version of TorBox
+# 10.  Installing all configuration files
+# 11.  Disabling Bluetooth
+# 12.  Configure the system services
+# 13.  Updating run/torbox.run
+# 14.  Finishing, cleaning and booting
 
 ##########################################################
 
@@ -533,7 +534,7 @@ else
 	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
 fi
 
-# 1a. Checking for Internet connection
+# 0. Checking for Internet connection
 clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
@@ -542,7 +543,7 @@ echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameser
 re-connect
 
 if [ "$STEP_NUMBER" -le "1" ]; then
-  # 1b. Adjusting time, if needed
+  # 1. Adjusting time, if needed
   clear
   if [ -f "/etc/timezone" ]; then
 	  sudo mv /etc/timezone /etc/timezone.bak
@@ -604,9 +605,9 @@ if [ "$STEP_NUMBER" -le "1" ]; then
 fi
 
 if [ "$STEP_NUMBER" -le "2" ]; then
-  # 2. Check the status of the WLAN regulatory domain to be sure WiFi will work
+  # 2a. Check the status of the WLAN regulatory domain to be sure WiFi will work
   clear
-  echo -e "${RED}[+] Step 2: Check the status of the WLAN regulatory domain...${NOCOLOR}"
+  echo -e "${RED}[+] Step 2a: Check the status of the WLAN regulatory domain...${NOCOLOR}"
   COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
   if [ "$COUNTRY" = "00:" ]; then
     echo -e "${YELLOW}[!]         No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
@@ -619,11 +620,18 @@ if [ "$STEP_NUMBER" -le "2" ]; then
   fi
   echo -e "${RED}[+]         To be sure we will unblock wlan, now! ${NOCOLOR}"
   sudo rfkill unblock wlan
+  sleep 10
+
+  # NEW v.0.5.4
+  # 2b. Removing Networkmanager and ModemManager
+  clear
+  echo -e "${RED}[+] Step 2b: Removing NetworkManager and ModemManager${NOCOLOR}"
+  sudo apt-get -y purge network-manager modemmanager
+  sleep 10
 fi
 
 if [ "$STEP_NUMBER" -le "3" ]; then
   # 3. Updating the system
-  sleep 10
   clear
   echo -e "${RED}[+] Step 3: Updating the system...${NOCOLOR}"
   sudo apt-get -y update
@@ -1050,28 +1058,28 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   fi
 fi
 
-# 11. Disabling Bluetooth
-#clear
-
-#echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
-#if [ -f "/boot/config.txt" ] ; then
-#	if ! grep "# Added by TorBox" /boot/config.txt ; then
-#  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
-#  	sudo systemctl disable hciuart.service
-#  	sudo systemctl disable bluetooth.service
-#  	sudo apt-get -y purge bluez
-#  	sudo apt-get -y autoremove
-#	fi
-#fi
-#sudo rfkill block bluetooth
-
-#if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-#	echo ""
-#	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-#	clear
-#else
-#	sleep 10
-#fi
+if [ "$STEP_NUMBER" -le "11" ]; then
+  # 11. Disabling Bluetooth
+  #echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+  #if [ -f "/boot/config.txt" ] ; then
+  #	if ! grep "# Added by TorBox" /boot/config.txt ; then
+  #  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
+  #	fi
+  #fi
+  clear
+  sudo systemctl disable hciuart.service
+  sudo systemctl disable bluetooth.service
+  sudo apt-get -y purge bluez
+  sudo apt-get -y autoremove
+  sudo rfkill block bluetooth
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
 
 if [ "$STEP_NUMBER" -le "12" ]; then
   # 12. Configure the system services
