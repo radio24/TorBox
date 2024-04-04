@@ -29,6 +29,9 @@ sudo systemctl stop hostapd
 sudo systemctl disable hostapd
 sudo systemctl mask hostapd
 
+# # NEW v.0.5.4: Is it possible to disable or even remove the NetworkManager? NetworkManager is responsible that DHCP doesn't work for usb0.
+sudo systemctl disable NetworkManager
+
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
@@ -42,21 +45,22 @@ fi
 AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^wlan0/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
-		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
-		# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
-		if ip link | grep "$INTERFACE" | grep -e "state UP" -e "NO-CARRIER" ; then
-			sudo ip link set dev $INTERFACE down
-			INTERFACE1_DOWN=1
-			sleep 2
-		fi
-		#
-		# NEW v.0.5.4: After a restart, the default MAC address is already set. Executing the comand result in a error.
-		# if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
-		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
-		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" = "1" ]; then
-			sudo ip link set dev $INTERFACE up
-			INTERFACE1_DOWN=0
+		# NEW v.0.5.4: After a restart, the default MAC address is already set.
+		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
+			# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+			# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
+			if ip link | grep "$INTERFACE" | grep -e "state UP" -e "NO-CARRIER" ; then
+				sudo ip link set dev $INTERFACE down
+				INTERFACE1_DOWN=1
+				sleep 2
+			fi
+			sudo macchanger -r $INTERFACE
+			# NEW v.0.5.3: We have only to put an interface up, if it was up before
+			if [ "$INTERFACE1_DOWN" = "1" ]; then
+				sudo ip link set dev $INTERFACE up
+				INTERFACE1_DOWN=0
+			fi
+			#
 		fi
 		#
 	else

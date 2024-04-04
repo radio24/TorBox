@@ -304,6 +304,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
       	INPUT=$(cat $TXT_DIR/first_use-TACA-text)
 				if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					clear
 					# To start TACA, notices.log has to be present
 					(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 					(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
@@ -324,6 +325,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 					sleep 2
 				else
+					clear
 					sudo pkill -f "log_check.py"
 	      	(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
 	      	(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
