@@ -63,7 +63,7 @@ if grep "^UseBridges" ${TORRC}; then
 			MODE_BRIDGES="${RED} OBFS4 is running - will be deactivated."
 	elif grep -o "^Bridge meek_lite " ${TORRC}; then
 			MODE_BRIDGES="${RED} Meek-Azure is running - will be deactivated."
-	elif grep -o "^Bridge snowflake " ${TORRC} | head -1; then
+	elif grep -o "^Bridge snowflake " ${TORRC}; then
 				MODE_BRIDGES="${RED} Snowflake is running - will be deactivated."
 	else
 			MODE_BRIDGES="${GREEN} Are not running."
@@ -87,7 +87,7 @@ else
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
-if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
+if grep -o "^ReachableAddresses " ${TORRC}; then
 	FIREWALL="${RED} Are running - will be deactivated."
   sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 else
