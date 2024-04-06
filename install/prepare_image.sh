@@ -35,6 +35,9 @@ GREEN='\033[1;32m'
 YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
+#Other variables
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
