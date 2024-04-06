@@ -36,6 +36,7 @@ YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
+TORRC="/etc/tor/torrc"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 
 # Read configuration from run/torbox.run
