@@ -1024,17 +1024,24 @@ fi
 clear
 
 echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
-if [ -f "/boot/config.txt" ] ; then
-	if ! grep "# Added by TorBox" /boot/config.txt ; then
-  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
-  	sudo systemctl disable hciuart.service
-  	sudo systemctl disable bluetooth.service
-  	sudo apt-get -y purge bluez
-  	sudo apt-get -y autoremove
-	fi
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  if [ -f "/boot/firmware/config.txt" ] ; then
+    if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+      sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/firmware/config.txt
+    fi
+  fi
+else
+  if [ -f "/boot/config.txt" ] ; then
+    if ! grep "# Added by TorBox" /boot/config.txt ; then
+      sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
+    fi
+  fi
 fi
+sudo systemctl disable hciuart.service
+sudo systemctl disable bluetooth.service
+sudo apt-get -y purge bluez
+sudo apt-get -y autoremove
 sudo rfkill block bluetooth
-
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	echo ""
 	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

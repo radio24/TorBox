@@ -1206,20 +1206,8 @@ case "$CHOICE" in
 		INPUT=$(cat text/pitft-text)
 		if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
-			online_check
-			if [ $OCHECK == 1 ]; then
-				sudo apt-get -y install python3-dev
-				wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
-				chmod +x adafruit-pitft.py
-				sudo pip3 install Click adafruit-python-shell
-				sudo python3 adafruit-pitft.py -u /home/torbox
-				rm adafruit-pitft.py
-			else
-				echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
-				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
-				echo " "
-				read -n 1 -s -r -p "Press any key to continue"
-			fi
+			sudo pip3 install Click adafruit-python-shell
+			sudo python3 adafruit-pitft.py -u /home/torbox
 		fi
   ;;
 

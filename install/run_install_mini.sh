@@ -103,6 +103,9 @@ NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 # Default hostname
 HOSTNAME="TorBox053"
 
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
 # For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
@@ -1060,13 +1063,20 @@ fi
 
 if [ "$STEP_NUMBER" -le "11" ]; then
   # 11. Disabling Bluetooth
-  #echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
-  #if [ -f "/boot/config.txt" ] ; then
-  #	if ! grep "# Added by TorBox" /boot/config.txt ; then
-  #  	sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
-  #	fi
-  #fi
-  clear
+  echo -e "${RED}[+] Step 11: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+  if [ "$DEBIAN_VERSION" -gt "11" ]; then
+    if [ -f "/boot/firmware/config.txt" ] ; then
+      if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+        sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/firmware/config.txt
+      fi
+    fi
+  else
+    if [ -f "/boot/config.txt" ] ; then
+      if ! grep "# Added by TorBox" /boot/config.txt ; then
+        sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
+      fi
+    fi
+  fi
   sudo systemctl disable hciuart.service
   sudo systemctl disable bluetooth.service
   sudo apt-get -y purge bluez
