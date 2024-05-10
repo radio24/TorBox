@@ -1165,7 +1165,7 @@ if [ "$STEP_NUMBER" -le "13" ]; then
   sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 
   # NEW for TorBox mini: Set a flag (only in this installation script!)
-  sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
+  sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
 
   echo -e "${RED}[+]          Update sudo setup${NOCOLOR}"
   sudo mkdir /home/torbox/openvpn
