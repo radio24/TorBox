@@ -1025,7 +1025,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
   (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo cp etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
   else
     sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
@@ -1035,7 +1035,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
   (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
   else
     sudo cp etc/iptables.ipv4.nat /etc/
@@ -1045,7 +1045,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   sudo cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
   (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo cp etc/network/interfaces.mini /etc/network/interfaces
   else
     sudo cp etc/network/interfaces /etc/network/
@@ -1053,7 +1053,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo cp etc/rc.local.mini /etc/rc.local
   else
     sudo cp etc/rc.local /etc/
@@ -1130,7 +1130,7 @@ if [ "$STEP_NUMBER" -le "12" ]; then
   clear
   echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
   sudo systemctl daemon-reload
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo systemctl stop hostapd
     sudo systemctl disable hostapd
     sudo systemctl mask hostapd
@@ -1203,7 +1203,7 @@ if [ "$STEP_NUMBER" -le "13" ]; then
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
 	  sudo sed -i "s/=random/=permanent/" ${RUNFILE}
-  elif [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
     sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
@@ -1233,7 +1233,7 @@ fi
 
 if [ "$STEP_NUMBER" -le "14" ]; then
   #14.  TorBox mini specific configurations
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     if ! grep "dwc2,g_ether" ${CMDLINEFILE}; then
       if grep "modules-load" ${CMDLINEFILE}; then
         CMDLINE_STRING=$(grep -o "modules-load=.*" ${CMDLINEFILE} | cut -d ' ' -f 1)
