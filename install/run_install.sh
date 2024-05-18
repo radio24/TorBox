@@ -681,7 +681,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   clear
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
-  if [ "$TORBOX_MINI" == "--torbox_mini"]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
   else
     check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms"
