@@ -1382,6 +1382,7 @@ case "$CHOICE" in
 
 	# Time synchronisation
 	16)
+		clear
 		settime
 	;;
 
