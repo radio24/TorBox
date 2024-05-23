@@ -1243,9 +1243,10 @@ if [ "$STEP_NUMBER" -le "14" ]; then
         sudo sed -i "s|modules-load=dwc2,g_ether rootwait|rootwait|g" ${CMDLINEFILE}
       fi
     fi
-  if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
-    (printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
-  fi
+  	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
+    	(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
+  	fi
+	fi
 fi
 
 if [ "$STEP_NUMBER" -le "15" ]; then
