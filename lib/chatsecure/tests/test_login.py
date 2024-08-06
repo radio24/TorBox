@@ -1,4 +1,3 @@
-import pgpy
 from tests.fixtures import app, client, test_db, get_test_keys
 
 def test_login_success(app, client, test_db):

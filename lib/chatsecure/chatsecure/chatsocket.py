@@ -1,7 +1,5 @@
 import json
-import pgpy
-import hashlib
-from flask import jsonify, Response, current_app, request, session
+from flask import request
 from flask_socketio import emit, join_room, send
 
 from chatsecure.app import socketio

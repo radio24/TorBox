@@ -1,5 +1,4 @@
 import pgpy
-from tests.fixtures import app, test_db, client
 from tests.test_login import get_test_keys
 from chatsecure.app import socketio
 from chatsecure.models import User, Group, UserMessage, GroupMessage

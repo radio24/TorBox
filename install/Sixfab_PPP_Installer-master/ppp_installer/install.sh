@@ -34,7 +34,7 @@
 YELLOW='\033[1;33m'
 RED='\033[1;31m'
 BLUE='\033[1;34m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 SET='\033[0m'
 
 # Global Varibales
@@ -49,34 +49,20 @@ POWERKEY_CELL_IOT_APP=11
 POWERKEY_CELL_IOT=24
 POWERKEY_TRACKER=24
 
-# Paths
-# SIXFAB_PATH="/opt/sixfab"
-# PPP_PATH="/opt/sixfab/ppp_connection_manager"
+# Where is the config.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CONFIGFILE="/boot/firmware/config.txt"
+else
+  CONFIGFILE="/boot/config.txt"
+fi
 
 clear
 echo -e "${RED}[+] Installing Sixfab Shield/HATs support${NOCOLOR}"
 echo -e ""
 
-# Check Sixfab path
-# if [[ -e $SIXFAB_PATH ]]; then
-#    echo -e "${RED}[+] Sixfab path already exist!" ${SET}
-# else
-#     sudo mkdir $SIXFAB_PATH
-#     echo -e "${RED}[+] Sixfab path is created." ${SET}
-# fi
-
-# Check PPP path
-# if [[ -e $PPP_PATH ]]; then
-#     echo -e "${RED}[+] PPP path already exist!" ${SET}
-# else
-#     sudo mkdir $PPP_PATH
-#     echo -e "${RED}[+] PPP path is created." ${SET}
-# fi
-sleep 5
-
 # Menu
 clear
-echo -e "${WHITE}Please choose your Sixfab Shield/HAT:${SET}"
+echo -e "${YELLOW}Please choose your Sixfab Shield/HAT:${SET}"
 echo -e "${RED}1: GSM/GPRS Shield${SET}"
 echo -e "${RED}2: 3G, 4G/LTE Base Shield${SET}"
 echo -e "${RED}3: Cellular IoT App Shield${SET}"
@@ -94,7 +80,7 @@ case $shield_hat in
     4)    echo -e "${RED}[+] You chose CellularIoT HAT${SET}";;
 	  5)    echo -e "${RED}[+] You chose Tracker HAT${SET}";;
 	  6)    echo -e "${RED}[+] You chose 3G/4G Base HAT${SET}";;
-    *)    echo -e "${WHITE}[!] Wrong Selection, exiting${SET}"; exit 1;
+    *)    echo -e "${YELLOW}[!] Wrong Selection, exiting${SET}"; exit 1;
 esac
 sleep 3
 
@@ -130,7 +116,7 @@ do
         break;;
 
 		[Nn]* )  break;;
-		*)  echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
+		*)  echo -e "${YELLOW}Wrong Selection, Select among Y or n${SET}";;
 	esac
 done
 
@@ -147,77 +133,14 @@ if ! (grep -q 'sudo route' /etc/ppp/ip-up ); then
 fi
 
 if [ $shield_hat -eq 2 ]; then
-	if ! (grep -q 'max_usb_current' /boot/config.txt ); then
-		echo "max_usb_current=1" >> /boot/config.txt
+	if ! (grep -q 'max_usb_current' ${CONFIGFILE} ); then
+		echo "max_usb_current=1" >> ${CONFIGFILE}
 	fi
 fi
 
-# auto connect/reconnect doesn't work
-# while [ 1 ]
-# do
-#	echo -e "${RED}Do you want to activate auto connect/reconnect service at R.Pi boot up? [Y/n] ${SET}"
-#	read auto_reconnect
-#
-#	case $auto_reconnect in
-#		[Yy]* ) sed -i "s/SIM_APN/$carrierapn/" configure_modem.sh
-#
-#            if [ $shield_hat -eq 1 ]; then
-#              cp unchanged_files/reconnect_gprsshield ppp_reconnect.sh
-#        			sed -i "s/STATUS_PIN/$STATUS_GPRS/" configure_modem.sh
-#				      sed -i "s/POWERKEY_PIN/$POWERKEY_GPRS/" configure_modem.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_REQ/" configure_modem.sh
-#
-#			      elif [ $shield_hat -eq 2 ]; then
-#              cp unchanged_files/reconnect_baseshield ppp_reconnect.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_NOT_REQ/" configure_modem.sh
-#
-#			      elif [ $shield_hat -eq 3 ]; then
-#              cp unchanged_files/reconnect_cellulariot_app ppp_reconnect.sh
-#				      sed -i "s/STATUS_PIN/$STATUS_CELL_IOT_APP/" configure_modem.sh
-#				      sed -i "s/POWERKEY_PIN/$POWERKEY_CELL_IOT_APP/" configure_modem.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_REQ/" configure_modem.sh
-#
-#			      elif [ $shield_hat -eq 4 ]; then
-#              cp unchanged_files/reconnect_cellulariot_app ppp_reconnect.sh
-#				      sed -i "s/STATUS_PIN/$STATUS_CELL_IOT/" configure_modem.sh
-#				      sed -i "s/POWERKEY_PIN/$POWERKEY_CELL_IOT/" configure_modem.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_REQ/" configure_modem.sh
-#
-#			      elif [ $shield_hat -eq 5 ]; then
-#              cp unchanged_files/reconnect_tracker ppp_reconnect.sh
-#				      sed -i "s/STATUS_PIN/$STATUS_TRACKER/" configure_modem.sh
-#				      sed -i "s/POWERKEY_PIN/$POWERKEY_TRACKER/" configure_modem.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_REQ/" configure_modem.sh
-#
-#			      elif [ $shield_hat -eq 6 ]; then
-#              cp unchanged_files/reconnect_basehat ppp_reconnect.sh
-#				      sed -i "s/POWERUP_FLAG/$POWERUP_NOT_REQ/" configure_modem.sh
-#
-#			      fi
-#
-#            cp functions.sh $PPP_PATH
-#            cp configs.sh $PPP_PATH
-#            mv configure_modem.sh $PPP_PATH
-#            mv ppp_reconnect.sh $PPP_PATH
-#            cp ppp_connection_manager.sh $PPP_PATH
-#            cp ppp_connection_manager.service /etc/systemd/system/
-#            systemctl daemon-reload
-#            systemctl enable ppp_connection_manager.service
-#
-#            break;;
-#
-#		[Nn]* ) echo -e ""
-#            echo -e "${WHITE}To connect to internet use main menu entry 8${SET}"
-#			  break;;
-#		*)   echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
-#	esac
-# done
-
-
-
 sleep 2
 clear
-echo -e "${WHITE}The installation of the Sixfab Shield/HATs support is done!${SET}"
+echo -e "${YELLOW}The installation of the Sixfab Shield/HATs support is done!${SET}"
 echo -e "${RED}To connect to internet use main menu entry 8${SET}"
 echo -e ""
 read -n 1 -s -r -p "Press any key to continue"

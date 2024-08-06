@@ -33,7 +33,6 @@
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
 # 2 - Will generate new unique SSH server keys (currently: 2 -> 3)
 # 3 - Will ask the source of the Internet, if OBFS4 bridges should be aktivated (and then unmask) and if TACA be activated (currently: 3 -> 0)
-# 4 - Will install additional network drivers (internally set with FRESHINSTALLED=4, not used in torbox.run)
 #
 # If SOURCE_SCRIPT is empty, the default is then the script was started from the shell or at the beginning --> starts menu at the end
 #
@@ -48,7 +47,8 @@ MENU_HEIGHT_10=10
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+BRED='\033[1;91m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Identify the Operation System
@@ -78,7 +78,7 @@ finish_bridge_start2()
 	REPLY=""
 	while true
 	do
-		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+		read -r -p $'\e[1;91mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
 		# The following line is for the prompt to appear on a new line.
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			echo
@@ -115,7 +115,7 @@ finish_bridge_start1()
   # Did tor with bridge-support start up?
  	while true
  	do
- 		read -r -p $'\e[1;37mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
+ 		read -r -p $'\e[1;91mDid you see \"Bootstrapped 100%: Done\" [Y/n]? -> \e[0m'
  		# The following line is for the prompt to appear on a new line.
  		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
  			echo
@@ -139,16 +139,16 @@ finish_bridge_start1()
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			fi
       clear
-      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-      echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report by pressing q."
-      echo ""
+			echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+		  echo -e "    Ignore any error messages; this can take a while; please wait..."
+		  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
+		  echo -e "    You can leave the progress report by pressing q."
+		  echo ""
 			stty intr q
 			# shellcheck disable=SC2064
 			trap "finish_bridge_start2" SIGINT
       sudo systemctl restart tor &
-      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
 		else
 			clear
@@ -197,12 +197,12 @@ while [ $FRESHINSTALLED -gt 0 ]; do
     2)
       clear
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-      echo -e "${WHITE}[+] First time starting your TorBox!${NOCOLOR}"
-      echo -e "${WHITE}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
+      echo -e "${BRED}[+] First time starting your TorBox!${NOCOLOR}"
+      echo -e "${BRED}[+] Generating new unique SSH server keys for your TorBox installation!${NOCOLOR}"
       (sudo rm -r /etc/ssh/ssh_host_*) 2>/dev/null
       sudo ssh-keygen -A
       echo ""
-      echo -e "${WHITE}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
+      echo -e "${BRED}[+] To take effect, you have to close and reopen all your SSH sessions.${NOCOLOR}"
       FRESHINSTALLED=3
       sleep 10
     ;;
@@ -220,7 +220,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       if (whiptail --title "TorBox - FIRST START UP (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         sleep 1
       else
-        sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
+        sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
         exit 0
       fi
 
@@ -270,7 +270,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat $TXT_DIR/first_use-firewall-text)
-			if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
@@ -304,6 +304,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
       	INPUT=$(cat $TXT_DIR/first_use-TACA-text)
 				if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					clear
 					# To start TACA, notices.log has to be present
 					(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 					(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
@@ -324,6 +325,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 					sleep 2
 				else
+					clear
 					sudo pkill -f "log_check.py"
 	      	(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
 	      	(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
@@ -336,29 +338,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
 			sudo timedatectl set-timezone UTC
 			if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-			echo -e "${WHITE}[!] SYSTEM-TIME CHECK${NOCOLOR}"
-			echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
-			echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
-			echo
-			echo  "             Date: $(date '+%Y-%m-%d')"
-			$TORBOX_PATH/bin/clock.py
-			echo
-			echo -e "${RED}    You can find the correct time here: ${WHITE}https://time.is/UTC${NOCOLOR}"
-			echo
-			while true
-			do
-				read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
-				# The following line is for the prompt to appear on a new line.
-				if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-					echo
-					echo
-					break
-				fi
-			done
-			if [[ $REPLY =~ ^[Yy]$ ]] ; then
-				settime
-			fi
-
+			settime
 			# Ask for bridge support
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
@@ -391,7 +371,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				fi
 	      DEFAULT_BRIDGE_SUPPORT=1
 				clear
-        echo -e "${RED}[+] Starting Tor ${WHITE}WITH${RED} bridge support...${NOCOLOR}"
+        echo -e "${RED}[+] Starting Tor ${YELLOW}WITH${RED} bridge support...${NOCOLOR}"
         sleep 1
 			else
 				sudo sed -i "s/^UseBridges/#UseBridges/g" ${TORRC}
@@ -403,7 +383,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
 				DEFAULT_BRIDGE_SUPPORT=0
 				clear
-				echo -e "${RED}[+] Starting Tor ${WHITE}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
+				echo -e "${RED}[+] Starting Tor ${YELLOW}WITHOUT${RED} OBFS4 bridge support...${NOCOLOR}"
 				sleep 1
 			fi
       (sudo systemctl unmask tor) 2>/dev/null
@@ -413,13 +393,13 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       (sudo systemctl enable tor) 2>/dev/null
       echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
       sudo systemctl daemon-reload
-      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=4/" ${RUNFILE}
+      sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
       clear
-      echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
-      echo -e "    Ignore any error messages, this can take minutes just wait..."
-      echo -e "    At the end, you should see \"${WHITE}Bootstrapped 100%: Done${NOCOLOR}\"."
-      echo -e "    You can leave the progress report by pressing q."
-      echo ""
+			echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
+		  echo -e "    Ignore any error messages; this can take a while; please wait..."
+		  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."
+		  echo -e "    You can leave the progress report by pressing q."
+		  echo ""
 			stty intr q
 			# shellcheck disable=SC2064
       if [ "$DEFAULT_BRIDGE_SUPPORT" == "1" ]; then
@@ -428,23 +408,8 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				trap "bash $SOURCE_SCRIPT; exit 0" SIGINT;
 			fi
       sudo systemctl restart tor &
-      sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[97m&\x1b[0m#' | grep -v -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
+			sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 			stty intr ^c
-    ;;
-
-		# This will install additional network drivers (only, if not on a cloud)
-    4)
-			clear
-			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-			FRESHINSTALLED=0
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
-			if [ "$ON_A_CLOUD" -eq "0" ]; then
-				INPUT=$(cat $TXT_DIR/install_network_drivers-text)
-				if (whiptail --title "TorBox - FIRST START UP" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-					bash $TORBOX_PATH/install/install_network_drivers install
-					recommended_reboot first_use
-				fi
-			fi
     ;;
 
     *) exit 1

@@ -48,7 +48,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -125,7 +125,7 @@ case "$CHOICE" in
     clear
     online_check $BRIDGE_DB_URL 0 1
     if [ $OCHECK == 1 ]; then
-      echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+      echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
       echo -e "${RED}[+] Checking for bridges to delete - please wait...${NOCOLOR}"
       sudo cp ${TORRC} ${BAK}
@@ -175,7 +175,7 @@ case "$CHOICE" in
       done
 			trap "bash bridges_remove_snowflake; exit 0" SIGINT
       if [ $j = 0 ]; then
-        echo -e "${WHITE}[!] All checked Snowflake do exist -> nothing to delete!${NOCOLOR}"
+        echo -e "${YELLOW}[!] All checked Snowflake do exist -> nothing to delete!${NOCOLOR}"
         sleep 5
         clear
       else
@@ -202,8 +202,8 @@ case "$CHOICE" in
         fi
       fi
     else
-      echo -e "${WHITE}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-      echo -e "${WHITE}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+      echo -e "${YELLOW}[+] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+      echo -e "${YELLOW}[+] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
       clear
@@ -223,7 +223,7 @@ case "$CHOICE" in
 			# clear
 			# if [ $OCHECK == 1 ]; then
 			# 	if (whiptail --title "TorBox - BRIDGE REMOVAL" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-			#		echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+			#		echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
 			#		echo " "
 			#		sleep 2
 			#		STATUS=1
@@ -231,7 +231,7 @@ case "$CHOICE" in
 					STATUS=0
 			#	fi
 			# else
-			# 	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+			# 	echo -e "${YELLOW}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
       #   echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
       #   echo " "
 			# 	sleep 2

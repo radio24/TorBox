@@ -35,7 +35,7 @@ MENU_HEIGHT_20=20
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Generating the filename for the backup
@@ -177,15 +177,15 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				(sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") 2>/dev/null
 			fi
 			echo ""
-			echo -e "${WHITE}[+] Backup is done!${NOCOLOR}"
-			echo -e "${RED}[+] You will find it here: ${WHITE}${OS_BK_TAR}"
+			echo -e "${YELLOW}[+] Backup is done!${NOCOLOR}"
+			echo -e "${RED}[+] You will find it here: ${YELLOW}${OS_BK_TAR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
 		else
 			clear
-			echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-			echo -e "${WHITE}[+] Did you include shared folders? Please, try again without them!${NOCOLOR}"
+			echo -e "${YELLOW}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+			echo -e "${YELLOW}[+] Did you include shared folders? Please, try again without them!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear

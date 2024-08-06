@@ -55,7 +55,7 @@ MENU_HEIGHT_25=25
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -104,7 +104,7 @@ $MODPROBE ip_nat_ftp
 ########## NAT rules ##########
 #We will forward all the network traffic to the captive portal in order to log in
 sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=1/" ${RUNFILE}
-echo -e "${WHITE}[!] WARNING: Tor is not running - all data are directly forwarded to the Internet...${NOCOLOR}"
+echo -e "${YELLOW}[!] WARNING: Tor is not running - all data are directly forwarded to the Internet...${NOCOLOR}"
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE  -j MASQUERADE
 $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 if [ -n "$I_DEVICE2" ]; then $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT ; fi

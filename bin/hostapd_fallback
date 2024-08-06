@@ -43,10 +43,10 @@ if [ -n "$STATICIP_WLAN1" ]; then
 	sudo sed -i "s/^interface=wlan1/interface=wlan0/" ${HOSTAPD}
 fi
 sleep 5
-LOG_STATUS=$(sudo systemctl is-active hostapd)
+AP_STATUS=$(sudo systemctl is-active hostapd)
 sleep 5
-echo $LOG_STATUS
-if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ]; then
+echo $AP_STATUS
+if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ]; then
 	sudo cp ${HOSTAPD_SAV} ${HOSTAPD}
 	if [ -n "$STATICIP_WLAN1" ]; then
 		sudo sed -i "s/^interface=wlan0/interface=wlan1/" ${HOSTAPD}

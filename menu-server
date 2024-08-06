@@ -48,7 +48,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -217,7 +217,7 @@ case "$CHOICE" in
 			# exitstatus == 1 means that $nORPORT is not an integer
 			if [ "$exitstatus" == "1" ]; then
 				clear
-				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 				sleep 5
 				clear
@@ -231,7 +231,7 @@ case "$CHOICE" in
 			# exitstatus == 1 means that $nOBFS4PORT is not an integer
 			if [ "$exitstatus" == "1" ]; then
 				clear
-				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 				sleep 5
 				clear
@@ -249,15 +249,15 @@ case "$CHOICE" in
 				if [[ $nNICK != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
 					clear
 					echo " "
-					echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
-					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					echo -e "${YELLOW}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+					echo -e "${YELLOW}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
 					nNICK=""
 					sleep 5
 				elif ${#nNICK} -gt 19 ; then
 					clear
 					echo " "
-					echo -e "${WHITE}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
-					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					echo -e "${YELLOW}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
+					echo -e "${YELLOW}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
 					nNICK=""
 					sleep 5
 				fi
@@ -305,7 +305,7 @@ case "$CHOICE" in
       FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
 			if [ -z "$FINGERPRINT" ]; then
 				clear
-				echo -e "${WHITE}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
+				echo -e "${YELLOW}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
 				echo -e "${RED}[+] Did you forget to restart tor? Please use entry 7.${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p "Press any key to continue"
@@ -318,14 +318,14 @@ case "$CHOICE" in
       echo -e "${RED}[+] Below is your personal bridge address, which you can use with another TorBox or with the Tor Browser.${NOCOLOR}"
       echo -e "${RED}[+] Format: obfs4 <IP>:<Port> <Fingerprint> cert=<Certificate> iat-mode=0${NOCOLOR}"
       echo ""
-      echo -e "${WHITE}[!] obfs4 $BRIDGELINE"
+      echo -e "${YELLOW}[!] obfs4 $BRIDGELINE"
       echo ""
       echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
       echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
       echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
       echo " "
     else
-      echo -e "${WHITE}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
+      echo -e "${YELLOW}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
       echo -e "${RED}[+] There is no personal bridge address, yet. You have to activate the Bridge Relay first (menu entry 2).${NOCOLOR}"
       echo " "
     fi
@@ -381,7 +381,7 @@ case "$CHOICE" in
 		 	(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
 		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
 		 	(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
-		 	echo -e "${WHITE}[+] DONE!${NOCOLOR}"
+		 	echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 		 	sleep 4
 		 	restarting_tor menu-server
 		 fi

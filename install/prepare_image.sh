@@ -31,8 +31,16 @@
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+GREEN='\033[1;32m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
+
+#Other variables
+TORRC="/etc/tor/torrc"
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+
+# Read configuration from run/torbox.run
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ###########
@@ -43,117 +51,154 @@ NOCOLOR='\033[0m'
 # Is the automatic counteractions feature activated?
 if pgrep -f "log_check.py" ; then
   clear
-  LOGCHECK="Activated!"
+  LOGCHECK="${GREEN} Activated!"
 else
     clear
-  LOGCHECK="Deactivated!"
+  LOGCHECK="${RED} Deactivated!"
 fi
 
 # Are bridges activated?
 if grep "^UseBridges" ${TORRC}; then
 	if grep -o "^Bridge obfs4 " ${TORRC}; then
-			MODE_BRIDGES="OBFS4 is running - will be deactivated."
+			MODE_BRIDGES="${RED} OBFS4 is running - will be deactivated."
 	elif grep -o "^Bridge meek_lite " ${TORRC}; then
-			MODE_BRIDGES="Meek-Azure is running - will be deactivated."
-	elif grep -o "^Bridge snowflake " ${TORRC} | head -1; then
-				MODE_BRIDGES="Snowflake is running - will be deactivated."
+			MODE_BRIDGES="${RED} Meek-Azure is running - will be deactivated."
+	elif grep -o "^Bridge snowflake " ${TORRC}; then
+				MODE_BRIDGES="${RED} Snowflake is running - will be deactivated."
 	else
-			MODE_BRIDGES="Are not running."
+			MODE_BRIDGES="${GREEN} Are not running."
 	fi
 else
-		MODE_BRIDGES="Are not running."
+		MODE_BRIDGES="${GREEN} Are not running."
 fi
 
 # Is the Bridge Relay activated?
 if grep "^BridgeRelay" ${TORRC}; then
-	BRIDGE_RELAY="Is running - will be deactivated"
+	BRIDGE_RELAY="=${RED} Is running - will be deactivated."
 else
-	BRIDGE_RELAY="Is not running"
+	BRIDGE_RELAY="${GREEN} Is not running."
 fi
 
 # Are Onion Services Running?
 if grep "^HiddenServiceDir" ${TORRC}; then
-	MODE_OS="Are running"
+	MODE_OS="${RED} Are running."
 else
-	MODE_OS="Are not running"
+	MODE_OS="${GREEN} Are not running."
 fi
 
 # Is the Countermeasure against a tightly configured firewall active?
-if grep -o "^ReachableAddresses " ${TORRC} | head -1; then
-	FIREWALL="Are running"
+if grep -o "^ReachableAddresses " ${TORRC}; then
+	FIREWALL="${RED} Are running - will be deactivated."
+  sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 else
-	FIREWALL="Are not running"
+	FIREWALL="${GREEN} Are not running."
 fi
 
 # Is the Countermeasure against a disconnection when idle feature active?
 	if pgrep -f "ping -q $PING_SERVER" ; then
 		clear
-		PING="Is running"
+		PING="${RED} Is running - will be deactivated."
+    sudo killall ping
 	else
 		clear
-		PING="Is not running"
+		PING="${GREEN} Is not running."
 	fi
 
 # Snowflake version
 SNOWFLAKE_VERS=$(snowflake-proxy --version 2>&1 | grep snowflake)
 
 clear
-echo -e "${WHITE}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
+echo -e "${YELLOW}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
 echo
-echo -e "${RED}Hostname                                     :${WHITE} $(cat /etc/hostname)${NOCOLOR}"
-echo -e "${RED}Kernel version                               :${WHITE} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version                                  :${WHITE} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
-echo -e "${RED}Obfs4proxy version                           :${WHITE} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                                    :${WHITE} ${SNOWFLAKE_VERS}${NOCOLOR}"
-echo -e "${RED}Nyx version                                  :${WHITE} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version                                   :${WHITE} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
-echo -e "${RED}Installed time zone                          :${WHITE} $(cat /etc/timezone)${NOCOLOR}"
-echo -e "${RED}Firewall countermeasures                     :${WHITE} $FIREWALL${NOCOLOR}"
-echo -e "${RED}Disconnection when idle countermeasure       :${WHITE} $PING${NOCOLOR}"
-echo -e "${RED}TorBox's automatic counteractions are        :${WHITE} $LOGCHECK${NOCOLOR}"
-echo -e "${RED}Bridges                                      :${WHITE} $MODE_BRIDGES${NOCOLOR}"
-echo -e "${RED}Bridge Relay                                 :${WHITE} $BRIDGE_RELAY${NOCOLOR}"
-echo -e "${RED}Onion Services                               :${WHITE} $MODE_OS${NOCOLOR}"
+echo -e "${RED}Hostname                                     :${YELLOW} $(cat /etc/hostname)${NOCOLOR}"
+echo -e "${RED}Kernel version                               :${YELLOW} $(uname -a)${NOCOLOR}"
+echo -e "${RED}Tor version                                  :${YELLOW} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
+echo -e "${RED}Obfs4proxy version                           :${YELLOW} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
+echo -e "${RED}Snowflake                                    :${YELLOW} ${SNOWFLAKE_VERS}${NOCOLOR}"
+echo -e "${RED}Nyx version                                  :${YELLOW} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
+echo -e "${RED}Go version                                   :${YELLOW} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Firewall countermeasures                     :$FIREWALL${NOCOLOR}"
+echo -e "${RED}Disconnection when idle countermeasure       :$PING${NOCOLOR}"
+echo -e "${RED}TorBox's automatic counteractions are        :$LOGCHECK${NOCOLOR}"
+echo -e "${RED}Bridges                                      :$MODE_BRIDGES${NOCOLOR}"
+echo -e "${RED}Bridge Relay                                 :$BRIDGE_RELAY${NOCOLOR}"
+echo -e "${RED}Onion Services                               :$MODE_OS${NOCOLOR}"
 echo
-echo
-echo -e "${WHITE}Following Python modules are installed:${NOCOLOR}"
+read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+clear
+echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
+# NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
+if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
+  sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+fi
 if [ ! -f requirements.txt ]; then wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt; fi
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
-	REPLY=""
-	readarray -t REQUIREMENTS < requirements.txt
-	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
-		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		VERSION=$(pip3 freeze | grep $REQUIREMENT | sed "s/${REQUIREMENT}==//" 2>&1)
-  	echo -e "${RED}${REQUIREMENT} version: ${WHITE}$VERSION${NOCOLOR}"
-		if [ -z "$VERSION" ]; then
-			# shellcheck disable=SC2059
-			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
-		fi
-	done
-	if [ -f requirements.failed ]; then
-		echo ""
-		echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
-		read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
-		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-				sudo pip3 install -r requirements.failed
-				sleep 5
-				rm requirements.failed
-				unset REQUIREMENTS
-				clear
-			fi
-		fi
-	fi
+  unset REPLY
+  readarray -t REQUIREMENTS < requirements.txt
+  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+    if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+    VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+    echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
+    if [ -z "$VERSION" ]; then
+      # shellcheck disable=SC2059
+      (printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+    fi
+  done
+  if [ -f requirements.failed ]; then
+    echo ""
+    echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
+    read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
+    if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+      if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+        sudo pip3 install -r requirements.failed
+        sleep 5
+        rm requirements.failed
+        unset REQUIREMENTS
+        clear
+      fi
+    fi
+  fi
 done
+unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+# the additional network drivers are not installed on a TorBox mini installation
+if [ "$TORBOX_MINI" -eq "0" ]; then
+  clear
+  echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"
+  dkms status
+  echo
+  echo -e "${RED}Does it look right?${NOCOLOR}"
+  read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
+  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+    if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+      sudo dkms remove --all
+      sudo bash install_network_drivers
+    fi
+  fi
+  echo ""
+  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+  unset REPLY
+fi
 clear
-echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
+echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
-sudo /usr/sbin/ntpdate pool.ntp.org
+printf "Setting the correct time zone: "
+if [ -f "/etc/timezone" ]; then
+	sudo mv /etc/timezone /etc/timezone.bak
+	(printf "Etc/UTC" | sudo tee /etc/timezone) 2>&1
+  printf " "
+fi
+sudo timedatectl set-timezone UTC
+echo
+settime
+clear
+echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
+echo
 echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
 sudo pkill -f "log_check.py"
 echo -e "${RED}[+] Stopping and masking tor${NOCOLOR}"
@@ -187,12 +232,20 @@ echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
 echo -e "${RED}[+] Copy default iptables.ipv4.nat${NOCOLOR}"
-sudo cp etc/iptables.ipv4.nat /etc/
+if [ "$TORBOX_MINI" -eq "1" ]; then
+  sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+else
+  sudo cp etc/iptables.ipv4.nat /etc/
+fi
 echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
-sudo cp etc/network/interfaces /etc/network/
+if [ "$TORBOX_MINI" -eq "1" ]; then
+  sudo cp etc/network/interfaces.mini /etc/network/interfaces
+else
+  sudo cp etc/network/interfaces /etc/network/
+fi
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
-(sudo apt-get -y remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
+(sudo apt-get -y --purge remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
@@ -201,6 +254,23 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 sudo systemctl daemon-reload
+echo -e "${RED}[+] Setting log level to low...${NOCOLOR}"
+LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
+LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
+if [ "$LOG_STATUS_001" != "inactive" ] || [ "$LOG_STATUS_002" != "inactive" ]; then
+  echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
+  sudo systemctl stop rsyslog
+  sudo systemctl stop systemd-journald-dev-log.socket
+  sudo systemctl stop systemd-journald-audit.socket
+  sudo systemctl stop systemd-journald.socket
+  sudo systemctl stop systemd-journald.service
+  sudo systemctl mask systemd-journald.service
+  echo ""
+  echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
+  #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
+  sudo systemctl disable rsyslog
+  sudo systemctl mask rsyslog
+fi
 echo -e "${RED}[+] Deleting all logs and resetting Tor statistics...${NOCOLOR}"
 echo
 erase_logs
@@ -208,7 +278,7 @@ echo
 echo -e "${RED}[+] Setting the right start trigger${NOCOLOR}"
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
 echo ""
-echo -e "${WHITE}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
+echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
 echo -e "${RED}[+] We will shutdown the TorBox now.${NOCOLOR}"
 echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

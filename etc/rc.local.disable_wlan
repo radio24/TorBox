@@ -59,14 +59,15 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 			sleep 2
 		fi
 		#
-			if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
-			if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
-			# NEW v.0.5.3: We have only to put an interface up, if it was up before
-			if [ "$INTERFACE1_DOWN" = "1" ]; then
-				sudo ip link set dev $INTERFACE up
-				INTERFACE1_DOWN=0
-			fi
-			#
+		# NEW v.0.5.4: After a restart, the default MAC address is already set. Executing the comand result in a error.
+		# if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
+		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
+		# NEW v.0.5.3: We have only to put an interface up, if it was up before
+		if [ "$INTERFACE1_DOWN" = "1" ]; then
+			sudo ip link set dev $INTERFACE up
+			INTERFACE1_DOWN=0
+		fi
+		#
 	else
 		MAC_ADDRESS=$(grep "MAC_$INTERFACE=" /home/torbox/torbox/run/torbox.run | sed "s/.*=//g")
 		# NEW v.0.5.3: We have only to put an interface down, if it is not already down

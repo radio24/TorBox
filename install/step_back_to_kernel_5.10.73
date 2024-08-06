@@ -47,7 +47,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Commit hash from https://github.com/Hexxeh/rpi-firmware/commits/master

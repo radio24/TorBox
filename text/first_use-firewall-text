@@ -1,8 +1,8 @@
-Since 2021, the TorBox team has observed more and more providers (especially in connection with open hotspots) which extensively block ports. These blockings stand in the way of a proper working TorBox (tor commonly uses ports 80, 443, 9001, and 9030 for network traffic and directory information).
+Some Internet providers (especially in connection with open hotspots) extensively block ports. These blockings stand in the way of a proper working TorBox resulting in the inability to connect to the tor network. Tor commonly uses ports 80, 443, 9001, and 9030 for network traffic and directory information.
 
-Therefore, TorBox uses, by default, countermeasures against a tightly configured firewall, taking care that tor uses only ports 80 and 443 for its data stream.
+There are two solutions to handle such situations: using bridges or countermeasures against a tightly configured firewall. However, you cannot use both methods together. Activating countermeasures against a tightly configured firewall ensures that tor uses only ports 80 and 443 for its data stream but blocks access to most of the bridges because they need other ports to work correctly.
 
-IMPORTANT
-DON'T USE IT if you plan to use BRIDGES or to run an OBFS4 BRIDGE RELAY! It will not work!
+AGAIN, IMPORTANT:
+DON'T CHOSE YES if you plan to use BRIDGES or to run an OBFS4 BRIDGE RELAY! It will not work!
 
 Do you want to keep using the countermeasure against tightly configured firewalls?

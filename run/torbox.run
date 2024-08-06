@@ -43,15 +43,14 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # 0 - Not a fresh installation - does nothing
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard (currently: 2 -> 3)
-# 3 - Starts the first_use skript (currently: 3 -> 4)
-# 4 - Will install additional network drivers (currently: 4 -> 0)
+# 3 - Starts the first_use skript (currently: 3 -> 0)
 FRESH_INSTALLED=0
 
 # NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
 # SSH access from the Internet
-# 0 - SSH access from the Internet is blocked
-# 1 - SSH access from the Internet is allowed (default)
-SSH_FROM_INTERNET=1
+# 0 - SSH access from the Internet is blocked (default)
+# 1 - SSH access from the Internet is allowed
+SSH_FROM_INTERNET=0
 
 # NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
 # OPENVPN access from the Internet
@@ -84,6 +83,7 @@ CLIENT_IFACE=wlan0 eth1
 # if set to "random", the the MAC adress will be randomized (this is the default)
 # if set to "permanent", the permanent, unique MAC address will be used
 # if set to xx:xx:xx:xx:xx:xx, then this MAC address will be used after a reboot
+# NEW v.0.5.4: Randomizing usb0 will lock you out!!
 MAC_eth0=random
 MAC_eth1=random
 MAC_wlan0=random
@@ -124,6 +124,9 @@ FORWARDING_ONLY=0
 
 # TorBox is running on a cloud or as a cloud service
 ON_A_CLOUD=0
+
+# TorBox is running on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget
+TORBOX_MINI=0
 
 ## Global variables to help inter-script communication - don't change them!!
 
