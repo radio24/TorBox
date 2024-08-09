@@ -16,7 +16,7 @@
 ###### SET VARIABLES ######
 # How many degrees should the display output be rotated?
 ROTATE=$(($1))
-CONFIGFILE="/boot/config.txt"
+CONFIGFILE="/boot/firmware/config.txt"
 
 sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
 sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
@@ -28,9 +28,9 @@ else
 	sudo sed -i "s/^dtoverlay=tft35a:rotate=.*/dtoverlay=tft35a:rotate=$ROTATE/g" ${CONFIGFILE}
 fi
 
-if ! grep "fbcon=map:10" /boot/cmdline.txt ; then
-  CMDLINE=$(</boot/cmdline.txt)
+if ! grep "fbcon=map:10" /boot/firmware/cmdline.txt ; then
+  CMDLINE=$(</boot/firmware/cmdline.txt)
   CMDLINE=${CMDLINE//[$'\n']}
   CMDLINE="$CMDLINE fbcon=map:10"
-  echo "$CMDLINE" > /boot/cmdline.txt
+  echo "$CMDLINE" > /boot/firmware/cmdline.txt
 fi
