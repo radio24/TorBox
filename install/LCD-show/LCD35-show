@@ -17,6 +17,9 @@
 # How many degrees should the display output be rotated?
 ROTATE=$(($1))
 
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
 # Where is the config.txt?
 if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CONFIGFILE="/boot/firmware/config.txt"

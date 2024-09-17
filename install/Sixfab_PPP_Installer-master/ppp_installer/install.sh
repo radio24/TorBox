@@ -49,6 +49,9 @@ POWERKEY_CELL_IOT_APP=11
 POWERKEY_CELL_IOT=24
 POWERKEY_TRACKER=24
 
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
 # Where is the config.txt?
 if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CONFIGFILE="/boot/firmware/config.txt"

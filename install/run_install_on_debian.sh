@@ -88,6 +88,9 @@ RED='\033[1;31m'
 YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
 # change the values until zou precisely know what you are doing)
