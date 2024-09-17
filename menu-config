@@ -1036,12 +1036,8 @@ case "$CHOICE" in
       clear
       online_check
       if [ $OCHECK == 1 ]; then
-        sudo apt-get -y install python3-dev
-        wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/adafruit-pitft.py
-        chmod +x adafruit-pitft.py
-        sudo pip3 install Click adafruit-python-shell
-        sudo python3 adafruit-pitft.py -u /home/torbox
-        rm adafruit-pitft.py
+				sudo pip3 install Click adafruit-python-shell
+				sudo python3 adafruit-pitft.py -u /home/torbox
       else
         echo -e "${WHITE}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
         echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
@@ -1115,8 +1111,9 @@ case "$CHOICE" in
     INPUT=$(cat text/sixfab-text)
     if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       #Original file: https://raw.githubusercontent.com/sixfab/Sixfab_PPP_Installer/master/ppp_installer/install.sh
-      chmod +x install/Sixfab_PPP_Installer-master/install.sh
-      sudo ./install/Sixfab_PPP_Installer-master/install.sh
+			cd install/Sixfab_PPP_Installer-master/ppp_installer
+			chmod +x install.sh
+			sudo ./install.sh
     fi
   ;;
 

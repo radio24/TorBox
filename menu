@@ -203,7 +203,7 @@ else
   " 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
   " 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
   "10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-  "===" "===============================================[Sub-Menues]===" \
+  "===" "================================================[Sub-Menus]===" \
   "11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
   "12" "Go to the Configuration sub-menu..." \
 	"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \

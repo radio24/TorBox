@@ -85,6 +85,9 @@ RED='\033[1;31m'
 WHITE='\033[1;37m'
 NOCOLOR='\033[0m'
 
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
 # change the values until zou precisely know what you are doing)
@@ -103,7 +106,7 @@ GO_PROGRAM="/usr/local/go/bin/go"
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
-TOR_HREF_FOR_SED="<a class=\"item-title ref-name\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED="<a class=\"gl-font-bold\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # NEW post-v.0.5.3: Currently not updated
@@ -1029,8 +1032,18 @@ fi
 # 10. Disabling Bluetooth
 clear
 echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable the Bluetooth functionality${NOCOLOR}"
-if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-   printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | tee -a /boot/firmware/config.txt
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  if [ -f "/boot/firmware/config.txt" ] ; then
+    if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+      sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/firmware/config.txt
+    fi
+  fi
+else
+  if [ -f "/boot/config.txt" ] ; then
+    if ! grep "# Added by TorBox" /boot/config.txt ; then
+      sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a /boot/config.txt
+    fi
+  fi
 fi
 rfkill block bluetooth
 

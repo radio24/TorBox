@@ -16,7 +16,23 @@
 ###### SET VARIABLES ######
 # How many degrees should the display output be rotated?
 ROTATE=$(($1))
-CONFIGFILE="/boot/config.txt"
+
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
+# Where is the config.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CONFIGFILE="/boot/firmware/config.txt"
+else
+  CONFIGFILE="/boot/config.txt"
+fi
+
+# Where is the cmdline.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CMDLINEFILE="/boot/firmware/cmdline.txt"
+else
+  CMDLINEFILE="/boot/cmdline.txt"
+fi
 
 sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/
 sudo cp ./usr/tft35a-overlay.dtb /boot/overlays/tft35a.dtbo
@@ -29,8 +45,8 @@ else
 fi
 
 if ! grep "fbcon=map:10" /boot/cmdline.txt ; then
-  CMDLINE=$(</boot/cmdline.txt)
+  CMDLINE=$(<${CMDLINEFILE})
   CMDLINE=${CMDLINE//[$'\n']}
   CMDLINE="$CMDLINE fbcon=map:10"
-  echo "$CMDLINE" > /boot/cmdline.txt
+  echo "$CMDLINE" > ${CMDLINEFILE}
 fi
