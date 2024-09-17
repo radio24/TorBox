@@ -106,11 +106,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8812au-20210629.git
-	cd 8812au-20210629
+	git clone https://github.com/morrownr/8812au-20210820.git
+	cd 8812au-20210820
 	sudo ./install-driver.sh NoPrompt
 	cd
-	sudo rm -r 8812au-20210629
+	sudo rm -r 8812au-20210820
 	sleep 2
 
 	# Installing the RTL8814AU
@@ -218,11 +218,11 @@ elif [ "$CHECK_OS" == "Debian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8812au-20210629.git
-	cd 8812au-20210629
+	git clone https://github.com/morrownr/8812au-20210820.git
+	cd 8812au-20210820
 	sudo ./install-driver.sh NoPrompt
 	cd
-	sudo rm -r 8812au-20210629
+	sudo rm -r 8812au-20210820
 	sleep 2
 
 	# Installing the RTL8814AU
@@ -339,11 +339,11 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing the Realtek RTL8812AU Wireless Network Driver ${NOCOLOR}"
-	git clone https://github.com/morrownr/8812au-20210629.git
-	cd 8812au-20210629
+	git clone https://github.com/morrownr/8812au-20210820.git
+	cd 8812au-20210820
 	sudo ./install-driver.sh NoPrompt
 	cd
-	sudo rm -r 8812au-20210629
+	sudo rm -r 8812au-20210820
 	sleep 2
 
 	# Installing the RTL8814AU
