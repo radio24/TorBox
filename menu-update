@@ -61,7 +61,7 @@ if grep -q --text 'Raspberry Pi 5' /proc/device-tree/model ; then CHECK_HD3="Ras
 if grep -q "Raspberry Pi 4" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 4" ; fi
 if grep -q "Raspberry Pi 5" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi 5" ; fi
 
-# Identify the Operation System
+# Identify the Operating System
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
@@ -71,7 +71,7 @@ if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbia
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
-TOR_HREF_FOR_SED="<a class=\"item-title ref-name\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED="<a class=\"gl-font-bold\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # NEW post-v.0.5.3: Currently not updated
@@ -134,7 +134,7 @@ update_firmware()
     sudo apt-get install rpi-eeprom
     sleep 2
     clear
-    echo -e "${RED}[!] Updating firmware if requiered...${NOCOLOR}"
+    echo -e "${RED}[!] Updating firmware if required...${NOCOLOR}"
     echo " "
     sudo rpi-eeprom-update
     echo " "
@@ -178,7 +178,7 @@ check_install_packages()
 # Provides the following variables: $torversion_versionsorted_new
 update_tor_preparations()
 {
-  # Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+  # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	sudo apt-get -y update
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   clear
@@ -207,7 +207,7 @@ update_tor_preparations()
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${WHITE}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
-		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
+		echo -e "${RED}[+] However, an older version of tor is already installed from${NOCOLOR}"
 		echo -e "${RED}    the Raspberry PI OS repository.${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -266,7 +266,7 @@ download_and_compile_tor()
 	fi
 	clear
 	if [ $DLCHECK -eq 0 ] ; then
-		echo -e "${RED}[+] Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+		echo -e "${RED}[+] Successfully downloaded the selected tor version... ${NOCOLOR}"
 		tar xzf $filename
 		echo ""
 		cd "$(ls -d -- tor-*/)"
@@ -633,11 +633,11 @@ update_torbox_menu()
   fi
 }
 
-# This function re-installs obfs4proxy
-# Syntax re_installing_obfs4proxy
-re_installing_obfs4proxy()
+# This function reinstalls obfs4proxy
+# Syntax reinstalling_obfs4proxy
+reinstalling_obfs4proxy()
 {
-	echo -e "${RED}[+] Re-installing obfs4proxy...${NOCOLOR}"
+	echo -e "${RED}[+] Reinstalling obfs4proxy...${NOCOLOR}"
 	cd ~
 	git clone $OBFS4PROXY_USED
 	DLCHECK=$?
@@ -664,11 +664,11 @@ re_installing_obfs4proxy()
 	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 }
 
-# This function re-installs snowflake
-# Syntax re_installing_snowflake
-re_installing_snowflake()
+# This function reinstalls snowflake
+# Syntax reinstalling_snowflake
+reinstalling_snowflake()
 {
-	echo -e "${RED}[+] Re-installing Snowflake...${NOCOLOR}"
+	echo -e "${RED}[+] Reinstalling Snowflake...${NOCOLOR}"
 	cd ~
 	git clone $SNOWFLAKE_USED
 	DLCHECK=$?
@@ -724,7 +724,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 " 2" "Update additional network drivers (reboot required!)" \
 " 3" "Update the firmware of the RPI 4 or 5 (reboot required!)"  \
 " 4" "Update or change the version of tor" \
-" 5" "Update the TorBox menu (whitout touching the configuration)"  \
+" 5" "Update the TorBox menu (without touching the configuration)"  \
 "==" "==========================================[Backup & Restore]===" \
 " 6" "Backup TorBox's configuration to a backup file" \
 " 7" "Restore TorBox's configuration from a backup file" \
@@ -737,7 +737,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 "13" "Restart Nginx, webssh and TFS" \
 "14" "Rerun the \"First Start-up\" script" \
 "15" "Erase all log files" \
-"16" "Time synchronisation"  \
+"16" "Time synchronization"  \
 "17" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -797,7 +797,7 @@ case "$CHOICE" in
 				done
 				if [ -f requirements.failed ]; then
 					echo ""
-					echo -e "${WHITE}Not alle required Python modules could be installed!${NOCOLOR}"
+					echo -e "${WHITE}Not all required Python modules could be installed!${NOCOLOR}"
 					read -r -p $'\e[1;37mWould you like to try it again [Y/n]? -> \e[0m'
 					if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 						if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
@@ -813,7 +813,7 @@ case "$CHOICE" in
 			sleep 10
 			clear
 			echo ""
-			echo -e "${RED}[+] Re-installing ${WHITE}go${NOCOLOR}"
+			echo -e "${RED}[+] Reinstalling ${WHITE}go${NOCOLOR}"
 			# NEW v.0.5.3: New way to download the current version of go
 			if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
 			elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
@@ -855,9 +855,9 @@ case "$CHOICE" in
 			(sudo cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
 			sudo chmod a+x /usr/bin/geoip*
 			echo ""
-			re_installing_obfs4proxy
+			reinstalling_obfs4proxy
 			echo ""
-			re_installing_snowflake
+			reinstalling_snowflake
 			echo ""
 			configure_system_service
       echo ""
@@ -925,8 +925,8 @@ case "$CHOICE" in
       clear
       # Avoid cheap censorship mechanisms
       online_check $TORURL 0 1
-      # We can only use Clearnet if allowed!
-      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
+      # We can only use Clearnet if allowed! (Typo, should be *DECISION*)
+      if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then 
         clear
         echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
         echo -e "${WHITE}    to use clearnet!${NOCOLOR}"
@@ -961,9 +961,9 @@ case "$CHOICE" in
         (sudo cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
         sudo chmod a+x /usr/bin/geoip*
 				echo ""
-				re_installing_obfs4proxy
+				reinstalling_obfs4proxy
 				echo ""
-				re_installing_snowflake
+				reinstalling_snowflake
 				echo ""
 				configure_system_service
         TOR_VERS=""
@@ -976,7 +976,7 @@ case "$CHOICE" in
     fi
 	;;
 
-	# Update the TorBox menu (whitout touching the configuration)
+	# Update the TorBox menu (without touching the configuration)
 	5)
 		clear
     INPUT=$(cat text/torbox_update-text)
@@ -991,7 +991,7 @@ case "$CHOICE" in
 		if [ $exitstatus != 255 ]; then
       clear
       online_check $TORBOXURL 0 1
-      # We can only use Clearnet if allowed!
+      # We can only use Clearnet if allowed! (Typo, should be *DECISION*)
       if [ $TORCONNECT = 0 ] && [ $CLEARNET_DECISSION = 0 ]; then
         clear
         echo -e "${WHITE}[!] SORRY! - currently, TorBox cannot use tor and is not allowed${NOCOLOR}"
@@ -1092,7 +1092,7 @@ case "$CHOICE" in
 	  fi
 	;;
 
-	# Remove all tor bridges and use built-in bridges
+	# Remove all tor bridges and use built-in bridges (Typo, should be *DECISION*)
 	11)
 		clear
 		INPUT=$(cat text/built-in_bridges-text)
