@@ -75,7 +75,7 @@ clear
 if grep -q "Raspberry" /proc/cpuinfo ; then CHECK_HD3="Raspberry Pi" ; fi
 clear
 
-# Identify the Operation System
+# Identify the Operating System
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 

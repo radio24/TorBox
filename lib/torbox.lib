@@ -243,8 +243,8 @@ add_open_dns()
 # TORCONNECT = 1 -> Connection through tor possible
 # TOR_DNS = 0    -> DNS resolution through tor not possible
 # TOR_DNS = 1    -> DNS resolution through tor possible
-# CLEARNET_DECISSION = 0 -> The calling script should not use clearnet (this is not really necessary, because the function will stop the execution).
-# CLEARNET_DECISSION = 1 -> The calling script can use clearnet
+# CLEARNET_DECISION = 0 -> The calling script should not use clearnet (this is not really necessary, because the function will stop the execution).
+# CLEARNET_DECISION = 1 -> The calling script can use clearnet
 online_check()
 {
   # Define all variables
@@ -265,7 +265,7 @@ online_check()
   fi
   OCHECK=0
   TORCONNECT=0
-  CLEARNET_DECISSION=0
+  CLEARNET_DECISION=0
 	TOR_DNS=1
 
   # Start working!
@@ -291,7 +291,7 @@ online_check()
       if [ "$CLEARNET_WARNING" == "1" ]; then
         INPUT=$(cat $TXT_DIR/clearnet_warning-text)
         if (whiptail --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-          CLEARNET_DECISSION=1
+          CLEARNET_DECISION=1
           if curl -m 6 -s $CHECK_URL >/dev/null; then
             OCHECK=1
             TORCONNECT=0
@@ -308,13 +308,13 @@ online_check()
 						fi
           fi
         else
-          CLEARNET_DECISSION=0
+          CLEARNET_DECISION=0
           OCHECK=0;
           TORCONNECT=0
         fi
 				clear
       else
-        CLEARNET_DECISSION=0
+        CLEARNET_DECISION=0
         OCHECK=0;
         TORCONNECT=0
       fi
@@ -323,7 +323,7 @@ online_check()
 
 # Only executed for not tor related URL (usually, in this case online_check was executed without options; used in menu-config and in update)
   if [ "$CLEARNET_ONLY" == "1" ]; then
-    CLEARNET_DECISSION=1
+    CLEARNET_DECISION=1
     if curl -m 6 -s $CHECK_URL >/dev/null; then
       OCHECK=1
       TORCONNECT=0
@@ -705,7 +705,7 @@ list_all_obfs4_bridges()
         bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_deactivated[$i]})
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-          if [ $CLEARNET_DECISSION == 1 ]; then
+          if [ $CLEARNET_DECISION == 1 ]; then
             bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
             bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -735,7 +735,7 @@ list_all_obfs4_bridges()
         bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_bridges_activated[$j]})
         if [ $OCHECK == 1 ]; then
           bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-          if [ $CLEARNET_DECISSION == 1 ]; then
+          if [ $CLEARNET_DECISION == 1 ]; then
             bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
           else
             bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -795,7 +795,7 @@ list_all_snowflake_bridges()
       bridge_address=$(cut -d ' ' -f3- <<< ${configured_snowflake_bridges_deactivated[$i]})
       if [ $OCHECK == 1 ]; then
         bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-        if [ $CLEARNET_DECISSION == 1 ]; then
+        if [ $CLEARNET_DECISION == 1 ]; then
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -835,7 +835,7 @@ list_all_snowflake_bridges()
       bridge_address=$(cut -d ' ' -f3,4 <<< ${configured_snowflake_bridges_activated[$j]})
       if [ $OCHECK == 1 ]; then
         bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-        if [ $CLEARNET_DECISSION == 1 ]; then
+        if [ $CLEARNET_DECISION == 1 ]; then
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)

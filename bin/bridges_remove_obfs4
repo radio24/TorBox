@@ -135,7 +135,7 @@ case "$CHOICE" in
       do
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-        if [ $CLEARNET_DECISSION == 1 ]; then
+        if [ $CLEARNET_DECISION == 1 ]; then
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -156,7 +156,7 @@ case "$CHOICE" in
       do
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_activated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-        if [ $CLEARNET_DECISSION == 1 ]; then
+        if [ $CLEARNET_DECISION == 1 ]; then
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -244,7 +244,7 @@ case "$CHOICE" in
 				bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 				if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 					bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-					if [ $CLEARNET_DECISSION == 1 ]; then
+					if [ $CLEARNET_DECISION == 1 ]; then
 						bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
 					else
 						bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -277,7 +277,7 @@ case "$CHOICE" in
 	      if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 					bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 	      	bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-	      	if [ $CLEARNET_DECISSION == 1 ]; then
+	      	if [ $CLEARNET_DECISION == 1 ]; then
 	          bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
 	        else
 	          bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)

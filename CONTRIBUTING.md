@@ -12,7 +12,7 @@ Please bear the following coding guidelines in mind:
 
 - Currently, all added features should run under Raspberry Pi OS (priority 1), Debian (priority 2), and Ubuntu (priority 3), all with 64-bit support. The code should be independent of the used hardware. If the code was written for a particular platform, try to make it portable to other platforms so everyone can enjoy it. If your code works only with the binary version on a specific platform, ensure it will not be loaded on other platforms.
 
-  **Identify the Operation System**
+  **Identify the Operating System**
   ```shell
   CHECK_OS="$(lsb_release -si)"
   CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"

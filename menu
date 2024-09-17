@@ -52,7 +52,7 @@ RED='\033[1;31m'
 YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
-# Identify the Operation System
+# Identify the Operating System
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 

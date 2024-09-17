@@ -84,7 +84,7 @@ case $shield_hat in
 esac
 sleep 3
 
-#Downloading setup files as will as ppp wiringpi is not necessary, because they are alredy there
+#Downloading setup files as will as ppp wiringpi is not necessary, because they are already there
 #However, we have to copy some unchanged configuration files
 sudo cp unchanged_files/provider .
 sudo cp unchanged_files/configure_modem.sh .

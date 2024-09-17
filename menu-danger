@@ -120,7 +120,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DANGER ZONE" 
 "==" "=============================================[Lock-out risk]===" \
 " 4" "$TOGGLE20 the AP on wlan1 failsafe" \
 " 5" "$TOGGLE21 SSH password login" \
-"==" "==========================================[Developper Tools]===" \
+"==" "==========================================[developer Tools]===" \
 " 6" "Forwarding only - tor protection disabled" \
 3>&1 1>&2 2>&3)
 exitstatus=$?

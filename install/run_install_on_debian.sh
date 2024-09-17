@@ -307,7 +307,7 @@ download_and_compile_tor()
 	wget $download_tor_url
 	DLCHECK=$?
 	if [ $DLCHECK -eq 0 ]; then
-		echo -e "${RED}[+]         Sucessfully downloaded the selected tor version... ${NOCOLOR}"
+		echo -e "${RED}[+]         Successfully downloaded the selected tor version... ${NOCOLOR}"
 		tar xzf $filename
 		cd "$(ls -d -- */)"
 		echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
@@ -366,7 +366,7 @@ select_and_install_tor()
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
-		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
+		echo -e "${RED}[+] However, an older version of tor is already installed from${NOCOLOR}"
 		echo -e "${RED}    the repository.${NOCOLOR}"
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -389,7 +389,7 @@ select_and_install_tor()
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
-		echo -e "${RED}[+] However, an older version of tor is alredy installed from${NOCOLOR}"
+		echo -e "${RED}[+] However, an older version of tor is already installed from${NOCOLOR}"
 		echo -e "${RED}    the repository.${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -621,7 +621,7 @@ check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
 # Installation of standard packages
 # NEW post-v.0.5.3: openssl ca-certificates added
 check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
-# Installation of developper packages - THIS PACKAGES ARE NECESARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
 check_install_packages "tor-geoipdb"
@@ -715,7 +715,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	done
 	if [ -f requirements.failed ]; then
 		echo ""
-		echo -e "${YELLOW}Not alle required Python modules could be installed!${NOCOLOR}"
+		echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
 		read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
@@ -932,7 +932,7 @@ cd
 wget $TORBOXURL
 DLCHECK=$?
 if [ $DLCHECK -eq 0 ] ; then
-	echo -e "${RED}[+]         TorBox' menu sucessfully downloaded... ${NOCOLOR}"
+	echo -e "${RED}[+]         TorBox' menu Successfully downloaded... ${NOCOLOR}"
 	echo -e "${RED}[+]         Unpacking TorBox menu...${NOCOLOR}"
 	unzip $TORBOXMENU_BRANCHNAME.zip
 	echo ""
