@@ -1171,10 +1171,6 @@ else
 	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 fi
 
-# NEW for TorBox v.0.5.4: nyx fix -> Fixed the issue with bandwidth graphs showing spikes at startup
-# https://github.com/excurso/nyx/commit/7e30f8d5931d02e7d3750b4f051b124d1271213b#diff-78d9d3ef7b004f2b81a8d2ba6c57fedaf80eec21d679e5080dab7bd710d450ad
-cp etc/nyx/panel/graph.py /usr/lib/python3/dist-packages/nyx/panel/
-
 if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  echo ""
  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
