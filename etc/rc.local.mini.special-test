@@ -25,11 +25,7 @@ sudo dmesg -D
 rfkill unblock all
 rfkill block bluetooth
 bash /home/torbox/torbox/bin/regset
-#Changed in etc/rc.local.mini.special-test
-#sudo systemctl stop hostapd
-#sudo systemctl disable hostapd
-#sudo systemctl mask hostapd
-#sudo /sbin/iwconfig wlan0 power off
+sudo systemctl stop hostapd
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
@@ -83,13 +79,28 @@ done
 
 # NEW v.0.5.4: This should work without problem - has to be tested !!!
 # If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
-if ip link | grep wlan0 ; then
-	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
-		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
-		if [ "$exitstatus" == "1" ]; then
-			# NEW v.0.5.4
-			sleep 2
-			systemctl restart tor
+# if ip link | grep wlan0 ; then
+#	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
+#		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
+#		if [ "$exitstatus" == "1" ]; then
+#			# NEW v.0.5.4
+#			sleep 2
+#			systemctl restart tor
+#		fi
+#	fi
+#fi
+
+# If the configured interface is available, we will start hostapd
+INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
+if ip link | grep "$INTERFACE" ; then sudo systemctl start hostapd; fi
+
+# Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
+if ip link | grep eth0 ; then
+	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
+		if ! sudo timeout 5 sudo route | grep -m 1 default; then
+			sudo ifdown eth0 2>/dev/null
+			ip addr flush dev eth0
+			sudo ifup eth0 2>/dev/null
 		fi
 	fi
 fi
