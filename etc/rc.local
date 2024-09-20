@@ -51,21 +51,22 @@ fi
 AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
-		# NEW v.0.5.3: We have only to put an interface down, if it is not already down
-		# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
-		if ip link | grep "$INTERFACE" | grep -e "state UP" -e "NO-CARRIER" ; then
-			sudo ip link set dev $INTERFACE down
-			INTERFACE1_DOWN=1
-			sleep 2
-		fi
-		#
-		# NEW v.0.5.4: After a restart, the default MAC address is already set. Executing the comand result in a error.
-		# if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run; then sudo macchanger -p $INTERFACE; fi
-		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run; then sudo macchanger -r $INTERFACE; fi
-		# NEW v.0.5.3: We have only to put an interface up, if it was up before
-		if [ "$INTERFACE1_DOWN" = "1" ]; then
-			sudo ip link set dev $INTERFACE up
-			INTERFACE1_DOWN=0
+		# NEW v.0.5.4: After a restart, the default MAC address is already set.
+		if grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
+			# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+			# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
+			if ip link | grep "$INTERFACE" | grep -e "state UP" -e "NO-CARRIER" ; then
+				sudo ip link set dev $INTERFACE down
+				INTERFACE1_DOWN=1
+				sleep 2
+			fi
+			sudo macchanger -r $INTERFACE
+			# NEW v.0.5.3: We have only to put an interface up, if it was up before
+			if [ "$INTERFACE1_DOWN" = "1" ]; then
+				sudo ip link set dev $INTERFACE up
+				INTERFACE1_DOWN=0
+			fi
+			#
 		fi
 		#
 	else
@@ -107,13 +108,15 @@ fi
 
 # If the configured interface is available, we will start hostapd
 INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
-if ip link | grep "$INTERFACE" ; then sudo systemctl start hostapd; fi
+if ip link | grep "$INTERFACE" ; then sudo systemctl restart hostapd; fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
   if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
 	  exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
 		if [ "$exitstatus" == "1" ]; then
+			# NEW v.0.5.4
+			sleep 2
 			systemctl restart tor
 		fi
 	fi
@@ -124,6 +127,8 @@ if ip link | grep wlan0 ; then
 	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
 		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
 		if [ "$exitstatus" == "1" ]; then
+			# NEW v.0.5.4
+			sleep 2
 			systemctl restart tor
 		fi
 	fi
@@ -154,10 +159,8 @@ if grep "^TCS-" /home/torbox/torbox/run/torbox.run ; then sudo /home/torbox/torb
 
 sudo systemctl start dnsmasq
 sudo /bin/ping -c 1 "pool.ntp.org" >/dev/null 2>&1 && sudo /usr/sbin/ntpdate pool.ntp.org
-# NEW post-v.0.5.3
 sudo systemctl stop dnsmasq
 
-# NEW v.0.5.3
 # Starting domain exclusion, if activated
 if grep "^UNPROTECTED_DOMAIN=1" /home/torbox/torbox/run/torbox.run ; then
 	if [ -f "/home/torbox/torbox/run/clearnet-list" ]; then

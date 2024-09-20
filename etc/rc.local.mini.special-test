@@ -77,22 +77,22 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-# NEW v.0.5.4: This should work without problem - has to be tested !!!
-# If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
-# if ip link | grep wlan0 ; then
-#	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
-#		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
-#		if [ "$exitstatus" == "1" ]; then
-#			# NEW v.0.5.4
-#			sleep 2
-#			systemctl restart tor
-#		fi
-#	fi
-#fi
-
 # If the configured interface is available, we will start hostapd
 INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
-if ip link | grep "$INTERFACE" ; then sudo systemctl start hostapd; fi
+if ip link | grep "$INTERFACE" ; then sudo systemctl restart hostapd; fi
+
+# NEW v.0.5.4: This should work without problem - has to be tested !!!
+# If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
+if ip link | grep wlan0 ; then
+	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
+		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
+		if [ "$exitstatus" == "1" ]; then
+			# NEW v.0.5.4
+			sleep 2
+			systemctl restart tor
+		fi
+	fi
+fi
 
 # Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
 if ip link | grep eth0 ; then
