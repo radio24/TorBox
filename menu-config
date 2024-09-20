@@ -421,7 +421,7 @@ case "$CHOICE" in
 			SSID="ssid=$INPUT"
 			sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
 			sleep 2
-			if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+			if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 				clear
 				echo " "
 				echo -e "${RED}[+] Activating the name of TorBox's WLAN! Rebooting TorBox, now...${NOCOLOR}"
