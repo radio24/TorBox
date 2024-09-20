@@ -268,7 +268,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION
 " 3" "Change the password of TorBox's WLAN (reboot required)"  \
 " 4" "Change the password of your tor control port (restarts tor!)"  \
 "==" "==================================================[Network]===" \
-" 5" "Change the name of TorBox's WLAN"  \
+" 5" "Change the name of TorBox's WLAN (reboot required)"  \
 " 6" "Set TorBox's WLAN regulatory domain for the 5 GHz band" \
 " 7" "Change TorBox's WLAN from the $TOGGLE05 to the $TOGGLE06" \
 " 8" "Change TorBox's WLAN channel and the MHz (currently: $TOGGLE07)"  \
@@ -367,10 +367,10 @@ case "$CHOICE" in
         SSID_PW=wpa_passphrase=$INPUT
         sudo sed -i "s/^wpa_passphrase=.*/${SSID_PW}/" ${HOSTAPD}
         sleep 2
-        if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox and use the onboard wireless chip as AP)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+        if (whiptail --yesno "The password of your WLAN is now changed to\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
           clear
           echo " "
-          echo -e "${RED}[+] Activating the new password of TorBox's WLAN now! Rebooting TorBox, now...${NOCOLOR}"
+          echo -e "${RED}[+] Activating the new password of TorBox's WLAN! Rebooting TorBox, now...${NOCOLOR}"
           echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
 					sync
 					sleep 2
@@ -421,12 +421,15 @@ case "$CHOICE" in
 			SSID="ssid=$INPUT"
 			sudo sed -i "s/^ssid=.*/${SSID}/" ${HOSTAPD}
 			sleep 2
-			if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\nWould you like to put the changes immediately into effect (this will disconnect the current connection with the TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+			if (whiptail --yesno "The name of TorBox's WLAN is now changed to\n\n$INPUT.\n\n$INPUT.\n\nWould you like to reboot TorBox now to put the changes immediately into effect (this will reboot TorBox)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 				clear
 				echo " "
-				echo -e "${RED}[+] Activating the name of TorBox's WLAN, now...${NOCOLOR}"
-				echo -e "${YELLOW}[!] You have to reconnect to the new WLAN!${NOCOLOR}"
-				(nohup bin/hostapd_fallback) 2>/dev/null
+				echo -e "${RED}[+] Activating the name of TorBox's WLAN! Rebooting TorBox, now...${NOCOLOR}"
+        echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
+				sync
+				sleep 2
+				sudo reboot
+				exit 0
 			fi
 		fi
   ;;
