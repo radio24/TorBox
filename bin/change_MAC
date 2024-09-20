@@ -73,7 +73,12 @@ CHOICE2=$2
 read_config()
 {
 	# List all available network interfaces
-	AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}')
+	# Important: Randomizing usb0 on a TorBox mini will lock you out!!
+	if grep "^TORBOX_MINI=1" ${RUNFILE} ; then
+		AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^usb0/d")
+	else
+		AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d")
+  fi
 	# Read interfaces from run/torbox.run
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/INTERNET_IFACE=//g") 2>/dev/null
@@ -81,6 +86,7 @@ read_config()
 	MAC_eth1=$(grep "^MAC_eth1=" ${RUNFILE} | sed "s/MAC_eth1=//g") 2>/dev/null
 	MAC_wlan0=$(grep "^MAC_wlan0=" ${RUNFILE} | sed "s/MAC_wlan0=//g") 2>/dev/null
 	MAC_wlan1=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2>/dev/null
+	MAC_usb0=$(grep "^MAC_wlan1=" ${RUNFILE} | sed "s/MAC_wlan1=//g") 2>/dev/null
 }
 
 # This function randomize, resets or changes the MAC address of an interface.
@@ -248,23 +254,36 @@ case "$CHOICE3" in
   # Change/randomize the MAC adresses of TorBox's interfaces
   1)
 		if [ -z "$CHOICE2" ]; then
-			###### DISPLAY THE AVAILABLE INTERFACES ######
-			CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
-			"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
-			"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
-			"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
-			"4" "Change the ethernet interface 1 (USB adapter; eth1)" OFF \
-			3>&1 1>&2 2>&3)
+			if grep -q "usb0" <<< "$AVAILABLE_INTERFACES"; then
+				###### DISPLAY THE AVAILABLE INTERFACES inluding usb0 ######
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
+				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
+				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
+				"4" "Change the ethernet interface 1 (USB adapter; eth1)" OFF \
+				"5" "Change the usb0 interface (USB adapter)" OFF \
+				3>&1 1>&2 2>&3)
+			else
+				###### DISPLAY THE AVAILABLE INTERFACES without usb0 ######
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
+				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
+				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
+				"4" "Change the ethernet interface 1 (USB adapter; eth1)" OFF \
+				3>&1 1>&2 2>&3)
+			fi
 			if [ ! -z "$CHOICE" ]; then mapfile -t CHOICE <<< "$CHOICE"; else exit 1; fi
 			if [ "$CHOICE" == "1" ]; then O_DEVICE="wlan0";
 			elif [ "$CHOICE" == "2" ]; then O_DEVICE="wlan1";
 			elif [ "$CHOICE" == "3" ]; then O_DEVICE="eth0";
-			elif [ "$CHOICE" == "4" ]; then O_DEVICE="eth1"; fi
+			elif [ "$CHOICE" == "4" ]; then O_DEVICE="eth1";
+			elif [ "$CHOICE" == "5" ]; then O_DEVICE="usb0"; fi
 		else
 			if [ "$O_DEVICE" == "wlan0" ]; then CHOICE=1;
 			elif [ "$O_DEVICE" == "wlan1" ]; then CHOICE=2;
 			elif [ "$O_DEVICE" == "eth0" ]; then CHOICE=3;
-			elif [ "$O_DEVICE" == "eth1" ]; then CHOICE=4; fi
+			elif [ "$O_DEVICE" == "eth1" ]; then CHOICE=4;
+			elif [ "$O_DEVICE" == "usb0" ]; then CHOICE=5; fi
 		fi
 		[ -z "$CHOICE" ] && exit 0
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
@@ -311,6 +330,13 @@ case "$CHOICE3" in
 			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
  			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_eth1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
+		fi
+		O_DEVICE="usb0"
+		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
+			# NEW v.0.5.3 Use ip instead of ifconfig
+			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
+			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_usb0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		echo ""
 		read -n 1 -s -r -p "Press any key to continue"
