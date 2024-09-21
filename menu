@@ -306,7 +306,7 @@ else
 
   ###### DISPLAY THE MAIN MENU ######
 	if [ "$ON_A_CLOUD" -eq "1" ]; then
-		CHOICE=$(whiptail --nocancel --title "TorBox on a cloud v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt) $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+		CHOICE=$(whiptail --nocancel --title "TorBox on a cloud v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)           $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 		" 1" "Tor statistics (press m for menu / q to quit)" \
 		" 2" "Enforce a new exit node with a new IP" \
 		" 3" "Restart Tor - check if it is working (press q to quit)"  \
