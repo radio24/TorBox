@@ -303,7 +303,7 @@ check_install_packages()
 
 # This function downloads and updates tor
 # Syntax download_and_compile_tor
-# Used predefined variables: $download_tor_url $filename RED WHITE NOCOLOR TORCONNECT
+# Used predefined variables: $download_tor_url $filename RED YELLOW NOCOLOR TORCONNECT
 download_and_compile_tor()
 {
 	# Difference to the update-function - we cannot use torsocks yet
@@ -350,7 +350,7 @@ download_and_compile_tor()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, YELLOW, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
@@ -991,9 +991,33 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup don
 (cp /etc/motd /etc/motd.bak) 2>/dev/null
 cp etc/motd /etc/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-cp etc/network/interfaces /etc/network/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+
+# NEW v.0.5.4: TorBox on a Cloud - there are two scenario
+# 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
+# 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
+#     but disable with Predictable Network Interface Name in /etc/network/interfaces
+
+if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+	NIC=ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1
+	if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
+		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		cp etc/network/interfaces /etc/network/
+		echo
+		echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
+		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		sleep 10
+	else
+		echo
+		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces untouched!"
+		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		sleep 10
+	fi
+else
+	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	cp etc/network/interfaces /etc/network/
+	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+fi
+
 # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
 # Added for TorBox on a Cloud -- has to be tested with a common Debian image
 if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
