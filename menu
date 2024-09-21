@@ -67,6 +67,9 @@ INTERNETSELECTION=$1
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
 
+#Check if this installation is on a cloud
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+
 ##############################
 ######## FUNCTIONS ###########
 
@@ -302,31 +305,58 @@ else
 	if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
 
   ###### DISPLAY THE MAIN MENU ######
-  CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-  " 1" "Tor statistics (press m for menu / q to quit)" \
-  " 2" "Enforce a new exit node with a new IP" \
-  " 3" "Restart Tor - check if it is working (press q to quit)"  \
-  " 4" "Display the Tor log file - quick and dirty (press q to quit)" \
-  "===" "===================================[Where is the Internet?]===" \
-  " 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
-  " 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-  " 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-  " 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-  " 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-  "10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-  "===" "================================================[Sub-Menus]===" \
-  "11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
-  "12" "Go to the Configuration sub-menu..." \
-	"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
-	"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
-	"15" "Go to the Danger Zone..." \
-  "16" "Go to the Update and Maintenance sub-menu..." \
-	"==" "============================================[Informational]===" \
-	"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
-	"18" "HOW CAN I HELP WITH TORBOX?" \
-  "===" "========================================[Reboot & Shutdown]===" \
-  "19" "Reboot / Shutdown TorBox" \
-  3>&1 1>&2 2>&3)
+	if [ "$ON_A_CLOUD" -eq "1" ]; then
+		CHOICE=$(whiptail --nocancel --title "TorBox on a cloud v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt) $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+		" 1" "Tor statistics (press m for menu / q to quit)" \
+		" 2" "Enforce a new exit node with a new IP" \
+		" 3" "Restart Tor - check if it is working (press q to quit)"  \
+		" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
+		"===" "===================================[Where is the Internet?]===" \
+		"  " " " \
+		"  " "On TorBox on a Cloud, menu entry 5-10 are not available!   " \
+		"  " "For special requirements, please contact the TorBox        " \
+		"  " "development team --> https://www.torbox.ch   " \
+		"  " " " \
+		"===" "================================================[Sub-Menus]===" \
+		"11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
+		"12" "Go to the Configuration sub-menu..." \
+		"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
+		"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
+		"15" "Go to the Danger Zone..." \
+		"16" "Go to the Update and Maintenance sub-menu..." \
+		"==" "============================================[Informational]===" \
+		"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+		"18" "HOW CAN I HELP WITH TORBOX?" \
+		"===" "========================================[Reboot & Shutdown]===" \
+		"19" "Reboot / Shutdown TorBox" \
+		3>&1 1>&2 2>&3)
+	else
+  	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  	" 1" "Tor statistics (press m for menu / q to quit)" \
+  	" 2" "Enforce a new exit node with a new IP" \
+  	" 3" "Restart Tor - check if it is working (press q to quit)"  \
+  	" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
+  	"===" "===================================[Where is the Internet?]===" \
+  	" 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
+  	" 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+  	" 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+  	" 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+  	" 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+  	"10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+  	"===" "================================================[Sub-Menus]===" \
+  	"11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
+  	"12" "Go to the Configuration sub-menu..." \
+		"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
+		"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
+		"15" "Go to the Danger Zone..." \
+  	"16" "Go to the Update and Maintenance sub-menu..." \
+		"==" "============================================[Informational]===" \
+		"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+		"18" "HOW CAN I HELP WITH TORBOX?" \
+  	"===" "========================================[Reboot & Shutdown]===" \
+  	"19" "Reboot / Shutdown TorBox" \
+  	3>&1 1>&2 2>&3)
+	fi
 	exitstatus=$?
 	# exitstatus == 255 means that the ESC key was pressed
 	[ "$exitstatus" == "255" ] && exit 0
@@ -593,7 +623,6 @@ case "$CHOICE" in
   8)
     INPUT=$(cat text/ppp0-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			if [ "$ON_A_CLOUD" -eq "1" ]; then
 				INPUT=$(cat text/on_a_cloud_warning-text)
 				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then

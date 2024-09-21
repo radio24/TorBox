@@ -433,9 +433,42 @@ update_torcfg()
   (sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
-  (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-  sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
+
+	# NEW v.0.5.4: Don't change /etc/network/interfaces on a cloud and respect TorBox mini
+	if [ "$ON_A_CLOUD" -eq "0" ]; then
+		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		cp etc/network/interfaces /etc/network/
+		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+	elif [ "$TORBOX_MINI" -eq "1" ]; then
+		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	  sudo cp etc/network/interfaces.mini /etc/network/interfaces
+	fi
+
+	# NEW v.0.5.4: ONLY ON DEBIAN AND Ubuntu
+	# Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
+	# Added for TorBox on a Cloud -- has to be tested with a common Debian image
+	if [ "$CHECK_OS" == "Ubuntu" ] || [ "$CHECK_OS" == "Debian" ]; then
+		echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+			GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+			if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+				if [ "$GRUB_CONFIG" == "" ]; then
+					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+					#This is necessary to work with special characters in sed
+					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+				else
+					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+					#This is necessary to work with special characters in sed
+					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+				fi
+			fi
+		else
+			(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+		fi
+		update-grub
+	fi
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
   sudo cp etc/rc.local /etc/rc.local
@@ -854,7 +887,7 @@ case "$CHOICE" in
 			sleep 5
 			echo ""
 			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
-      if [ "$TORBOX_MINI" -eq "1" ] || [ "$TORBOX_ON_A_CLOUD" -eq "1" ] ; then
+      if [ "$TORBOX_MINI" -eq "1" ] || [ "$ON_A_CLOUD" -eq "1" ] ; then
         sudo systemctl stop hostapd
         sudo systemctl disable hostapd
         sudo systemctl mask hostapd

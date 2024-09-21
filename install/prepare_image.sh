@@ -41,6 +41,7 @@ RUNFILE="/home/torbox/torbox/run/torbox.run"
 
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ###########
@@ -108,21 +109,23 @@ fi
 SNOWFLAKE_VERS=$(snowflake-proxy --version 2>&1 | grep snowflake)
 
 clear
-echo -e "${YELLOW}[!] CHECK INSTALLED VERSIONS${NOCOLOR}"
+echo -e "${YELLOW}[!] CHECK INSTALLATION${NOCOLOR}"
 echo
-echo -e "${RED}Hostname                                     :${YELLOW} $(cat /etc/hostname)${NOCOLOR}"
-echo -e "${RED}Kernel version                               :${YELLOW} $(uname -a)${NOCOLOR}"
-echo -e "${RED}Tor version                                  :${YELLOW} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
-echo -e "${RED}Obfs4proxy version                           :${YELLOW} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
-echo -e "${RED}Snowflake                                    :${YELLOW} ${SNOWFLAKE_VERS}${NOCOLOR}"
-echo -e "${RED}Nyx version                                  :${YELLOW} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version                                   :${YELLOW} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
-echo -e "${RED}Firewall countermeasures                     :$FIREWALL${NOCOLOR}"
-echo -e "${RED}Disconnection when idle countermeasure       :$PING${NOCOLOR}"
-echo -e "${RED}TorBox's automatic counteractions are        :$LOGCHECK${NOCOLOR}"
-echo -e "${RED}Bridges                                      :$MODE_BRIDGES${NOCOLOR}"
-echo -e "${RED}Bridge Relay                                 :$BRIDGE_RELAY${NOCOLOR}"
-echo -e "${RED}Onion Services                               :$MODE_OS${NOCOLOR}"
+if [ "$TORBOX_MINI" -eq "1" ]; then echo -e "${YELLOW}ATTENTION: This is a TorBox mini - installation!${NOCOLOR}"; echo; fi
+if [ "$ON_A_CLOUD" -eq "1" ]; then echo -e "${YELLOW}ATTENTION: This is an installation on a cloud!${NOCOLOR}"; echo; fi
+echo -e "${RED}Hostname                               :${YELLOW} $(cat /etc/hostname)${NOCOLOR}"
+echo -e "${RED}Kernel version                         :${YELLOW} $(uname -a)${NOCOLOR}"
+echo -e "${RED}Tor version                            :${YELLOW} $(tor -v | head -1 | sed "s/Tor version //" | cut -c1-80)${NOCOLOR}"
+echo -e "${RED}Obfs4proxy version                     :${YELLOW} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
+echo -e "${RED}Snowflake                              :${YELLOW} ${SNOWFLAKE_VERS}${NOCOLOR}"
+echo -e "${RED}Nyx version                            :${YELLOW} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
+echo -e "${RED}Go version                             :${YELLOW} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Firewall countermeasures               :$FIREWALL${NOCOLOR}"
+echo -e "${RED}Disconnection when idle countermeasure :$PING${NOCOLOR}"
+echo -e "${RED}TorBox's automatic counteractions are  :$LOGCHECK${NOCOLOR}"
+echo -e "${RED}Bridges                                :$MODE_BRIDGES${NOCOLOR}"
+echo -e "${RED}Bridge Relay                           :$BRIDGE_RELAY${NOCOLOR}"
+echo -e "${RED}Onion Services                         :$MODE_OS${NOCOLOR}"
 echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
@@ -166,7 +169,7 @@ unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 # the additional network drivers are not installed on a TorBox mini installation
-if [ "$TORBOX_MINI" -eq "0" ]; then
+if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
   echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"
   dkms status
@@ -237,11 +240,13 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 else
   sudo cp etc/iptables.ipv4.nat /etc/
 fi
-echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
-if [ "$TORBOX_MINI" -eq "1" ]; then
-  sudo cp etc/network/interfaces.mini /etc/network/interfaces
-else
-  sudo cp etc/network/interfaces /etc/network/
+if [ "$ON_A_CLOUD" -eq "0" ]; then
+	echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
+	if [ "$TORBOX_MINI" -eq "1" ]; then
+  	sudo cp etc/network/interfaces.mini /etc/network/interfaces
+	else
+  	sudo cp etc/network/interfaces /etc/network/
+	fi
 fi
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H

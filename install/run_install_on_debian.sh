@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2004,SC2059,SC2181
+# shellcheck disable=SC2001,SC2004,SC2016,SC2059,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2024 Patrick Truffer
@@ -998,18 +998,23 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 #     but disable with Predictable Network Interface Name in /etc/network/interfaces
 
 if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	NIC=ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1
+	NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 	if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
 		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		cp etc/network/interfaces /etc/network/
 		echo
 		echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
 		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		echo
 		sleep 10
 	else
+		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
 		echo
-		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces untouched!"
+		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
+		echo -e "${YELLOW}            However, we changed $NIC into eth0!"
 		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		echo
 		sleep 10
 	fi
 else
@@ -1020,6 +1025,7 @@ fi
 
 # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
 # Added for TorBox on a Cloud -- has to be tested with a common Debian image
+echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
 if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
 	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
 	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
@@ -1043,7 +1049,6 @@ update-grub
 # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
 cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
 (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
 cp etc/rc.local /etc/rc.local
 chmod a+x /etc/rc.local
 systemctl daemon-reload
