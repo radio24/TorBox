@@ -91,7 +91,7 @@ case "$CHOICE" in
 		exitstatus=$?
 		COUNTRY=$(echo $COUNTRY | tr '[:upper:]' '[:lower:]')
 		# exitstatus == 255 means that the ESC key was pressed
-		if [ "$exitstatus" == "255" ] || [ "$COUNTRY" == "" ]; then
+		if [ "$exitstatus" = "255" ] || [ "$COUNTRY" = "" ]; then
 			clear
 #		Currently, additional Snowflake bridges are country specific. We cannot fetch general valid Snowflake bridges in this way. As lon as it stays like that the following lines are valid:
 			echo " "
@@ -111,13 +111,13 @@ case "$CHOICE" in
       trap "bash bridges_add_snowflake $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
       (rm -r /tmp/captcha.*) 2>/dev/null
       if [ $CLEARNET_DECISION == 1 ]; then
-				if [ "$COUNTRY" == "00" ]; then
+				if [ "$COUNTRY" = "00" ]; then
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --snowflake)
 				else
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --snowflake -c $COUNTRY)
 				fi
       else
-				if [ "$COUNTRY" == "00" ]; then
+				if [ "$COUNTRY" = "00" ]; then
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor --snowflake)
 				else
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor --snowflake -c $COUNTRY)
@@ -216,7 +216,7 @@ case "$CHOICE" in
 		is_integer "${number_bridges}"
 		exitstatus=$?
 		# exitstatus == 1 means that $number_bridges is not an integer
-		if [ "$exitstatus" == "1" ]; then
+		if [ "$exitstatus" = "1" ]; then
 			clear
 			echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 			echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"

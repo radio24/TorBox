@@ -1305,7 +1305,7 @@ case "$CHOICE" in
 					is_integer "${SPEED}"
 					exitstatus=$?
 					# exitstatus == 1 means that $SPEED is not an integer
-					if [ "$exitstatus" == "1" ]; then
+					if [ "$exitstatus" = "1" ]; then
 						clear
 						echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"

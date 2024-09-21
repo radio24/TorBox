@@ -320,7 +320,7 @@ case "$CHOICE" in
 			done
 			trap
 			service_menu checklist "${bridge_address_display_list}" "\nImportant: If available, the bridge status is not always accurate!"
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				clear
 
 				# 2: This is for choosing the right bridge line (bridge_address_ore is the long variable)

@@ -770,7 +770,7 @@ case "$CHOICE" in
 				if (whiptail --title "TorBox - INFO" --yesno --no-button "CREATE A NEW ONE" --yes-button "REACTIVATE" "There are deactivated Onion Services configured.\n\nDo you want to reactivate an already configured Onion Service or create a new one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					exitstatus=$?
 					service_menu checklist "$SERVICE_NAME_LIST"
-					if [ "$exitstatus" == "0" ]; then
+					if [ "$exitstatus" = "0" ]; then
 						i=0
 						for SERVICE_NAME in $SERVICE_NAME_LIST; do
 							i=$((i+1))
@@ -835,7 +835,7 @@ case "$CHOICE" in
           INPUT=$(cat text/reactivate-onion_service-text)
           if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
             exitstatus=$?
-            if [ "$exitstatus" == "0" ]; then
+            if [ "$exitstatus" = "0" ]; then
               clear
               echo -e "${RED}[+] Reactivating ${YELLOW}${SERVICE_NAME}${NOCOLOR}"
               #This is necessary to work with special characters in sed
@@ -874,7 +874,7 @@ case "$CHOICE" in
           is_integer "${VIRTPORT}"
 					exitstatus=$?
 					# exitstatus == 1 means that $VIRTPORT is not an integer
-					if [ "$exitstatus" == "1" ]; then
+					if [ "$exitstatus" = "1" ]; then
 	        	clear
 	        	echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 	        	sleep 5
@@ -948,7 +948,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       exitstatus=$?
       service_menu checklist "$SERVICE_NAME_LIST"
-      if [ "$exitstatus" == "0" ]; then
+      if [ "$exitstatus" = "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -966,7 +966,7 @@ case "$CHOICE" in
 							SERVICE_NAME_STRING="$(<<< "${SERVICE_NAME}" sed -e 's`[][\\/.*^$]`\\&`g')"
 							# This gives VIRTPORT, HIDDENSSERVICEPORT and UNIX_PATH
 							find_virtport $SERVICE_NAME
-              if [ "$exitstatus" == "0" ]; then
+              if [ "$exitstatus" = "0" ]; then
 								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
 								(TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)) >/dev/null
 								(TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)) >/dev/null
@@ -1003,7 +1003,7 @@ case "$CHOICE" in
 									stty intr ^c
 									trap
 								fi
-              elif [ "$exitstatus" == "1" ]; then
+              elif [ "$exitstatus" = "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${YELLOW}$SERVICE_NAME${NOCOLOR}"
                 sudo sed -i "s/^HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/#HiddenServiceDir ${DATA_DIR_OS_STRING}\/${SERVICE_NAME_STRING}/g" ${TORRC}
                 #This is necessary to work with special characters in sed
@@ -1067,7 +1067,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
       service_menu checklist "$SERVICE_NAME_LIST"
-      if [ "$exitstatus" == "0" ]; then
+      if [ "$exitstatus" = "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -1133,7 +1133,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
-      if [ "$exitstatus" == "0" ]; then
+      if [ "$exitstatus" = "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -1142,7 +1142,7 @@ case "$CHOICE" in
               CLIENT_NAME=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client name which you want authorize to acces the onion service (e.g.: alice):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
               exitstatus=$?
               # exitstatus == 255 means that the ESC key was pressed
-              if [ "$exitstatus" == "0" ]; then
+              if [ "$exitstatus" = "0" ]; then
                 CLIENT_PUB_KEY=$(whiptail --title "TorBox - INFO" --inputbox "\n\nType in the client's public key in base32 (for example: BAFYBEICZSSCDSBS7FFQZ55ASQDF3SMV6KLCW3GOFSZVWLYARCI47BGF354):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
                 if { [ -n "${SERVICE_NAME}" ] && [ -n "${CLIENT_NAME}" ] && [ -n "${CLIENT_PUB_KEY}" ]; }; then
                   clear
@@ -1177,7 +1177,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       exitstatus=$?
       service_menu menu "$SERVICE_NAME_LIST"
-      if [ "$exitstatus" == "0" ]; then
+      if [ "$exitstatus" = "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -1197,7 +1197,7 @@ case "$CHOICE" in
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
-              if [ "$exitstatus" == "0" ]; then
+              if [ "$exitstatus" = "0" ]; then
                 n=0
                 for CLIENT_NAME in $CLIENT_NAME_LIST; do
                   n=$((n+1))
@@ -1226,7 +1226,7 @@ case "$CHOICE" in
 		error_no_authorization
     service_menu checklist "$SERVICE_NAME_LIST" "\nNot listed services don't have any client authorization."
     exitstatus=$?
-    if [ "$exitstatus" == "0" ]; then
+    if [ "$exitstatus" = "0" ]; then
       i=0
       for SERVICE_NAME in $SERVICE_NAME_LIST; do
         i=$((i+1))
@@ -1261,7 +1261,7 @@ case "$CHOICE" in
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
       exitstatus=$?
       service_menu checklist "$SERVICE_NAME_LIST"
-      if [ "$exitstatus" == "0" ]; then
+      if [ "$exitstatus" = "0" ]; then
         i=0
         for SERVICE_NAME in $SERVICE_NAME_LIST; do
           i=$((i+1))
@@ -1280,7 +1280,7 @@ case "$CHOICE" in
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
-              if [ "$exitstatus" == "0" ]; then
+              if [ "$exitstatus" = "0" ]; then
                 n=0
                 for CLIENT_NAME in $CLIENT_NAME_LIST; do
                   n=$((n+1))
@@ -1350,7 +1350,7 @@ case "$CHOICE" in
 			exitstatus=$?
 			service_menu menu "$ONION_AUTH_LIST" "Choose an authorization of the Onion Service listed below to edit. (ESC -> go back)"
 			# shellcheck disable=SC2154
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				i=0
 				for ONION_AUTH in $ONION_AUTH_LIST; do
 					i=$((i+1))
@@ -1394,7 +1394,7 @@ case "$CHOICE" in
 			exitstatus=$?
 			service_menu checklist "$ONION_AUTH_LIST" "Choose the client authorization of the Onion Service(s) listed below to remove. (ESC -> go back)"
 			# shellcheck disable=SC2154
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				i=0
 				for ONION_AUTH in $ONION_AUTH_LIST; do
 					i=$((i+1))
@@ -1432,7 +1432,7 @@ case "$CHOICE" in
       "==" "===============================================================" \
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
       	 CHOICE2=$(echo "$CHOICE2" | tr -d ' ')
       	 case "$CHOICE2" in
 
@@ -1440,7 +1440,7 @@ case "$CHOICE" in
        	 1)
         	clear
         	service_menu menu "$SERVICE_NAME_LIST"
-        	if [ "$exitstatus" == "0" ]; then
+        	if [ "$exitstatus" = "0" ]; then
           	i=0
           	for SERVICE_NAME in $SERVICE_NAME_LIST; do
             	i=$((i+1))
@@ -1518,7 +1518,7 @@ case "$CHOICE" in
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
 					service_menu menu "$WEB_SERVICE_NAME_LIST"
 					exitstatus=$?
-					if [ "$exitstatus" == "0" ]; then
+					if [ "$exitstatus" = "0" ]; then
 						i=0
 						for SERVICE_NAME in $WEB_SERVICE_NAME_LIST; do
 							i=$((i+1))
@@ -1594,7 +1594,7 @@ case "$CHOICE" in
          	create_web_service_list 0
 					[ -z $WEB_SERVICE_NAME_LIST ] && error_no_folder_shared
          	service_menu checklist "$WEB_SERVICE_NAME_LIST"
-         	if [ "$exitstatus" == "0" ]; then
+         	if [ "$exitstatus" = "0" ]; then
          		if [ ! -z "$SERVICE_NAME_LIST" ]; then
            		i=0
            		for SERVICE_NAME in $SERVICE_NAME_LIST; do
@@ -1662,7 +1662,7 @@ case "$CHOICE" in
 			"==" "===============================================================" \
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				CHOICE2=$(echo "$CHOICE2" | tr -d ' ')
 				case "$CHOICE2" in
 
@@ -1673,7 +1673,7 @@ case "$CHOICE" in
 						sudo ./bin/start_tfs
 						# New Start (always executed!)
 						service_menu menu "$SERVICE_NAME_LIST"
-						if [ "$exitstatus" == "0" ]; then
+						if [ "$exitstatus" = "0" ]; then
 							i=0
 							for SERVICE_NAME in $SERVICE_NAME_LIST; do
 								i=$((i+1))
@@ -1735,7 +1735,7 @@ case "$CHOICE" in
 						TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/filesharing/tfs ||")
 						service_menu menu "$SERVICE_NAME_LIST"
 						exitstatus=$?
-						if [ "$exitstatus" == "0" ]; then
+						if [ "$exitstatus" = "0" ]; then
 							i=0
 							for SERVICE_NAME in $SERVICE_NAME_LIST; do
 								i=$((i+1))
@@ -1821,7 +1821,7 @@ case "$CHOICE" in
 							sudo ls /etc/nginx/sites-available | grep .*-onion-filesharing.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available/{}
 						else
 							service_menu checklist "$SERVICE_NAME_LIST_002"
-	       			if [ "$exitstatus" == "0" ]; then
+	       			if [ "$exitstatus" = "0" ]; then
 	         			if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
 	           			i=0
 	             		for SERVICE_NAME in $SERVICE_NAME_LIST_002; do
@@ -1881,7 +1881,7 @@ case "$CHOICE" in
 			"==" "===============================================================" \
 			3>&1 1>&2 2>&3)
 			exitstatus=$?
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				CHOICE2=$(echo "$CHOICE2" | tr -d ' ')
 				case "$CHOICE2" in
 
@@ -1892,7 +1892,7 @@ case "$CHOICE" in
 						sudo ./bin/start_tcs
 						# New Start (always executed!)
 						service_menu menu "$SERVICE_NAME_LIST"
-						if [ "$exitstatus" == "0" ]; then
+						if [ "$exitstatus" = "0" ]; then
 							i=0
 							for SERVICE_NAME in $SERVICE_NAME_LIST; do
 								i=$((i+1))
@@ -1940,7 +1940,7 @@ case "$CHOICE" in
 							sudo ls /etc/nginx/sites-available | grep .*-onion-chatsecure.conf | xargs -I {} -d"\n" sudo rm /etc/nginx/sites-available/{}
 						else
 							service_menu checklist "$SERVICE_NAME_LIST_002"
-							if [ "$exitstatus" == "0" ]; then
+							if [ "$exitstatus" = "0" ]; then
 								if [ ! -z "$SERVICE_NAME_LIST_002" ]; then
 									i=0
 									for SERVICE_NAME in $SERVICE_NAME_LIST_002; do

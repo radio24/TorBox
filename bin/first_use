@@ -64,6 +64,9 @@ TXT_DIR="$TORBOX_PATH/text"
 FRESHINSTALLED=$1
 [ ! -z $2 ] && SOURCE_SCRIPT=$2 || SOURCE_SCRIPT=menu
 
+#Check if this installation is on a cloud
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+
 ##############################
 ######## FUNCTIONS ###########
 
@@ -277,32 +280,30 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 
-			# Configuring the source of the Internet
-    	check_interface_with_internet
-    	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
-    	"==" "===============================================================" \
-    	" 1" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
-    	" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-    	" 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
-    	" 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
-    	" 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
-    	" 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
-    	"==" "===============================================================" \
-    	3>&1 1>&2 2>&3)
-
-      # This will configure the origin of the Internet.
-      CHOICE=$(echo "$CHOICE" | tr -d ' ')
-      if [ ! -z "$CHOICE" ]; then
-        if [[ $CHOICE -gt 0  && $CHOICE -lt 7 ]]; then
-          CHOICE=$((CHOICE+4))
-          ./menu $CHOICE
-        fi
-      fi
-
-			# Ask for TACA support (not on a cloud)
-      clear
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+			# Configuring the source of the Internet (not on a cloud)
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
+				check_interface_with_internet
+    		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    		"==" "===============================================================" \
+    		" 1" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
+    		" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
+    		" 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+    		" 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
+    		" 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
+    		" 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
+    		"==" "===============================================================" \
+    		3>&1 1>&2 2>&3)
+
+      	# This will configure the origin of the Internet.
+      	CHOICE=$(echo "$CHOICE" | tr -d ' ')
+      	if [ ! -z "$CHOICE" ]; then
+        	if [[ $CHOICE -gt 0  && $CHOICE -lt 7 ]]; then
+          	CHOICE=$((CHOICE+4))
+          	./menu $CHOICE
+        	fi
+      	fi
+				# Ask for TACA support (not on a cloud)
+      	clear
       	INPUT=$(cat $TXT_DIR/first_use-TACA-text)
 				if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					clear
@@ -325,15 +326,15 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					sudo $TORBOX_PATH/log_check.py &
 					echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 					sleep 2
-				else
-					clear
-					sudo pkill -f "log_check.py"
-	      	(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
-	      	(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
-	      	(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
-	      	sleep 1
-      	fi
-			fi
+				fi
+			else
+				clear
+				sudo pkill -f "log_check.py"
+	     	(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
+	     	(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
+	     	(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
+      	sleep 1
+    	fi
 
 			# Synchronize time to avoid problems with bridges
 			clear

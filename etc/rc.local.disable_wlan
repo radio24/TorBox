@@ -91,7 +91,7 @@ done
 if ip link | grep wlan0 ; then
  if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
 	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
-	 if [ "$exitstatus" == "1" ]; then
+	 if [ "$exitstatus" = "1" ]; then
 		 # NEW v.0.5.4
 		 sleep 2
 		 systemctl restart tor
@@ -103,7 +103,7 @@ fi
 if ip link | grep wlan1 ; then
  if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
 	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
-	 if [ "$exitstatus" == "1" ]; then
+	 if [ "$exitstatus" = "1" ]; then
 		 # NEW v.0.5.4
 		 sleep 2
 		 systemctl restart tor

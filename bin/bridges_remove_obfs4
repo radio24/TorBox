@@ -303,7 +303,7 @@ case "$CHOICE" in
 			done
 			trap "bash bridges_remove_obfs4; exit 0" SIGINT
 			service_menu checklist "${bridge_address_display_list}" "\nImportant: If available, the bridge status is not always accurate!"
-			if [ "$exitstatus" == "0" ]; then
+			if [ "$exitstatus" = "0" ]; then
 				clear
 				sudo cp ${TORRC} ${BAK}
 				i=0

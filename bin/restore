@@ -130,7 +130,7 @@ cd
 if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	clear
-	if [ "$exitstatus" == "0" ]; then
+	if [ "$exitstatus" = "0" ]; then
 		OS_BK_TAR=$(whiptail --title "What is the name of your backup file?" --inputbox "\n\nEnter the name of your backup file (for example: torbox_backup_date.tgz; blank = abort):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 		clear
 		[ -z "$OS_BK_TAR" ] && exit 0
