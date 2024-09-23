@@ -312,8 +312,9 @@ else
 		" 3" "Restart Tor - check if it is working (press q to quit)"  \
 		" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
 		"===" "===================================[Where is the Internet?]===" \
+		" 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
 		"  " " " \
-		"  " "On TorBox on a Cloud, menu entry 5-10 are not available!   " \
+		"  " "On TorBox on a Cloud, menu entry 6-10 are not available!   " \
 		"  " "For special requirements, please contact the TorBox        " \
 		"  " "development team --> https://www.torbox.ch   " \
 		"  " " " \

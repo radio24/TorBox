@@ -19,6 +19,9 @@
 -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
 -A INPUT -p tcp -m tcp --dport 1194 -j ACCEPT
 -A INPUT -p udp -m udp --dport 1194 -j ACCEPT
+-A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i eth0 -o usb0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -m state --state INVALID -j DROP
 -A FORWARD -p icmp -m icmp --icmp-type 8 -j ACCEPT
 -A FORWARD -p icmp -m icmp --icmp-type 0 -j ACCEPT

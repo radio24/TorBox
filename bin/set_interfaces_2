@@ -201,6 +201,12 @@ $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-fl
 
 ###### FORWARD chain ######
 echo -e "${RED}[+] Setting up FORWARD chain...${NOCOLOR}"
+# NEW v.0.5.4: Necessary for TorBox on a Cloud --> This rule allows the forwarding of network packets that come in via the Internet-interface and go out via the network- or VPN-interface. The packets have to belong to already established connections or are related to them.
+# -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
+sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
 # State tracking rules
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 # Allow ICMP Ping

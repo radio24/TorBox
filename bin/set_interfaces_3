@@ -172,10 +172,11 @@ if [ "$FIRST_RUN" == "0" ]; then
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 
+	# NEW v.0.5.4: These rules are newly implemented in set_interfaces_2
 	# -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
-	sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	sudo $IPTABLES -I FORWARD 3 -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 3 -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 	# -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
