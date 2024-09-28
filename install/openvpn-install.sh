@@ -198,7 +198,7 @@ function installQuestions() {
 	# In the original script, choosing the port number, the protocol (UDP or TCP) and the compression was possible.
 	# We removed it for the sake of simplicity.
 	# To add it again, see here: https://github.com/angristan/openvpn-install/blob/master/openvpn-install.sh
-	PORT="1194"
+	PORT="443"
 	PROTOCOL="udp"
 	clear
 	echo -e "${YELLOW}[+] Do you want to customize encryption settings?${NOCOLOR}"
@@ -636,7 +636,7 @@ verb 3" >>$OPENVPN_CONF
 	# If SELinux is enabled and a custom port was selected, we need this
 	if hash sestatus 2>/dev/null; then
 		if sestatus | grep "Current mode" | grep -qs "enforcing"; then
-			if [[ $PORT != '1194' ]]; then
+			if [[ $PORT != '443' ]]; then
 				semanage port -a -t openvpn_port_t -p "$PROTOCOL" "$PORT"
 			fi
 		fi
@@ -969,7 +969,7 @@ function removeOpenVPN() {
 		# SELinux
 		if hash sestatus 2>/dev/null; then
 			if sestatus | grep "Current mode" | grep -qs "enforcing"; then
-				if [[ $PORT != '1194' ]]; then
+				if [[ $PORT != '443' ]]; then
 					semanage port -d -t openvpn_port_t -p "$PROTOCOL" "$PORT"
 				fi
 			fi

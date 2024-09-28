@@ -101,7 +101,8 @@ if pgrep -f "dhclient.$INTERFACE2" ; then
 	INTERFACE2_DOWN=1
 fi
 
-sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+if [ "$ON_A_CLOUD" -eq "0" ]; then sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces; fi
 sleep 1
 
 if [ $INTERFACE1_DOWN = 1 ] ; then

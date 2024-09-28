@@ -255,11 +255,11 @@ fi
 ###### OPENVPN access through Internet ######
 if grep -q "^OPENVPN_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up OPENVPN access through the Internet...${NOCOLOR}"
-	$IPTABLES -A INPUT -p tcp --dport 1194 -j ACCEPT
-	$IPTABLES -A INPUT -p udp --dport 1194 -j ACCEPT
+	$IPTABLES -A INPUT -p tcp --dport 443 -j ACCEPT
+	$IPTABLES -A INPUT -p udp --dport 443 -j ACCEPT
 else
-	($IPTABLES -D INPUT -p tcp --dport 1194 -j ACCEPT) 2>/dev/null
-	($IPTABLES -D INPUT -p udp --dport 1194 -j ACCEPT) 2>/dev/null
+	($IPTABLES -D INPUT -p tcp --dport 443 -j ACCEPT) 2>/dev/null
+	($IPTABLES -D INPUT -p udp --dport 443 -j ACCEPT) 2>/dev/null
 fi
 
 ###### HTTP plain text traffic blocker ######

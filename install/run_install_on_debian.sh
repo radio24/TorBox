@@ -986,7 +986,8 @@ echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
 cp etc/hostapd/hostapd.conf /etc/hostapd/
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
 (cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-cp etc/iptables.ipv4.nat /etc/
+if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/iptables-cloud.ipv4.nat /etc/iptables.ipv4.nat
+else cp etc/iptables.ipv4.nat /etc/; fi
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
 (cp /etc/motd /etc/motd.bak) 2>/dev/null
 cp etc/motd /etc/
@@ -1124,9 +1125,15 @@ fi
 clear
 echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
 systemctl daemon-reload
-systemctl unmask hostapd
-systemctl enable hostapd
-systemctl start hostapd
+if [ "$TORBOX_MINI" == "--torbox_mini" ] || [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+  systemctl stop hostapd
+  systemctl disable hostapd
+  systemctl mask hostapd
+else
+  systemctl unmask hostapd
+  systemctl enable hostapd
+  systemctl start hostapd
+fi
 systemctl unmask isc-dhcp-server
 systemctl enable isc-dhcp-server
 systemctl start isc-dhcp-server

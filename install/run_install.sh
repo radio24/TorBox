@@ -1035,20 +1035,43 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
   (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-    sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
-  else
-    sudo cp etc/iptables.ipv4.nat /etc/
-  fi
+	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/iptables-cloud.ipv4.nat /etc/iptables.ipv4.nat
+	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+	else sudo cp etc/iptables.ipv4.nat /etc/; fi
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
   (sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
+
+  # NEW v.0.5.4: TorBox on a Cloud - there are two scenario
+  # 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
+  # 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
+  #     but disable with Predictable Network Interface Name in /etc/network/interfaces
   (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-    sudo cp etc/network/interfaces.mini /etc/network/interfaces
+  if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+  	NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+  	if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
+  		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+  		sudo cp etc/network/interfaces /etc/network/
+  		echo
+  		echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
+  		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+  		echo
+  		sleep 10
+  	else
+  		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+  		sudo sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
+  		echo
+  		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
+  		echo -e "${YELLOW}            However, we changed $NIC into eth0!"
+  		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+  		echo
+  		sleep 10
+  	fi
+  elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+      sudo cp etc/network/interfaces.mini /etc/network/interfaces
   else
-    sudo cp etc/network/interfaces /etc/network/
+  	sudo cp etc/network/interfaces /etc/network/
   fi
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
@@ -1130,7 +1153,7 @@ if [ "$STEP_NUMBER" -le "12" ]; then
   clear
   echo -e "${RED}[+] Step 12: Configure the system services...${NOCOLOR}"
   sudo systemctl daemon-reload
-  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+  if [ "$TORBOX_MINI" == "--torbox_mini" ] || [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
     sudo systemctl stop hostapd
     sudo systemctl disable hostapd
     sudo systemctl mask hostapd

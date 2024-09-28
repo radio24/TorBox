@@ -8,7 +8,7 @@ Before you continue, please check the following points:
 - For a client-server VPN connection, it is recommended to use the
   OpenVPN Connect client software: https://openvpn.net/client/
 - If you want to reach your OpenVPN server outside your local LAN,
-  the server must be reachable (exposed UDP port 1194 to the internet).
+  the server must be reachable (exposed UDP port 443 to the internet).
 - You may manually adapt your configuration if the server does not
   have a static IP. See here for more: https://t.ly/jcsnL
 

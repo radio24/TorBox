@@ -93,6 +93,9 @@ TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # shellcheck disable=SC2001,SC2016
 TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
+# Read configuration from run/torbox.run
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+
 ##############################
 ######## FUNCTIONS ########
 
@@ -348,7 +351,19 @@ case "$CHOICE" in
 
   #This changes the password of the WLAN
   3)
-    INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+		clear
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
+		INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if [ ! -z "$INPUT" ]; then
       if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
         clear
@@ -401,7 +416,6 @@ case "$CHOICE" in
 
   #This changes the name of the WLAN
   5)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -437,7 +451,6 @@ case "$CHOICE" in
 
   #This sets the WLAN regulatory domain.
   6)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -469,7 +482,6 @@ case "$CHOICE" in
 
   #This changes the frequency band
   7)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -538,7 +550,6 @@ case "$CHOICE" in
 
   #Change the WLAN channel
   8)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -791,7 +802,6 @@ case "$CHOICE" in
   9)
 		INPUT=$(cat text/help-change-MAC)
 		if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 			clear
 			if [ "$ON_A_CLOUD" -eq "1" ]; then
 				INPUT=$(cat text/on_a_cloud_warning_mac-text)
@@ -810,7 +820,6 @@ case "$CHOICE" in
 
   #This hides / unhides the WLAN
   10)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -860,7 +869,18 @@ case "$CHOICE" in
 
   #This disables / enables the WLAN
   11)
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+		clear
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-config; exit 0" EXIT
+				exit 0
+			fi
+		fi
 		clear
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
@@ -987,6 +1007,17 @@ case "$CHOICE" in
       fi
     fi
     if [ "$TOGGLE10" = "Disable" ]; then
+			if [ "$ON_A_CLOUD" -eq "1" ]; then
+				INPUT=$(cat text/on_a_cloud_warning-text)
+				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+					exitstatus=$?
+					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+				else
+					trap "bash menu-config; exit 0" EXIT
+					exit 0
+				fi
+			fi
       if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "Would you like to disable SSH access from the Internet (this is the default)?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         clear
         echo " "
@@ -1131,9 +1162,11 @@ case "$CHOICE" in
 			LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
 			LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
 			if [ "$LOG_STATUS_001" == "inactive" ] && [ "$LOG_STATUS_002" == "inactive" ]; then
-				sudo systemctl unmask rsyslog
-        sudo systemctl enable rsyslog
-        sudo systemctl start rsyslog
+				if test -f "/etc/rsyslog.conf"; then
+					sudo systemctl unmask rsyslog
+        	sudo systemctl enable rsyslog
+        	sudo systemctl start rsyslog
+				fi
 				sudo systemctl unmask systemd-journald.service
 				sudo systemctl start systemd-journald.service
 				sudo systemctl start systemd-journald-dev-log.socket
@@ -1154,7 +1187,7 @@ case "$CHOICE" in
       clear
       echo " "
       echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
-      sudo systemctl stop rsyslog
+			if test -f "/etc/rsyslog.conf"; then sudo systemctl stop rsyslog; fi
 			sudo systemctl stop systemd-journald-dev-log.socket
 			sudo systemctl stop systemd-journald-audit.socket
 			sudo systemctl stop systemd-journald.socket
@@ -1163,8 +1196,10 @@ case "$CHOICE" in
       echo ""
       echo -e "${RED}[+] Making it permanent...${NOCOLOR}"
       #Siehe auch hier: https://stackoverflow.com/questions/17358499/linux-how-to-disable-all-log
-      sudo systemctl disable rsyslog
-			sudo systemctl mask rsyslog
+      if test -f "/etc/rsyslog.conf"; then
+				sudo systemctl disable rsyslog
+				sudo systemctl mask rsyslog
+			fi
       echo ""
       erase_logs
       sleep 2
@@ -1194,7 +1229,6 @@ case "$CHOICE" in
 			trap "bash menu-config; exit 0" EXIT
 			exit 0
 		fi
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -1230,7 +1264,6 @@ case "$CHOICE" in
 			trap "bash menu-config; exit 0" EXIT
 			exit 0
 		fi
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
@@ -1308,7 +1341,6 @@ case "$CHOICE" in
 			trap "bash menu-config; exit 0" EXIT
 			exit 0
 		fi
-		ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 		clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
 			INPUT=$(cat text/on_a_cloud_warning-text)
