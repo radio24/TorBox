@@ -1035,7 +1035,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
   (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/iptables-cloud.ipv4.nat /etc/iptables.ipv4.nat
+	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/iptables.ipv4-cloud.nat /etc/iptables.ipv4.nat
 	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
 	else sudo cp etc/iptables.ipv4.nat /etc/; fi
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
