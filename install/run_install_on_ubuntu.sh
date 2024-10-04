@@ -1106,8 +1106,10 @@ if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
   sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
   echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
 fi
+# NEW v.0.5.4: Cloudspecific torrc
 (sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
-sudo cp etc/tor/torrc /etc/tor/
+if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/tor/torrc-cloud /etc/tor/torrc
+else sudo cp etc/tor/torrc /etc/tor/ ; fi
 echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
 echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"

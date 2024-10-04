@@ -1,0 +1,122 @@
+## This is the configuration file of Tor
+
+## DON'T CHANGE THE FOLLOWING 20 LINES!
+######################################################
+## Configuration for TorBox
+
+Log notice file /var/log/tor/notices.log
+VirtualAddrNetworkIPv4 10.192.0.0/10
+AutomapHostsSuffixes .onion,.exit
+AutomapHostsOnResolve 1
+TransPort 127.0.0.1:9040
+#TransPort 192.168.42.1:9040
+#TransPort 192.168.43.1:9040
+TransPort 192.168.44.1:9040
+DNSPort 127.0.0.1:9053
+#DNSPort 192.168.42.1:9053
+#DNSPort 192.168.43.1:9053
+DNSPort 192.168.44.1:9053
+SocksPort 127.0.0.1:9050
+#SocksPort 192.168.42.1:9050
+#SocksPort 192.168.43.1:9050
+SocksPort 192.168.44.1:9050
+SocksPort 127.0.0.1:9052 IsolateDestAddr
+#SocksPort 192.168.42.1:9052 IsolateDestAddr
+#SocksPort 192.168.43.1:9052 IsolateDestAddr
+SocksPort 192.168.44.1:9052 IsolateDestAddr
+ControlPort 127.0.0.1:9051
+#ControlPort 192.168.42.1:9051
+#ControlPort 192.168.43.1:9051
+ControlPort 192.168.44.1:9051
+HashedControlPassword 16:E68F16640ED8C0F7601F5AA3D229D8DFD8715623CB055577F9434F7FB7
+DisableDebuggerAttachment 0
+AvoidDiskWrites 1
+#%include /etc/tor/torrc.exclude-slow
+
+## THE CONFIGURATION OF THE ONION SERVICES STARTS HERE!
+#######################################################
+## This will configure the Onion Services (do not remove or change that line - this is an anchor)
+
+## This will configure the Onion Service authorizations
+#ClientOnionAuthDir /var/lib/tor/onion_auth
+
+## THE CONFIGURATION OF THE BRIDGE RELAY STARTS HERE!
+######################################################
+## This will setup an obfs4 bridge relay.
+#BridgeRelay 1
+#ORPort 4235
+#ExtORPort auto
+#ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy
+#ServerTransportListenAddr obfs4 0.0.0.0:443
+#ContactInfo <address@email.com>
+#Nickname TorBox053
+#BridgeDistribution any
+
+## TO OVERCOME A FIREWALL, START HERE!
+## HOWEVER, USE IT ONLY, IF REALLY NECESSARY!
+######################################################
+## This will allow you to run Tor as a client behind a firewall with
+## restrictive policies, but will not allow you to run as a server behind such
+## a firewall.
+## ReachableAddresses IP[/MASK][:PORT]…
+## A comma-separated list of IP addresses and ports that your firewall allows
+## you to connect to. The format is as for the addresses in ExitPolicy, except
+## that "accept" is understood unless "reject" is explicitly provided. For
+## example, 'ReachableAddresses 99.0.0.0/8, reject 18.0.0.0/8:80, accept *:80'
+## means that your firewall allows connections to everything inside net 99,
+## rejects port 80 connections to net 18, and accepts connections to port 80
+## otherwise.
+#ReachableAddresses accept *:443, accept *:80
+
+## TO OVERCOME CENSORSHIP, START HERE!
+######################################################
+## If you like to use bridges to overcome censorship, EDIT THE LINES BELOW!
+## To use bridges, uncomment the three lines below...
+#UseBridges 1
+#UpdateBridgesFromAuthority 0
+#ClientTransportPlugin meek_lite,obfs4 exec /usr/bin/obfs4proxy
+#ClientTransportPlugin snowflake exec /usr/bin/snowflake-client
+
+## Meek-Azure (do not remove or change that line - this is an anchor)
+#Bridge meek_lite 192.0.2.18:80 BE776A53492E1E044A26F17306E1BC46A55A1625 url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
+
+## Snowflake (do not remove or change that line - this is an anchor)
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net/ ampcache=https://cdn.ampproject.org/ front=www.google.com ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for China
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=foursquare.com ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for China
+#Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=foursquare.com ice=stun:stun.l.google.com:19302,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.net:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for Iran
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.azureedge.net/ front=ajax.aspnetcdn.com ice=stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for Turkmenistan
+#Bridge snowflake 192.0.2.3:80 2B280B23E1107BB62ABFC40DDCC8824814F80A72 fingerprint=2B280B23E1107BB62ABFC40DDCC8824814F80A72 url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=foursquare.com ice=stun:206.53.159.130:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479 utls-imitate=hellorandomizedalpn
+#Specific Snowflake bridge for Turkmenistan
+#Bridge snowflake 192.0.2.4:80 8838024498816A039FCBBAB14E6F40A0843051FA fingerprint=8838024498816A039FCBBAB14E6F40A0843051FA url=https://snowflake-broker.torproject.net.global.prod.fastly.net/ front=foursquare.com ice=stun:206.53.159.130:3479,stun:94.23.17.185:3479,stun:217.74.179.29:3479,stun:83.125.8.47:3479,stun:23.253.102.137:3479,stun:52.26.251.34:3479,stun:154.73.34.8:3479,stun:185.125.180.70:3479,stun:195.35.115.37:3479 utls-imitate=hellorandomizedalpn
+
+## IMPORTANT: Currently, Snowflake supports only one bridge line. If you uncomment several bridge lines, only the first will be used.
+
+## OBFS4 bridges
+##
+## You have three ways to get new bridge-addresses:
+## 1. Get them here https://bridges.torproject.org/
+## 2. Or send an email to bridges@torproject.org, using an address
+##    from Riseup or Gmail with "get transport obfs4" in the body of the mail.
+## 3. Via Telegram (official): https://t.me/GetBridgesBot ; then use /bridges to get a bridge.
+## 4. (Not recommended, only if needed): Via Telegram (unofficial): https://t.me/tor_bridges
+#Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
+#Bridge obfs4 193.11.166.194:27015 2D82C2E354D531A68469ADF7F878FA6060C6BACA cert=4TLQPJrTSaDffMK7Nbao6LC7G9OW/NHkUwIdjLSS3KYf0Nv4/nQiiI8dY2TcsQx01NniOg iat-mode=0
+#Bridge obfs4 193.11.166.194:27020 86AC7B8D430DAC4117E9F42C9EAED18133863AAF cert=0LDeJH4JzMDtkJJrFphJCiPqKx7loozKN7VNfuukMGfHO0Z8OGdzHVkhVAOfo1mUdv9cMg iat-mode=0
+#Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
+#Bridge obfs4 5.45.100.58:1337 66002E678B3A3C6968AB1944C233A82A34FCF0B8 cert=cZei7/b4KsHqb0tTn3mnAZ+LruUAJ1+yiXKwWxmNFLbpfQycmibCoYjlmX8n1gGskaiQLQ iat-mode=0
+#Bridge obfs4 146.57.248.225:22 10A6CD36A537FCE513A322361547444B393989F0 cert=K1gDtDAIcUfeLqbstggjIw2rtgIKqdIhUlHp82XRqNSq/mtAjp1BIC9vHKJ2FAEpGssTPw iat-mode=0
+#Bridge obfs4 87.197.128.98:9292 AE6BA15179AEEF64A0F543BEB7FA1BE2E91A93CF cert=t36bkZYMFJyJzTN1HYyh5LzAK/R81GAAH2Q7N3P9qLt5Jd0g7qDvWPIKTurxO2t7XzxSQA iat-mode=0
+#Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
+#Bridge obfs4 51.222.13.177:80 5EDAC3B810E12B01F6FD8050D2FD3E277B289A08 cert=2uplIpLQ0q9+0qMFrK5pkaYRDOe460LL9WHBvatgkuRr/SL31wBOEupaMMJ6koRE6Ld0ew iat-mode=0
+#Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
+#Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
+#Bridge obfs4 2.229.145.26:9001 363DCFB52ED15579C968C339959751125CFE9E65 cert=lWV/kX9g/6WA56Oce6UVfoncRn1gGHN4Vs6+84FMNK3aPoNhDuTfQywJREFyu62oLzItAg iat-mode=0
+#Bridge obfs4 23.88.57.187:64682 8474BCEFF0E06DD04B6272C2DEDDA8E7D4BEA582 cert=VAkW8b/TxygLDw3+fBrV17cz7e0X7BPLi2dyl52/CApzuPDbQPUVKjLX6M7gJpBjgYt1cg iat-mode=0
+#Bridge obfs4 172.98.142.184:7358 3F85291518BD51DE1D88B8031A62E085FF26E41A cert=ufbLZaUbgbkCum+IAEqPVgwag8Do5hgVh6paeo1F3S7vj20IG4onuoiwA63m4fOhug8EWA iat-mode=0
+#Bridge obfs4 185.229.111.42:443 BAC14303729F3EB82F777F818FCE6DBF054CC3D4 cert=AKdHfYBsQhED3BlzjQKJR2Wd4LcIS+zKCCaoi0+cTfBYp714KSYk/R9k7rLXBTRlpLaiWw iat-mode=0
+#Bridge obfs4 65.108.254.231:1312 42787C35C3A916C9556AB6835664B20DA66F73FC cert=VACdrxjo3NvNVKKmdx4Aq9js2DfN9HebzhVQdKc0+k79WIZQ1JdoQQIrtOiF9Gtl9fbAPA iat-mode=0
+#Bridge obfs4 157.90.115.53:443 42486E8C5B6F82C066DF55BEE73534231F8ABA49 cert=pv/ni3rSR3byqrSnWjw/Th/ygdBd0U61BY/eBTIPcqekjF4U4af4XcjYXcgTtI1dJ5plaw iat-mode=0
