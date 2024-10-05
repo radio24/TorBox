@@ -1165,7 +1165,7 @@ case "$CHOICE" in
 	11)
 		clear
 		INPUT=$(cat text/built-in_bridges-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			online_check $TOR_GET_DEFAULT_BRIDGES_URL 0 1
 			if [ $OCHECK == 1 ]; then
@@ -1296,7 +1296,7 @@ case "$CHOICE" in
 		clear
 		if [ "$SPEED" == "0" ]; then
 			INPUT=$(cat text/exclude_slow_tor_relays-update-text)
-			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed

@@ -201,7 +201,7 @@ case "$CHOICE" in
   	fi
 		if [ "$FIREWALL" = "ON" ]; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -217,7 +217,7 @@ case "$CHOICE" in
 		fi
 		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
     	INPUT=$(cat $TXT_DIR/activate-obfs4-bridges-text)
-    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
     		sudo bash bin/bridges_activate_obfs4
     	else
     		trap "bash menu-bridges; exit 0" EXIT
@@ -280,7 +280,7 @@ case "$CHOICE" in
     fi
 		if [ "$FIREWALL" = "ON" ]; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -296,7 +296,7 @@ case "$CHOICE" in
 		fi
 		if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
     	INPUT=$(cat $TXT_DIR/activate-snowflake-bridges-text)
-    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
       	sudo bash bin/bridges_activate_snowflake
     	else
       	trap "bash menu-bridges; exit 0" EXIT
@@ -483,7 +483,7 @@ case "$CHOICE" in
 				exit 1
 			fi
       INPUT=$(cat $TXT_DIR/firewall-text-on)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
         INPUT=$(cat $TXT_DIR/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -500,7 +500,7 @@ case "$CHOICE" in
       fi
     fi
     if [ "$FIREWALL" = "ON" ]; then
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "Do you want to deactivate against a tightly configured firewall?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
         sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
         INPUT=$(cat $TXT_DIR/restart-tor-text)
         if (whiptail --title "TorBox - INFO" --no-button "NO - DON'T (RE)START" --yes-button "YES - (RE)START" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
@@ -522,7 +522,7 @@ case "$CHOICE" in
   17)
     if [ "$PING" = "OFF" ] || [ -z "$PING" ]; then
       INPUT=$(cat $TXT_DIR/ping-text-on)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         ping -q "$PING_SERVER" >/dev/null &
         #Alternative Möglichkeit: screen -dm ping google.com
         echo -e "${RED}[+] Countermeasure against a disconnect when idle feature activated!${NOCOLOR}"
@@ -530,7 +530,7 @@ case "$CHOICE" in
       fi
     fi
     if [ "$PING" = "ON" ]; then
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "Do you want to deactivate the countermeasure against a disconnect when idle feature?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         sudo killall ping
         echo -e "${RED}[+] Countermeasure against a disconnect when idle feature deactivated!${NOCOLOR}"
         sleep 2
@@ -542,14 +542,14 @@ case "$CHOICE" in
   18)
     if [ -z "$tun0up" ] ; then
       INPUT=$(cat $TXT_DIR/connecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         connecting_to_VPN
 			  sudo systemctl restart tor &
 				tun0up=$(ip link | grep tun0)
       fi
     else
       INPUT=$(cat $TXT_DIR/disconnecting-VPN-text)
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Disonnecting OpenVPN server...${NOCOLOR}"
         sudo killall openvpn

@@ -127,7 +127,7 @@ change_config()
 clear
 INPUT=$(cat $TXT_DIR/restore-text)
 cd
-if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	clear
 	if [ "$exitstatus" = "0" ]; then

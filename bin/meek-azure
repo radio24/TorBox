@@ -78,7 +78,7 @@ case $MEEKSTRING in
   "OFF")
 		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -145,7 +145,7 @@ case $MEEKSTRING in
 		# fi
 		clear
 		INPUT=$(cat $TXT_DIR/activate-meek-azure-text)
-		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
 			deactivate_obfs4_bridges NORESTART
@@ -164,7 +164,7 @@ case $MEEKSTRING in
 
 	"ON!")
     INPUT=$(cat $TXT_DIR/deactivate-meek-azure-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+    if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       clear
       sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
       sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}

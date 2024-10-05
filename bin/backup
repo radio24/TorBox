@@ -60,9 +60,10 @@ TXT_DIR="/home/torbox/torbox/text"
 ###### MAIN ######
 clear
 INPUT=$(cat "${TXT_DIR}/backup-text")
-if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	if [ "$exitstatus" = "0" ]; then
+		
 		# OBFS4 Bridge Relay data exist?
 		if sudo -u "${TOR_USER}" [ ! -f "${HASHED_FINGERPRINT_DIR}" ]; then
 			OBFS4RELAY=0

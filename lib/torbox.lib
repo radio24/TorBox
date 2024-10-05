@@ -916,7 +916,7 @@ activate_obfs4_bridges()
   if [ $number_configured_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -946,7 +946,7 @@ activate_snowflake_bridges()
   if [ $number_configured_snowflake_bridges_activated -gt 0 ]; then
 		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi

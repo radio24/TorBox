@@ -1050,7 +1050,7 @@ case "$CHOICE" in
   15)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
-      if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
         clear
         echo -e "${RED}[+] Block HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -I PREROUTING 4 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
@@ -1067,7 +1067,7 @@ case "$CHOICE" in
       fi
     fi
     if [ "$TOGGLE12" = "Disable" ]; then
-      if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "Would you like to allow HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+      if (whiptail --title "TorBox - INFO" --defaultno --yesno "Would you like to allow HTTP plain text traffic?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
         clear
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
@@ -1087,7 +1087,7 @@ case "$CHOICE" in
   16)
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed

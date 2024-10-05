@@ -274,7 +274,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 
 			# Will the user keep using the default configured firewall circumvention?
 			INPUT=$(cat $TXT_DIR/first_use-firewall-text)
-			if (whiptail --title "TorBox - FIRST START UP!" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP!" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^#ReachableAddresses /ReachableAddresses /g" ${TORRC}
 			else
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
@@ -305,7 +305,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				# Ask for TACA support (not on a cloud)
       	clear
       	INPUT=$(cat $TXT_DIR/first_use-TACA-text)
-				if (whiptail --title "TorBox - FIRST START UP!" --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - FIRST START UP!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					clear
 					# To start TACA, notices.log has to be present
 					(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
@@ -345,10 +345,10 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			clear
       DEFAULT_BRIDGE_SUPPORT=0
       INPUT=$(cat $TXT_DIR/first_use-add-bridges-text)
-			if (whiptail --title "TorBox - FIRST START UP" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - FIRST START UP" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
 				fi

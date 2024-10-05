@@ -142,7 +142,7 @@ case "$CHOICE" in
 				# Is there an option to route from tor excluded domains through VPN?
 				if [ -z "$tun0up" ] ; then
 					INPUT=$(cat text/connecting-VPN-exclusion-text)
-	      	if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+	      	if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						connecting_to_VPN
 						sudo systemctl restart tor &
 					fi
@@ -153,7 +153,7 @@ case "$CHOICE" in
 				# Always both lists have to be loaded, even if one of them isn't used
 				clear
 				if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
-					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - INFO" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						exitstatus=$?
 						# exitstatus == 255 means that the ESC key was pressed
 						[ "$exitstatus" == "255" ] && exit 0
@@ -173,7 +173,7 @@ case "$CHOICE" in
 					sudo ipset create $CLEARNET_LIST hash:ip
 				fi
 				if [ -f "$VPN_LIST_FILE_OWN" ]; then
-					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - INFO" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						exitstatus=$?
 						# exitstatus == 255 means that the ESC key was pressed
 						[ "$exitstatus" == "255" ] && exit 0
