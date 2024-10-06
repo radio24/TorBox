@@ -169,14 +169,14 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			sleep 2
 
 			# OBFS4 Bridge Relay data exist?
-			if sudo -u "${TOR_USER}" [ ! -f "restore${HASHED_FINGERPRINT_DIR}" ]; then
+			if sudo test ! -f "restore${HASHED_FINGERPRINT_DIR}"; then
 				OBFS4RELAY=0
 			else
 				OBFS4RELAY=1
 			fi
 
 			# Onion Services available?
-			SERVICE_NAME_LIST=$(sudo -u "${TOR_USER}" ls "restore${DATA_DIR_OS}")
+			SERVICE_NAME_LIST=$(sudo ls "restore${DATA_DIR_OS}")
 			if [ -z "${SERVICE_NAME_LIST}" ]; then
 				ONIONSERVICES=0
 			else
@@ -184,7 +184,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			fi
 
 			# Onion Client Authorization used?
-			ONION_AUTH_LIST=$(sudo -u "${TOR_USER}" ls "restore${CLIENT_ONION_AUTH_DIR}")
+			ONION_AUTH_LIST=$(sudo ls "restore${CLIENT_ONION_AUTH_DIR}")
 			if [ -z "${ONION_AUTH_LIST}" ]; then
 				ONIONAUTH=0
 			else
@@ -324,7 +324,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 
 			# Restoring TORRC
 			echo ""
-			read -r -p $'\e[1;93mDo you really want to overwrite the basic torbox configration (/etc/torrc)? [y/N]? -> \e[0m' -e -i N REPLY
+			read -r -p $'\e[1;93mDo you really want to restore the basic torbox configration from the backup (usually not necessary)? [y/N]? -> \e[0m' -e -i N REPLY
 			# The following line is for the prompt to appear on a new line.
 			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 				if [[ $REPLY =~ ^[Yy]$ ]] ; then
@@ -488,7 +488,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
       if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then OLD_EXCLUSIONLISTS=1; fi
       if [ -f "restore$CLEARNET_LIST_FILE_OWN" ] || [ -f "restore$VPN_LIST_FILE_OWN" ]; then RESTORE_EXCLUSIONLISTS=1; fi
 			if grep "UNPROTECTED_DOMAIN=1" ${RUNFILE} || grep "UNPROTECTED_DOMAIN=1" "restore${RUNFILE}"; then
-        if (whiptail --title "TorBox - RESTORE" --yesno "On the target system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are active.\n\nDo you want to activate domain exclusion on the restored system (NO will delete active lists and deactivate domain exclusion)?" $MENU_HEIGHT_10 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - RESTORE" --yesno "On the target system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are active.\n\nDo you want to activate domain exclusion on the restored system (NO will delete active lists and deactivate domain exclusion)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					exitstatus=$?
 					clear
 					# exitstatus == 255 means that the ESC key was pressed
