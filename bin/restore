@@ -395,7 +395,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			if [ "$ONIONSERVICES" == "1" ]; then
 				echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
 				sudo mv restore${DATA_DIR_OS} ${DATA_DIR}
-				(sudo sed -i "s/HiddenServiceDir/d" ${TORRC}) 2>/dev/
+				(sudo sed -i "s/HiddenServiceDir/d" ${TORRC}) 2>/dev/null
 				(sudo sed -i "s/HiddenServicePort/d" ${TORRC}) 2>/dev/null
 				HIDDENSERVICES=$(grep -A 1 "HiddenServiceDir" $TORRC_RESTORE) 2>/dev/null
 				#This is necessary to work with special characters in sed
