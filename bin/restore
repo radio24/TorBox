@@ -392,21 +392,24 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			fi
 
 			# Restoring Onion Service data
-			if [ "$ONIONSERVICES" == "1" ]; then
+			if [ "$ONIONSERVICES" = "1" ]; then
 				echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
 				sudo mv restore${DATA_DIR_OS} ${DATA_DIR}
-				(sudo sed -i "s/HiddenServiceDir/d" ${TORRC}) 2>/dev/null
-				(sudo sed -i "s/HiddenServicePort/d" ${TORRC}) 2>/dev/null
-				HIDDENSERVICES=$(grep -A 1 "HiddenServiceDir" $TORRC_RESTORE) 2>/dev/null
-				#This is necessary to work with special characters in sed
-				HIDDENSERVICES="$(<<< "$HIDDENSERVICES" sed -e 's`[][\\/.*^$]`\\&`g')"
+				sudo sed -i "/HiddenServiceDir/d" ${TORRC}
+				sudo sed -i "/HiddenServicePort/d" ${TORRC}
+				# HIDDENSERVICES=$(grep -A 1 "HiddenServiceDir" $TORRC_RESTORE) 2>/dev/null
+				HIDDENSERVICES=$(grep -A 1 "HiddenServiceDir" "$TORRC_RESTORE" | tr '\n' '\a' | sed 's/\a/\\n/g') 2>/dev/null
 				# Using the Anchor in torrc
 				REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
 				#This is necessary to work with special characters in sed
+				HIDDENSERVICES="$(<<< "$HIDDENSERVICES" sed -e 's`[][\\/.*^$]`\\&`g')"
 				REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+				NEW_STRING="$REPLACE_STRING\n$HIDDENSERVICES"
 				#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
-				sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$HIDDENSERVICES/g" "${TORRC}"
-				sleep 1
+				sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
+				# Konvertieren alle \n zu echten Zeilenumbrüchen
+    		sudo sed -i 's/\\n/\n/g' "${TORRC}"
+				sleep 30
 			fi
 
 			# Restoring server access authorization
