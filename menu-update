@@ -529,20 +529,23 @@ update_torcfg()
 		REPLACE_STRING="$REPLACE_STRING\n$SNOW_BRIDGE"
 		sudo sed -E -i "s/^## Snowflake .*/$REPLACE_STRING/g" "${TORRC}"
 	fi
-
 	if [ -z $OBFS4_BRIDGE ] ; then (sudo sed -i "s/^Bridge obfs4/#Bridge obfs4" ${TORRC}) 2>/dev/null ; else (printf %s"$OBFS4_BRIDGE\n" | sudo tee -a $TORRC) 2>/dev/null ; fi
 	if [ -z $CLIENTONIONAUTHDIR ] ; then (sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; fi
 	sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
-
+	echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
+	sudo sed -i "/HiddenServiceDir/d" ${TORRC}
+	sudo sed -i "/HiddenServicePort/d" ${TORRC}
 	# Using the Anchor in torrc
 	REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
 	#This is necessary to work with special characters in sed
+	HIDDENSERVICES="$(<<< "$HIDDENSERVICES" sed -e 's`[][\\/.*^$]`\\&`g')"
 	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-	HIDDENSERVICE="$(<<< "$HIDDENSERVICE" sed -e 's`[][\\/.*^$]`\\&`g')"
-	HIDDENSERVICE="\n$HIDDENSERVICE"
+	NEW_STRING="$REPLACE_STRING\n$HIDDENSERVICES"
 	#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
-	sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$NEW_STRING/g" "${TORRC}"
-
+	sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
+	# Konvertieren alle \n zu echten Zeilenumbrüchen
+	sudo sed -i 's/\\n/\n/g' "${TORRC}"
+	sleep 1
 	echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
   echo -e "${RED}[+]${NOCOLOR} Changing .profile if necessary"
