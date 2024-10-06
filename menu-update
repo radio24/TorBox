@@ -769,7 +769,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 "10" "Reset tor and force a change of the permanent entry node" \
 "11" "Remove all tor bridges and use built-in bridges" \
 "12" "Renew the list of excluded slow tor relays" \
-"13" "Restart Nginx, webssh and TFS" \
+"13" "Restart Nginx, webssh, TFS and TCS" \
 "14" "Rerun the \"First Start-up\" script" \
 "15" "Erase all log files" \
 "16" "Time synchronization"  \

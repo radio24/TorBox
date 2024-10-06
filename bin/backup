@@ -52,7 +52,6 @@ CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
-# NEW post-v.0.5.3: Backup the entire directory to preserve also the exlusion files --> SUPPORT NOT YET ADDED TO RESTORE!!!
 RUNDIR="/home/torbox/torbox/run"
 TXT_DIR="/home/torbox/torbox/text"
 
@@ -63,7 +62,7 @@ INPUT=$(cat "${TXT_DIR}/backup-text")
 if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
 	if [ "$exitstatus" = "0" ]; then
-		
+
 		# OBFS4 Bridge Relay data exist?
 		if sudo -u "${TOR_USER}" [ ! -f "${HASHED_FINGERPRINT_DIR}" ]; then
 			OBFS4RELAY=0
