@@ -154,7 +154,11 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 		if [ "$OBFS4RELAY" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR}/fingerprint ${DATA_DIR}/hashed-fingerprint ${DATA_DIR}/keys ${DATA_DIR}/pt_state"; fi
 		if [ "$ONIONSERVICES" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR_OS}" ; fi
 		if [ "$ONIONAUTH" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${CLIENT_ONION_AUTH_DIR}"; fi
-		if [ "$SHAREDFOLDERS" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${WEBSITE_DIR}"; fi
+		if [ "$SHAREDFOLDERS" == "1" ]; then
+			BACKUPSTRING="$BACKUPSTRING ${WEBSITE_DIR}";
+		else
+			sudo find "$WEBSITE_DIR" -type d >${RUNDIR}/directories_list.txt
+		fi
 		clear
 		echo -e "${RED}[+] Start backup...${NOCOLOR}"
 		echo -e "${RED}[+] Calculating size...${NOCOLOR}"
@@ -171,6 +175,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				mkdir $BACKUP_DIR
 			fi
 			(sudo tar -cpzf "$OS_BK_TAR" --absolute-names ${BACKUPSTRING}) 2>/dev/null
+			sudo rm "${RUNDIR}/directories_list.txt"
 			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders" 2>/dev/null)
 			if [ -z "$LINK_EXIST" ]; then
 				echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"

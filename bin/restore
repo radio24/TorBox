@@ -46,7 +46,6 @@ NOCOLOR='\033[0m'
 TOR_DIR="/etc/tor/"
 TORRC="${TOR_DIR}torrc"
 TORRC_RESTORE="restore${TORRC}"
-TOR_USER="debian-tor"
 DATA_DIR_ROOT="/var/lib"
 DATA_DIR="${DATA_DIR_ROOT}/tor"
 DATA_DIR_OS="${DATA_DIR}/services"
@@ -405,7 +404,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
     		sudo sed -i 's/\\n/\n/g' "${TORRC}"
         # Restoring TFS and TCS configuration
         TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
-        TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+         TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
         (sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
         TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
         TCS_STRING="$(<<< "$TCS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
@@ -444,7 +443,19 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				fi
 				echo ""
 				sleep 1
-			fi
+      else
+        if [ -f restore/${RUNDIR}/directories_list.txt ]; then
+          if (whiptail --title "TorBox - RESTORE" --yesno "There were no shared folders backed up. However, we have a list of directories that may be created to ensure that Onion Services is working. This is, for example, needed if a restored shared folder and TFS configuration should work correctly.\n\nDo you want to create these folders (if unsure, choose YES)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+            clear
+            while IFS= read -r FOLDER; do
+              if [ ! -d "$FOLDER" ]; then
+                mkdir -p "$FOLDER"
+                echo -e "${RED}[+] Restoring folder: $FOLDER${NOCOLOR}"
+              fi
+            done < "restore/${RUNDIR}/directories_list.txt"
+          fi
+        fi
+      fi
 
 			# Catch and remove the TFS configuration from the runfile, if no Onion Service and/or shared folders are restored
       TFS_STRING=$(grep -m 1 "^TFS-" "${RUNFILE}")
@@ -454,6 +465,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
         if [ ! -z "$TFS_STRING" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
 					sudo bash $TORBOX_PATH/bin/start_tfs
+          clear
 					sleep 1
 				fi
 			fi
@@ -466,6 +478,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				if [ ! -z "$TCS_STRING" ]; then
 					echo -e "${RED}[+] Starting TCS...${NOCOLOR}"
 					sudo bash $TORBOX_PATH/bin/start_tcs
+          clear
 					sleep 1
 				fi
 			fi
