@@ -404,7 +404,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
     		sudo sed -i 's/\\n/\n/g' "${TORRC}"
         # Restoring TFS and TCS configuration
         TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
-         TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+        TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
         (sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
         TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
         TCS_STRING="$(<<< "$TCS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
