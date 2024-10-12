@@ -54,7 +54,8 @@ HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
 TORBOX_PATH="/home/torbox/torbox"
-RUNFILE="$TORBOX_PATH/run/torbox.run"
+RUNDIR="$TORBOX_PATH/run"
+RUNFILE="$RUNDIR/torbox.run"
 TXT_DIR="$TORBOX_PATH/text"
 CLEARNET_LIST="clearnet-list"
 CLEARNET_LIST_FILE="$TORBOX_PATH/run/$CLEARNET_LIST"
@@ -402,13 +403,32 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
 				# Converts all \n to real line breaks
     		sudo sed -i 's/\\n/\n/g' "${TORRC}"
-        # Restoring TFS and TCS configuration
+
+        # Restoring TFS configuration
         TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
+        #This is necessary to work with special characters in sed
         TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-        (sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
+        TFS_STRING="\n$TFS_STRING"
+        # Using the Anchor in torbox.run
+        REPLACE_STRING=$(grep -m 1 "This will configure the TFS program" ${RUNFILE})
+      	#This is necessary to work with special characters in sed
+      	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+        sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
+
+        # Restoring TFS and TCS configuration
         TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
         TCS_STRING="$(<<< "$TCS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-        (sudo sed -i "s/^TCS-.*/$TCS_STRING/" ${RUNFILE}) 2>/dev/null
+        TCS_STRING="\n$TCS_STRING"
+        # Using the Anchor in torbox.run
+      	REPLACE_STRING=$(grep -m 1 "This will configure the TCS program" ${RUNFILE})
+      	#This is necessary to work with special characters in sed
+      	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+        sudo sed -E -i "s/# This will configure the TCS program.*/$REPLACE_STRING$TCS_STRING/g" "${RUNFILE}"
+
+        # Restoring Nginx configuration
+        echo -e "${RED}[+] Restoring Nginx configuration...${NOCOLOR}"
+        (sudo mv "restore${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2>/dev/null
+        (sudo mv "restore${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2>/dev/null
 				sleep 1
 			fi
 
@@ -436,31 +456,25 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 					(sudo mv "restore${WEBSITE_DIR}/$FOLDER" "${WEBSITE_DIR}") 2>/dev/null
 					(sudo chown torbox:torbox "$WEBSITE_DIR/$FOLDER") 2>/dev/null
 				done
-				if [ "$ONIONSERVICES" == "1" ]; then
-					echo -e "${RED}[+] Restoring Nginx configuration...${NOCOLOR}"
-					(sudo mv "restore${NGINX_DIR}/sites-available" "${NGINX_DIR}"/) 2>/dev/null
-					(sudo mv "restore${NGINX_DIR}/sites-enabled" "${NGINX_DIR}"/) 2>/dev/null
-				fi
 				echo ""
 				sleep 1
-      else
-        if [ -f restore/${RUNDIR}/directories_list.txt ]; then
-          if (whiptail --title "TorBox - RESTORE" --yesno "There were no shared folders backed up. However, we have a list of directories that may be created to ensure that Onion Services is working. This is, for example, needed if a restored shared folder and TFS configuration should work correctly.\n\nDo you want to create these folders (if unsure, choose YES)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-            clear
-            while IFS= read -r FOLDER; do
-              if [ ! -d "$FOLDER" ]; then
-                mkdir -p "$FOLDER"
-                echo -e "${RED}[+] Restoring folder: $FOLDER${NOCOLOR}"
-              fi
-            done < "restore/${RUNDIR}/directories_list.txt"
-          fi
+      elif [ "$SHAREDFOLDERS" == "0" ] && [ "$ONIONSERVICES" = "1" ]; then
+        #statements
+        if [ -f /home/torbox/restore/${RUNDIR}/directories_list.txt ]; then
+          clear
+          while IFS= read -r FOLDER; do
+            if [ ! -d "$FOLDER" ]; then
+              mkdir -p "$FOLDER"
+              echo -e "${RED}[+] Restoring folder: $FOLDER${NOCOLOR}"
+            fi
+          done < "restore/${RUNDIR}/directories_list.txt"
         fi
       fi
 
 			# Catch and remove the TFS configuration from the runfile, if no Onion Service and/or shared folders are restored
       TFS_STRING=$(grep -m 1 "^TFS-" "${RUNFILE}")
       if [ "$ONIONSERVICES" != "1" ] ; then
-        [ ! -z "$TFS_STRING_OLD" ] && sudo sed -E -i "/^TFS-/d" "${RUNFILE}"
+        [ ! -z "$TFS_STRING" ] && sudo sed -E -i "/^TFS-/d" "${RUNFILE}"
 			else
         if [ ! -z "$TFS_STRING" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
@@ -505,6 +519,11 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
       if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then OLD_EXCLUSIONLISTS=1; fi
       if [ -f "restore$CLEARNET_LIST_FILE_OWN" ] || [ -f "restore$VPN_LIST_FILE_OWN" ]; then RESTORE_EXCLUSIONLISTS=1; fi
 			if grep "UNPROTECTED_DOMAIN=1" ${RUNFILE} || grep "UNPROTECTED_DOMAIN=1" "restore${RUNFILE}"; then
+        IPTABLES_LINE=$(sudo iptables-save | grep -m 1 " \-\-match-set " | sed "s/-A //")
+        if [ ! -z "$IPTABLES_LINE" ]; then
+          echo "SUCCESS"
+          stopping_domain_exclusion
+        fi
 				if (whiptail --title "TorBox - RESTORE" --yesno "On the target system and/or on the backed up system, the lists which contain domains to be excluded from tor-routing were/are active.\n\nDo you want to activate domain exclusion on the restored system (NO will delete active lists and deactivate domain exclusion)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					exitstatus=$?
 					clear
@@ -583,25 +602,26 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				  fi
         fi
 			fi
+    fi
 
-			# We don't need the restore directory anymore
-			clear
-			echo -e "${RED}[+] Cleaning...${NOCOLOR}"
-			sudo rm -r /home/torbox/restore
-			echo ""
-			sleep 1
+  	# We don't need the restore directory anymore
+		clear
+		echo -e "${RED}[+] Cleaning...${NOCOLOR}"
+		sudo rm -r /home/torbox/restore
+		echo ""
+		sleep 1
 
-			# Finally, restarting tor
-			echo -e "${RED}[+] Checking if the tor config file is without errors...${NOCOLOR}"
-			sudo $TORBOX_PATH/bin/onion-parser
-			echo " "
-			stty intr q
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue or q to stop... \e[0m'
-			echo ""
-			clear
-			restarting_tor restore
-			stty intr ^c
-		fi
+		# Finally, restarting tor
+		echo -e "${RED}[+] Checking if the tor config file is without errors...${NOCOLOR}"
+		sudo $TORBOX_PATH/bin/onion-parser
+		echo " "
+		stty intr q
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue or q to stop... \e[0m'
+		echo ""
+		clear
+		restarting_tor restore
+		stty intr ^c
 	fi
 fi
 cd $TORBOX_PATH
+exit 0
