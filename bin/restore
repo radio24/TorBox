@@ -338,12 +338,6 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				fi
 			fi
 
-			# Restoring TFS and TCS configuration
-			TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
-			(sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
-			TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
-			(sudo sed -i "s/^TCS-.*/$TCS_STRING/" ${RUNFILE}) 2>/dev/null
-
 			# Configure restored RUNFILE and TORRC
 			deactivating_bridge_relay
 			(sudo sed -i "s/^HiddenServiceDir/#HiddenServiceDir/g" ${TORRC}) 2>/dev/null
@@ -407,8 +401,15 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				NEW_STRING="$REPLACE_STRING\n$HIDDENSERVICES"
 				#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
 				sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
-				# Konvertieren alle \n zu echten Zeilenumbrüchen
+				# Converts all \n to real line breaks
     		sudo sed -i 's/\\n/\n/g' "${TORRC}"
+        # Restoring TFS and TCS configuration
+        TFS_STRING=$(grep "^TFS-" restore${RUNFILE}) 2>/dev/null
+        TFS_STRING="$(<<< "$TFS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+        (sudo sed -i "s/^TFS-.*/$TFS_STRING/" ${RUNFILE}) 2>/dev/null
+        TCS_STRING=$(grep "^TCS-" restore${RUNFILE}) 2>/dev/null
+        TCS_STRING="$(<<< "$TCS_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
+        (sudo sed -i "s/^TCS-.*/$TCS_STRING/" ${RUNFILE}) 2>/dev/null
 				sleep 1
 			fi
 
@@ -446,11 +447,11 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			fi
 
 			# Catch and remove the TFS configuration from the runfile, if no Onion Service and/or shared folders are restored
-			TFS_STRING=$(grep -m 1 "^TFS-" "${RUNFILE}")
-			if [ "$ONIONSERVICES" == "0" ] || [ "$SHAREDFOLDERS" == "0" ]; then
-				[ ! -z "$TFS_STRING" ] && sudo sed -E -i "/^TFS-/d" "${RUNFILE}"
+      TFS_STRING=$(grep -m 1 "^TFS-" "${RUNFILE}")
+      if [ "$ONIONSERVICES" != "1" ] ; then
+        [ ! -z "$TFS_STRING_OLD" ] && sudo sed -E -i "/^TFS-/d" "${RUNFILE}"
 			else
-				if [ ! -z "$TFS_STRING" ]; then
+        if [ ! -z "$TFS_STRING" ]; then
 					echo -e "${RED}[+] Starting TFS...${NOCOLOR}"
 					sudo bash $TORBOX_PATH/bin/start_tfs
 					sleep 1
@@ -459,7 +460,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 
 			# Catch and remove the TCS configuration from the copied backup, if no Onion Service and/or shared folders are restored
 			TCS_STRING=$(grep -m 1 "^TCS-" "${RUNFILE}")
-			if [ "$ONIONSERVICES" == "0" ] || [ "$SHAREDFOLDERS" == "0" ]; then
+			if [ "$ONIONSERVICES" != "1" ] ; then
 				[ ! -z "$TCS_STRING" ] && sudo sed -E -i "/^TCS-/d" "${RUNFILE}"
 			else
 				if [ ! -z "$TCS_STRING" ]; then

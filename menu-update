@@ -543,7 +543,7 @@ update_torcfg()
 	NEW_STRING="$REPLACE_STRING\n$HIDDENSERVICES"
 	#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
 	sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
-	# Konvertieren alle \n zu echten Zeilenumbrüchen
+	# Converts all \n to real line breaks
 	sudo sed -i 's/\\n/\n/g' "${TORRC}"
 	sleep 1
 	echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
