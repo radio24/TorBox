@@ -1,0 +1,29 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+bcrypt = "*"
+click = "*"
+flask = "*"
+flask-socketio = "*"
+flask-restful = "*"
+flask-cors = "*"
+numpy = "*"
+paramiko = "*"
+peewee = "*"
+pip = "*"
+pgpy = "*"
+pytesseract = "*"
+requests = "*"
+stem = "1.8.2"
+tornado = "*"
+urwid = "*"
+
+[dev-packages]
+opencv-python-headless = "*"
+pytest = "*"
+
+[requires]
+python_version = "3.11"

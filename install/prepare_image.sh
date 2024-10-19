@@ -130,12 +130,18 @@ echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
 echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
-# NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+# For RaspberryPi OS based on Debian Bookworm needed
 PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
-if [ ! -f requirements.txt ]; then wget --no-cache https://raw.githubusercontent.com/radio24/TorBox/master/requirements.txt; fi
+cd
+if [ ! -f requirements.txt ]; then
+  sudo pip3 install pipenv
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+  pipenv requirements >requirements.txt
+fi
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
@@ -165,10 +171,26 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
     fi
   fi
 done
+cd torbox
 unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-# the additional network drivers are not installed on a TorBox mini installation
+# Are there any updates in the requirements?
+# How to update Python libraries?
+# IMPORTANT updated Python libraries have to be tested to avoid bad surprises
+# 1. Check the Pipfile --> is the package in the list?
+# 2. Execute: pip lock (this should only be done on a test system not during installation or to prepare an image!)
+# 3. Execute: pipenv requirements >requirements.txt (Important: we do not store this file on GitHub anymore)
+# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+# 5. Check the list of outdated packages: pip list --outdated
+clear
+echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
+echo
+pip list --outdated
+unset REPLY
+echo ""
+read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+# The additional network drivers are not installed on a TorBox mini installation
 if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
   echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"

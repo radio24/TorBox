@@ -657,9 +657,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   clear
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
-  # check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+  # check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp raspberrypi-kernel-headers dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
   # NEW for TorBox mini: raspberrypi-kernel-headers dkms removed
-  check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+  check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   # IMPORTANT tor-geoipdb installs also the tor package
@@ -715,14 +715,18 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   # NEW v.0.5.4: opencv-python-headless hangs when installed with pip
   check_install_packages "python3-opencv"
 
-  # NEW v.0.5.3: New way to install and check Python requirements
+  # Install and check Python requirements
+  # NEW v.0.5.4: Introducing pipenv
   # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
-  #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
+  #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
+  #            Probably obsolet with TorBox v.0.5.4 - do be checked
   cd
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+  sudo pip3 install pipenv
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+  pipenv requirements >requirements.txt
   sudo pip3 install -r requirements.txt
   sleep 5
-
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
   if [ -f requirements.failed ]; then rm requirements.failed; fi

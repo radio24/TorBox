@@ -623,7 +623,7 @@ sleep 5
 check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
 # Installation of standard packages
 # NEW post-v.0.5.3: openssl ca-certificates added
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp python3-stem dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw"
+check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw"
 # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 # IMPORTANT tor-geoipdb installs also the tor package
@@ -692,14 +692,18 @@ fi
 # NEW v.0.5.4: opencv-python-headless hangs when installed with pip
 check_install_packages "python3-opencv"
 
-# NEW v.0.5.3: New way to install and check Python requirements
+# Install and check Python requirements
+# NEW v.0.5.4: Introducing pipenv
 # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
-#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing
+#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
+#            Probably obsolet with TorBox v.0.5.4 - do be checked
 cd
-wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+pip3 install pipenv
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+pipenv requirements >requirements.txt
 pip3 install -r requirements.txt
 sleep 5
-
 clear
 echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
 if [ -f requirements.failed ]; then rm requirements.failed; fi
