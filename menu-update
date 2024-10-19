@@ -607,7 +607,7 @@ update_torbox_menu()
   # Save TACA configuration
   cp --parents torbox/log_check_config.py $TMP_DIR
 	# Save TFS/TCS PID files
-	cp --parents -R torbox/lib/filesharing/pid $TMP_DIR
+	cp --parents -R torbox/lib/fileshare/pid $TMP_DIR
 	cp --parents -R torbox/lib/chatsecure/pid $TMP_DIR
 
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
@@ -642,10 +642,10 @@ update_torbox_menu()
 			sudo mv $TMP_DIR/torbox/log_check_config.py torbox
 		fi
 		# Restore  TFS/TCS PID files
-		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/filesharing/pid/)
+		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/fileshare/pid/)
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
-				cp $TMP_DIR/torbox/lib/filesharing/pid/$TFS_NAME torbox/lib/filesharing/pid/
+				cp $TMP_DIR/torbox/lib/fileshare/pid/$TFS_NAME torbox/lib/fileshare/pid/
 			done
 		fi
 		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/chatsecure/pid/)
@@ -1356,11 +1356,11 @@ case "$CHOICE" in
 	13)
 		clear
 		# shellcheck disable=SC2012
-		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+		TFS_NAME_LIST=$(ls lib/fileshare/pid/ | sed "s/.pid//")
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
 				echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-				PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
+				PID=$(cat lib/fileshare/pid/${TFS_NAME}.pid)
 				(sudo kill $PID) &>/dev/null
 			done
 			echo ""

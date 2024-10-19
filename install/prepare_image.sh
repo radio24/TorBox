@@ -179,7 +179,7 @@ read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 # How to update Python libraries?
 # IMPORTANT updated Python libraries have to be tested to avoid bad surprises
 # 1. Check the Pipfile --> is the package in the list?
-# 2. Execute: pip lock (this should only be done on a test system not during installation or to prepare an image!)
+# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
 # 3. Execute: pipenv requirements >requirements.txt (Important: we do not store this file on GitHub anymore)
 # 4. Execute: sudo pip install -r requirements (this will update outdated packages)
 # 5. Check the list of outdated packages: pip list --outdated

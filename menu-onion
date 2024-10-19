@@ -359,48 +359,32 @@ configure_tfs()
 		echo -e "${RED}[+] You can change the configuration later with menu entry 2.${NOCOLOR}"
 		echo ""
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE_TXT" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE_TXT\" -od $ONION_HOSTNAME -ad 0 -au 0"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME -ad 0 -au 0"
-		fi
+    TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
-		#Start TFS
 		echo -e "${RED}[+] Starting TFS (up- and downloading prohibited)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -od $ONION_HOSTNAME -ad 0 -au 0 &) &>/dev/null
-		else (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME -ad 0 -au 0 &) &>/dev/null
-		fi
+		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
+    if [ ! -f "${TFS_PATH}/.access"]; then printf "${TFS_PATH};x" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};x/' "${TFS_PATH}/.access"; fi
 	elif [ "$allow_ud" == "1" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE_TXT" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE_TXT\" -od $ONION_HOSTNAME -ad 0 -au 1"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME -ad 0 -au 1"
-		fi
+		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
-		#Start TFS
 		echo -e "${RED}[+] Starting TFS (only for uploading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -od $ONION_HOSTNAME -ad 0 -au 1 &) &>/dev/null
-		else (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME -ad 0 -au 1 &) &>/dev/null
-		fi
+		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
+    if [ ! -f "${TFS_PATH}/.access"]; then printf "${TFS_PATH};xw" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xw/' "${TFS_PATH}/.access"; fi
 	elif [ "$allow_ud" == "2" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE_TXT" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE_TXT\" -od $ONION_HOSTNAME -ad 1 -au 0"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME -ad 1 -au 0"
-		fi
+		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
-		# Start TFS
 		echo -e "${RED}[+] Starting TFS (only for downloading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -od $ONION_HOSTNAME -ad 1 -au 0 &) &>/dev/null
-		else (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME -ad 1 -au 0 &) &>/dev/null
-		fi
+		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
+    if [ ! -f "${TFS_PATH}/.access"]; then printf "${TFS_PATH};xr" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xr/' "${TFS_PATH}/.access"; fi
 	elif [ "$allow_ud" == "3" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE_TXT" ]; then TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -m \"$TFS_MESSAGE_TXT\" -od $ONION_HOSTNAME -ad 1 -au 1"
-		else TFS_STRING="\nTFS-$SERVICE_NAME=lib\/filesharing\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME -ad 1 -au 1"
-		fi
+		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
-		#Start TFS
 		echo -e "${RED}[+] Starting TFS (only for up- and downloading)...${NOCOLOR}"
-		if [ ! -z "$TFS_MESSAGE" ]; then (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -m "$TFS_MESSAGE" -od $ONION_HOSTNAME -ad 1 -au 1 &) &>/dev/null
-		else (nohup sudo ./lib/filesharing/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME -ad 1 -au 1 &) &>/dev/null
-		fi
+		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
+    if [ ! -f "${TFS_PATH}/.access"]; then printf "${TFS_PATH};xrw" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xrw/' "${TFS_PATH}/.access"; fi
 	fi
 	#Configure Nginx
 	echo ""
@@ -732,11 +716,11 @@ case "$CHOICE" in
         (sudo sed -i "s/^HiddenServicePort/#HiddenServicePort/g" ${TORRC}) 2>/dev/null
 				if [ ! -z "$HIDDENSERVICENAMES" ]; then echo -e "${RED}[+] Deactivating following Onion Service name(s):\n\n${YELLOW}${HIDDENSERVICENAMES}\n${NOCOLOR}"; fi
 				# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
-				TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+				TFS_NAME_LIST=$(ls lib/fileshare/pid/ | sed "s/.pid//")
 				if [ ! -z "$TFS_NAME_LIST" ]; then
 					for TFS_NAME in $TFS_NAME_LIST; do
 						echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-						PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${TFS_NAME}.pid)
+						PID=$(cat /home/torbox/torbox/lib/fileshare/pid/${TFS_NAME}.pid)
 						(sudo kill $PID) &>/dev/null
 					done
 				fi
@@ -968,7 +952,7 @@ case "$CHOICE" in
 							find_virtport $SERVICE_NAME
               if [ "$exitstatus" = "0" ]; then
 								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
-								(TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)) >/dev/null
+								(TFS_NAME_LIST=$(ls lib/fileshare/pid/$SERVICE_NAME.pid)) >/dev/null
 								(TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)) >/dev/null
 								if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $SERVICE_NAME; fi
 								if [ ! -z "$TCS_NAME_LIST" ]; then stopping_tcs $SERVICE_NAME; fi
@@ -998,10 +982,12 @@ case "$CHOICE" in
                 	sleep 1
                 	echo -e "5"
                 	sleep 1
+                  (sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
                 	echo -e "${RED}[+] Shared folder $WEBSITE_DIR/$SERVICE_NAME is deleted!${NOCOLOR}"
-                	(sudo rm -r $WEBSITE_DIR/$SERVICE_NAME) &>/dev/null
+                  sleep 3
 									stty intr ^c
 									trap
+                  clear
 								fi
               elif [ "$exitstatus" = "1" ]; then
                 echo -e "${RED}[+] Deactivate Onion Service named ${YELLOW}$SERVICE_NAME${NOCOLOR}"
@@ -1011,9 +997,9 @@ case "$CHOICE" in
                 sudo sed -i "s/^$HIDDENSSERVICEPORT_STRING/#$HIDDENSSERVICEPORT_STRING/g" ${TORRC}
 								# This will only kill the TFS/TCS process, but not touch torbox.run and the Nginx configuration for later reactivation
 								echo -e "${RED}[+] Stopping TFS and TCS, if active${NOCOLOR}"
-								TFS_NAME_LIST=$(ls lib/filesharing/pid/$SERVICE_NAME.pid)
+								TFS_NAME_LIST=$(ls lib/fileshare/pid/$SERVICE_NAME.pid)
 								if [ ! -z "$TFS_NAME_LIST" ]; then
-									PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${SERVICE_NAME}.pid)
+									PID=$(cat /home/torbox/torbox/lib/fileshare/pid/${SERVICE_NAME}.pid)
 									(sudo kill $PID) &>/dev/null
 								fi
 								TCS_NAME_LIST=$(ls lib/chatsecure/pid/$SERVICE_NAME.pid)
@@ -1732,7 +1718,7 @@ case "$CHOICE" in
 						clear
 						SERVICE_NAME_LIST=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
             [ -z $SERVICE_NAME_LIST ] && error_no_tfs_running
-						TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/filesharing/tfs ||")
+						TFS_CONFIG_LIST=$(grep "^TFS-" ${RUNFILE} | cut -d "=" -f2- | sed "s|lib/fileshare/tfs ||")
 						service_menu menu "$SERVICE_NAME_LIST"
 						exitstatus=$?
 						if [ "$exitstatus" = "0" ]; then
@@ -1787,9 +1773,9 @@ case "$CHOICE" in
 											3>&1 1>&2 2>&3)
 										fi
 										TFS_MESSAGE=$(whiptail --title "TorBox v.0.5.3 - TorBox's File Sharing capabilities" --inputbox "\nOptionally, a message can be displayed below the \"TorBox File Sharing\" logo. What should that message say? (empty means nothing; \"newline\" can be used):" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
-										sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+										sudo sed -E -i "/^TFS-$SERVICE_NAME=lib\/fileshare\/tfs/d" "${RUNFILE}"
 										clear
-										[ -f "lib/filesharing/pid/$SERVICE_NAME.pid" ] && stopping_tfs $SERVICE_NAME
+										[ -f "lib/fileshare/pid/$SERVICE_NAME.pid" ] && stopping_tfs $SERVICE_NAME
 										configure_tfs "$TFS_MESSAGE"
 										echo ""
 										# This will give ONION_HOSTNAME
@@ -1811,7 +1797,7 @@ case "$CHOICE" in
 						SERVICE_NAME_LIST_001=$(grep "^TFS-" ${RUNFILE} | sed "s/^TFS-//" | cut -d "=" -f1)
 						[ -z "$SERVICE_NAME_LIST_001" ] && error_no_tfs_running
 						clear
-						SERVICE_NAME_LIST_002=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+						SERVICE_NAME_LIST_002=$(ls lib/fileshare/pid/ | sed "s/.pid//")
 						if [ -z "$SERVICE_NAME_LIST_002" ]; then
 							echo -e "${RED}[+] Removing TFS configuration...${NOCOLOR}"
 							(sudo pkill -f "filesharing") &>/dev/null

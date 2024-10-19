@@ -1014,9 +1014,9 @@ stopping_tfs()
 	TFS_NAME_LIST=$1
 	for TFS_NAME in $TFS_NAME_LIST; do
 		echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-		PID=$(cat /home/torbox/torbox/lib/filesharing/pid/${TFS_NAME}.pid)
+		PID=$(cat /home/torbox/torbox/lib/fileshare/pid/${TFS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
-		sudo sed -E -i "/^TFS-$TFS_NAME=lib\/filesharing\/tfs/d" "${RUNFILE}"
+		sudo sed -E -i "/^TFS-$TFS_NAME=lib\/fileshare\/tfs/d" "${RUNFILE}"
 		echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 		find_virtport "${TFS_NAME}"
 		sudo rm "/etc/nginx/sites-enabled/${TFS_NAME}-${VIRTPORT}-onion-filesharing.conf"

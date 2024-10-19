@@ -300,7 +300,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			# Stopping TACA, TFS and TCS because old and new configuration could be different
 			sudo pkill -f "log_check.py"
 			# shellcheck disable=SC2012
-			TFS_NAME_LIST=$(ls $TORBOX_PATH/lib/filesharing/pid/ | sed "s/.pid//")
+			TFS_NAME_LIST=$(ls $TORBOX_PATH/lib/fileshare/pid/ | sed "s/.pid//")
 			if [ ! -z "$TFS_NAME_LIST" ]; then stopping_tfs $TFS_NAME_LIST; fi
 			# shellcheck disable=SC2012
 			TCS_NAME_LIST=$(ls $TORBOX_PATH/lib/chatsecure/pid/ | sed "s/.pid//")

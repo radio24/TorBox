@@ -388,7 +388,7 @@ case "$CHOICE" in
       (sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
       sleep 1
       clear
-      echo -e "${RED}[+] TorBox's automatic counteractions feature is deativated!${NOCOLOR}"
+      echo -e "${RED}[+] TorBox's automatic counteractions feature is deactivated!${NOCOLOR}"
       sleep 5
     fi
     if [ "$LOGCHECK" = "Activate" ]; then

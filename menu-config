@@ -1237,7 +1237,7 @@ case "$CHOICE" in
 			online_check
 			if [ $OCHECK == 1 ]; then
 				sudo pip3 install Click adafruit-python-shell
-				sudo python3 adafruit-pitft.py -u /home/torbox
+				sudo python3 install/adafruit-pitft.py -u /home/torbox
 			else
 				echo -e "${YELLOW}[!] SORRY! - TorBox is not connected with the Internet!${NOCOLOR}"
 				echo -e "${RED}[+] For that reason, we cannot execute this function :(${NOCOLOR}"
