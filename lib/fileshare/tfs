@@ -85,7 +85,7 @@ def run_webserver(instance_name, dev=True):
 
         class TFSApp(BaseApplication):
             def load_config(self):
-                self.cfg.set("bind", f"unix:/tmp/tfs_{instance_name}.sock")
+                self.cfg.set("bind", f"unix:/var/run/tfs_{instance_name}.sock")
                 self.cfg.set("workers", 2)
                 self.cfg.set("loglevel", "error")
                 # self.cfg.set("loglevel", "debug")  # dev
