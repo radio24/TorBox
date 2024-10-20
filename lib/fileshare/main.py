@@ -64,8 +64,11 @@ def upload_files():
     if '..' in upload_path:
         abort(400, {'error': 'Invalid directory specified'})
 
-    # uplod_path must be a subdirectory of DOWNLOADS_PATH
-    upload_path = os.path.join(DOWNLOADS_PATH, upload_path)
+    # upload_path must be a subdirectory of DOWNLOADS_PATH
+    if upload_path == "/":
+        upload_path = DOWNLOADS_PATH
+    else:
+        upload_path = os.path.join(DOWNLOADS_PATH, upload_path)
 
     # Check if the specified directory exists
     if not os.path.exists(upload_path) or not os.path.isdir(upload_path):
