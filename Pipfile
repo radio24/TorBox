@@ -17,6 +17,8 @@ pgpy = "*"
 urwid = "*"
 tornado = "*"
 paramiko = "*"
+flask-compress = "*"
+gunicorn = "*"
 
 [dev-packages]
 opencv-python-headless = "*"
