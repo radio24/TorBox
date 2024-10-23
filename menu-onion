@@ -96,26 +96,6 @@ read_config()
   fi
 }
 
-# This function tests if a onion service exists.
-# Syntax test_service_exists <service_name>
-# Following variables can be used:
-# $ONION_HOSTNAME
-test_service_exists()
-{
-  SERVICE_NAME="${1}"
-  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_OS}/${SERVICE_NAME}/hostname")
-  if [ "${ONION_HOSTNAME}" = "" ]; then
-    clear
-    echo -e "${YELLOW}[!] ERROR: Service does not exist: ${SERVICE_NAME}${NOCOLOR}"
-    echo " "
-    read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-    clear
-		# NEW - TorBox v.0.5.3
-		trap "bash menu-onion; exit 0" EXIT
-    exit 1
-  fi
-}
-
 # This function creates a list of all onione services
 # Syntax create_service_list [<only_with_clients>]
 # [<only_with_clients>] will provide a list with services that have at least one client
@@ -395,8 +375,9 @@ configure_tfs()
 	TARGET=$(cut -d ' ' -f3 <<< $HIDDENSSERVICEPORT)
 	sed -i'' "s|TARGET|${TARGET}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
 	sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
-	sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
-	sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+  sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
+  # NEW - TorBox v.0.5.4: Not necessary with TFS v.2
+  # sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
 	(sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
 	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"

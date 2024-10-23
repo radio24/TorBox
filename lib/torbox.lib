@@ -109,7 +109,7 @@ check_interface_with_internet()
 # settime()
 # Automatically synchronize the time with ntpdate and, if necessary, fall back to manual mode
 # Syntax settime
-# Used predefined variables: RED, WHITE, NOCOLOR
+# Used predefined variables: RED, YELLOW, NOCOLOR
 # Used predefined function: check_interface_with_internet()
 settime()
 {
@@ -483,7 +483,7 @@ restarting_tor()
 }
 
 # connecting_to_VPN()
-# Used predefined variables: RED, WHITE, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
+# Used predefined variables: RED, YELLOW, NOCOLOR, MENU_HEIGHT_15, MENU_WIDTH_REDUX
 # This function connects the TorBox to a VPN
 connecting_to_VPN()
 {
@@ -673,7 +673,7 @@ number_of_snowflake_bridges()
 }
 
 # list_all_obfs4_bridges()
-# Used predefined variables: RED, NOCOLOR, WHITE, GREEN
+# Used predefined variables: RED, NOCOLOR, YELLOW, GREEN
 # Used predefined function: number_of_obfs4_bridges()
 # List all OBFS4 bridges
 list_all_obfs4_bridges()
@@ -761,7 +761,7 @@ list_all_obfs4_bridges()
 }
 
 # list_all_snowflake_bridges()
-# Used predefined variables: RED, NOCOLOR, WHITE, GREEN
+# Used predefined variables: RED, NOCOLOR, YELLOW, GREEN
 # Used predefined function: number_of_snowflake_bridges()
 # List all Snowflake bridges
 list_all_snowflake_bridges()
@@ -966,7 +966,7 @@ activate_snowflake_bridges()
 }
 
 # display_net_reconfiguration_info())
-# Used predefined variables: RED, NOCOLOR, WHITE
+# Used predefined variables: RED, NOCOLOR, YELLOW
 # Displays information before reconfigure the network (only used several times in menu)
 display_net_reconfiguration_info()
 {
@@ -1005,8 +1005,35 @@ find_virtport()
   VIRTPORT=$(cut -d ' ' -f2 <<< $HIDDENSSERVICEPORT)
 }
 
+# test_service_exists(<service_name>)
+# Used predefined variables: YELLOW, NOCOLOR
+# This function tests if a onion service exists.
+# Following variables can be used:
+# $ONION_HOSTNAME
+test_service_exists()
+{
+  SERVICE_NAME="${1}"
+	TOR_USER="debian-tor"
+	DATA_DIR_ROOT="/var/lib"
+	DATA_DIR="${DATA_DIR_ROOT}/tor"
+	DATA_DIR_OS="${DATA_DIR}/services"
+	ONION_HOSTNAME=""
+  ONION_HOSTNAME=$(sudo -u "${TOR_USER}" grep -s ".onion" "${DATA_DIR_OS}/${SERVICE_NAME}/hostname")
+  if [ "${ONION_HOSTNAME}" = "" ]; then
+    clear
+    echo -e "${YELLOW}[!] ERROR: Service does not exist: ${SERVICE_NAME}${NOCOLOR}"
+    echo " "
+    read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+    clear
+		# NEW - TorBox v.0.5.3
+		trap "bash menu-onion; exit 0" EXIT
+    exit 1
+  fi
+}
+
+
 # stopping_tfs(<tfs_name_list>)
-# Used predefined variables: RED, WHITE, NOCOLOR, RUNFILE
+# Used predefined variables: RED, YELLOW, NOCOLOR, RUNFILE
 # Used predefined function: find_virtport(<service_name>)
 # Stops certain TorBox Fils Sharing (TFS) instances
 stopping_tfs()
@@ -1025,7 +1052,7 @@ stopping_tfs()
 }
 
 # stopping_tcs(<tcs_name_list>)
-# Used predefined variables: RED, WHITE, NOCOLOR, RUNFILE
+# Used predefined variables: RED, YELLOW, NOCOLOR, RUNFILE
 # Used predefined function: find_virtport(<service_name>)
 # Stops certain TorBox Chat Secure (TCS) instances
 stopping_tcs()
