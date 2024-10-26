@@ -25,7 +25,7 @@
 # Debian System (Tested with Bookworm).
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step] [--continue_with_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -49,14 +49,18 @@
 # The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
 #
+# The --continue_with_step In case of an aborted installation, this option
+# allows to continue the installation with a certain step, skipping all other
+# steps before.
+#
 # IMPORTANT
 # Start it as root
 #
 ##########################################################
 
 # Table of contents for this script:
-# 1a. Checking for Internet connection
-# 1b. Adjusting time, if needed
+#  0. Checking for Internet connection
+#  1. Adjusting time, if needed
 #  2. Updating the system
 #  3. Installing all necessary packages
 #  4. Installing Tor
@@ -147,7 +151,7 @@ CHECK_URL2="google.com"
 DEFAULT_PASS="CHANGE-IT"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,on_a_cloud,step_by_step -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,on_a_cloud,step_by_step,continue_with_step: -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -161,7 +165,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2024 Patrick Truffer, nyxnor (Contributor)"
-			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]"
+      echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step] [--continue_with_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -172,6 +176,8 @@ while true; do
 			echo "                        : Let select a specific TorBox branch (default: master)"
 			echo "         --on_a_cloud   : Installing on a cloud or as a cloud service"
 			echo "         --step_by_step : Executes the installation step by step"
+      echo "         --continue_with_step"
+      echo "                        : Continue the installation with a certain step"
 			echo ""
 			echo "For more information visit https://www.torbox.ch/ or https://github.com/radio24/TorBox"
 			exit 0
@@ -192,10 +198,18 @@ while true; do
 		;;
 		--on_a_cloud ) ON_A_CLOUD="--on_a_cloud"; shift ;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
+    --continue_with_step )
+      # shellcheck disable=SC2034
+      CONTINUE_WITH_STEP="--continue_with_step"
+      [ ! -z "$2" ] && STEP_NUMBER="$2"
+      shift 2
+    ;;
 		-- ) shift; break ;;
 		* ) break ;;
   esac
 done
+
+[ -z "$STEP_NUMBER" ] && STEP_NUMBER="1"
 
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
@@ -498,7 +512,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation on Debian (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as as root with \"./run_install_debian\" in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--step_by_step : executes the installation step by step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation on Debian (scroll down!)" --scrolltext --no-button "INSTALL" --yes-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON DEBIAN\n\nPlease make sure that you started this script as as root with \"./run_install_debian\" in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--step_by_step : executes the installation step by step.\n--continue_with_step\n  	  	   :continue the installation with a certain step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	clear
 	exit
 fi
@@ -524,811 +538,840 @@ else
 	HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
 fi
 
-# 1. Checking for Internet connection
+# 0. Checking for Internet connection
 clear
-echo -e "${RED}[+] Step 1: Preparing the system: Do we have Internet?${NOCOLOR}"
+echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 
 # NEW v.0.5.3
 re-connect
 
-# 1b. Adjusting time, if needed
-clear
-if [ -f "/etc/timezone" ]; then
-	mv /etc/timezone /etc/timezone.bak
-	(printf "Etc/UTC" | tee /etc/timezone) 2>&1
+if [ "$STEP_NUMBER" -le "1" ]; then
+  # 1. Adjusting time, if needed
+  clear
+  if [ -f "/etc/timezone" ]; then
+	  mv /etc/timezone /etc/timezone.bak
+	  (printf "Etc/UTC" | tee /etc/timezone) 2>&1
+  fi
+  timedatectl set-timezone UTC
+  clear
+  echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
+  echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
+  echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
+  echo
+  echo -e "             Date: ${YELLOW}$(date '+%Y-%m-%d')${NOCOLOR}"
+  echo -e "             Time: ${YELLOW}$(date '+%H:%M')${NOCOLOR}"
+  echo
+  echo -e "${RED}    You can find the correct time here: ${YELLOW}https://time.is/UTC${NOCOLOR}"
+  echo
+  while true
+  do
+	  read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
+	  # The following line is for the prompt to appear on a new line.
+	  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+		  echo
+		  echo
+		  break
+	  fi
+  done
+  if [[ $REPLY =~ ^[Yy]$ ]] ; then
+	  echo ""
+	  read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
+	  echo ""
+	  echo -e "${RED}Please enter the UTC time (HH:MM)${NOCOLOR}"
+	  read -r -p $'You can find the correct time here: https://time.is/UTC: ' TIMESTRING
+	  # Check and set date
+	  if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
+		  echo ""
+		  date -s "$DATESTRING"
+		  echo -e "${RED}[+] Date set successfully!${NOCOLOR}"
+		  if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+			  echo ""
+			  date -s "$TIMESTRING"
+			  echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
+			  sleep 5
+			  clear
+		  else
+			  echo ""
+			  echo -e "${YELLOW}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
+			  echo ""
+			  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			  clear
+		  fi
+	  else
+		  echo ""
+		  echo -e "${YELLOW}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
+		  echo ""
+		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		  clear
+	  fi
+  fi
 fi
-timedatectl set-timezone UTC
-clear
-echo -e "${YELLOW}[!] SYSTEM-TIME CHECK${NOCOLOR}"
-echo -e "${RED}[!] Tor needs a correctly synchronized time.${NOCOLOR}"
-echo -e "${RED}    The system should display the current UTC time:${NOCOLOR}"
-echo
-echo -e "             Date: ${YELLOW}$(date '+%Y-%m-%d')${NOCOLOR}"
-echo -e "             Time: ${YELLOW}$(date '+%H:%M')${NOCOLOR}"
-echo
-echo -e "${RED}    You can find the correct time here: ${YELLOW}https://time.is/UTC${NOCOLOR}"
-echo
-while true
-do
-	read -r -p $'\e[1;31m    Do you want to adjust the system time [Y/n]? -> \e[0m'
-	# The following line is for the prompt to appear on a new line.
-	if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-		echo
-		echo
-		break
-	fi
-done
-if [[ $REPLY =~ ^[Yy]$ ]] ; then
-	echo ""
-	read -r -p $'\e[1;31mPlease enter the date (YYYY-MM-DD): \e[0m' DATESTRING
-	echo ""
-	echo -e "${RED}Please enter the UTC time (HH:MM)${NOCOLOR}"
-	read -r -p $'You can find the correct time here: https://time.is/UTC: ' TIMESTRING
-	# Check and set date
-	if [[ $DATESTRING =~ ^[1-2]{1}[0-9]{3}-[0-9]{2}-[0-9]{2}$ ]]; then
-		echo ""
-		date -s "$DATESTRING"
-		echo -e "${RED}[+] Date set successfully!${NOCOLOR}"
-		if [[ $TIMESTRING =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
-			echo ""
-			date -s "$TIMESTRING"
-			echo -e "${RED}[+] Time set successfully!${NOCOLOR}"
-			sleep 5
-			clear
-		else
-			echo ""
-			echo -e "${YELLOW}[!] INVALIDE TIME FORMAT!${NOCOLOR}"
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		fi
+
+if [ "$STEP_NUMBER" -le "2" ]; then
+  # 2. Updating the system
+  clear
+  echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
+  # NEW v.0.5.3: Using backport for go
+  if grep "^# deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then sed -i "s'# deb http://deb.debian.org/debian bullseye-backports main'deb http://deb.debian.org/debian bullseye-backports main'g" /etc/apt/sources.list ; fi
+  apt-get -y update
+  apt-get -y dist-upgrade
+  apt-get -y clean
+  apt-get -y autoclean
+  apt-get -y autoremove
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "3" ]; then
+  # 3. Installing all necessary packages
+  clear
+  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+  # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
+  # NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
+  check_install_packages "resolvconf"
+  sleep 3
+  (printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
+  sleep 5
+  check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
+  # Installation of standard packages
+  # NEW post-v.0.5.3: openssl ca-certificates added
+  check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw"
+  # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+  check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
+  # IMPORTANT tor-geoipdb installs also the tor package
+  check_install_packages "tor-geoipdb"
+  systemctl stop tor
+  systemctl mask tor
+  # Both tor services have to be masked to block outgoing tor connections
+  systemctl mask tor@default.service
+  # NEW post-v.0.5.3: Added
+  # An old version of easy-rsa was available by default in some openvpn packages
+  if [[ -d /etc/openvpn/easy-rsa/ ]]; then
+	  rm -rf /etc/openvpn/easy-rsa/
+  fi
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  fi
+
+  #Install wiringpi
+  clear
+  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+  echo ""
+  echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
+  echo ""
+  cd
+  git clone $WIRINGPI_USED
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ]; then
+	  cd WiringPi
+	  ./build
+	  cd
+	  rm -r WiringPi
+	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		  echo ""
+		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		  clear
+	  fi
+  else
+	  echo ""
+	  echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
+	  echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
+	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  fi
+
+  # Additional installations for Python
+  clear
+  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+  echo ""
+  echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
+  ln /usr/bin/python3 /usr/bin/python
+  echo -e "${RED}[+]         Installing ${YELLOW}Python modules${NOCOLOR}"
+  echo ""
+
+  # NEW v.0.5.3: For Debian 12 needed
+  PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
+  if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
+    rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
+  fi
+
+  # NEW v.0.5.4: opencv-python-headless hangs when installed with pip
+  check_install_packages "python3-opencv"
+
+  # Install and check Python requirements
+  # NEW v.0.5.4: Introducing pipenv
+  # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
+  #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
+  #            Probably obsolet with TorBox v.0.5.4 - do be checked
+  cd
+  pip3 install pipenv
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+  pipenv requirements >requirements.txt
+  pip3 install -r requirements.txt
+  sleep 5
+  clear
+  echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
+  if [ -f requirements.failed ]; then rm requirements.failed; fi
+  REPLY="Y"
+  while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
+	  REPLY=""
+	  readarray -t REQUIREMENTS < requirements.txt
+	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
+		  if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+  	  echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
+		  if [ -z "$VERSION" ]; then
+			  # shellcheck disable=SC2059
+			  (printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
+		  fi
+	  done
+	  if [ -f requirements.failed ]; then
+		  echo ""
+		  echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
+		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
+		  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
+			  if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
+				  pip3 install -r requirements.failed
+				  sleep 5
+				  rm requirements.failed
+				  unset REQUIREMENTS
+				  clear
+			  fi
+		  fi
+	  fi
+  done
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  fi
+
+  # Additional installation for go
+  clear
+  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
+  echo ""
+  echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
+  echo ""
+
+  # NEW v.0.5.3: New way to download the current version of go
+  if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+  elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+  else PLATFORM="linux-armv6l"
+  fi
+
+  # Fetch the filename of the latest go version
+  GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+  wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+  DLCHECK=$?
+
+  # NEW v.0.5.3: if the download failed, install the package from the distribution
+  if [ "$DLCHECK" != "0" ] ; then
+	  echo ""
+	  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	  echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
+	  echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	  echo
+	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		  echo ""
+		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		  clear
+	  else
+		  sleep 10
+	  fi
+	  re-connect
+	  if grep "^deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then
+		  apt-get -y -t bullseye-backports install golang
+	  else
+		  apt-get -y install golang
+		  GO_PROGRAM="/usr/local/go/bin/go"
+		  if [ -f $GO_PROGRAM ]; then
+			  GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		  else
+			  GO_PROGRAM=go
+			  #This can lead to command not found - ignore it
+			  GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
+		  fi
+		  if [ "$GO_VERSION_NR" -lt "17" ]; then
+			  echo ""
+			  echo -e "${YELLOW}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
+			  echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
+			  echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
+			  echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
+			  echo ""
+			  exit 1
+	  	fi
+	  fi
+  else
+	  tar -C /usr/local -xzvf $GO_FILENAME
+	  rm $GO_FILENAME
+  fi
+
+  # NEW v.0.5.3: what if .profile doesn't exist?
+  if [ -f ".profile" ]; then
+	  if ! grep "Added by TorBox (001)" .profile ; then
+		  printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+	  fi
+  else
+	  printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
+  fi
+  export PATH=$PATH:/usr/local/go/bin
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+
+if [ "$STEP_NUMBER" -le "4" ]; then
+  # 4. Installing tor
+  clear
+  echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
+  select_and_install_tor
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+ 	 clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "5" ]; then
+  # 5. Configuring Tor with its pluggable transports
+  clear
+  echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
+  cd
+  git clone $OBFS4PROXY_USED
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ]; then
+	  export GO111MODULE="on"
+	  cd obfs4proxy
+	  # NEW v.0.5.3 - with or without the path
+	  if [ -f /usr/local/go/bin/go ]; then
+		  GO_PROGRAM=/usr/local/go/bin/go
+	  else
+		  GO_PROGRAM=go
+	  fi
+	  $GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
+	  cp ./obfs4proxy/obfs4proxy /usr/bin
+	  cd
+	  rm -rf obfs4proxy
+	  rm -rf go*
+  else
+	  echo ""
+	  echo -e "${YELLOW}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
+	  echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
+	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	  echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  check_install_packages obfs4proxy
+	  clear
+  fi
+  setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+  (mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
+  (chmod a+x /usr/share/tor/geoip*) 2>/dev/null
+  # Debian specific
+  (chmod a+x /usr/local/share/tor/geoip*) 2>/dev/null
+  # Copy not moving!
+  (cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
+  # Debian specific
+  (cp /usr/local/share/tor/geoip* /usr/bin) 2>/dev/null
+  sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+  sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "6" ]; then
+  # 6. Install Snowflake
+  clear
+  echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
+  echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
+  cd
+  git clone $SNOWFLAKE_USED
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ]; then
+	  export GO111MODULE="on"
+	  cd snowflake/proxy
+	  $GO_PROGRAM get
+	  $GO_PROGRAM build
+	  cp proxy /usr/bin/snowflake-proxy
+	  cd
+	  cd snowflake/client
+	  $GO_PROGRAM get
+	  $GO_PROGRAM build
+	  cp client /usr/bin/snowflake-client
+	  cd
+	  rm -rf snowflake
+	  rm -rf go*
+  else
+	  echo ""
+	  echo -e "${YELLOW}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
+	  echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
+	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  fi
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "7" ]; then
+  # 7. Again checking connectivity
+  clear
+  echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
+  # NEW v.0.5.3
+  re-connect
+fi
+
+if [ "$STEP_NUMBER" -le "8" ]; then
+  # 8. Downloading and installing the latest version of TorBox
+  sleep 10
+  clear
+  echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
+  echo -e "${RED}[+]         Selected branch ${YELLOW}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
+  cd
+  wget $TORBOXURL
+  DLCHECK=$?
+  if [ $DLCHECK -eq 0 ] ; then
+	  echo -e "${RED}[+]         TorBox' menu Successfully downloaded... ${NOCOLOR}"
+	  echo -e "${RED}[+]         Unpacking TorBox menu...${NOCOLOR}"
+	  unzip $TORBOXMENU_BRANCHNAME.zip
+	  echo ""
+	  echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
+	  (rm -r torbox) 2>/dev/null
+	  echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
+	  mv TorBox-$TORBOXMENU_BRANCHNAME torbox
+	  echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
+	  (rm -r $TORBOXMENU_BRANCHNAME.zip) 2>/dev/null
+	  echo ""
+  else
+	  echo ""
+	  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TORBOX!${NOCOLOR}"
+	  echo -e "${RED}[+] The TorBox repositories may be blocked or offline!${NOCOLOR}"
+	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
+	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  exit 0
+  fi
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "9" ]; then
+  # 9. Installing all configuration files
+  clear
+  cd torbox
+  echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
+  echo ""
+  (cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
+  cp etc/default/hostapd /etc/default/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
+  (cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
+  cp etc/default/isc-dhcp-server /etc/default/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
+  (cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
+  cp etc/dhcp/dhclient.conf /etc/dhcp/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
+  (cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
+  cp etc/dhcp/dhcpd.conf /etc/dhcp/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
+  (cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
+  cp etc/hostapd/hostapd.conf /etc/hostapd/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
+  (cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
+  if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/iptables.ipv4-cloud.nat /etc/iptables.ipv4.nat
+  else cp etc/iptables.ipv4.nat /etc/; fi
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
+  (cp /etc/motd /etc/motd.bak) 2>/dev/null
+  cp etc/motd /etc/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
+
+  # NEW v.0.5.4: TorBox on a Cloud - there are two scenario
+  # 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
+  # 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
+  #     but disable with Predictable Network Interface Name in /etc/network/interfaces
+
+  if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+	  NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
+	  if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
+		  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		  cp etc/network/interfaces /etc/network/
+		  echo
+		  echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
+		  echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		  echo
+		  sleep 10
+	  else
+		  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		  sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
+		  echo
+		  echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
+		  echo -e "${YELLOW}            However, we changed $NIC into eth0!"
+		  echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+		  echo
+		  sleep 10
+	  fi
+  else
+	  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	  cp etc/network/interfaces /etc/network/
+	  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+  fi
+
+  # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
+  # Added for TorBox on a Cloud -- has to be tested with a common Debian image
+  echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+  if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+	  GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+	  if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+		  if [ "$GRUB_CONFIG" == "" ]; then
+			  GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+			  #This is necessary to work with special characters in sed
+			  GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			  sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		  else
+			  GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+			  #This is necessary to work with special characters in sed
+			  GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			  sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		  fi
+	  fi
+  else
+	  (printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+  fi
+  update-grub
+  # With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.
+  # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
+  cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
+  (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
+  cp etc/rc.local /etc/rc.local
+  chmod a+x /etc/rc.local
+  systemctl daemon-reload
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
+  if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
+    cp /etc/sysctl.conf /etc/sysctl.conf.bak
+    sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+    echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
+  fi
+  # NEW v.0.5.4: Cloudspecific torrc
+  (cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
+  if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/tor/torrc-cloud /etc/tor/torrc
+  else cp etc/tor/torrc /etc/tor/ ; fi
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
+  echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
+  sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+  (cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
+  cp etc/nginx/nginx.conf /etc/nginx/
+  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
+  echo ""
+
+  #Back to the home directory
+  cd
+  # NEW v.0.5.3: what if .profile doesn't exist?
+  if [ -f ".profile" ]; then
+	  if ! grep "Added by TorBox (002)" .profile ; then
+		  printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+	  fi
+  else
+	  printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
+  fi
+
+  echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
+  (mkdir /var/lib/tor/services) 2>/dev/null
+  chown -R debian-tor:debian-tor /var/lib/tor/services
+  chmod -R go-rwx /var/lib/tor/services
+  (mkdir /var/lib/tor/onion_auth) 2>/dev/null
+  chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
+  chmod -R go-rwx /var/lib/tor/onion_auth
+
+  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  echo ""
+	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  clear
+  else
+	  sleep 10
+  fi
+fi
+
+if [ "$STEP_NUMBER" -le "10" ]; then
+	# 10. Disabling Bluetooth
+	clear
+	echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
+	if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  	if [ -f "/boot/firmware/config.txt" ] ; then
+    	if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
+      	printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/firmware/config.txt
+    	fi
+  	fi
 	else
-		echo ""
-		echo -e "${YELLOW}[!] INVALIDE DATE FORMAT!${NOCOLOR}"
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
+  	if [ -f "/boot/config.txt" ] ; then
+    	if ! grep "# Added by TorBox" /boot/config.txt ; then
+      	printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/config.txt
+    	fi
+  	fi
 	fi
-fi
-
-# 2. Updating the system
-clear
-echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
-# NEW v.0.5.3: Using backport for go
-if grep "^# deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then sed -i "s'# deb http://deb.debian.org/debian bullseye-backports main'deb http://deb.debian.org/debian bullseye-backports main'g" /etc/apt/sources.list ; fi
-apt-get -y update
-apt-get -y dist-upgrade
-apt-get -y clean
-apt-get -y autoclean
-apt-get -y autoremove
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 3. Installing all necessary packages
-clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-# Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
-# NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
-check_install_packages "resolvconf"
-sleep 3
-(printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
-sleep 5
-check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
-# Installation of standard packages
-# NEW post-v.0.5.3: openssl ca-certificates added
-check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw"
-# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
-check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
-# IMPORTANT tor-geoipdb installs also the tor package
-check_install_packages "tor-geoipdb"
-systemctl stop tor
-systemctl mask tor
-# Both tor services have to be masked to block outgoing tor connections
-systemctl mask tor@default.service
-# NEW post-v.0.5.3: Added
-# An old version of easy-rsa was available by default in some openvpn packages
-if [[ -d /etc/openvpn/easy-rsa/ ]]; then
-	rm -rf /etc/openvpn/easy-rsa/
-fi
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-fi
-
-#Install wiringpi
-clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-echo ""
-echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-echo ""
-cd
-git clone $WIRINGPI_USED
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ]; then
-	cd WiringPi
-	./build
-	cd
-	rm -r WiringPi
+	rfkill block bluetooth
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
+	else
+		sleep 10
 	fi
-else
-	echo ""
-	echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
-	echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+fi
+
+if [ "$STEP_NUMBER" -le "11" ]; then
+	# 11. Configure the system services
 	clear
-fi
+	echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
+	systemctl daemon-reload
+	if [ "$TORBOX_MINI" == "--torbox_mini" ] || [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+  	systemctl stop hostapd
+  	systemctl disable hostapd
+  	systemctl mask hostapd
+	else
+  	systemctl unmask hostapd
+  	systemctl enable hostapd
+  	systemctl start hostapd
+	fi
+	systemctl unmask isc-dhcp-server
+	systemctl enable isc-dhcp-server
+	systemctl start isc-dhcp-server
+	systemctl stop tor
+	systemctl mask tor
+	# Both tor services have to be masked to block outgoing tor connections
+	systemctl mask tor@default.service
+	systemctl unmask ssh
+	systemctl enable ssh
+	systemctl start ssh
+	# Debian specific
+	systemctl unmask resolvconf
+	systemctl enable resolvconf
+	systemctl start resolvconf
+	# NEW v.0.5.3: This doesn't work - rc-local will be still masked
+	#systemctl unmask rc-local
+	#systemctl enable rc-local
+	echo ""
+	echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
+	systemctl stop rsyslog
+	systemctl disable rsyslog
+	systemctl mask rsyslog
+	systemctl stop systemd-journald-dev-log.socket
+	systemctl stop systemd-journald-audit.socket
+	systemctl stop systemd-journald.socket
+	systemctl stop systemd-journald.service
+	systemctl mask systemd-journald.service
+	echo""
 
-# Additional installations for Python
-clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-echo ""
-echo -e "${RED}[+]         Link \"python\" to \"python3\"${NOCOLOR}"
-ln /usr/bin/python3 /usr/bin/python
-echo -e "${RED}[+]         Installing ${YELLOW}Python modules${NOCOLOR}"
-echo ""
+	# Make Nginx ready for Webssh and Onion Services
+	echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
+	systemctl stop nginx
+	(rm /etc/nginx/sites-enabled/default) 2>/dev/null
+	(rm /etc/nginx/sites-available/default) 2>/dev/null
+	(rm -r /var/www/html) 2>/dev/null
+	# This is necessary for Nginx / TFS
+	(chown torbox:torbox /var/www) 2>/dev/null
+	# Configuring webssh
+	cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+	ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+	# HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
+	(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
+	#systemctl start nginx
+	systemctl daemon-reload
 
-# NEW v.0.5.3: For Debian 12 needed
-PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
-if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
-  rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
-fi
-
-# NEW v.0.5.4: opencv-python-headless hangs when installed with pip
-check_install_packages "python3-opencv"
-
-# Install and check Python requirements
-# NEW v.0.5.4: Introducing pipenv
-# Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
-#            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
-#            Probably obsolet with TorBox v.0.5.4 - do be checked
-cd
-pip3 install pipenv
-wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-pipenv requirements >requirements.txt
-pip3 install -r requirements.txt
-sleep 5
-clear
-echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
-if [ -f requirements.failed ]; then rm requirements.failed; fi
-REPLY="Y"
-while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
-	REPLY=""
-	readarray -t REQUIREMENTS < requirements.txt
-	for REQUIREMENT in "${REQUIREMENTS[@]}"; do
-		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
-  	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
-		if [ -z "$VERSION" ]; then
-			# shellcheck disable=SC2059
-			(printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
-		fi
-	done
-	if [ -f requirements.failed ]; then
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
-		read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
-		if [[ $REPLY =~ ^[YyNn]$ ]] ; then
-			if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-				pip3 install -r requirements.failed
-				sleep 5
-				rm requirements.failed
-				unset REQUIREMENTS
-				clear
-			fi
-		fi
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
 	fi
-done
+fi
 
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+if [ "$STEP_NUMBER" -le "12" ]; then
+	# 12. Updating run/torbox.run
 	clear
+	echo -e "${RED}[+] Step 12: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
+	echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
+	sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
+	sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
+	sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
+	sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
+	sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+	# NEW v.0.5.4: Specifc configurations for an installation on a cloud
+	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
+	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
+		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+		sed -i "s/=random/=permanent/" ${RUNFILE}
+	else
+		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+	fi
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+ 		echo ""
+ 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+ 		clear
+	else
+ 		sleep 10
+	fi
 fi
 
-# Additional installation for go
-clear
-echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-echo ""
-echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
-echo ""
-
-# NEW v.0.5.3: New way to download the current version of go
-if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
-else PLATFORM="linux-armv6l"
-fi
-
-# Fetch the filename of the latest go version
-GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
-wget --no-cache "$GO_DL_PATH$GO_FILENAME"
-DLCHECK=$?
-
-# NEW v.0.5.3: if the download failed, install the package from the distribution
-if [ "$DLCHECK" != "0" ] ; then
+if [ "$STEP_NUMBER" -le "13" ]; then
+	# 13. Adding and implementing the user torbox
+	clear
+	echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
+	echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
+	echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
 	echo ""
-	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
-	echo -e "${RED}[+] The Go repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+	echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+	echo -e "${YELLOW}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
+	echo -e "${YELLOW}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
+	echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+	echo ""
+	adduser --disabled-password --gecos "" torbox
+	echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
+	adduser torbox
+	adduser torbox netdev
+	# This is necessary for Nginx / TFS
+	(chown torbox:torbox /var/www) 2>/dev/null
+	mv /root/* /home/torbox/
+	(mv /root/.profile /home/torbox/) 2>/dev/null
+	mkdir /home/torbox/openvpn
+	(rm .bash_history) 2>/dev/null
+	chown -R torbox:torbox /home/torbox/
+	if !  grep "# Added by TorBox" /etc/sudoers ; then
+  	printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" |  tee -a /etc/sudoers
+  	(visudo -c) 2>/dev/null
+	fi
+	cd /home/torbox/
+
+	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+		echo ""
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		clear
+	else
+		sleep 10
+	fi
+fi
+
+if [ "$STEP_NUMBER" -le "14" ]; then
+	# 14. Setting/changing root password
+	clear
+	echo -e "${RED}[+] Step 14: Setting/changing the root password...${NOCOLOR}"
+	echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
+	echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
 	echo
+	echo -e "${YELLOW}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
+	echo -e "${YELLOW}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
+	echo ""
+	passwd
+fi
+
+if [ "$STEP_NUMBER" -le "15" ]; then
+	# 15. Finishing, cleaning and booting
+	sleep 10
+	clear
+	echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
+	echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
+	echo ""
+	echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+	echo -e "${YELLOW}    After this last step, TorBox will restart.${NOCOLOR}"
+	echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
+	echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
+	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
+	echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
+	echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
+	echo ""
+	read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
+	clear
+	echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
+	(rm -r WiringPi) 2>/dev/null
+	# Find the bigest space waster packages: dpigs -H
+	apt-get -y --purge remove exim4 exim4-base exim4-config exim4-daemon-light
+	apt-get -y remove libgl1-mesa-dri texlive* lmodern
+	apt-get -y clean
+	apt-get -y autoclean
+	apt-get -y autoremove
+	echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
+	timedatectl set-timezone UTC
+	echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
+	echo " "
+	# shellcheck disable=SC2044
+	for logs in $(find /var/log -type f); do
+  	echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
+  	rm $logs
+  	sleep 1
+	done
+	echo -e "${RED}[+]${NOCOLOR} Erasing History..."
+	#.bash_history is already deleted
+	history -c
+	# To start TACA notices.log has to be present
+	(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
+	(chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
+	echo ""
+	echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
+	# NEW v.0.5.3
+	# This has to be at the end to avoid unnecessary error messages
+	(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+	systemctl restart systemd-hostnamed
+	if grep 127.0.1.1.* /etc/hosts ; then
+		(sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
+	else
+		(sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
+	fi
+	#
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+		read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
 		clear
 	else
 		sleep 10
 	fi
-	re-connect
-	if grep "^deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then
-		apt-get -y -t bullseye-backports install golang
-	else
-		apt-get -y install golang
-		GO_PROGRAM="/usr/local/go/bin/go"
-		if [ -f $GO_PROGRAM ]; then
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		else
-			GO_PROGRAM=go
-			#This can lead to command not found - ignore it
-			GO_VERSION_NR=$($GO_PROGRAM version | cut -d ' ' -f3 | cut -d '.' -f2)
-		fi
-		if [ "$GO_VERSION_NR" -lt "17" ]; then
-			echo ""
-			echo -e "${YELLOW}[!] TOO LOW GO VERSION NUMBER${NOCOLOR}"
-			echo -e "${RED}[+] At least go version 1.17 is needed to compile pluggable ${NOCOLOR}"
-			echo -e "${RED}[+] transports. We tried several ways to get a newer go version, ${NOCOLOR}"
-			echo -e "${RED}[+] but failed. Please, try it again later or install go manually. ${NOCOLOR}"
-			echo ""
-			exit 1
-		fi
-	fi
-else
-	tar -C /usr/local -xzvf $GO_FILENAME
-	rm $GO_FILENAME
+	echo -e "${RED}[+] Rebooting...${NOCOLOR}"
+	sync
+	sleep 3
+	reboot
 fi
-
-# NEW v.0.5.3: what if .profile doesn't exist?
-if [ -f ".profile" ]; then
-	if ! grep "Added by TorBox (001)" .profile ; then
-		printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-	fi
-else
-	printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
-fi
-export PATH=$PATH:/usr/local/go/bin
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 4. Installing tor
-clear
-echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
-select_and_install_tor
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 5. Configuring Tor with its pluggable transports
-clear
-echo -e "${RED}[+] Step 5: Configuring Tor with its pluggable transports....${NOCOLOR}"
-cd
-git clone $OBFS4PROXY_USED
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ]; then
-	export GO111MODULE="on"
-	cd obfs4proxy
-	# NEW v.0.5.3 - with or without the path
-	if [ -f /usr/local/go/bin/go ]; then
-		GO_PROGRAM=/usr/local/go/bin/go
-	else
-		GO_PROGRAM=go
-	fi
-	$GO_PROGRAM build -o obfs4proxy/obfs4proxy ./obfs4proxy
-	cp ./obfs4proxy/obfs4proxy /usr/bin
-	cd
-	rm -rf obfs4proxy
-	rm -rf go*
-else
-	echo ""
-	echo -e "${YELLOW}[!] COULDN'T CLONE THE OBFS4PROXY REPOSITORY!${NOCOLOR}"
-	echo -e "${RED}[+] The obfs4proxy repository may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo -e "${RED}[+] In the meantime, we install the distribution package, which may be outdated.${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	check_install_packages obfs4proxy
-	clear
-fi
-setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
-(mv /usr/local/bin/tor* /usr/bin) 2>/dev/null
-(chmod a+x /usr/share/tor/geoip*) 2>/dev/null
-# Debian specific
-(chmod a+x /usr/local/share/tor/geoip*) 2>/dev/null
-# Copy not moving!
-(cp /usr/share/tor/geoip* /usr/bin) 2>/dev/null
-# Debian specific
-(cp /usr/local/share/tor/geoip* /usr/bin) 2>/dev/null
-sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
-sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 6. Install Snowflake
-clear
-echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
-echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
-cd
-git clone $SNOWFLAKE_USED
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ]; then
-	export GO111MODULE="on"
-	cd snowflake/proxy
-	$GO_PROGRAM get
-	$GO_PROGRAM build
-	cp proxy /usr/bin/snowflake-proxy
-	cd
-	cd snowflake/client
-	$GO_PROGRAM get
-	$GO_PROGRAM build
-	cp client /usr/bin/snowflake-client
-	cd
-	rm -rf snowflake
-	rm -rf go*
-else
-	echo ""
-	echo -e "${YELLOW}[!] COULDN'T CLONE THE SNOWFLAKE REPOSITORY!${NOCOLOR}"
-	echo -e "${RED}[+] The Snowflake repository may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-fi
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 7. Again checking connectivity
-clear
-echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
-# NEW v.0.5.3
-re-connect
-
-# 8. Downloading and installing the latest version of TorBox
-sleep 10
-clear
-echo -e "${RED}[+] Step 8: Downloading and installing the latest version of TorBox...${NOCOLOR}"
-echo -e "${RED}[+]         Selected branch ${YELLOW}$TORBOXMENU_BRANCHNAME${RED}...${NOCOLOR}"
-cd
-wget $TORBOXURL
-DLCHECK=$?
-if [ $DLCHECK -eq 0 ] ; then
-	echo -e "${RED}[+]         TorBox' menu Successfully downloaded... ${NOCOLOR}"
-	echo -e "${RED}[+]         Unpacking TorBox menu...${NOCOLOR}"
-	unzip $TORBOXMENU_BRANCHNAME.zip
-	echo ""
-	echo -e "${RED}[+]         Removing the old one...${NOCOLOR}"
-	(rm -r torbox) 2>/dev/null
-	echo -e "${RED}[+]         Moving the new one...${NOCOLOR}"
-	mv TorBox-$TORBOXMENU_BRANCHNAME torbox
-	echo -e "${RED}[+]         Cleaning up...${NOCOLOR}"
-	(rm -r $TORBOXMENU_BRANCHNAME.zip) 2>/dev/null
-	echo ""
-else
-	echo ""
-	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TORBOX!${NOCOLOR}"
-	echo -e "${RED}[+] The TorBox repositories may be blocked or offline!${NOCOLOR}"
-	echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	exit 0
-fi
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 9. Installing all configuration files
-clear
-cd torbox
-echo -e "${RED}[+] Step 9: Installing all configuration files....${NOCOLOR}"
-echo ""
-(cp /etc/default/hostapd /etc/default/hostapd.bak) 2>/dev/null
-cp etc/default/hostapd /etc/default/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/hostapd -- backup done"
-(cp /etc/default/isc-dhcp-server /etc/default/isc-dhcp-server.bak) 2>/dev/null
-cp etc/default/isc-dhcp-server /etc/default/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/default/isc-dhcp-server -- backup done"
-(cp /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.bak) 2>/dev/null
-cp etc/dhcp/dhclient.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
-(cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
-cp etc/dhcp/dhcpd.conf /etc/dhcp/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
-(cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
-cp etc/hostapd/hostapd.conf /etc/hostapd/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
-(cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/iptables.ipv4-cloud.nat /etc/iptables.ipv4.nat
-else cp etc/iptables.ipv4.nat /etc/; fi
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
-(cp /etc/motd /etc/motd.bak) 2>/dev/null
-cp etc/motd /etc/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
-
-# NEW v.0.5.4: TorBox on a Cloud - there are two scenario
-# 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
-# 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
-#     but disable with Predictable Network Interface Name in /etc/network/interfaces
-
-if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-	if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
-		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-		cp etc/network/interfaces /etc/network/
-		echo
-		echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
-		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
-		echo
-		sleep 10
-	else
-		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-		sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
-		echo
-		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
-		echo -e "${YELLOW}            However, we changed $NIC into eth0!"
-		echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
-		echo
-		sleep 10
-	fi
-else
-	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-	cp etc/network/interfaces /etc/network/
-	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
-fi
-
-# NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
-# Added for TorBox on a Cloud -- has to be tested with a common Debian image
-echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
-if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
-	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
-	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
-		if [ "$GRUB_CONFIG" == "" ]; then
-			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
-			#This is necessary to work with special characters in sed
-			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-		else
-			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
-			#This is necessary to work with special characters in sed
-			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-		fi
-	fi
-else
-	(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
-fi
-update-grub
-# With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.
-# URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
-cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
-(cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-cp etc/rc.local /etc/rc.local
-chmod a+x /etc/rc.local
-systemctl daemon-reload
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
-if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
-  cp /etc/sysctl.conf /etc/sysctl.conf.bak
-  sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
-fi
-# NEW v.0.5.4: Cloudspecific torrc
-(cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
-if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/tor/torrc-cloud /etc/tor/torrc
-else cp etc/tor/torrc /etc/tor/ ; fi
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/tor/torrc -- backup done"
-echo -e "${RED}[+]${NOCOLOR}         Activating IP forwarding"
-sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-(cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak) 2>/dev/null
-cp etc/nginx/nginx.conf /etc/nginx/
-echo -e "${RED}[+]${NOCOLOR}         Copied /etc/nginx/nginx.conf -- backup done"
-echo ""
-
-#Back to the home directory
-cd
-# NEW v.0.5.3: what if .profile doesn't exist?
-if [ -f ".profile" ]; then
-	if ! grep "Added by TorBox (002)" .profile ; then
-		printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
-	fi
-else
-	printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
-fi
-
-echo -e "${RED}[+]          Make tor ready for Onion Services${NOCOLOR}"
-(mkdir /var/lib/tor/services) 2>/dev/null
-chown -R debian-tor:debian-tor /var/lib/tor/services
-chmod -R go-rwx /var/lib/tor/services
-(mkdir /var/lib/tor/onion_auth) 2>/dev/null
-chown -R debian-tor:debian-tor /var/lib/tor/onion_auth
-chmod -R go-rwx /var/lib/tor/onion_auth
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 10. Disabling Bluetooth
-clear
-echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
-if [ "$DEBIAN_VERSION" -gt "11" ]; then
-  if [ -f "/boot/firmware/config.txt" ] ; then
-    if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-      printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/firmware/config.txt
-    fi
-  fi
-else
-  if [ -f "/boot/config.txt" ] ; then
-    if ! grep "# Added by TorBox" /boot/config.txt ; then
-      printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/config.txt
-    fi
-  fi
-fi
-rfkill block bluetooth
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 11. Configure the system services
-clear
-echo -e "${RED}[+] Step 11: Configure the system services...${NOCOLOR}"
-systemctl daemon-reload
-if [ "$TORBOX_MINI" == "--torbox_mini" ] || [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-  systemctl stop hostapd
-  systemctl disable hostapd
-  systemctl mask hostapd
-else
-  systemctl unmask hostapd
-  systemctl enable hostapd
-  systemctl start hostapd
-fi
-systemctl unmask isc-dhcp-server
-systemctl enable isc-dhcp-server
-systemctl start isc-dhcp-server
-systemctl stop tor
-systemctl mask tor
-# Both tor services have to be masked to block outgoing tor connections
-systemctl mask tor@default.service
-systemctl unmask ssh
-systemctl enable ssh
-systemctl start ssh
-# Debian specific
-systemctl unmask resolvconf
-systemctl enable resolvconf
-systemctl start resolvconf
-# NEW v.0.5.3: This doesn't work - rc-local will be still masked
-#systemctl unmask rc-local
-#systemctl enable rc-local
-echo ""
-echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
-systemctl stop rsyslog
-systemctl disable rsyslog
-systemctl mask rsyslog
-systemctl stop systemd-journald-dev-log.socket
-systemctl stop systemd-journald-audit.socket
-systemctl stop systemd-journald.socket
-systemctl stop systemd-journald.service
-systemctl mask systemd-journald.service
-echo""
-
-# Make Nginx ready for Webssh and Onion Services
-echo -e "${RED}[+]          Make Nginx ready for Webssh and Onion Services${NOCOLOR}"
-systemctl stop nginx
-(rm /etc/nginx/sites-enabled/default) 2>/dev/null
-(rm /etc/nginx/sites-available/default) 2>/dev/null
-(rm -r /var/www/html) 2>/dev/null
-# This is necessary for Nginx / TFS
-(chown torbox:torbox /var/www) 2>/dev/null
-# Configuring webssh
-cp torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-# HAS TO BE TESTED: https://unix.stackexchange.com/questions/164866/nginx-leaves-old-socket
-(sed "s|STOP_SCHEDULE=\"${STOP_SCHEDULE:-QUIT/5/TERM/5/KILL/5}\"|STOP_SCHEDULE=\"${STOP_SCHEDULE:-TERM/5/KILL/5}\"|g" /etc/init.d/nginx) 2>/dev/null
-#systemctl start nginx
-systemctl daemon-reload
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 12. Updating run/torbox.run
-clear
-echo -e "${RED}[+] Step 12: Configuring TorBox and update run/torbox.run...${NOCOLOR}"
-echo -e "${RED}[+]          Update run/torbox.run${NOCOLOR}"
-sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
-sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
-sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
-# NEW v.0.5.4: Specifc configurations for an installation on a cloud
-# Important: Randomizing MAC addresses could prevent the assignement of an IP address
-if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
-	sed -i "s/=random/=permanent/" ${RUNFILE}
-else
-	sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
-	sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
-fi
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
- echo ""
- read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
- clear
-else
- sleep 10
-fi
-
-# 13. Adding and implementing the user torbox
-clear
-echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
-echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
-echo -e "${RED}[+]          password \"$DEFAULT_PASS\" is created.  ${NOCOLOR}"
-echo ""
-echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
-echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${YELLOW}    and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
-echo -e "${YELLOW}    Please, change the default passwords as soon as possible!!${NOCOLOR}"
-echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-echo ""
-adduser --disabled-password --gecos "" torbox
-echo -e "$DEFAULT_PASS\n$DEFAULT_PASS\n" |  passwd torbox
-adduser torbox
-adduser torbox netdev
-# This is necessary for Nginx / TFS
-(chown torbox:torbox /var/www) 2>/dev/null
-mv /root/* /home/torbox/
-(mv /root/.profile /home/torbox/) 2>/dev/null
-mkdir /home/torbox/openvpn
-(rm .bash_history) 2>/dev/null
-chown -R torbox:torbox /home/torbox/
-if !  grep "# Added by TorBox" /etc/sudoers ; then
-  printf "\n# Added by TorBox\ntorbox  ALL=(ALL) NOPASSWD: ALL\n" |  tee -a /etc/sudoers
-  (visudo -c) 2>/dev/null
-fi
-cd /home/torbox/
-
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	clear
-else
-	sleep 10
-fi
-
-# 14. Setting/changing root password
-clear
-echo -e "${RED}[+] Step 14: Setting/changing the root password...${NOCOLOR}"
-echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
-echo -e "${RED}[+]          Usually, you don't need to log into the system as root.${NOCOLOR}"
-echo
-echo -e "${YELLOW}             AGAIN: To use TorBox, you have to log in with \"torbox\"${NOCOLOR}"
-echo -e "${YELLOW}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
-echo ""
-passwd
-
-# 15. Finishing, cleaning and booting
-sleep 10
-clear
-echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
-echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
-echo ""
-echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
-echo -e "${YELLOW}    After this last step, TorBox will restart.${NOCOLOR}"
-echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
-echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
-echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
-echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
-echo ""
-read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
-clear
-echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-(rm -r WiringPi) 2>/dev/null
-# Find the bigest space waster packages: dpigs -H
-apt-get -y --purge remove exim4 exim4-base exim4-config exim4-daemon-light
-apt-get -y remove libgl1-mesa-dri texlive* lmodern
-apt-get -y clean
-apt-get -y autoclean
-apt-get -y autoremove
-echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
-timedatectl set-timezone UTC
-echo -e "${RED}[+] Erasing ALL LOG-files...${NOCOLOR}"
-echo " "
-# shellcheck disable=SC2044
-for logs in $(find /var/log -type f); do
-  echo -e "${RED}[+]${NOCOLOR} Erasing $logs"
-  rm $logs
-  sleep 1
-done
-echo -e "${RED}[+]${NOCOLOR} Erasing History..."
-#.bash_history is already deleted
-history -c
-# To start TACA notices.log has to be present
-(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
-(chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
-echo ""
-echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-# NEW v.0.5.3
-# This has to be at the end to avoid unnecessary error messages
-(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-systemctl restart systemd-hostnamed
-if grep 127.0.1.1.* /etc/hosts ; then
-	(sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
-else
-	(sed -i "s/^::1/127.0.1.1\t$HOSTNAME\n::1/g" /etc/hosts) 2>/dev/null
-fi
-#
-if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	echo ""
-	read -n 1 -s -r -p $'\e[1;31mPlease press any key to REBOOT... \e[0m'
-	clear
-else
-	sleep 10
-fi
-echo -e "${RED}[+] Rebooting...${NOCOLOR}"
-sync
-sleep 3
-reboot
