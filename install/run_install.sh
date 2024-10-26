@@ -51,6 +51,8 @@
 # as a cloud service. This will enable/disable some features.
 #
 # The --torbox_mini option creates the TorBox mini on a Raspberry Pi Zero 2 W.
+# Important: # Before the script can be started with this option, the Raspberry
+# Pi OS lite 32-bit must be installed on the SD card running in the Raspberry Pi Zero 2 W.
 #
 # The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
