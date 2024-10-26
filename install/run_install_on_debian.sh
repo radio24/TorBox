@@ -838,6 +838,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   else
 	  sleep 10
   fi
+fi
 
 if [ "$STEP_NUMBER" -le "4" ]; then
   # 4. Installing tor
