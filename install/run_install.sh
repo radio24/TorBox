@@ -684,9 +684,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw rustc"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw rustc raspberrypi-kernel-headers dkms"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -740,8 +740,10 @@ if [ "$STEP_NUMBER" -le "4" ]; then
     sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
   fi
 
-  # NEW v.0.5.4: opencv-python-headless hangs when installed with pip
-  check_install_packages "python3-opencv"
+	# NEW v.0.5.4: Some Python libraries have to be installed manually
+	# opencv-python-headless hangs when installed with pip
+	# python3-cryptography needs rust, which waste 1 Gb of space.
+	check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
 
   # Install and check Python requirements
   # NEW v.0.5.4: Introducing pipenv

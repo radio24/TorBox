@@ -683,7 +683,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 	check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
 	# Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw rustc"
+	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw"
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 	# IMPORTANT tor-geoipdb installs also the tor package
@@ -750,8 +750,10 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 	fi
 
-	# NEW v.0.5.4: opencv-python-headless hangs when installed with pip
-	check_install_packages "python3-opencv"
+	# NEW v.0.5.4: Some Python libraries have to be installed manually
+	# opencv-python-headless hangs when installed with pip
+	# python3-cryptography needs rust, which waste 1 Gb of space.
+	check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
 
 	# Install and check Python requirements
 	# NEW v.0.5.4: Introducing pipenv
