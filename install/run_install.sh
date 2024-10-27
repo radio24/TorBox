@@ -684,9 +684,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-    check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw rustc"
   else
-    check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr python3-pip python3-pil imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw rustc raspberrypi-kernel-headers dkms"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -761,9 +761,13 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   REPLY="Y"
   while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	  REPLY=""
-	  readarray -t REQUIREMENTS < requirements.txt
+		# NEW v.0.5.4
+		# readarray -t REQUIREMENTS < requirements.txt
+		# We have to skipp the first line
+		readarray -t REQUIREMENTS < <(tail -n +2 requirements.txt)
 	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
-		  if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+			# NEW v.0.5.4
+			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(cut -d ";" -f 0 | sed s"/==.*//" <<< "$REQUIREMENT"); fi
 		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
   	  echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		  if [ -z "$VERSION" ]; then
