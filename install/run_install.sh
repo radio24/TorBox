@@ -663,14 +663,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   # 3. Updating the system
   clear
   echo -e "${RED}[+] Step 3: Updating the system...${NOCOLOR}"
-	# NEW v.0.5.3: Using backport for go
-	if [ $DEBIAN_VERSION == "12" ]; then
-		if ! grep "^deb [ arch=armhf ] http://deb.debian.org/debian bookworm-backports main" /etc/apt/sources.list ; then (printf "deb http://deb.debian.org/debian bookworm-backports main\n" | tee -a /etc/apt/sources.list) >/dev/null 2>&1 ; fi
-	fi
 	sudo apt-get -y update
-	curl -O http://http.us.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2023.4_all.deb
-	sudo dpkg -i debian-archive-keyring_2023.4_all.deb
-	rm debian-archive-keyring_2023.4_all.deb
   sudo apt-get -y dist-upgrade
   sudo apt-get -y clean
   sudo apt-get -y autoclean
@@ -750,12 +743,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
 	# opencv-python-headless hangs when installed with pip
 	# python3-cryptography needs rust, which waste 1 Gb of space.
-	if [ $DEBIAN_VERSION == "12" ]; then
-		check_install_packages "python3-pip python3-pil python3-opencv"
-		sudo apt-get -y -t bookworm-backports install python3-cryptography
-	else
-		check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
-	fi
+	check_install_packages "python3-pip python3-pil python3-opencv"
+	# check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
+
   # Install and check Python requirements
   # NEW v.0.5.4: Introducing pipenv
   # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
@@ -763,7 +753,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   #            Probably obsolet with TorBox v.0.5.4 - do be checked
   cd
   sudo pip3 install pipenv
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
   wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
   pipenv requirements >requirements.txt
   sudo pip3 install -r requirements.txt
