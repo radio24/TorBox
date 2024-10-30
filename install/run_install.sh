@@ -752,9 +752,11 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
   #            Probably obsolet with TorBox v.0.5.4 - do be checked
   cd
-  sudo pip3 install pipenv
+	sudo pip install --upgrade pip
+	sudo pip3 install pipenv
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
   wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+	pipenv lock -v
   pipenv requirements >requirements.txt
   sudo pip3 install -r requirements.txt
   sleep 5
