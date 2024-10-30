@@ -4,14 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-bcrypt = "*"
+bcrypt = "3.2.2"
 click = "*"
 eventlet = "*"
 flask = "*"
 flask-socketio = "*"
 flask-restful = "*"
 flask-compress = "*"
-flask-cors = "*"
+flask-cors = "4.0.2"
 gunicorn = "*"
 numpy = "*"
 paramiko = "*"
