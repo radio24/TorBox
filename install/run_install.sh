@@ -764,7 +764,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	sudo sed -i "s/^pillow==/#pillow==/g" requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
-  sudo pip3 install -r requirements.txt
+  pip3 install -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
@@ -792,7 +792,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 		  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			  if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-				  sudo pip3 install -r requirements.failed
+				  pip3 install -r requirements.failed
 				  sleep 5
 				  rm requirements.failed
 				  unset REQUIREMENTS
