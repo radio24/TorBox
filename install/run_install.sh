@@ -743,9 +743,8 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
 	# opencv-python-headless hangs when installed with pip
 	# python3-cryptography needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv"
+	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt"
 	# check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
-
   # Install and check Python requirements
   # NEW v.0.5.4: Introducing pipenv
   # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
@@ -754,11 +753,18 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   cd
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-	pipenv lock -v
-  pipenv requirements >requirements.txt
-  sudo pip3 install -r requirements.txt
+	pip install --only-binary=:all: cryptography
+	pip install --only-binary=:all: pillow
+	# Don't try to create Pipfile.lock during the installation process. It is too slow and complicated!
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+	#pipenv lock -v
+	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+	pipenv requirements >requirements.txt
+	sudo sed -i "s/^cryptography==/#cryptography==/g" requirements.txt
+	sudo sed -i "s/^pillow==/#pillow==/g" requirements.txt
+	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+  pip3 install -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
@@ -786,7 +792,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 		  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			  if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-				  sudo pip3 install -r requirements.failed
+				  pip3 install -r requirements.failed
 				  sleep 5
 				  rm requirements.failed
 				  unset REQUIREMENTS
