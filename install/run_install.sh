@@ -154,8 +154,7 @@ TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 #TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
 
 # Snowflake repositories
-# Official: https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake/
-SNOWFLAKE_ORIGINAL_WEB="https://git.torproject.org/pluggable-transports/snowflake.git"
+SNOWFLAKE_ORIGINAL_WEB="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake"
 # Only until version 2.6.1
 SNOWFLAKE_PREVIOUS_USED="https://github.com/syphyr/snowflake"
 # Version 2.8.0+
@@ -820,10 +819,14 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
   echo ""
 
-  # NEW v.0.5.3: New way to download the current version of go
-  if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-  else PLATFORM="linux-armv6l"
-  fi
+	# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5)
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then PLATFORM="linux-armv6l";
+	else
+		if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+		elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+		else PLATFORM="linux-armv6l"
+  	fi
+	fi
 
   # Fetch the filename of the latest go version
   GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)

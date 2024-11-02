@@ -860,10 +860,13 @@ case "$CHOICE" in
 			clear
 			echo ""
 			echo -e "${RED}[+] Reinstalling ${YELLOW}go${NOCOLOR}"
-			# NEW v.0.5.3: New way to download the current version of go
-			if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-			elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
-			else PLATFORM="linux-armv6l"
+			# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5)
+			if [ "$TORBOX_MINI" == "--torbox_mini" ]; then PLATFORM="linux-armv6l";
+			else
+				if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+				elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+				else PLATFORM="linux-armv6l"
+				fi
 			fi
 			# Fetch the filename of the latest go version
 			GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
