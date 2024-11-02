@@ -773,7 +773,7 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 "11" "Remove all tor bridges and use built-in bridges" \
 "12" "Renew the list of excluded slow tor relays" \
 "13" "Restart Nginx, webssh, TFS and TCS" \
-"14" "Rerun the \"First Start-up\" script" \
+"14" "Rerun the \"First Start-up\" Dialogue" \
 "15" "Erase all log files" \
 "16" "Time synchronization"  \
 "17" "Just fixing and cleaning" \
@@ -1403,13 +1403,13 @@ case "$CHOICE" in
 		sleep 5
 	;;
 
-	# Rerun the "First Start-up" script
+	# Rerun the "First Start-up" Dialogue
 	14)
   	clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
-			first_use 1 menu-update
+			./first_use 1 menu-update
 		else
-			first_use 3 menu-update
+			./first_use 3 menu-update
 		fi
 	;;
 

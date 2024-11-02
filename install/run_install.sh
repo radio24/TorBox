@@ -752,7 +752,6 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# opencv-python-headless and numpy hangs when installed with pip
 	# bcrypt needs rust, which waste 1 Gb of space.
 	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
-	# check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
   cd
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
@@ -768,20 +767,20 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
-	sudo sed -i "/^pillow==.*/g" requirements.txt
+	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	sudo pip3 install -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
-  if [ -f requirements.failed ]; then rm requirements.failed; fi
+	if [ -f "requirements.failed" ]; then rm requirements.failed; fi
   REPLY="Y"
   while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	  REPLY=""
 		# NEW v.0.5.4
-		# readarray -t REQUIREMENTS < requirements.txt
-		# We have to skipp the first line
-		readarray -t REQUIREMENTS < <(tail -n +2 requirements.txt)
+		# grep -v '^\s*$ filters out empty lines or lines containing only whitespace.
+		# tail -n +2 will skipp the first line
+		readarray -t REQUIREMENTS < <(grep -v '^\s*$' requirements.txt | tail -n +2)
 	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 			# NEW v.0.5.4
 			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
@@ -792,7 +791,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 			  (printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
 		  fi
 	  done
-	  if [ -f requirements.failed ]; then
+		if [ -f "requirements.failed" ]; then
 		  echo ""
 		  echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
 		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'

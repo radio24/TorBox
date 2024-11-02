@@ -707,32 +707,50 @@ if [ "$STEP_NUMBER" -le "3" ]; then
     rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
   fi
 
+	# Install and check Python requirements
+	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
+	# 1. Check the Pipfile --> is the package in the list?
+	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
+	# 3. Execute: pipenv requirements >requirements.txt
+	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+	# 5. Check the list of outdated packages: pip list --outdated
+	# Remark: we install all Python libraries globally because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless hangs when installed with pip
-	# python3-cryptography needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
-
-  # Install and check Python requirements
-  # NEW v.0.5.4: Introducing pipenv
-  # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
-  #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
-  #            Probably obsolet with TorBox v.0.5.4 - do be checked
-  cd
-  pip3 install pipenv
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-  pipenv requirements >requirements.txt
+	# opencv-python-headless and numpy hangs when installed with pip
+	# bcrypt needs rust, which waste 1 Gb of space.
+	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	cd
+	pip install --upgrade pip
+	pip3 install pipenv
+	# bcrypt needs rust, which waste 1 Gb of space, but the python3- package is too old
+	pip install --only-binary=:all: cryptography
+	pip install --only-binary=:all: pillow
+	# Don't try to create Pipfile.lock during the installation process. It is too slow and complicated!
+	# The best way is to build it on a cloud installation
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+	#pipenv lock -v
+	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+	pipenv requirements >requirements.txt
+	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	sed -i "/^cryptography==.*/d" requirements.txt
+	sed -i "/^pillow==.*/d" requirements.txt
+	sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
   pip3 install -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
-  if [ -f requirements.failed ]; then rm requirements.failed; fi
+	if [ -f "requirements.failed" ]; then rm requirements.failed; fi
   REPLY="Y"
   while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	  REPLY=""
-	  readarray -t REQUIREMENTS < requirements.txt
+		# NEW v.0.5.4
+		# grep -v '^\s*$ filters out empty lines or lines containing only whitespace.
+		# tail -n +2 will skipp the first line
+		readarray -t REQUIREMENTS < <(grep -v '^\s*$' requirements.txt | tail -n +2)
 	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
-		  if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
+			# NEW v.0.5.4
+			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
 		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
   	  echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		  if [ -z "$VERSION" ]; then
@@ -740,7 +758,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 			  (printf "$REQUIREMENT\n" | tee -a requirements.failed) >/dev/null 2>&1
 		  fi
 	  done
-	  if [ -f requirements.failed ]; then
+		if [ -f "requirements.failed" ]; then
 		  echo ""
 		  echo -e "${YELLOW}Not all required Python modules could be installed!${NOCOLOR}"
 		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
