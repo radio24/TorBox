@@ -158,14 +158,13 @@ if [ ! -f requirements.txt ]; then
 	sudo sed -i "/^pillow==.*/g" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 fi
-# NEW v.0.5.4
-# grep -v '^\s*$ filters out empty lines or lines containing only whitespace.
-# tail -n +2 will skipp the first line
-readarray -t REQUIREMENTS < <(grep -v '^\s*$' requirements.txt | tail -n +2)
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
-  unset REPLY
-  readarray -t REQUIREMENTS < requirements.txt
+	REPLY=""
+	# NEW v.0.5.4
+	# grep -v '^\s*$ filters out empty lines or lines containing only whitespace.
+	# tail -n +2 will skipp the first line
+	readarray -t REQUIREMENTS < <(grep -v '^\s*$' requirements.txt | tail -n +2)
   for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		# NEW v.0.5.4
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
