@@ -137,10 +137,26 @@ if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
 fi
 cd
 if [ ! -f requirements.txt ]; then
-  sudo pip3 install pipenv
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-  wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+	# Has to be the same as in run_install.sh
+	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
+	# 1. Check the Pipfile --> is the package in the list?
+	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
+	# 3. Execute: pipenv requirements >requirements.txt
+	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+	# 5. Check the list of outdated packages: pip list --outdated
+	sudo apt-get -y install python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy
+	sudo pip install --upgrade pip
+	sudo pip3 install pipenv
+	sudo pip install --only-binary=:all: cryptography
+	sudo pip install --only-binary=:all: pillow
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
   pipenv requirements >requirements.txt
+	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pillow==.*/g" requirements.txt
+	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 fi
 if [ -f requirements.failed ]; then rm requirements.failed; fi
 REPLY="Y"
@@ -176,21 +192,16 @@ unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 # Are there any updates in the requirements?
-# How to update Python libraries?
-# IMPORTANT updated Python libraries have to be tested to avoid bad surprises
-# 1. Check the Pipfile --> is the package in the list?
-# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
-# 3. Execute: pipenv requirements >requirements.txt
-# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
-# 5. Check the list of outdated packages: pip list --outdated
 clear
 echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
+echo -e "${RED}It doesn't mean that something is wrong!${NOCOLOR}"
+echo -e "${RED}Updated Python libraries have to be tested to avoid bad surprises!${NOCOLOR}"
 echo
 pip list --outdated
 unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-# The additional network drivers are not installed on a TorBox mini installation
+# The additional network drivers are not installed on a TorBox mini or TorBox on a Cloud installation
 if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
   echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"

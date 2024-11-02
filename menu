@@ -267,7 +267,7 @@ trap
 sudo sed -i "s/^EXITID=.*/${EXITID}/" ${RUNFILE}
 clear
 if [ -z "$INTERNETSELECTION" ]; then
-  if [ $FRESHINSTALLED -gt 0 ]; then bin/first_use; fi
+  if [ $FRESHINSTALLED -gt 0 ]; then first_use; fi
 fi
 read_config
 do_we_use_bridges

@@ -740,31 +740,37 @@ if [ "$STEP_NUMBER" -le "4" ]; then
     sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
   fi
 
+	# Install and check Python requirements
+	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
+	# 1. Check the Pipfile --> is the package in the list?
+	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
+	# 3. Execute: pipenv requirements >requirements.txt
+	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+	# 5. Check the list of outdated packages: pip list --outdated
+	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless hangs when installed with pip
-	# python3-cryptography needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt"
+	# opencv-python-headless and numpy hangs when installed with pip
+	# bcrypt needs rust, which waste 1 Gb of space.
+	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
 	# check_install_packages "python3-pip python3-pil python3-opencv python3-cryptography"
-  # Install and check Python requirements
-  # NEW v.0.5.4: Introducing pipenv
-  # Important: mechanize 0.4.8 cannot correctly be installed under Raspberry Pi OS
-  #            the folder /usr/local/lib/python3.9/distpackages/mechanize is missing.
-  #            Probably obsolet with TorBox v.0.5.4 - do be checked
   cd
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
-	pip install --only-binary=:all: cryptography
-	pip install --only-binary=:all: pillow
+	# bcrypt needs rust, which waste 1 Gb of space, but the python3- package is too old
+	sudo pip install --only-binary=:all: cryptography
+	sudo pip install --only-binary=:all: pillow
 	# Don't try to create Pipfile.lock during the installation process. It is too slow and complicated!
+	# The best way is to build it on a cloud installation
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
 	#pipenv lock -v
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
-	sudo sed -i "s/^cryptography==/#cryptography==/g" requirements.txt
-	sudo sed -i "s/^pillow==/#pillow==/g" requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
-  pip3 install -r requirements.txt
+	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pillow==.*/g" requirements.txt
+	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	sudo pip3 install -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
@@ -792,7 +798,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 		  read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 		  if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 			  if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-				  pip3 install -r requirements.failed
+					sudo pip3 install -r requirements.failed
 				  sleep 5
 				  rm requirements.failed
 				  unset REQUIREMENTS
@@ -1286,20 +1292,28 @@ if [ "$STEP_NUMBER" -le "14" ]; then
         CMDLINE_STRING_NEW="$CMDLINE_STRING,dwc2,g_ether"
         sudo sed -i "s|${CMDLINE_STRING}|${CMDLINE_STRING_NEW}|g" ${CMDLINEFILE}
       else
-        sudo sed -i "s|modules-load=dwc2,g_ether rootwait|rootwait|g" ${CMDLINEFILE}
+        sudo sed -i "s|rootwait|modules-load=dwc2,g_ether rootwait|g" ${CMDLINEFILE}
       fi
     fi
   	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
     	(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
   	fi
+		clear
+		echo -e "${RED}[+] Step 14: TorBox is configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		else
+			sleep 10
+		fi
 	fi
 fi
 
 if [ "$STEP_NUMBER" -le "15" ]; then
   # 15. Finishing, cleaning and booting
-  echo ""
-  echo ""
-  echo -e "${RED}[+] Step 14: We are finishing and cleaning up now!${NOCOLOR}"
+	clear
+	echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"
   echo -e "${RED}[+]          This will erase all log files and cleaning up the system.${NOCOLOR}"
   echo ""
   echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"

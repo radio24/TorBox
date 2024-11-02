@@ -299,7 +299,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       	if [ ! -z "$CHOICE" ]; then
         	if [[ $CHOICE -gt 0  && $CHOICE -lt 7 ]]; then
           	CHOICE=$((CHOICE+4))
-          	./menu $CHOICE
+						./menu $CHOICE
         	fi
       	fi
 				# Ask for TACA support (not on a cloud)
