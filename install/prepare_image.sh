@@ -158,6 +158,7 @@ if [ ! -f requirements.txt ]; then
 	sudo sed -i "/^pillow==.*/g" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 fi
+if [ -f "requirements.failed" ]; then rm requirements.failed; fi
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	REPLY=""
@@ -194,22 +195,24 @@ cd torbox
 unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+
 # Are there any updates in the requirements?
-clear
-echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
-echo -e "${RED}It doesn't mean that something is wrong!${NOCOLOR}"
-echo -e "${RED}Updated Python libraries have to be tested to avoid bad surprises!${NOCOLOR}"
-echo
-pip list --outdated
-unset REPLY
-echo ""
-read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+#clear
+#echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
+#echo -e "${RED}It doesn't mean that something is wrong!${NOCOLOR}"
+#echo -e "${RED}Updated Python libraries have to be tested to avoid bad surprises!${NOCOLOR}"
+#echo
+#pip list --outdated
+#unset REPLY
+#echo ""
+#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+
 # The additional network drivers are not installed on a TorBox mini or TorBox on a Cloud installation
 if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
   echo -e "${YELLOW}The following additional network drivers are installed:${NOCOLOR}"
   dkms status
-  echo
+	echo ""
   echo -e "${RED}Does it look right?${NOCOLOR}"
   read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
   if [[ $REPLY =~ ^[YyNn]$ ]] ; then
@@ -224,7 +227,6 @@ if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 fi
 clear
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
-echo
 echo -e "${RED}[+] Setting the correct time${NOCOLOR}"
 printf "Setting the correct time zone: "
 if [ -f "/etc/timezone" ]; then
@@ -233,29 +235,35 @@ if [ -f "/etc/timezone" ]; then
   printf " "
 fi
 sudo timedatectl set-timezone UTC
-echo
+echo ""
+echo ""
 settime
 clear
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE${NOCOLOR}"
 echo
 echo -e "${RED}[+] Deactivating TorBox's automatic counteractions feature...${NOCOLOR}"
 sudo pkill -f "log_check.py"
+echo ""
 echo -e "${RED}[+] Stopping and masking tor${NOCOLOR}"
 sudo systemctl stop tor
 sudo systemctl mask tor
 sudo systemctl mask tor@default.service
+echo ""
 echo -e "${RED}[+] Deactivating all bridges${NOCOLOR}"
 deactivate_obfs4_bridges NORESTART
 sudo sed -i "s/^ClientTransportPlugin snowflake /#ClientTransportPlugin snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
 sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}
+echo ""
 echo -e "${RED}[+] Deactivating the bridge relay${NOCOLOR}"
 deactivating_bridge_relay
+echo ""
 echo -e "${RED}[+] Removing permanently OBFS4 Bridge Relay data${NOCOLOR}"
 (sudo rm -r /var/lib/tor/keys) 2>/dev/null
 (sudo rm /var/lib/tor/fingerprint) 2>/dev/null
 (sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
 (sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
+echo ""
 echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node ${NOCOLOR}"
 (sudo rm -r /var/lib/tor/cached-certs) 2>/dev/null
 (sudo rm -r /var/lib/tor/cached-consensus) 2>/dev/null
@@ -267,9 +275,12 @@ echo -e "${RED}[+] Resetting Tor and force a change of the permanent entry node 
 (sudo rm -r /var/lib/tor/diff-cache) 2>/dev/null
 (sudo rm -r /var/lib/tor/lock) 2>/dev/null
 (sudo rm -r /var/lib/tor/state) 2>/dev/null
+echo ""
 echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
+(sudo rm /etc/wpa_supplicant/wpa_supplicant.conf) 2>/dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan0.conf) 2>/dev/null
 (sudo rm /etc/wpa_supplicant/wpa_supplicant-wlan1.conf) 2>/dev/null
+echo ""
 echo -e "${RED}[+] Copy default iptables.ipv4.nat${NOCOLOR}"
 if [ "$TORBOX_MINI" -eq "1" ]; then
   sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
@@ -277,6 +288,7 @@ else
   sudo cp etc/iptables.ipv4.nat /etc/
 fi
 if [ "$ON_A_CLOUD" -eq "0" ]; then
+	echo ""
 	echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
 	if [ "$TORBOX_MINI" -eq "1" ]; then
   	sudo cp etc/network/interfaces.mini /etc/network/interfaces
@@ -284,9 +296,11 @@ if [ "$ON_A_CLOUD" -eq "0" ]; then
   	sudo cp etc/network/interfaces /etc/network/
 	fi
 fi
+echo ""
 echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
 # Find the bigest space waster packages: dpigs -H
 (sudo apt-get -y --purge remove libgl1-mesa-dri texlive* lmodern) 2>/dev/null
+echo ""
 echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
@@ -295,10 +309,12 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 sudo systemctl daemon-reload
+echo ""
 echo -e "${RED}[+] Setting log level to low...${NOCOLOR}"
 LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
 LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
 if [ "$LOG_STATUS_001" != "inactive" ] || [ "$LOG_STATUS_002" != "inactive" ]; then
+	echo ""
   echo -e "${RED}[+] Stopping logging now...${NOCOLOR}"
   sudo systemctl stop rsyslog
   sudo systemctl stop systemd-journald-dev-log.socket
@@ -312,16 +328,17 @@ if [ "$LOG_STATUS_001" != "inactive" ] || [ "$LOG_STATUS_002" != "inactive" ]; t
   sudo systemctl disable rsyslog
   sudo systemctl mask rsyslog
 fi
+echo ""
 echo -e "${RED}[+] Deleting all logs and resetting Tor statistics...${NOCOLOR}"
 echo
 erase_logs
-echo
+echo ""
 echo -e "${RED}[+] Setting the right start trigger${NOCOLOR}"
 sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=2/" ${RUNFILE}
 echo ""
 echo -e "${YELLOW}[!] PREPARATIONS FOR THE IMAGE IS FINISHED!${NOCOLOR}"
 echo -e "${RED}[+] We will shutdown the TorBox now.${NOCOLOR}"
-echo
+echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
 sudo shutdown -h now
