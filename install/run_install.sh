@@ -912,8 +912,12 @@ if [ "$STEP_NUMBER" -le "6" ]; then
   git clone $OBFS4PROXY_USED
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
+		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+			export GOARCH=arm
+			export GOARM=6
+		fi
 	  export GO111MODULE="on"
-	  cd obfs4proxy
+		cd obfs4proxy
 	  go build -o obfs4proxy/obfs4proxy ./obfs4proxy
 	  sudo cp ./obfs4proxy/obfs4proxy /usr/bin
 	  cd
@@ -957,6 +961,10 @@ if [ "$STEP_NUMBER" -le "7" ]; then
   git clone $SNOWFLAKE_USED
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
+		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+			export GOARCH=arm
+			export GOARM=6
+		fi
 	  export GO111MODULE="on"
 	  cd snowflake/proxy
 	  go get
