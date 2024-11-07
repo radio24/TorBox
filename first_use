@@ -393,10 +393,13 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
       (sudo systemctl enable tor) 2>/dev/null
-      echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
-      sudo systemctl daemon-reload
+			# NEW v.0.5.4
+			# The `systemctl unmask` and `systemctl enable` commands already handle the necessary reloading of systemd’s configuration internally
+			# echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
+			# sudo systemctl daemon-reload
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
-      clear
+			sleep 1
+			clear
 			echo -e "${RED}[+] DONE! Checking progress - please be patient!${NOCOLOR}"
 		  echo -e "    Ignore any error messages; this can take a while; please wait..."
 		  echo -e "    Finally, you should see \"${YELLOW}Bootstrapped 100%: Done${NOCOLOR}\"."

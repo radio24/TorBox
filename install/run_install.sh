@@ -683,9 +683,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms libjpeg-dev"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -768,6 +768,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	re-connect
 	sudo pip3 install -r requirements.txt
   sleep 5
   clear
@@ -893,6 +894,7 @@ if [ "$STEP_NUMBER" -le "5" ]; then
   # 5. Installing tor
   clear
   echo -e "${RED}[+] Step 5: Installing Tor...${NOCOLOR}"
+	re-connect
   select_and_install_tor
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

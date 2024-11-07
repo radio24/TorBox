@@ -682,7 +682,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
 	check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
 	# Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw"
+	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev"
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 	# IMPORTANT tor-geoipdb installs also the tor package
@@ -779,6 +779,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	re-connect
 	sudo pip3 install -r requirements.txt
 	sleep 5
 	clear
@@ -901,6 +902,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# 4. Installing tor
 	clear
 	echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
+	re-connect
 	select_and_install_tor
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
