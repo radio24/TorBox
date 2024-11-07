@@ -146,7 +146,7 @@ read_config()
       TOGGLE04b="LOW"
   fi
 
-  # TOGGLE05 / TOGGLE06 / represents the 2.4 GHz and 5 GHz Band
+	# TOGGLE05 / TOGGLE06 / represents the 2.5 GHz and 5 GHz Band
   if grep -q "^hw_mode=g" ${HOSTAPD}; then
 		clear
     TOGGLE05="2.5 GHz"

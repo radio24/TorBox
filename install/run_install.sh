@@ -377,7 +377,7 @@ download_and_compile_tor()
 	else
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -395,7 +395,7 @@ download_and_compile_tor()
 select_and_install_tor()
 {
   # Difference to the update-function - we cannot use torsocks yet
-  echo -e "${RED}[+]         Can we access the unofficial Tor repositories on GitHub?${NOCOLOR}"
+	echo -e "${RED}[+]         Can we access the $TOR_RELEASE Tor repositories on GitHub?${NOCOLOR}"
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
@@ -404,7 +404,7 @@ select_and_install_tor()
 	else
 		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
-		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -427,7 +427,7 @@ select_and_install_tor()
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
-		echo -e "${RED}[+] The unofficial Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
