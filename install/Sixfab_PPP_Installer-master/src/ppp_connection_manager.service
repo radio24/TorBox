@@ -1,0 +1,13 @@
+[Unit]
+Description=PPP Connection Manager
+After=network.target
+
+[Service]
+ExecStart=/bin/bash ppp_connection_manager.sh
+WorkingDirectory=/opt/sixfab/ppp_connection_manager
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
