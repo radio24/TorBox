@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2016
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -53,7 +53,7 @@ YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Default hostname
-HOSTNAME="TorBox053"
+HOSTNAME="TorBox054"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -66,15 +66,13 @@ CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
-# NEW post-v.0.5.3: Added
 # Release Page of the official Tor repositories
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
-TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED="<a class=\"gl-font-bold\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# NEW post-v.0.5.3: Currently not updated
 # Release Page of the unofficial Tor repositories on GitHub
 #TOR_RELEASE="unofficial"
 #TORURL="https://github.com/torproject/tor/tags"
@@ -185,7 +183,6 @@ update_tor_preparations()
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   clear
   echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
-	# NEW post-v.0.5.3: Added
 	if [ "$TOR_RELEASE" == "official" ]; then
   	if [ $TORCONNECT -eq 0 ]; then
 			readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
@@ -433,9 +430,42 @@ update_torcfg()
   (sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
-  (sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-  sudo cp etc/network/interfaces /etc/network/
-  echo -e "${RED}[+]${NOCOLOR} Copied /etc/network/interfaces -- backup done"
+
+	# NEW v.0.5.4: Don't change /etc/network/interfaces on a cloud and respect TorBox mini
+	if [ "$ON_A_CLOUD" -eq "0" ]; then
+		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+		cp etc/network/interfaces /etc/network/
+		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
+	elif [ "$TORBOX_MINI" -eq "1" ]; then
+		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	  sudo cp etc/network/interfaces.mini /etc/network/interfaces
+	fi
+
+	# NEW v.0.5.4: ONLY ON DEBIAN AND Ubuntu
+	# Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
+	# Added for TorBox on a Cloud -- has to be tested with a common Debian image
+	if [ "$CHECK_OS" == "Ubuntu" ] || [ "$CHECK_OS" == "Debian" ]; then
+		echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+			GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+			if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+				if [ "$GRUB_CONFIG" == "" ]; then
+					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+					#This is necessary to work with special characters in sed
+					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+				else
+					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+					#This is necessary to work with special characters in sed
+					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+				fi
+			fi
+		else
+			(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+		fi
+		update-grub
+	fi
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
   sudo cp etc/rc.local /etc/rc.local
@@ -496,20 +526,23 @@ update_torcfg()
 		REPLACE_STRING="$REPLACE_STRING\n$SNOW_BRIDGE"
 		sudo sed -E -i "s/^## Snowflake .*/$REPLACE_STRING/g" "${TORRC}"
 	fi
-
 	if [ -z $OBFS4_BRIDGE ] ; then (sudo sed -i "s/^Bridge obfs4/#Bridge obfs4" ${TORRC}) 2>/dev/null ; else (printf %s"$OBFS4_BRIDGE\n" | sudo tee -a $TORRC) 2>/dev/null ; fi
 	if [ -z $CLIENTONIONAUTHDIR ] ; then (sudo sed -i "s/^ClientOnionAuthDir/#ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; else (sudo sed -i "s/^#ClientOnionAuthDir/ClientOnionAuthDir/" ${TORRC}) 2>/dev/null ; fi
 	sudo sed -i "s/^$TOR_INCLUDE_EX_SLOW/#$TOR_INCLUDE_EX_SLOW/" ${TORRC}
-
+	echo -e "${RED}[+] Restoring Onion Service data...${NOCOLOR}"
+	sudo sed -i "/HiddenServiceDir/d" ${TORRC}
+	sudo sed -i "/HiddenServicePort/d" ${TORRC}
 	# Using the Anchor in torrc
 	REPLACE_STRING=$(grep -m 1 "This will configure the Onion Services" ${TORRC})
 	#This is necessary to work with special characters in sed
+	HIDDENSERVICES="$(<<< "$HIDDENSERVICES" sed -e 's`[][\\/.*^$]`\\&`g')"
 	REPLACE_STRING="$(<<< "$REPLACE_STRING" sed -e 's`[][\\/.*^$]`\\&`g')"
-	HIDDENSERVICE="$(<<< "$HIDDENSERVICE" sed -e 's`[][\\/.*^$]`\\&`g')"
-	HIDDENSERVICE="\n$HIDDENSERVICE"
+	NEW_STRING="$REPLACE_STRING\n$HIDDENSERVICES"
 	#Writing the necessary entries on the right place in torrc (not at the end, because there are already the bridges)
-	sudo sed -E -i "s/## This will configure the Onion Services.*/$REPLACE_STRING$NEW_STRING/g" "${TORRC}"
-
+	sudo sed -E -i "s/## This will configure the Onion Services.*/$NEW_STRING/g" "${TORRC}"
+	# Converts all \n to real line breaks
+	sudo sed -i 's/\\n/\n/g' "${TORRC}"
+	sleep 1
 	echo -e "${RED}[+]${NOCOLOR} Activating IP forwarding"
   sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
   echo -e "${RED}[+]${NOCOLOR} Changing .profile if necessary"
@@ -571,7 +604,7 @@ update_torbox_menu()
   # Save TACA configuration
   cp --parents torbox/log_check_config.py $TMP_DIR
 	# Save TFS/TCS PID files
-	cp --parents -R torbox/lib/filesharing/pid $TMP_DIR
+	cp --parents -R torbox/lib/fileshare/pid $TMP_DIR
 	cp --parents -R torbox/lib/chatsecure/pid $TMP_DIR
 
   echo -e "${RED}[+] Downloading TorBox menu from GitHub...${NOCOLOR}"
@@ -606,10 +639,10 @@ update_torbox_menu()
 			sudo mv $TMP_DIR/torbox/log_check_config.py torbox
 		fi
 		# Restore  TFS/TCS PID files
-		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/filesharing/pid/)
+		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/fileshare/pid/)
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
-				cp $TMP_DIR/torbox/lib/filesharing/pid/$TFS_NAME torbox/lib/filesharing/pid/
+				cp $TMP_DIR/torbox/lib/fileshare/pid/$TFS_NAME torbox/lib/fileshare/pid/
 			done
 		fi
 		TFS_NAME_LIST=$(ls $TMP_DIR/torbox/lib/chatsecure/pid/)
@@ -720,7 +753,7 @@ stty intr ^c
 trap
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
@@ -736,8 +769,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU
 "10" "Reset tor and force a change of the permanent entry node" \
 "11" "Remove all tor bridges and use built-in bridges" \
 "12" "Renew the list of excluded slow tor relays" \
-"13" "Restart Nginx, webssh and TFS" \
-"14" "Rerun the \"First Start-up\" script" \
+"13" "Restart Nginx, webssh, TFS and TCS" \
+"14" "Rerun the \"First Start-up\" Dialogue" \
 "15" "Erase all log files" \
 "16" "Time synchronization"  \
 "17" "Just fixing and cleaning" \
@@ -777,13 +810,17 @@ case "$CHOICE" in
 			sleep 10
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
-      # NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+      # For RaspberryPi OS based on Debian Bookworm needed
       PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
       if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
         sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
       fi
-			# NEW v.0.5.3: New way to install and check Python requirements
-			sudo pip3 install --upgrade -r requirements.txt
+			# New way to install and check Python requirements
+      cd
+      sudo pip3 install pipenv
+      wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+      wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+      pipenv requirements >requirements.txt
 			sleep 5
 			clear
 			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
@@ -820,10 +857,13 @@ case "$CHOICE" in
 			clear
 			echo ""
 			echo -e "${RED}[+] Reinstalling ${YELLOW}go${NOCOLOR}"
-			# NEW v.0.5.3: New way to download the current version of go
-			if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-			elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
-			else PLATFORM="linux-armv6l"
+			# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5)
+			if [ "$TORBOX_MINI" == "--torbox_mini" ]; then PLATFORM="linux-armv6l";
+			else
+				if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+				elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+				else PLATFORM="linux-armv6l"
+				fi
 			fi
 			# Fetch the filename of the latest go version
 			GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
@@ -832,7 +872,7 @@ case "$CHOICE" in
 			if [ $DLCHECK -eq 0 ] ; then
 				sudo rm -rvf /usr/local/go/
 			  sudo tar -C /usr/local -xzvf $GO_FILENAME
-				# NEW v.0.5.3: what if .profile doesn't exist?
+				# What if .profile doesn't exist?
 				if [ -f ".profile" ]; then
 					if ! grep "Added by TorBox (001)" .profile ; then
 						sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
@@ -854,7 +894,7 @@ case "$CHOICE" in
 			sleep 5
 			echo ""
 			echo -e "${RED}[+] Configure the system services...${NOCOLOR}"
-      if [ "$TORBOX_MINI" -eq "1" ] || [ "$TORBOX_ON_A_CLOUD" -eq "1" ] ; then
+      if [ "$TORBOX_MINI" -eq "1" ] || [ "$ON_A_CLOUD" -eq "1" ] ; then
         sudo systemctl stop hostapd
         sudo systemctl disable hostapd
         sudo systemctl mask hostapd
@@ -877,6 +917,8 @@ case "$CHOICE" in
 			echo -e "${YELLOW}[+] FINISHED! TorBox's base system is now updated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+      cd
+      cd torbox
 			recommended_reboot menu-update
 		fi
 	;;
@@ -1132,7 +1174,7 @@ case "$CHOICE" in
 	11)
 		clear
 		INPUT=$(cat text/built-in_bridges-text)
-		if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			online_check $TOR_GET_DEFAULT_BRIDGES_URL 0 1
 			if [ $OCHECK == 1 ]; then
@@ -1263,7 +1305,7 @@ case "$CHOICE" in
 		clear
 		if [ "$SPEED" == "0" ]; then
 			INPUT=$(cat text/exclude_slow_tor_relays-update-text)
-			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed
@@ -1272,7 +1314,7 @@ case "$CHOICE" in
 					is_integer "${SPEED}"
 					exitstatus=$?
 					# exitstatus == 1 means that $SPEED is not an integer
-					if [ "$exitstatus" == "1" ]; then
+					if [ "$exitstatus" = "1" ]; then
 						clear
 						echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 						echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
@@ -1314,11 +1356,11 @@ case "$CHOICE" in
 	13)
 		clear
 		# shellcheck disable=SC2012
-		TFS_NAME_LIST=$(ls lib/filesharing/pid/ | sed "s/.pid//")
+		TFS_NAME_LIST=$(ls lib/fileshare/pid/ | sed "s/.pid//")
 		if [ ! -z "$TFS_NAME_LIST" ]; then
 			for TFS_NAME in $TFS_NAME_LIST; do
 				echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
-				PID=$(cat lib/filesharing/pid/${TFS_NAME}.pid)
+				PID=$(cat lib/fileshare/pid/${TFS_NAME}.pid)
 				(sudo kill $PID) &>/dev/null
 			done
 			echo ""
@@ -1361,13 +1403,13 @@ case "$CHOICE" in
 		sleep 5
 	;;
 
-	# Rerun the "First Start-up" script
+	# Rerun the "First Start-up" Dialogue
 	14)
   	clear
 		if [ "$ON_A_CLOUD" -eq "1" ]; then
-			bin/first_use 1 menu-update
+			./first_use 1 menu-update
 		else
-			bin/first_use 3 menu-update
+			./first_use 3 menu-update
 		fi
 	;;
 

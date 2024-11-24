@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -49,7 +49,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -112,7 +112,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "==========================================[Domain Exclusion]===" \
 " 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 " 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
@@ -120,7 +120,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DANGER ZONE" 
 "==" "=============================================[Lock-out risk]===" \
 " 4" "$TOGGLE20 the AP on wlan1 failsafe" \
 " 5" "$TOGGLE21 SSH password login" \
-"==" "==========================================[Developper Tools]===" \
+"==" "==========================================[developer Tools]===" \
 " 6" "Forwarding only - tor protection disabled" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -135,14 +135,14 @@ case "$CHOICE" in
 		if [ "$TOGGLE19" == "Start" ]; then
 			clear
     	INPUT=$(cat text/domains_without_tor-text)
-    	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+    	if (whiptail --title "TorBox - DOMAIN EXCLUSION" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				exitstatus=$?
 				# exitstatus == 255 means that the ESC key was pressed
 				[ "$exitstatus" == "255" ] && exit 1
 				# Is there an option to route from tor excluded domains through VPN?
 				if [ -z "$tun0up" ] ; then
 					INPUT=$(cat text/connecting-VPN-exclusion-text)
-	      	if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+	      	if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						connecting_to_VPN
 						sudo systemctl restart tor &
 					fi
@@ -152,72 +152,50 @@ case "$CHOICE" in
 				# At the end sudo ipset create $CLEARNET_LIST hash:ip AND sudo ipset create $VPN_LIST hash:ip has to be executed
 				# Always both lists have to be loaded, even if one of them isn't used
 				clear
-				if [ -f "$CLEARNET_LIST_FILE_OWN" ] || [ -f "$VPN_LIST_FILE_OWN" ]; then
-					if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
-							sudo ipset create $CLEARNET_LIST hash:ip
-							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
-						else
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							[ -f "$CLEARNET_LIST_FILE_OWN" ] && (rm $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST_FILE) 2>/dev/null
-							[ -f "$CLEARNET_LIST_FILE" ] && (rm $CLEARNET_LIST_FILE) 2>/dev/null
-							(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
-							sudo ipset create $CLEARNET_LIST hash:ip
-						fi
-					else
+				if [ -f "$CLEARNET_LIST_FILE_OWN" ]; then
+					if (whiptail --title "TorBox - INFO" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be DIRECT. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
 						sudo ipset create $CLEARNET_LIST hash:ip
-					fi
-					if [ -f "$VPN_LIST_FILE_OWN" ]; then
-						if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "YES" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							(sudo ipset destroy $VPN_LIST) 2>/dev/null
-							sudo ipset create $VPN_LIST hash:ip
-							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						else
-							exitstatus=$?
-							# exitstatus == 255 means that the ESC key was pressed
-							[ "$exitstatus" == "255" ] && exit 0
-							[ -f "$VPN_LIST_FILE" ] && (rm $VPN_LIST_FILE_OWN $VPN_LIST_FILE) 2>/dev/null
-							(sudo ipset destroy $VPN_LIST) 2>/dev/null
-							sudo ipset create $VPN_LIST hash:ip
-						fi
+						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 					else
-						sudo ipset create $VPN_LIST hash:ip
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						[ -f "$CLEARNET_LIST_FILE_OWN" ] && (rm $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST_FILE) 2>/dev/null
+						[ -f "$CLEARNET_LIST_FILE" ] && (rm $CLEARNET_LIST_FILE) 2>/dev/null
+						(sudo ipset destroy $CLEARNET_LIST) 2>/dev/null
+						sudo ipset create $CLEARNET_LIST hash:ip
 					fi
 				else
 					sudo ipset create $CLEARNET_LIST hash:ip
+				fi
+				if [ -f "$VPN_LIST_FILE_OWN" ]; then
+					if (whiptail --title "TorBox - INFO" --yesno "We found a list of domains that will NOT be routed through tor. The communication with these domains will be over VPN, if available. It comes with the risk that you will leak information and location!\n\nDo you want to use this list of domains (NO will delte the list, press ESC to leave)?" $MENU_HEIGHT_15 $MENU_WIDTH); then
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						(sudo ipset destroy $VPN_LIST) 2>/dev/null
+						sudo ipset create $VPN_LIST hash:ip
+						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
+					else
+						exitstatus=$?
+						# exitstatus == 255 means that the ESC key was pressed
+						[ "$exitstatus" == "255" ] && exit 0
+						[ -f "$VPN_LIST_FILE" ] && (rm $VPN_LIST_FILE_OWN $VPN_LIST_FILE) 2>/dev/null
+						(sudo ipset destroy $VPN_LIST) 2>/dev/null
+						sudo ipset create $VPN_LIST hash:ip
+					fi
+				else
 					sudo ipset create $VPN_LIST hash:ip
 				fi
 				(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=1/" ${RUNFILE}) 2>/dev/null
 				bin/set_interfaces_3
 			fi
 		fi
-    if [ "$TOGGLE19" == "Stop" ]; then
-			# Where is the Internet
-			INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
-			# Where are the clients
-			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE} | sed "s/CLIENT_IFACE=//g") 2>/dev/null
-			NUMBER_OF_WORD=$(wc -w <<< "${CLIENT_IFACE}")
-			if [ "$NUMBER_OF_WORD" == "1" ]; then
-				I_DEVICE1=$CLIENT_IFACE
-				if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
-			else
-				I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-				I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
-			fi
-			clear
-			(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}) 2>/dev/null
-			sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 0 0 1
-			sudo ipset destroy 2>/dev/null
-		fi
+		if [ "$TOGGLE19" == "Stop" ]; then stopping_domain_exclusion; fi
   ;;
 
 	# Add, change or remove a domain/IP entry in the exclusion lists
@@ -237,7 +215,7 @@ case "$CHOICE" in
 				DOMAINNAME=$(grep -P '(?=^.{4,253}$)(^(?:[a-zA-Z0-9](?:(?:[a-zA-Z0-9\-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,}|xn--[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$)' <<< "$DOMAINNAME")
 				if [ "$DOMAINNAME" == "" ] ; then
 					clear
-					echo -e "${WHITE}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
 					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -267,7 +245,7 @@ case "$CHOICE" in
 
 				# The domain is already added
 				if [ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ] || [ "$NUMBER_DOMAIN_EXIST_VPN" -gt "0" ]; then
-					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --menu "The domain is already on the exclusion list. You can do the following:" 11 $MENU_WIDTH 3 \
+					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --menu "The domain is already on the exclusion list. You can do the following:" 11 $MENU_WIDTH 3 \
 					" 1" "Rescan and add more subdomains and IPs connected to the domain" \
 					" 2" "Move entries (for example netflix.com) from $LISTE01 to $LISTE02"  \
 					" 3" "Remove a domain from the exclusion list"  \
@@ -282,19 +260,19 @@ case "$CHOICE" in
 						# Rescan and add more subdomains and IPs connected to the domain
 						1)
 						  INPUT=$(cat text/rescan_domain-text)
-							whiptail --title "TorBox - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
+							whiptail --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
 					    bin/find_domains "$DOMAINNAME" 1
 							clear
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${RED}[+] Done!${NOCOLOR}"
+							echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
 						# Move the entries from one list to another
 						2)
 							if [ "$LISTE01" == "CLEARNET" ]; then
-								echo -e "${RED}Moving ${WHITE}$DOMAINNAME${RED} from ${WHITE}$LISTE01${RED} to ${WHITE}$LISTE02${RED}...${NOCOLOR}"
+								echo -e "${RED}Moving ${YELLOW}$DOMAINNAME${RED} from ${YELLOW}$LISTE01${RED} to ${YELLOW}$LISTE02${RED}...${NOCOLOR}"
 								readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
 								(printf "%s\n" "${DOMAIN_NOT_EXIST_CLEAR[@]}" >> ${VPN_LIST_FILE_OWN}) &>/dev/null
 								readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep -v "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
@@ -304,7 +282,7 @@ case "$CHOICE" in
 								sed -i '/^[[:blank:]]*$/ d' ${CLEARNET_LIST_FILE_OWN}
 								sed -i '/^[[:blank:]]*$/ d' ${VPN_LIST_FILE_OWN}
 							elif [ "$LISTE01" == "VPN" ]; then
-								echo -e "${RED}Moving ${WHITE}$DOMAINNAME${RED} from ${WHITE}$LISTE01${RED} to ${WHITE}$LISTE02${RED}...${NOCOLOR}"
+								echo -e "${RED}Moving ${YELLOW}$DOMAINNAME${RED} from ${YELLOW}$LISTE01${RED} to ${YELLOW}$LISTE02${RED}...${NOCOLOR}"
 								readarray -t DOMAIN_NOT_EXIST_VPN < <(grep "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
 								(printf "%s\n" "${DOMAIN_NOT_EXIST_VPN[@]}" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
 								readarray -t DOMAIN_NOT_EXIST_VPN < <(grep -v "$DOMAINNAME" ${VPN_LIST_FILE_OWN})
@@ -316,7 +294,7 @@ case "$CHOICE" in
 							fi
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 							config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-							echo -e "${RED}[+] Done!${NOCOLOR}"
+							echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 							sleep 3
 						;;
 
@@ -324,11 +302,11 @@ case "$CHOICE" in
 						3)
 							clear
 							INPUT=$(cat text/remove_domain-text)
-							if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+							if (whiptail --title "TorBox - DOMAIN EXCLUSION" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 								exitstatus=$?
 								# exitstatus == 255 means that the ESC key was pressed
 								[ "$exitstatus" == "255" ] && exit 1
-								echo -e "${RED}Remove ${WHITE}$DOMAINNAME${RED} from the exclusion lists...${NOCOLOR}"
+								echo -e "${RED}Remove ${YELLOW}$DOMAINNAME${RED} from the exclusion lists...${NOCOLOR}"
 								if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
 									readarray -t DOMAIN_NOT_EXIST_CLEAR < <(grep -v "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN})
 									(printf "%s\n" "${DOMAIN_NOT_EXIST_CLEAR[@]}" > ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
@@ -352,7 +330,7 @@ case "$CHOICE" in
 
 				# The domain is not added, yet.
 				else
-					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --menu "The domain is not added, yet! You have to chose in which exceptionslist you want to add the domain:" $MENU_HEIGHT_10 $MENU_WIDTH 2 \
+					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --menu "The domain is not added, yet! You have to chose in which exceptionslist you want to add the domain:" $MENU_HEIGHT_10 $MENU_WIDTH 2 \
 					" 1" "CLEARNET - direct connection, no protection" \
 					" 2" "VPN      - works only with VPN connection"  \
 					3>&1 1>&2 2>&3)
@@ -371,13 +349,12 @@ case "$CHOICE" in
 							;;
 					esac
 					clear
-					echo -e "${RED}[+] Finding obvious IPs for ${WHITE}$DOMAINNAME${NOCOLOR}"
-					# NEW post-v.0.5.3
+					echo -e "${RED}[+] Finding obvious IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
 					add_open_dns
 					echo ""
 					MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
 					if [ ! -z "$MORE_IPs" ]; then
-						echo -e "${RED}[+] Adding IPs for ${WHITE}$DOMAINNAME${NOCOLOR}"
+						echo -e "${RED}[+] Adding IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
 						MORE_IPs="$DOMAINNAME $MORE_IPs"
 						if [ "$LISTE01" == "CLEARNET" ]; then
 							(printf "%s\n" "$MORE_IPs" >> ${CLEARNET_LIST_FILE_OWN}) &>/dev/null
@@ -390,11 +367,11 @@ case "$CHOICE" in
 						fi
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${RED}[+] Done!${NOCOLOR}"
+						echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 						sleep 3
 					else
 						clear
-						echo -e "${WHITE}[!] NO IP FOUND!${NOCOLOR}"
+						echo -e "${YELLOW}[!] NO IP FOUND!${NOCOLOR}"
 						echo -e "${RED}[!] There is something wrong! The domain name may not exist!${NOCOLOR}"
 						echo -e "${RED}[!] Possibly, there is no Internet connection or DNS resolution is broken.${NOCOLOR}"
 						echo " "
@@ -403,21 +380,21 @@ case "$CHOICE" in
 						exit 0
 					fi
 					INPUT=$(cat text/rescan_domain_after_adding-text)
-					if (whiptail --title "TorBox - (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - DOMAIN EXCLUSION (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						exitstatus=$?
 						# exitstatus == 255 means that the ESC key was pressed
 						[ "$exitstatus" == "255" ] && exit 1
 						bin/find_domains "$DOMAINNAME" 1
 						config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
 						config_ipset $VPN_LIST_FILE_OWN $CLEARNET_LIST $VPN_LIST_FILE
-						echo -e "${RED}[+] Done!${NOCOLOR}"
+						echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 						sleep 3
 					fi
 				fi
 				if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then bin/set_interfaces_3; fi
 			else
 				clear
-				echo -e "${WHITE}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
 				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -430,37 +407,41 @@ case "$CHOICE" in
 	# List the exclusion lists
 	3)
 		clear
-		if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
-			echo " "
-			echo -e "${WHITE}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
-			echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
-			echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
-			echo " "
-			trap "bash menu-danger; exit 0" SIGINT
-			readarray -t CLEARNET_LIST_FILE_OWN_ARRAY < "$CLEARNET_LIST_FILE_OWN"
-			for CLEARNET_LIST_FILE_OWN_STRING in "${CLEARNET_LIST_FILE_OWN_ARRAY[@]}"
-			do
-				SUBDOMAIN=$(cut -d ' ' -f1 <<< $CLEARNET_LIST_FILE_OWN_STRING)
-				IP_ROW=$(cut -d ' ' -f2- <<< $CLEARNET_LIST_FILE_OWN_STRING)
-				echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
-			done
-			echo " "
+		if [ -f $CLEARNET_LIST_FILE_OWN ]; then
+			if grep -q "$DOMAINNAME" ${CLEARNET_LIST_FILE_OWN}; then
+				echo " "
+				echo -e "${YELLOW}[+] DOMAINS LISTED IN THE CLEARNET LIST${NOCOLOR}"
+				echo -e "${RED}[+] The connection to the domain's IPs on this list is established directly${NOCOLOR}"
+				echo -e "${RED}[+] and unprotected. However, if available, the domain is accessed through VPN.${NOCOLOR}"
+				echo " "
+				trap "bash menu-danger; exit 0" SIGINT
+				readarray -t CLEARNET_LIST_FILE_OWN_ARRAY < "$CLEARNET_LIST_FILE_OWN"
+				for CLEARNET_LIST_FILE_OWN_STRING in "${CLEARNET_LIST_FILE_OWN_ARRAY[@]}"
+				do
+					SUBDOMAIN=$(cut -d ' ' -f1 <<< $CLEARNET_LIST_FILE_OWN_STRING)
+					IP_ROW=$(cut -d ' ' -f2- <<< $CLEARNET_LIST_FILE_OWN_STRING)
+					echo -e "${YELLOW}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+				done
+				echo " "
+			fi
 		fi
-		if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
-			echo " "
-			echo -e "${WHITE}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
-			echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
-			echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
-			echo " "
-			trap "bash menu-danger; exit 0" SIGINT
-			readarray -t VPN_LIST_FILE_OWN_ARRAY < "$VPN_LIST_FILE_OWN"
-			for VPN_LIST_FILE_OWN_STRING in "${VPN_LIST_FILE_OWN_ARRAY[@]}"
-			do
-				SUBDOMAIN=$(cut -d ' ' -f1 <<< $VPN_LIST_FILE_OWN_STRING)
-				IP_ROW=$(cut -d ' ' -f2- <<< $VPN_LIST_FILE_OWN_STRING)
-				echo -e "${WHITE}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
-			done
-			echo " "
+		if [ -f $VPN_LIST_FILE_OWN ]; then
+			if grep -q "$DOMAINNAME" ${VPN_LIST_FILE_OWN}; then
+				echo " "
+				echo -e "${YELLOW}[+] DOMAINS LISTED IN THE VPN LIST${NOCOLOR}"
+				echo -e "${RED}[+] The connection to the domain's IPs are established through VPN.${NOCOLOR}"
+				echo -e "${RED}[+] However, if VPN is unavailable, the domain is still accessed through tor.${NOCOLOR}"
+				echo " "
+				trap "bash menu-danger; exit 0" SIGINT
+				readarray -t VPN_LIST_FILE_OWN_ARRAY < "$VPN_LIST_FILE_OWN"
+				for VPN_LIST_FILE_OWN_STRING in "${VPN_LIST_FILE_OWN_ARRAY[@]}"
+				do
+					SUBDOMAIN=$(cut -d ' ' -f1 <<< $VPN_LIST_FILE_OWN_STRING)
+					IP_ROW=$(cut -d ' ' -f2- <<< $VPN_LIST_FILE_OWN_STRING)
+					echo -e "${YELLOW}$SUBDOMAIN${NOCOLOR} --> ${RED}${IP_ROW}${NOCOLOR}"
+				done
+				echo " "
+			fi
 		fi
 		read -n 1 -s -r -p "Press any key to continue"
 	;;
@@ -505,7 +486,7 @@ case "$CHOICE" in
 			else
 				cd torbox
 				clear
-				echo -e "${WHITE}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
 				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys"
 				echo -e "${RED}[!] keys are generated, and the public key is on the TorBox ready to work."
 				echo " "
@@ -535,11 +516,15 @@ case "$CHOICE" in
 		if [ "$NUMBER_OF_WORD" == "1" ]; then
 			I_DEVICE1=$CLIENT_IFACE
 			if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+		elif [ "$NUMBER_OF_WORD" == "2" ]; then
+			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		else
 			I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 			I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+			I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 		fi
-    sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2
+    sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
 	;;
 
   *)

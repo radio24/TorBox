@@ -1,0 +1,46 @@
+@layer tailwind-base, primereact, tailwind-utilities;
+
+@layer tailwind-base {
+	@tailwind base;
+}
+
+@layer tailwind-utilities {
+	@tailwind components;
+	@tailwind utilities;
+}
+
+body {
+	overflow-y: hidden;
+	@apply
+	bg-slate-800
+	w-[100vw] h-[100vh];
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 0.3rem;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background-color: rgb(30 41 59);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background-color: rgb(71 85 105);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(71 85 105);
+}
+
+#root {
+	@apply w-[100vw] h-[100vh];
+}
+
+.p-fileupload .p-fileupload-content {
+	@apply
+	shadow-2xl shadow-slate-900/40
+  }

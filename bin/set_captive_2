@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -37,24 +37,25 @@
 # wlan1 -> 	TorBox is connected to the internet through a wireless network (USB WiFi adapter).
 #	ppp0	->	TorBox is connected to the internet through a cellular adapter.
 # usb0	->  TorBox is connected to the internet through an USB adapter.
+# tun0  ->  TorBox is connected to the Internet through a VPN server
 #
 # The <incoming interface> is where the client-device is connected to the TorBox. Possible values for the <incoming interface>:
 # eth0  -> 	The device is connected with a cable (onboard ethernet interface).
 # eth1	-> 	The device is connected with a cable (USB ethernet adapter).
 # wlan0 -> 	The device is connected via wireless network (onboard WLAN chip).
 # wlan1 -> 	The device is connected via wireless network (USB WiFi adapter).
+# tun1  ->  The device is a VPN client and connected with TorBox's VPN server
 #
 #
 ######## SET VARIABLES ########
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
-MENU_HEIGHT_15=15
 MENU_HEIGHT_25=25
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -67,6 +68,7 @@ TXT_DIR="/home/torbox/torbox/text"
 O_DEVICE=$1
 I_DEVICE1=$2
 I_DEVICE2=$3
+I_DEVICE3=$4
 
 ###############################
 
@@ -102,12 +104,14 @@ $MODPROBE ip_nat_ftp
 ########## NAT rules ##########
 #We will forward all the network traffic to the captive portal in order to log in
 sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=1/" ${RUNFILE}
-echo -e "${WHITE}[!] WARNING: Tor is not running - all data are directly forwarded to the Internet...${NOCOLOR}"
+echo -e "${YELLOW}[!] WARNING: Tor is not running - all data are directly forwarded to the Internet...${NOCOLOR}"
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE  -j MASQUERADE
 $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-$IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+if [ -n "$I_DEVICE2" ]; then $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT ; fi
+if [ -n "$I_DEVICE3" ]; then $IPTABLES -A FORWARD -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT ; fi
 $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -j ACCEPT
-$IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT
+if [ -n "$I_DEVICE2" ]; then $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -j ACCEPT ; fi
+if [ -n "$I_DEVICE3" ]; then $IPTABLES -A FORWARD -i $I_DEVICE3 -o $O_DEVICE -j ACCEPT ; fi
 
 ########## DIALOG BOX #########
 clear

@@ -1,5 +1,5 @@
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -41,16 +41,22 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 
 # Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing
-# 1 - Delete pi after running run_install.sh (currently: 1 -> 3)
+# 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
 # 2 - Generate new unique SSH server keys needed after flashing the image on a SDcard (currently: 2 -> 3)
-# 3 - Starts the first_use script
-# 4 - Will install additional network drivers
+# 3 - Starts the first_use skript (currently: 3 -> 0)
 FRESH_INSTALLED=0
 
+# NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
 # SSH access from the Internet
-# 0 - SSH access from the Internet is blocked HTTP (default)
+# 0 - SSH access from the Internet is blocked (default)
 # 1 - SSH access from the Internet is allowed
 SSH_FROM_INTERNET=0
+
+# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
+# OPENVPN access from the Internet
+# 0 - OPENVPN access from the Internet is blocked
+# 1 - OPENVPN access from the Internet is allowed (default)
+OPENVPN_FROM_INTERNET=1
 
 # Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)
@@ -67,8 +73,6 @@ BLOCK_HTTP=1
 # 1 - TorBox's automatic counteractions are activated
 LOGCHECK=0
 
-## Global variables to help inter-script communication - don't change them!!
-
 # Where is the Internet?
 INTERNET_IFACE=eth0
 
@@ -79,10 +83,12 @@ CLIENT_IFACE=wlan0 eth1
 # if set to "random", the the MAC adress will be randomized (this is the default)
 # if set to "permanent", the permanent, unique MAC address will be used
 # if set to xx:xx:xx:xx:xx:xx, then this MAC address will be used after a reboot
+# NEW v.0.5.4: Randomizing usb0 will lock you out!!
 MAC_eth0=random
 MAC_eth1=random
 MAC_wlan0=random
 MAC_wlan1=random
+MAC_usb0=permanent
 
 # TWebSSH
 # 0 - TorBox's Web SSH is disabled
@@ -117,5 +123,13 @@ WLAN_FAILSAFE=1
 # will be displayed in the main menu.
 FORWARDING_ONLY=0
 
-# Exit controll variable
+# TorBox is running on a cloud or as a cloud service
+ON_A_CLOUD=0
+
+# TorBox is running on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget
+TORBOX_MINI=0
+
+## Global variables to help inter-script communication - don't change them!!
+
+# Exit control variable
 EXITID=0

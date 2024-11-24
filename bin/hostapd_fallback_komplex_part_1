@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -38,6 +38,11 @@
 # wlan1 entries in the configuration fails and substitutet them with wlan0.
 #
 #
+# EXCEPTION: don't run on TorBox mini (will replace /etc/network/interfaces)
+#            --> asuming that we don't have clients on the wifi
+RUNFILE="/home/torbox/torbox/run/torbox.run"
+if grep "^TORBOX_MINI=1" ${RUNFILE} ; then exit; fi
+
 ##### SET VARIABLES ######
 
 #Other variables
@@ -65,38 +70,33 @@ fi
 # pgrep -f "dhclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
 #
-# NEW v.0.5.0
-# New: we have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
+# We have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 # ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
-# NEW v.0.5.3:
 # ATTENTION: Under Raspberry Pi OS we can grep dhclient, but under Debian that's not possible because dclient is started on
 #            all interfaces. We have to avoid to take down the interface with the AP!
 
 if pgrep -f "dhclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	# NEW v.0.5.3 We can only do that, if the interface is not used as AP
+	# We can only do that, if the interface is not used as AP
 	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 		sudo ifdown $INTERFACE1
 		INTERFACE1_DOWN=1
 	fi
 	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
-		# New v.0.5.0 hast to be tested
 		sudo ifdown $INTERFACE3
 		INTERFACE3_DOWN=1
 	fi
-	###
 fi
 
 if pgrep -f "dhclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2
-	# New v.0.5.0 hast to be tested
 	sudo ifdown $INTERFACE4
-	###
 	INTERFACE2_DOWN=1
 fi
 
-sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+if [ "$ON_A_CLOUD" -eq "0" ]; then sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces; fi
 sleep 1
 
 if [ $INTERFACE1_DOWN = 1 ] ; then
@@ -105,17 +105,13 @@ if [ $INTERFACE1_DOWN = 1 ] ; then
 fi
 
 if [ $INTERFACE3_DOWN = 1 ] ; then
-		# New v.0.5.0 hast to be tested
 		sudo ifup $INTERFACE3
 		INTERFACE3_DOWN=0
-		###
 fi
 
 if [ $INTERFACE2_DOWN = 1 ] ; then
 		sudo ifup $INTERFACE2
-		# New v.0.5.0 hast to be tested
 		sudo ifup $INTERFACE4
-		###
 		INTERFACE2_DOWN=0
 fi
 
@@ -131,17 +127,25 @@ fi
 # If wlan0 or wlan1 is not acting as AP then we have to do something about it!
 if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 	sudo sed -i "s/^interface=.*/interface=$INTERFACE1/" ${HOSTAPD}
-	sudo systemctl restart hostapd
-	sleep 5
-	LOG_STATUS=$(sudo systemctl is-active hostapd)
-	if [ $LOG_STATUS = activating ] || [ $LOG_STATUS = inactive ] ; then
-		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
-		sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
-		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
-		sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
-		sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+		# New v.0.5.4 avoid to run hostapd if it is masked
+	AP_STATUS=$(sudo systemctl is-enable hostapd)
+	if [ "$AP_STATUS" != "masked" ] ; then
 		sudo systemctl restart hostapd
 		sleep 5
+	fi
+	# New v.0.5.4 avoid to run hostapd if it is masked
+	AP_STATUS=$(sudo systemctl is-enable hostapd)
+	if [ "$AP_STATUS" != "masked" ] ; then
+		AP_STATUS=$(sudo systemctl is-active hostapd)
+		if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
+			sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
+			sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
+			sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
+			sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
+			sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+			sudo systemctl restart hostapd
+			sleep 5
+		fi
 	fi
 fi
 

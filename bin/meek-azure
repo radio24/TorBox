@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ MENU_HEIGHT_25=25
 #Colors
 RED='\033[1;31m'
 GREEN='\033[1;32m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -78,7 +78,7 @@ case $MEEKSTRING in
   "OFF")
 		if grep "^ReachableAddresses" ${TORRC} ; then
 			INPUT=$(cat $TXT_DIR/no_antifirewall-please-text)
-			if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 			fi
 		fi
@@ -88,8 +88,8 @@ case $MEEKSTRING in
 		readarray -t configured_meekazure_deactivated < <(grep "^#Bridge meek_lite " ${TORRC})
 		if [ ${#configured_meekazure_deactivated[0]} = 0 ]; then
 			echo " "
-			echo -e "${WHITE}[!] There is no MEEK-AZURE configured! Did you change /etc/tor/torrc ?${NOCOLOR}"
-			echo -e "${WHITE}[!] We cannot activate MEEK-AZURE! Contact anonym@torbox.ch for help!${NOCOLOR}"
+			echo -e "${YELLOW}[!] There is no MEEK-AZURE configured! Did you change /etc/tor/torrc ?${NOCOLOR}"
+			echo -e "${YELLOW}[!] We cannot activate MEEK-AZURE! Contact anonym@torbox.ch for help!${NOCOLOR}"
 			read -n 1 -s -r -p "Press any key to continue"
 			exit 1
 		else
@@ -104,7 +104,7 @@ case $MEEKSTRING in
 		OCHECK=0
 		# if [ $OCHECK == 1 ]; then
 		#	echo " "
-		#	echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+		#	echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
 		#	echo -e "${RED}[+] Checking next the MEEK-AZURE SERVER - this could take a moment!${NOCOLOR}"
 		#	echo -e "${RED}[+] You can only use MEEK-AZURE, if the server is ONLINE!${NOCOLOR}"
 		#	sleep 2
@@ -131,21 +131,21 @@ case $MEEKSTRING in
 		#	done
 		#	if [ $MEEK_ON == 0 ] ; then
 		#		echo " "
-		#		echo -e "${WHITE}[!] SORRY! - the MEEK-AZURE SERVER seems to be OFFLINE!${NOCOLOR}"
+		#		echo -e "${YELLOW}[!] SORRY! - the MEEK-AZURE SERVER seems to be OFFLINE!${NOCOLOR}"
 		#		echo -e "${RED}[+] We try to use it anyway, but most likely it will not work :(${NOCOLOR}"
 		#	fi
 		#	echo " "
 		#	read -n 1 -s -r -p "Press any key to continue"
 		# else
 		#	echo " "
-		#	echo -e "${WHITE}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
+		#	echo -e "${YELLOW}[!] SORRY! - no connection with the bridge database!${NOCOLOR}"
 		#	echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
 		#	echo " "
 		#	sleep 3
 		# fi
 		clear
 		INPUT=$(cat $TXT_DIR/activate-meek-azure-text)
-		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 			clear
 			deactivating_bridge_relay
 			deactivate_obfs4_bridges NORESTART
@@ -164,7 +164,7 @@ case $MEEKSTRING in
 
 	"ON!")
     INPUT=$(cat $TXT_DIR/deactivate-meek-azure-text)
-    if (whiptail --title "TorBox - INFO" --defaultno --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+    if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
       clear
       sudo sed -i "s/^Bridge snowflake /#Bridge snowflake /g" ${TORRC}
       sudo sed -i "s/^Bridge meek_lite /#Bridge meek_lite /g" ${TORRC}

@@ -1,10 +1,12 @@
 This menu entry supposes that TorBox is connected to the Internet through
-the onboard Ethernet interface (eth0).
+the onboard Ethernet interface (eth0). It is also the case if TorBox is
+hosted on a cloud.
 
 The next step is to set up TorBox so that your client devices have access
-through TorBox's wireless network (wlan0) and/or through an USB Ethernet
-adapter (eth1). In the second case, please plug in the adapter and
-connect the ethernet cable with your client device NOW.
+through TorBox's wireless network (wlan0), through an USB Ethernet
+adapter (eth1), and/or via an installed VPN server (tun1). In case of an
+USB Ethernet adapter: please plug in the adapter and connect the ethernet
+cable with your client device NOW.
 
 If we have to restart TorBox's wireless network, please reconnect your
 client without closing the ssh session. Usually, the configuration

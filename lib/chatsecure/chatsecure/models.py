@@ -14,7 +14,8 @@ if os.environ.get("INSTANCE_NAME"):
     db_name = BASE_DIR / "db/{}.db".format(os.environ.get("INSTANCE_NAME"))
 
 db = pw.SqliteDatabase(
-    db_name, pragmas={"journal_mode": "wal", "cache_size": 10000, "foreign_keys": 1}
+    db_name,
+    pragmas={"journal_mode": "wal", "cache_size": 10000, "foreign_keys": 1}
 )
 
 
