@@ -90,7 +90,7 @@ if [ $EXITID = "EXITID=1" ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - BRIDGE REMOVAL MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
 " 1" "Delete ALL configured Snowflake bridges and directly connect tor"  \
 " 2" "Delete only Snowflake bridges, which do not exist anymore"  \

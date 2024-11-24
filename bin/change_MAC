@@ -96,7 +96,7 @@ change_mac_address()
 	O_DEVICE=$1
 	exitstatus=0
 	if [ -z "$CHOICE2" ]; then
-		INPUT="TorBox v.0.5.3 - Change the MAC address for $O_DEVICE"
+		INPUT="TorBox v.0.5.4 - Change the MAC address for $O_DEVICE"
 		CHOICE2=$(whiptail --nocancel --title "$INPUT" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" 9 $MENU_WIDTH 3 \
 		"1" "Randomize the MAC addresse(s)" ON \
 		"2" "Use the permanent, unique MAC address of the interface(s)" OFF \
@@ -112,7 +112,7 @@ change_mac_address()
 				MAC_ADDRESS="random"
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
-				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
@@ -125,7 +125,7 @@ change_mac_address()
 				echo
 				sudo macchanger -r $O_DEVICE
 				echo
-				# NEW v.0.5.3: We have only to put an interface up, if it was up before
+				# We have only to put an interface up, if it was up before
 				if [ "$INTERFACE1_DOWN" == "1" ]; then
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE up
@@ -139,7 +139,7 @@ change_mac_address()
 				MAC_ADDRESS="permanent"
 				sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 				clear
-				# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
@@ -152,7 +152,7 @@ change_mac_address()
 				echo
 				sudo macchanger -p $O_DEVICE
 				echo
-				# NEW v.0.5.3: We have only to put an interface up, if it was up before
+				# We have only to put an interface up, if it was up before
 				if [ "$INTERFACE1_DOWN" == "1" ]; then
 					echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE up
@@ -178,7 +178,7 @@ change_mac_address()
 				 	fi
 				 	sudo sed -i "s/^MAC_$O_DEVICE=.*/MAC_$O_DEVICE=$MAC_ADDRESS/" ${RUNFILE}
 					clear
-					# NEW v.0.5.3: We have only to put an interface down, if it is not already down
+					# We have only to put an interface down, if it is not already down
 					# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 					if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
 						echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
@@ -189,7 +189,7 @@ change_mac_address()
 					#
 					echo -e "${RED}[+] Setting MAC address to $MAC_ADDRESS ${NOCOLOR}"
 			 		sudo ip link set dev $O_DEVICE address $MAC_ADDRESS
-					# NEW v.0.5.3: We have only to put an interface up, if it was up before
+					# We have only to put an interface up, if it was up before
 					if [ "$INTERFACE1_DOWN" == "1" ]; then
 						echo -e "${RED}[+] Starting up interface $O_DEVICE!${NOCOLOR}"
 			 			sudo ip link set dev $O_DEVICE up
@@ -239,7 +239,7 @@ change_mac_address_finish()
 read_config
 
 if [ -z "$CHOICE2" ]; then
-	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Change/randomize the MAC adresses of TorBox's interfaces"  \
 	" 2" "List the MAC adresses of TorBox's interfaces"  \
@@ -256,7 +256,7 @@ case "$CHOICE3" in
 		if [ -z "$CHOICE2" ]; then
 			if grep -q "usb0" <<< "$AVAILABLE_INTERFACES"; then
 				###### DISPLAY THE AVAILABLE INTERFACES inluding usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
@@ -265,7 +265,7 @@ case "$CHOICE3" in
 				3>&1 1>&2 2>&3)
 			else
 				###### DISPLAY THE AVAILABLE INTERFACES without usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
@@ -305,36 +305,26 @@ case "$CHOICE3" in
 		echo ""
 		O_DEVICE="wlan0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			# NEW v.0.5.3 Use ip instead of ifconfig
-			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
  			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_wlan0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="wlan1"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			# NEW v.0.5.3 Use ip instead of ifconfig
-			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_wlan1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="eth0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			# NEW v.0.5.3 Use ip instead of ifconfig
-			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_eth0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="eth1"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			# NEW v.0.5.3 Use ip instead of ifconfig
-			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
  			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_eth1${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi
 		O_DEVICE="usb0"
 		if grep -q "$O_DEVICE" <<< "$AVAILABLE_INTERFACES"; then
-			# NEW v.0.5.3 Use ip instead of ifconfig
-			#MAC_ADDRESS_NUMBER=$(ifconfig $O_DEVICE | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			MAC_ADDRESS_NUMBER=$(ip -o link show $O_DEVICE | cut -d ' ' -f 2,20 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')
 			echo -e "Interface: ${RED}$O_DEVICE${NOCOLOR} - status: ${RED}$MAC_usb0${NOCOLOR} - current MAC: ${RED}$MAC_ADDRESS_NUMBER${NOCOLOR}"
 		fi

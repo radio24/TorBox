@@ -70,34 +70,28 @@ fi
 # pgrep -f "dhclient.$INTERFACE1" will only return true, if the Internet is on INTERFACE1
 # no need to change anything if INTERFACE1 was already the AP
 #
-# NEW v.0.5.0
-# New: we have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
+# We have also to take down the Interface with the old AP to avoid that the IP address (192.168.4x.1) is given twice
 # ATTENTION: If this will disconnect the clients or hang TorBox then dhclient has to be removed.
-# NEW v.0.5.3:
 # ATTENTION: Under Raspberry Pi OS we can grep dhclient, but under Debian that's not possible because dclient is started on
 #            all interfaces. We have to avoid to take down the interface with the AP!
 
 if pgrep -f "dhclient.$INTERFACE1" ; then
 	(sudo dhclient -r) 2>&1
-	# NEW v.0.5.3 We can only do that, if the interface is not used as AP
+	# We can only do that, if the interface is not used as AP
 	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 		sudo ifdown $INTERFACE1
 		INTERFACE1_DOWN=1
 	fi
 	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
-		# New v.0.5.0 hast to be tested
 		sudo ifdown $INTERFACE3
 		INTERFACE3_DOWN=1
 	fi
-	###
 fi
 
 if pgrep -f "dhclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2
-	# New v.0.5.0 hast to be tested
 	sudo ifdown $INTERFACE4
-	###
 	INTERFACE2_DOWN=1
 fi
 
@@ -111,17 +105,13 @@ if [ $INTERFACE1_DOWN = 1 ] ; then
 fi
 
 if [ $INTERFACE3_DOWN = 1 ] ; then
-		# New v.0.5.0 hast to be tested
 		sudo ifup $INTERFACE3
 		INTERFACE3_DOWN=0
-		###
 fi
 
 if [ $INTERFACE2_DOWN = 1 ] ; then
 		sudo ifup $INTERFACE2
-		# New v.0.5.0 hast to be tested
 		sudo ifup $INTERFACE4
-		###
 		INTERFACE2_DOWN=0
 fi
 

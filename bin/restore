@@ -201,7 +201,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 
 			# Please, choose with SPACE which data you want to restore
       if [ "$OBFS4RELAY" == "1" ] || [ "$ONIONSERVICES" == "1" ] || [ "$ONIONAUTH" == "1" ] || [ "$SHAREDFOLDERS" == "1" ]; then
-				WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.3 - RESTORE SELECTION\" --checklist --separate-output \"\nPlease, choose with SPACE which data you want to restore in addition to the TorBox configuration and press ENTER (ESC -> go back).\n\nIMPORTANT: The old configuration will be deleted in ANY CASE!\n\" $MENU_HEIGHT_15 $MENU_WIDTH 4"
+				WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.4 - RESTORE SELECTION\" --checklist --separate-output \"\nPlease, choose with SPACE which data you want to restore in addition to the TorBox configuration and press ENTER (ESC -> go back).\n\nIMPORTANT: The old configuration will be deleted in ANY CASE!\n\" $MENU_HEIGHT_15 $MENU_WIDTH 4"
 				i=0
 				n=0
 				if [ "$OBFS4RELAY" == "1" ]; then

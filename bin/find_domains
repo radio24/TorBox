@@ -104,9 +104,7 @@ do
 				# THIS WILL BREAK!! -> (IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
 				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
-					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
-						#REMOVE COMMENT IF NOT NEEDED: NEW_STRING=$(sed "s/[[:space:]]$SUBDOMAIN/[[:space:]]$SUBDOMAIN[[:space:]]$IP/g" <<< "$NEW_STRING");
 						NEW_STRING=$(sed -E "s/[[:space:]]${SUBDOMAIN}/[[:space:]]${SUBDOMAIN}[[:space:]]$IP/g" <<< "$NEW_STRING");
 					fi
 				done
@@ -114,7 +112,6 @@ do
 			else
 				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
-					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
 						NEW_STRING="$NEW_STRING $SUBDOMAIN $IP_LIST\n"
 					fi
@@ -122,8 +119,6 @@ do
 			fi
 		done
 		# Matching routine stop
-
-    # NEW v.0.5.3
     unset DUMP_ARRAY
 		readarray -t DUMP_ARRAY< <(printf %s"${NEW_STRING}")
 		# Display the result
@@ -133,7 +128,6 @@ do
 		echo -e "${YELLOW}Domain IP${NOCOLOR}"
 		echo "---------"
 		SAMMEL_IP=""
-		# FIX post-v.0.5.3 - changed from i=0 to index=0 because of possible interferences from other functions
 		index=0
 		for DUMP_STRING in "${DUMP_ARRAY[@]}"
 		do
@@ -144,7 +138,6 @@ do
 			# If we have two lines with the same "SUBDOMAIN", so it's because of that command
 			# In this case, we have to implement a matching routine, as we did above
 			if [ ! -z "$SUBDOMAIN" ]; then
-				# NEW post-v.0.5.3
 				ping -c 1 -q $SUBDOMAIN >&/dev/null
 				OCHECK=$?
 				if [ ! $OCHECK -eq 0 ]; then

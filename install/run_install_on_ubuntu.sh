@@ -101,13 +101,12 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox053"
+HOSTNAME="TorBox054"
 
 # For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
-# NEW post-v.0.5.3: Added
 # Release Page of the official Tor repositories
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
@@ -115,7 +114,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# NEW post-v.0.5.3: Currently not updated
 # Release Page of the unofficial Tor repositories on GitHub
 #TOR_RELEASE="unofficial"
 #TORURL="https://github.com/torproject/tor/tags"
@@ -246,7 +244,7 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
-# NEW v.0.5.3: New function re-connect
+# New function re-connect
 # This function tries to restor a connection to the Internet after failing to install a package
 # Syntax: re-connect()
 re-connect()
@@ -297,7 +295,7 @@ re-connect()
 	fi
 }
 
-# NEW v.0.5.3: Modified to check, if the packages was installed
+# Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax check_install_packages <packagenames>
@@ -395,7 +393,6 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	# NEW post-v.0.5.3: Added
 	if [ "$TOR_RELEASE" == "official" ]; then
 		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 	elif [ "$TOR_RELEASE" == "unofficial" ]; then
@@ -550,8 +547,6 @@ fi
 clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
-
-# NEW v.0.5.3
 re-connect
 
 if [ "$STEP_NUMBER" -le "1" ]; then
@@ -649,7 +644,7 @@ if [ "$STEP_NUMBER" -le "2" ]; then
 	echo ""
 
 	echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
-	# NEW v.0.5.3: Surpress the system restart dialog
+	# Surpress the system restart dialog
 	sudo apt-get -y remove needrestart
 	sudo apt-get -y update
 	sudo apt-get -y dist-upgrade
@@ -691,7 +686,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	sudo systemctl mask tor
 	# Both tor services have to be masked to block outgoing tor connections
 	sudo systemctl mask tor@default.service
-	# NEW post-v.0.5.3: Added
 	# An old version of easy-rsa was available by default in some openvpn packages
 	if [[ -d /etc/openvpn/easy-rsa/ ]]; then
 		rm -rf /etc/openvpn/easy-rsa/
@@ -743,7 +737,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	echo -e "${RED}[+]         Installing ${YELLOW}Python modules${NOCOLOR}"
 	echo ""
 
-	# NEW v.0.5.3
 	PYTHON_LIB_PATH=$(python -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
 	if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
@@ -831,7 +824,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
 	echo ""
 
-	# NEW v.0.5.3: New way to download the current version of go
+	# New way to download the current version of go
 	if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
 	elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
 	else PLATFORM="linux-armv6l"
@@ -841,7 +834,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
 	wget --no-cache "$GO_DL_PATH$GO_FILENAME"
 	DLCHECK=$?
-	# NEW v.0.5.3: if the download failed, install the package from the distribution
+	# If the download failed, install the package from the distribution
 	if [ "$DLCHECK" != "0" ] ; then
 		echo ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
@@ -879,7 +872,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 		sudo rm $GO_FILENAME
 	fi
 
-	# NEW v.0.5.3: what if .profile doesn't exist?
+	# What if .profile doesn't exist?
 	if [ -f ".profile" ]; then
 		if ! grep "Added by TorBox (001)" .profile ; then
 			sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
@@ -1004,7 +997,6 @@ if [ "$STEP_NUMBER" -le "7" ]; then
 	# 7. Again checking connectivity
 	clear
 	echo -e "${RED}[+] Step 7: Re-checking Internet connectivity...${NOCOLOR}"
-	# NEW v.0.5.3
 	re-connect
 fi
 
@@ -1116,7 +1108,7 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 	fi
 
-	# NEW v.0.5.3: Ubuntu supports Predictable Network Interface Names, but we need wlan0, wlan1 etc.
+	# Ubuntu supports Predictable Network Interface Names, but we need wlan0, wlan1 etc.
 	# See here: https://askubuntu.com/questions/826325/how-to-revert-usb-wifi-interface-name-from-wlxxxxxxxxxxxxx-to-wlanx
 	# See here: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
 	if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
@@ -1146,7 +1138,7 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 	# See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 	sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
 	(sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-	# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+	# No special rc.local for Debian/Ubuntu anymore
 	sudo cp etc/rc.local /etc/rc.local
 	sudo chmod u+x /etc/rc.local
 	# We will enable rc-local further below
@@ -1176,7 +1168,7 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 
 	#Back to the home directory
 	cd
-	# NEW v.0.5.3: what if .profile doesn't exist?
+	# What if .profile doesn't exist?
 	if [ -f ".profile" ]; then
 		if ! grep "Added by TorBox (002)" .profile ; then
 			sudo printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
@@ -1293,7 +1285,7 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	#sudo systemctl start nginx
 	sudo systemctl daemon-reload
 
-	# NEW v.0.5.3: snowflake-client has to be added to apparmor
+	# Snowflake-client has to be added to apparmor
 	if [ -f "/etc/apparmor.d/abstractions/tor" ]; then
 		if ! grep "/usr/bin/snowflake-client Pix," /etc/apparmor.d/abstractions/tor; then
 			sudo printf "\n# Needed by snowflake\n/usr/bin/snowflake-client Pix,\n" | sudo tee -a /etc/apparmor.d/abstractions/tor;
@@ -1389,7 +1381,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	echo -e "${YELLOW}    After this last step, TorBox will reboot.${NOCOLOR}"
 	echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 	echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
+	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox054) use \"CHANGE-IT\" as password.${NOCOLOR}"
 	echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 	echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 	echo ""
@@ -1409,7 +1401,6 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	echo -e "${RED}[+] Setting the timezone to UTC${NOCOLOR}"
 	sudo timedatectl set-timezone UTC
 	echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-	# NEW v.0.5.3
 	# This has to be at the end to avoid unnecessary error messages
 	(sudo hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 	sudo systemctl restart systemd-hostnamed

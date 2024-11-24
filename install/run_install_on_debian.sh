@@ -102,13 +102,12 @@ DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox053"
+HOSTNAME="TorBox054"
 
 # For go
 GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
-# NEW post-v.0.5.3: Added
 # Release Page of the official Tor repositories
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
@@ -116,7 +115,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# NEW post-v.0.5.3: Currently not updated
 # Release Page of the unofficial Tor repositories on GitHub
 #TOR_RELEASE="unofficial"
 #TORURL="https://github.com/torproject/tor/tags"
@@ -245,7 +243,7 @@ done
 ##############################
 ######## FUNCTIONS ###########
 
-# NEW v.0.5.3: New function re-connect
+# New function re-connect
 # This function tries to restor a connection to the Internet after failing to install a package
 # Syntax: re-connect()
 re-connect()
@@ -290,7 +288,7 @@ re-connect()
 	fi
 }
 
-# NEW v.0.5.3: Modified to check, if the packages was installed
+# Modified to check, if the packages was installed
 # This function installs the packages in a controlled way, so that the correct
 # installation can be checked.
 # Syntax check_install_packages <packagenames>
@@ -388,7 +386,6 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	# NEW post-v.0.5.3: Added
 	if [ "$TOR_RELEASE" == "official" ]; then
 		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 	elif [ "$TOR_RELEASE" == "unofficial" ]; then
@@ -516,7 +513,7 @@ if (whiptail --title "TorBox Installation on Debian (scroll down!)" --scrolltext
 	exit
 fi
 
-# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
+# Implementation of optional randomization of the hostname to prevent ISPs to see the default
 if [ -z "$RANDOMIZE_HOSTNAME" ]; then
 	if (whiptail --title "TorBox Installation on Debian" --defaultno --no-button "USE DEFAULT" --yes-button "CHANGE!" --yesno "In highly authoritarian countries connecting the tor network could be seen as suspicious. The default hostname of TorBox is \"TorBox<nnn>\" (<nnn> representing the version).\n\nWhen a computer connects to an ISP's network, it sends a DHCP request that includes the hostname. Because ISPs can see, log and even block hostnames, setting another hostname or using a randomized hostname may be preferable.\n\nWe recommend randomizing the hostname in highly authoritarian countries or if you think that your ISP blocks tor related network traffic.\n\nDo you want to use the DEFAULT hostname or to CHANGE it?" $MENU_HEIGHT_20 $MENU_WIDTH); then
 		if (whiptail --title "TorBox Installation on Debian" --no-button "SET HOSTNAME" --yes-button "RANDOMIZE HOSTNAME" --yesno "You can set a specific hostname or use a randomized one. Please choose..." $MENU_HEIGHT_10 $MENU_WIDTH); then
@@ -541,8 +538,6 @@ fi
 clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
-
-# NEW v.0.5.3
 re-connect
 
 if [ "$STEP_NUMBER" -le "1" ]; then
@@ -611,7 +606,7 @@ if [ "$STEP_NUMBER" -le "2" ]; then
   # 2. Updating the system
   clear
   echo -e "${RED}[+] Step 2: Updating the system...${NOCOLOR}"
-  # NEW v.0.5.3: Using backport for go
+  # Using backport for go
   if grep "^# deb http://deb.debian.org/debian bullseye-backports main" /etc/apt/sources.list ; then sed -i "s'# deb http://deb.debian.org/debian bullseye-backports main'deb http://deb.debian.org/debian bullseye-backports main'g" /etc/apt/sources.list ; fi
   apt-get -y update
   apt-get -y dist-upgrade
@@ -633,7 +628,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   clear
   echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
   # Necessary packages for Debian systems (not necessary with Raspberry Pi OS)
-  # NEW v.0.5.3 Installing resolvconf will overwrite resolv.conf
+  # NEW v.0.5.4 Installing resolvconf will overwrite resolv.conf
   check_install_packages "resolvconf"
   sleep 3
   (printf "$RESOLVCONF" | tee /etc/resolv.conf) 2>&1
@@ -649,7 +644,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   systemctl mask tor
   # Both tor services have to be masked to block outgoing tor connections
   systemctl mask tor@default.service
-  # NEW post-v.0.5.3: Added
   # An old version of easy-rsa was available by default in some openvpn packages
   if [[ -d /etc/openvpn/easy-rsa/ ]]; then
 	  rm -rf /etc/openvpn/easy-rsa/
@@ -700,7 +694,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   echo -e "${RED}[+]         Installing ${YELLOW}Python modules${NOCOLOR}"
   echo ""
 
-  # NEW v.0.5.3: For Debian 12 needed
+  # For Debian 12 needed
   PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ' ' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/.zip//g" | sed "s/ //g")
   if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
     rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
@@ -787,7 +781,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
   echo ""
 
-  # NEW v.0.5.3: New way to download the current version of go
+  # New way to download the current version of go
   if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
   elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
   else PLATFORM="linux-armv6l"
@@ -798,7 +792,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   wget --no-cache "$GO_DL_PATH$GO_FILENAME"
   DLCHECK=$?
 
-  # NEW v.0.5.3: if the download failed, install the package from the distribution
+	# If the download failed, install the package from the distribution
   if [ "$DLCHECK" != "0" ] ; then
 	  echo ""
 	  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
@@ -840,7 +834,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	  rm $GO_FILENAME
   fi
 
-  # NEW v.0.5.3: what if .profile doesn't exist?
+	# What if .profile doesn't exist?
   if [ -f ".profile" ]; then
 	  if ! grep "Added by TorBox (001)" .profile ; then
 		  printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile
@@ -885,7 +879,7 @@ if [ "$STEP_NUMBER" -le "5" ]; then
   if [ $DLCHECK -eq 0 ]; then
 	  export GO111MODULE="on"
 	  cd obfs4proxy
-	  # NEW v.0.5.3 - with or without the path
+		# NEW v.0.5.4 With or without the path
 	  if [ -f /usr/local/go/bin/go ]; then
 		  GO_PROGRAM=/usr/local/go/bin/go
 	  else
@@ -974,7 +968,6 @@ if [ "$STEP_NUMBER" -le "7" ]; then
   # 7. Again checking connectivity
   clear
   echo -e "${RED}[+] Step 7: Re-checking Internet connectivity${NOCOLOR}"
-  # NEW v.0.5.3
   re-connect
 fi
 
@@ -1128,7 +1121,7 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 
   #Back to the home directory
   cd
-  # NEW v.0.5.3: what if .profile doesn't exist?
+	# What if .profile doesn't exist?
   if [ -f ".profile" ]; then
 	  if ! grep "Added by TorBox (002)" .profile ; then
 		  printf "\n# Added by TorBox (002)\ncd torbox\n./menu\n" | tee -a .profile
@@ -1209,7 +1202,7 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	systemctl unmask resolvconf
 	systemctl enable resolvconf
 	systemctl start resolvconf
-	# NEW v.0.5.3: This doesn't work - rc-local will be still masked
+	# This doesn't work - rc-local will be still masked
 	#systemctl unmask rc-local
 	#systemctl enable rc-local
 	echo ""
@@ -1342,7 +1335,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
 	echo -e "${YELLOW}    After this last step, TorBox will restart.${NOCOLOR}"
 	echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 	echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox053) use \"CHANGE-IT\" as password.${NOCOLOR}"
+	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox054) use \"CHANGE-IT\" as password.${NOCOLOR}"
 	echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 	echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 	echo ""
@@ -1374,7 +1367,6 @@ if [ "$STEP_NUMBER" -le "15" ]; then
 	(chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
 	echo ""
 	echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
-	# NEW v.0.5.3
 	# This has to be at the end to avoid unnecessary error messages
 	(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
 	systemctl restart systemd-hostnamed

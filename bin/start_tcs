@@ -86,10 +86,8 @@ if [ $n -gt 0 ] ; then
 			else
 				echo -e "${RED}[+] Removing TCS configuration...${NOCOLOR}"
 				sudo sed -i "/^TCS-${SERVICE_NAME}/d" "${RUNFILE}"
-				# NEW - TorBox v.0.5.3
 				(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
 				(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
-				#
 				echo -e "${RED}[+] Removing Nginx configuration...${NOCOLOR}"
 				find_virtport "${SERVICE_NAME}"
 				(sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null

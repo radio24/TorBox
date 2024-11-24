@@ -228,7 +228,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
         exit 0
       fi
 
-			# NEW v.0.5.3: Implementation of optional randomization of the hostname to prevent ISPs to see the default
+			# Implementation of optional randomization of the hostname to prevent ISPs to see the default
 			INPUT=$(cat $TXT_DIR/randomize_hostname-text)
 			HOSTNAME=$(hostname)
 			INPUT=$(sed "s/HOSTNAMEANKER/$HOSTNAME/g" <<< "$INPUT")
@@ -283,7 +283,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			# Configuring the source of the Internet (not on a cloud)
 			if [ "$ON_A_CLOUD" -eq "0" ]; then
 				check_interface_with_internet
-    		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
+    		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     		"==" "===============================================================" \
     		" 1" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
     		" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \

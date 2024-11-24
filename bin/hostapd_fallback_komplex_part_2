@@ -106,10 +106,3 @@ fi
 # This function has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
 sudo systemctl restart isc-dhcp-server
-
-# NEW v.0.5.3 - not necessary - all iptables config should only be done in set_interfaces_x
-#sudo /sbin/iptables -F
-#sudo /sbin/iptables -t nat -F
-#sudo /sbin/iptables -P FORWARD DROP
-#sudo /sbin/iptables -P INPUT ACCEPT
-#sudo /sbin/iptables -P OUTPUT ACCEPT

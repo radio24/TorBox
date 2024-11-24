@@ -265,7 +265,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
 " 2" "Generate SSH key for TorBox login"  \
@@ -911,7 +911,7 @@ case "$CHOICE" in
               echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
               sudo systemctl mask --now hostapd
               sudo systemctl daemon-reload
-              # NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+              # No special rc.local for Debian/Ubuntu anymore
               sudo cp etc/rc.local.disable_wlan /etc/rc.local
 							sudo chmod a+x /etc/rc.local
             fi
@@ -934,7 +934,7 @@ case "$CHOICE" in
         	clear
         	echo " "
         	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        	# NEW v.0.5.3: No special rc.local for Debian/Ubuntu anymore
+        	# No special rc.local for Debian/Ubuntu anymore
         	sudo cp etc/rc.local /etc/rc.local
 					sudo chmod a+x /etc/rc.local
         	sudo systemctl unmask hostapd
@@ -1323,7 +1323,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for Sixfab Shields/HATs for cellular connections
-  #Remark for TorBox v.0.5.3 - we try to do it without an online connection.
+  #Remark for TorBox v.0.5.4 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
   23)
 		if [ -z "$CHECK_HD3" ]; then

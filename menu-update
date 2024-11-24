@@ -53,7 +53,7 @@ YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Default hostname
-HOSTNAME="TorBox053"
+HOSTNAME="TorBox054"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -66,7 +66,6 @@ CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
-# NEW post-v.0.5.3: Added
 # Release Page of the official Tor repositories
 TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
@@ -74,7 +73,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\"gl-font-bold\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# NEW post-v.0.5.3: Currently not updated
 # Release Page of the unofficial Tor repositories on GitHub
 #TOR_RELEASE="unofficial"
 #TORURL="https://github.com/torproject/tor/tags"
@@ -185,7 +183,6 @@ update_tor_preparations()
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
   clear
   echo -e "${RED}[+] Fetching possible tor versions... ${NOCOLOR}"
-	# NEW post-v.0.5.3: Added
 	if [ "$TOR_RELEASE" == "official" ]; then
   	if [ $TORCONNECT -eq 0 ]; then
 			readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
@@ -756,7 +753,7 @@ stty intr ^c
 trap
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.3 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \
@@ -813,12 +810,12 @@ case "$CHOICE" in
 			sleep 10
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
-      # NEW v.0.5.3: For RaspberryPi OS based on Debian Bookworm needed
+      # For RaspberryPi OS based on Debian Bookworm needed
       PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
       if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
         sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
       fi
-			# NEW v.0.5.3: New way to install and check Python requirements
+			# New way to install and check Python requirements
       cd
       sudo pip3 install pipenv
       wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
@@ -875,7 +872,7 @@ case "$CHOICE" in
 			if [ $DLCHECK -eq 0 ] ; then
 				sudo rm -rvf /usr/local/go/
 			  sudo tar -C /usr/local -xzvf $GO_FILENAME
-				# NEW v.0.5.3: what if .profile doesn't exist?
+				# What if .profile doesn't exist?
 				if [ -f ".profile" ]; then
 					if ! grep "Added by TorBox (001)" .profile ; then
 						sudo printf "\n# Added by TorBox (001)\nexport PATH=$PATH:/usr/local/go/bin\n" | tee -a .profile

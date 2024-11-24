@@ -112,7 +112,7 @@ read_config
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "==========================================[Domain Exclusion]===" \
 " 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 " 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
@@ -245,7 +245,7 @@ case "$CHOICE" in
 
 				# The domain is already added
 				if [ "$NUMBER_DOMAIN_EXIST_CLEAR" -gt "0" ] || [ "$NUMBER_DOMAIN_EXIST_VPN" -gt "0" ]; then
-					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --menu "The domain is already on the exclusion list. You can do the following:" 11 $MENU_WIDTH 3 \
+					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --menu "The domain is already on the exclusion list. You can do the following:" 11 $MENU_WIDTH 3 \
 					" 1" "Rescan and add more subdomains and IPs connected to the domain" \
 					" 2" "Move entries (for example netflix.com) from $LISTE01 to $LISTE02"  \
 					" 3" "Remove a domain from the exclusion list"  \
@@ -260,7 +260,7 @@ case "$CHOICE" in
 						# Rescan and add more subdomains and IPs connected to the domain
 						1)
 						  INPUT=$(cat text/rescan_domain-text)
-							whiptail --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
+							whiptail --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --textbox text/rescan_domain-text $MENU_HEIGHT_25 $MENU_WIDTH
 					    bin/find_domains "$DOMAINNAME" 1
 							clear
 							config_ipset $CLEARNET_LIST_FILE_OWN $CLEARNET_LIST $CLEARNET_LIST_FILE
@@ -330,7 +330,7 @@ case "$CHOICE" in
 
 				# The domain is not added, yet.
 				else
-					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - DOMAIN EXCLUSION" --menu "The domain is not added, yet! You have to chose in which exceptionslist you want to add the domain:" $MENU_HEIGHT_10 $MENU_WIDTH 2 \
+					CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DOMAIN EXCLUSION" --menu "The domain is not added, yet! You have to chose in which exceptionslist you want to add the domain:" $MENU_HEIGHT_10 $MENU_WIDTH 2 \
 					" 1" "CLEARNET - direct connection, no protection" \
 					" 2" "VPN      - works only with VPN connection"  \
 					3>&1 1>&2 2>&3)
@@ -350,7 +350,6 @@ case "$CHOICE" in
 					esac
 					clear
 					echo -e "${RED}[+] Finding obvious IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
-					# NEW post-v.0.5.3
 					add_open_dns
 					echo ""
 					MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")

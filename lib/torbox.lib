@@ -1025,7 +1025,7 @@ test_service_exists()
     echo " "
     read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
     clear
-		# NEW - TorBox v.0.5.3
+		# NEW - TorBox v.0.5.4
 		trap "bash menu-onion; exit 0" EXIT
     exit 1
   fi
@@ -1063,7 +1063,7 @@ stopping_tcs()
 		PID=$(cat /home/torbox/torbox/lib/chatsecure/pid/${TCS_NAME}.pid)
 		(sudo kill $PID) &>/dev/null
 		sudo sed -E -i "/^TCS-$TCS_NAME=lib\/chatsecure\/tcs/d" "${RUNFILE}"
-		# NEW - TorBox v.0.5.3
+		# NEW - TorBox v.0.5.4
 		sleep 2
 		(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
 		(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null

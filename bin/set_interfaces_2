@@ -97,7 +97,7 @@ captive_tunneling()
 	if [ $EXITLOOP == 0 ]; then
 		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
 		echo ""
-		# TEST: that should improve the connectivity with the captive portal
+		# That should improve the connectivity with the captive portal
 		sudo ifdown $O_DEVICE
 		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $O_DEVICE
@@ -117,11 +117,6 @@ captive_tunneling()
 		sleep 2
 	fi
 }
-
-# NEW v.0.5.3 - Not necessary
-###### WE WILL DEACTIVATE BRIDGE RELAY MODE FIRST ######
-#clear
-#[ "$ONLY_RESET" != "1" ] && deactivating_bridge_relay
 
 ###### ADDITIONAL COMMANDS DEPENDED ON THE INTERFACE CONNECTED TO THE INTERNET ######
 while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
