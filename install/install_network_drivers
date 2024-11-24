@@ -2,7 +2,7 @@
 # shellcheck disable=SC2046
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -35,10 +35,10 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
-# Identify the Operation System
+# Identify the Operating System
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
@@ -47,7 +47,6 @@ if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbia
 EXECUTED=$1
 
 ######## PREPARATIONS ########
-sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 cd
 
 # For a Raspberry Pi OS installation
@@ -396,8 +395,8 @@ elif [ "$CHECK_OS" == "Ubuntu" ]; then
 
 elif [ "$CHECK_OS" == "OTHER" ]; then
 	clear
-	echo -e "${WHITE}[+] It seems that your Operation System is not supported, yet!!${NOCOLOR}"
-	echo -e "${WHITE}[+] Please, contact anonym@torbox.ch for help! ${NOCOLOR}"
+	echo -e "${YELLOW}[+] It seems that your Operating System is not supported, yet!!${NOCOLOR}"
+	echo -e "${YELLOW}[+] Please, contact anonym@torbox.ch for help! ${NOCOLOR}"
 	read -n 1 -s -r -p "Press any key to continue"
 	exit 1
 fi

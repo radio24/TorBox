@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -35,7 +35,7 @@ MENU_HEIGHT_20=20
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Generating the filename for the backup
@@ -52,7 +52,6 @@ CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 HASHED_FINGERPRINT_DIR="${DATA_DIR}/hashed-fingerprint"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
-# NEW post-v.0.5.3: Backup the entire directory to preserve also the exlusion files --> SUPPORT NOT YET ADDED TO RESTORE!!!
 RUNDIR="/home/torbox/torbox/run"
 TXT_DIR="/home/torbox/torbox/text"
 
@@ -60,9 +59,10 @@ TXT_DIR="/home/torbox/torbox/text"
 ###### MAIN ######
 clear
 INPUT=$(cat "${TXT_DIR}/backup-text")
-if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO" --yes-button "YES" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 	exitstatus=$?
-	if [ "$exitstatus" == "0" ]; then
+	if [ "$exitstatus" = "0" ]; then
+
 		# OBFS4 Bridge Relay data exist?
 		if sudo -u "${TOR_USER}" [ ! -f "${HASHED_FINGERPRINT_DIR}" ]; then
 			OBFS4RELAY=0
@@ -88,7 +88,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 
 		# Please, choose with SPACE which data you want to includ
 		if [ "$OBFS4RELAY" == "1" ] || [ "$ONIONSERVICES" == "1" ] || [ "$ONIONAUTH" == "1" ] ; then
-			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.3 - BACKUP SELECTION\" --checklist --separate-output \"\nAdditionally to the TorBox configuration, we have found OBFS4 Bridge Relay and/or Onion Services data, which can be included in the backup. \n\nPlease, choose with SPACE which data you want to includ and press ENTER \n(ESC -> go back)\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
+			WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.4 - BACKUP SELECTION\" --checklist --separate-output \"\nAdditionally to the TorBox configuration, we have found OBFS4 Bridge Relay and/or Onion Services data, which can be included in the backup. \n\nPlease, choose with SPACE which data you want to includ and press ENTER \n(ESC -> go back)\n\" $MENU_HEIGHT_20 $MENU_WIDTH 3"
 			i=0
 			n=0
 			if [ "$OBFS4RELAY" == "1" ]; then
@@ -154,7 +154,11 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 		if [ "$OBFS4RELAY" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR}/fingerprint ${DATA_DIR}/hashed-fingerprint ${DATA_DIR}/keys ${DATA_DIR}/pt_state"; fi
 		if [ "$ONIONSERVICES" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${DATA_DIR_OS}" ; fi
 		if [ "$ONIONAUTH" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${CLIENT_ONION_AUTH_DIR}"; fi
-		if [ "$SHAREDFOLDERS" == "1" ]; then BACKUPSTRING="$BACKUPSTRING ${WEBSITE_DIR}"; fi
+		if [ "$SHAREDFOLDERS" == "1" ]; then
+			BACKUPSTRING="$BACKUPSTRING ${WEBSITE_DIR}";
+		else
+			sudo find "$WEBSITE_DIR" -type d >${RUNDIR}/directories_list.txt
+		fi
 		clear
 		echo -e "${RED}[+] Start backup...${NOCOLOR}"
 		echo -e "${RED}[+] Calculating size...${NOCOLOR}"
@@ -171,21 +175,22 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --no-button "NO
 				mkdir $BACKUP_DIR
 			fi
 			(sudo tar -cpzf "$OS_BK_TAR" --absolute-names ${BACKUPSTRING}) 2>/dev/null
+			sudo rm "${RUNDIR}/directories_list.txt"
 			LINK_EXIST=$(ls -L "$BACKUP_DIR/shared_folders" 2>/dev/null)
 			if [ -z "$LINK_EXIST" ]; then
 				echo -e "${RED}[+] Creating a link to the shared folders.${NOCOLOR}"
 				(sudo ln -sf "${WEBSITE_DIR}" "${BACKUP_DIR}/shared_folders") 2>/dev/null
 			fi
 			echo ""
-			echo -e "${WHITE}[+] Backup is done!${NOCOLOR}"
-			echo -e "${RED}[+] You will find it here: ${WHITE}${OS_BK_TAR}"
+			echo -e "${YELLOW}[+] Backup is done!${NOCOLOR}"
+			echo -e "${RED}[+] You will find it here: ${YELLOW}${OS_BK_TAR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear
 		else
 			clear
-			echo -e "${WHITE}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
-			echo -e "${WHITE}[+] Did you include shared folders? Please, try again without them!${NOCOLOR}"
+			echo -e "${YELLOW}[!] ABORT! NOT ENOUGH SPACE!${NOCOLOR}"
+			echo -e "${YELLOW}[+] Did you include shared folders? Please, try again without them!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 			clear

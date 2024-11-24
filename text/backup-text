@@ -1,4 +1,4 @@
-This menu entry backups the TorBox configuration. Users can also backup their OBFS4 Bridge Relay or Onion Services if available.
+This menu entry backups the TorBox configuration including domain exclusion lists, OBFS4 Bridge Relay and Onion Services data if available.
 
 In the end, the backup is stored as a compressed file in a directory called "backup" in TorBox's home directory.
 

@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2076,SC2190
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -41,7 +41,7 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -104,9 +104,7 @@ do
 				# THIS WILL BREAK!! -> (IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST") &>/dev/null
 				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
-					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
-						#REMOVE COMMENT IF NOT NEEDED: NEW_STRING=$(sed "s/[[:space:]]$SUBDOMAIN/[[:space:]]$SUBDOMAIN[[:space:]]$IP/g" <<< "$NEW_STRING");
 						NEW_STRING=$(sed -E "s/[[:space:]]${SUBDOMAIN}/[[:space:]]${SUBDOMAIN}[[:space:]]$IP/g" <<< "$NEW_STRING");
 					fi
 				done
@@ -114,7 +112,6 @@ do
 			else
 				IFS=' ' read -ra IP_ARRAY <<< "$IP_LIST"
 				for IP in "${IP_ARRAY[@]}"; do
-					#REMOVE COMMENT IF NOT NEEDED: #if ! grep -q -E "$IP" <<< "$NEW_STRING"; then
 					if ! grep -q "$IP" <<< "${NEW_STRING[*]}"; then
 						NEW_STRING="$NEW_STRING $SUBDOMAIN $IP_LIST\n"
 					fi
@@ -122,18 +119,15 @@ do
 			fi
 		done
 		# Matching routine stop
-
-    # NEW v.0.5.3
     unset DUMP_ARRAY
 		readarray -t DUMP_ARRAY< <(printf %s"${NEW_STRING}")
 		# Display the result
 	  clear
 		echo -e "${RED}[+] Displaying the result${NOCOLOR}"
 		echo ""
-		echo -e "${WHITE}Domain IP${NOCOLOR}"
+		echo -e "${YELLOW}Domain IP${NOCOLOR}"
 		echo "---------"
 		SAMMEL_IP=""
-		# FIX post-v.0.5.3 - changed from i=0 to index=0 because of possible interferences from other functions
 		index=0
 		for DUMP_STRING in "${DUMP_ARRAY[@]}"
 		do
@@ -144,7 +138,6 @@ do
 			# If we have two lines with the same "SUBDOMAIN", so it's because of that command
 			# In this case, we have to implement a matching routine, as we did above
 			if [ ! -z "$SUBDOMAIN" ]; then
-				# NEW post-v.0.5.3
 				ping -c 1 -q $SUBDOMAIN >&/dev/null
 				OCHECK=$?
 				if [ ! $OCHECK -eq 0 ]; then
@@ -162,8 +155,8 @@ do
 				IP=$(xargs <<< "$IP");
 				MORE_IPs=$(xargs <<< "$MORE_IPs");
 				RED='\033[1;31m'
-				WHITE='\033[1;37m'
-				echo -e "${WHITE}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
+				YELLOW='\033[1;93m'
+				echo -e "${YELLOW}$SUBDOMAIN ${RED}$IP $MORE_IPs${NOCOLOR}"
 				SAMMEL_IP_STRING="$SUBDOMAIN $IP $MORE_IPs"
 				SAMMEL_IP_STRING=$(xargs <<< "$SAMMEL_IP_STRING")
 				SAMMEL_IP[index]="$SAMMEL_IP_STRING"
@@ -198,7 +191,7 @@ if [ "$RESCAN" == "1" ]; then
 		touch "$VPN_LIST_FILE_OWN"
 	fi
 	if [ -z "$LISTE01" ]; then
-		echo -e "${WHITE}[!] The domain is not added, yet!${NOCOLOR}"
+		echo -e "${YELLOW}[!] The domain is not added, yet!${NOCOLOR}"
 		echo -e "${RED}    You have to chose in which exceptionslist you want to add the domain:${NOCOLOR}"
 		echo ""
 		echo "    1 - CLEARNET - direct connection, no protection"
@@ -207,7 +200,7 @@ if [ "$RESCAN" == "1" ]; then
 		echo ""
 		while true
 		do
-			read -r -p $'\e[1;37mChoose the desired list -> \e[0m'
+			read -r -p $'\e[1;93mChoose the desired list -> \e[0m'
 			if [[ $REPLY =~ ^[120]$ ]] ; then
 				echo
 				break
@@ -221,8 +214,8 @@ if [ "$RESCAN" == "1" ]; then
 		fi
 	fi
 
-	echo -e "${WHITE}[!] Do you want to complement or replace old entries?${NOCOLOR}"
-	echo -e "${RED}    The old/new entries are in ${WHITE}$LISTE01${NOCOLOR}"
+	echo -e "${YELLOW}[!] Do you want to complement or replace old entries?${NOCOLOR}"
+	echo -e "${RED}    The old/new entries are in ${YELLOW}$LISTE01${NOCOLOR}"
 	echo ""
 	echo "    1 - Complement old entries (recommended)"
 	echo "    2 - Replace old entries"
@@ -230,7 +223,7 @@ if [ "$RESCAN" == "1" ]; then
 	echo ""
 	while true
 	do
-  	read -r -p $'\e[1;37mChoose the desired menu entry -> \e[0m'
+  	read -r -p $'\e[1;93mChoose the desired menu entry -> \e[0m'
 		if [[ $REPLY =~ ^[120]$ ]] ; then
 			echo
 			break

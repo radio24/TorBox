@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -34,32 +34,35 @@ import os
 
 interface = False
 
-options, remainder = getopt.getopt(sys.argv[1:], 'i:a', ['interface=',
-														'autoconnect'])
+options, remainder = getopt.getopt(
+    sys.argv[1:], "i:a", ["interface=", "autoconnect"]
+)
 
 # Autoconnect flag
 autoconnect = False
 
 for opt, arg in options:
-	if opt in ('-i', '--interface'):
-		interface = arg
-	elif opt in ('-a', '--autoconnect'):
-		autoconnect = True
+    if opt in ("-i", "--interface"):
+        interface = arg
+    elif opt in ("-a", "--autoconnect"):
+        autoconnect = True
 
 if not interface:
-	print("Usage: %s -i <interface> [-a|--autoconnect]" % (sys.argv[0]) )
-	quit()
+    print("Usage: %s -i <interface> [-a|--autoconnect]" % (sys.argv[0]))
+    quit()
 else:
-	# check interface exists
-	if not os.path.isfile('/sys/class/net/%s/dev_port' % interface):
-		print('[%s]: not available' % interface)
-		quit()
+    # check interface exists
+    if not os.path.isfile("/sys/class/net/%s/dev_port" % interface):
+        print("[%s]: not available" % interface)
+        quit()
 
 from wireless_manager import WirelessManager
 
-def main():
-	twm = WirelessManager(interface, autoconnect)
-	twm.start()
 
-if __name__ == '__main__':
-	main()
+def main():
+    twm = WirelessManager(interface, autoconnect)
+    twm.start()
+
+
+if __name__ == "__main__":
+    main()

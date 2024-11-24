@@ -9,16 +9,16 @@ VirtualAddrNetworkIPv4 10.192.0.0/10
 AutomapHostsSuffixes .onion,.exit
 AutomapHostsOnResolve 1
 TransPort 127.0.0.1:9040
-TransPort 192.168.42.1:9040
+#TransPort 192.168.42.1:9040
 #TransPort 192.168.43.1:9040
 DNSPort 127.0.0.1:9053
-DNSPort 192.168.42.1:9053
+#DNSPort 192.168.42.1:9053
 #DNSPort 192.168.43.1:9053
 SocksPort 127.0.0.1:9050
-SocksPort 192.168.42.1:9050
+#SocksPort 192.168.42.1:9050
 #SocksPort 192.168.43.1:9050
 SocksPort 127.0.0.1:9052 IsolateDestAddr
-SocksPort 192.168.42.1:9052 IsolateDestAddr
+#SocksPort 192.168.42.1:9052 IsolateDestAddr
 #SocksPort 192.168.43.1:9052 IsolateDestAddr
 ControlPort 127.0.0.1:9051
 #ControlPort 192.168.42.1:9051
@@ -44,7 +44,7 @@ AvoidDiskWrites 1
 #ServerTransportPlugin obfs4 exec /usr/bin/obfs4proxy
 #ServerTransportListenAddr obfs4 0.0.0.0:443
 #ContactInfo <address@email.com>
-#Nickname TorBox053
+#Nickname TorBox054
 #BridgeDistribution any
 
 ## TO OVERCOME A FIREWALL, START HERE!
@@ -61,7 +61,7 @@ AvoidDiskWrites 1
 ## means that your firewall allows connections to everything inside net 99,
 ## rejects port 80 connections to net 18, and accepts connections to port 80
 ## otherwise.
-ReachableAddresses accept *:443, accept *:80
+#ReachableAddresses accept *:443, accept *:80
 
 ## TO OVERCOME CENSORSHIP, START HERE!
 ######################################################

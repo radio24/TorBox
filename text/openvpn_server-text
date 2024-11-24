@@ -1,0 +1,20 @@
+You are about to install OpenVPN as a server on your TorBox. It means that every client machine, wherever it is, which is connected via VPN with your TorBox, will route all data to your TorBox and from there to the tor network.
+
+Before you continue, please check the following points:
+- To log into your TorBox via VPN, you have to use the following IP:
+  192.168.44.1. You can use webssh or a SSH/SFTP client.
+- Every client needs its own ovpn-file generated on the TorBox using
+  the Configuration menu (Manage the OpenVPN server).
+- For a client-server VPN connection, it is recommended to use the
+  OpenVPN Connect client software: https://openvpn.net/client/
+- If you want to reach your OpenVPN server outside your local LAN,
+  the server must be reachable (exposed UDP port 443 to the internet).
+- You may manually adapt your configuration if the server does not
+  have a static IP. See here for more: https://t.ly/jcsnL
+
+Next, you must choose if the TorBox is running on physical hardware (on a real box) or a virtual server (on a cloud). In a cloud-based installation, messages will show you if something (for example, the installation of  WLAN drivers) makes no sense, but it will not limit the functionality.
+
+You can also install the OpenVPN server later by using the Configuration
+sub-menu.
+
+Please choose one option or press ESC to abort.

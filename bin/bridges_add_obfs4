@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2010,SC2012,SC2016,SC2062,SC2064,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -72,7 +72,7 @@ i=0
 ###########################
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
 " 1" "Add OBFS4 bridges automatically"  \
 " 2" "Add OBFS4 bridges manually"  \
@@ -91,7 +91,7 @@ case "$CHOICE" in
 			exitstatus=$?
 			COUNTRY=$(echo $COUNTRY | tr '[:upper:]' '[:lower:]')
 			# exitstatus == 255 means that the ESC key was pressed
-			if [ "$exitstatus" == "255" ] || [ "$COUNTRY" == "" ]; then
+			if [ "$exitstatus" = "255" ] || [ "$COUNTRY" = "" ]; then
 				clear
 				echo -e "${RED}[+] No country selected --> trying to fetch general valid OBFS4 bridges!${NOCOLOR}"
 				COUNTRY=00
@@ -104,8 +104,8 @@ case "$CHOICE" in
     	echo -e "${RED}[+] Trying to fetch a bridge... this may take some time, please wait!${NOCOLOR}"
     	trap "bash bridges_add_obfs4 $MODE_BRIDGES $STANDALONE; exit 0" SIGINT
     	(rm -r /tmp/captcha.*) 2>/dev/null
-    	if [ $CLEARNET_DECISSION == 1 ]; then
-				if [ "$COUNTRY" == "00" ]; then
+    	if [ $CLEARNET_DECISION == 1 ]; then
+				if [ "$COUNTRY" = "00" ]; then
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py)
 				else
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py -c $COUNTRY)
@@ -120,7 +120,7 @@ case "$CHOICE" in
 					fi
 				fi
 			else
-				if [ "$COUNTRY" == "00" ]; then
+				if [ "$COUNTRY" = "00" ]; then
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor)
 				else
 					bridge_address=$(python3 $TORBOX_PATH/bin/bridges_get.py --network=tor -c $COUNTRY)
@@ -137,7 +137,7 @@ case "$CHOICE" in
     	fi
 			if [ "$bridge_address" = "-1" ]; then
 				echo " "
-				echo -e "${WHITE}[!] NETWORK ERROR!${NOCOLOR}"
+				echo -e "${YELLOW}[!] NETWORK ERROR!${NOCOLOR}"
 				echo -e "${RED}[+] Sorry, I couldn't fetch a bridge! Please, try again later or add bridges manually!${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p "Press any key to continue"
@@ -162,7 +162,7 @@ case "$CHOICE" in
 				n=0
 				for (( i=0; i<number_bridges; i++ ))
 				do
-					[ "$i" == "0" ] && echo -e "${WHITE}[!] Success! We fetched $number_bridges bridge(s)${NOCOLOR}"
+					[ "$i" == "0" ] && echo -e "${YELLOW}[!] Success! We fetched $number_bridges bridge(s)${NOCOLOR}"
 					n=$((n+1))
 					if grep -q "${bridge_address[$i]}" $TORRC ; then
 						echo -e "${RED}[+] Sorry, bridge number $n is already added!${NOCOLOR}"
@@ -190,8 +190,8 @@ case "$CHOICE" in
     	fi
   	else
     	echo ""
-    	echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-    	echo -e "${WHITE}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
+    	echo -e "${YELLOW}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+    	echo -e "${YELLOW}[!] Can't fetch a bridge - ABORTING :( ${NOCOLOR}"
     	echo " "
     	read -n 1 -s -r -p "Press any key to continue"
     	clear
@@ -207,9 +207,9 @@ case "$CHOICE" in
 		is_integer "${number_bridges}"
 		exitstatus=$?
 		# exitstatus == 1 means that $number_bridges is not an integer
-		if [ "$exitstatus" == "1" ]; then
+		if [ "$exitstatus" = "1" ]; then
 			clear
-			echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+			echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 			echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 			sleep 5
 			clear
@@ -226,7 +226,7 @@ case "$CHOICE" in
           exit 0
         fi
         if grep -q "$bridge_address" $TORRC ; then
-          echo -e "${WHITE}[!] Bridge number $i is already added!${NOCOLOR}"
+          echo -e "${YELLOW}[!] Bridge number $i is already added!${NOCOLOR}"
           sleep 3
           i=$((i+1))
         else

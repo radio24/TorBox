@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2016,SC2154
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -85,7 +85,7 @@ fi
 
 if [ $number_configured_bridges_deactivated = 0 ]; then
   clear
-  echo -e "${WHITE}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
+  echo -e "${YELLOW}[!] There are no deactivated OBFS4 bridges. ${NOCOLOR}"
   echo -e "${RED}[+] You may use the menu entry \"Deactivate OBFS4...\". ${NOCOLOR}"
   echo " "
   read -n 1 -s -r -p "Press any key to continue"
@@ -94,7 +94,7 @@ if [ $number_configured_bridges_deactivated = 0 ]; then
 fi
 
 clear
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - BRIDGE ACTIVATION MENU" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "===============================================================" \
 " 1" "Activate ALL configured OBFS4 bridges"  \
 " 2" "Activate only OBFS4 bridges, which are ONLINE"  \
@@ -119,7 +119,7 @@ case "$CHOICE" in
     clear
     online_check $BRIDGE_DB_URL 0 1
     if [ $OCHECK == 1 ]; then
-      echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+      echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
       echo " "
       echo -e "${RED}[+] Checking for bridges to activate - please wait...${NOCOLOR}"
 			trap break SIGINT
@@ -129,7 +129,7 @@ case "$CHOICE" in
       do
         bridge_address=$(cut -d ' ' -f2- <<< ${configured_bridges_deactivated[$i]})
         bridge_hash=$(cut -d ' ' -f3 <<< $bridge_address)
-        if [ $CLEARNET_DECISSION == 1 ]; then
+        if [ $CLEARNET_DECISION == 1 ]; then
         	bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
         else
           bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -158,7 +158,7 @@ case "$CHOICE" in
 				exit 0
       else
         echo ""
-        echo -e "${WHITE}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
+        echo -e "${YELLOW}[!] There are no usable OBFS4 bridges :(  ${NOCOLOR}"
         echo -e "${RED}[+] Please add some new OBFS4 bridges first! ${NOCOLOR}"
         echo " "
         read -n 1 -s -r -p "Press any key to continue"
@@ -167,8 +167,8 @@ case "$CHOICE" in
       fi
     else
       echo ""
-      echo -e "${WHITE}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
-      echo -e "${WHITE}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
+      echo -e "${YELLOW}[!] OH NO! - no connection to the bridge database :( ${NOCOLOR}"
+      echo -e "${YELLOW}[!] Can't fetch the status of the bridges - ABORTING :( ${NOCOLOR}"
       echo " "
       read -n 1 -s -r -p "Press any key to continue"
       clear
@@ -182,7 +182,7 @@ case "$CHOICE" in
 		clear
 		if [ $OCHECK == 1 ]; then
 			if (whiptail --title "TorBox - BRIDGE ACTIVATION" --yesno "Do you want to see the ONLINE/OFFLINE status of the bridges?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-				echo -e "${WHITE}[+] OK - we are connected with the bridge database${NOCOLOR}"
+				echo -e "${YELLOW}[+] OK - we are connected with the bridge database${NOCOLOR}"
 				echo " "
 				sleep 2
 				STATUS=1
@@ -190,7 +190,7 @@ case "$CHOICE" in
 				STATUS=0
 			fi
 		else
-			echo -e "${WHITE}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
+			echo -e "${YELLOW}[!] SORRY! - no connection with the bridge database${NOCOLOR}"
 			echo -e "${RED}[!] We'll go ahead anyway.${NOCOLOR}"
       echo " "
 			sleep 3
@@ -198,7 +198,7 @@ case "$CHOICE" in
 		number_of_obfs4_bridges
 		if [ "$number_configured_bridges_deactivated" == "0" ]; then
 			echo ""
-			echo -e "${WHITE}[!] There is no deactivated bridge, which can be activated!${NOCOLOR}"
+			echo -e "${YELLOW}[!] There is no deactivated bridge, which can be activated!${NOCOLOR}"
 			echo " "
 			read -n 1 -s -r -p "Press any key to continue"
 			clear
@@ -214,7 +214,7 @@ case "$CHOICE" in
 			bridge_ip=$(cut -d ' ' -f1 <<< $bridge_address)
 			if [ $OCHECK == 1 ] && [ $STATUS == 1 ]; then
 				bridge_hash=$(cut -d ' ' -f2 <<< $bridge_address)
-				if [ $CLEARNET_DECISSION == 1 ]; then
+				if [ $CLEARNET_DECISION == 1 ]; then
 					bridge_status=$($TORBOX_PATH/bin/bridges_check.py -f $bridge_hash)
 				else
 					bridge_status=$($TORBOX_PATH/bin/bridges_check.py --network=tor -f $bridge_hash)
@@ -240,7 +240,7 @@ case "$CHOICE" in
 		done
 		trap "bash bridges_activate_obfs4; exit 0" SIGINT
 		service_menu checklist "${bridge_address_display_list}" "\nThis is the list of bridges which can still get activated.\nImportant: If available, the bridge status is not always accurate!"
-		if [ "$exitstatus" == "0" ]; then
+		if [ "$exitstatus" = "0" ]; then
 			clear
 			sudo cp ${TORRC} ${BAK}
 			i=0

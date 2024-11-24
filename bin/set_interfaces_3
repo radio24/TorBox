@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -35,7 +35,7 @@
 #
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables - because of rc.local, all paths have to be absolute
@@ -59,7 +59,7 @@ read_config()
 	# TOGGLE19 shows if domain exclusion active or not
 	if grep "UNPROTECTED_DOMAIN=0" ${RUNFILE} ; then
 	  echo ""
-	  echo -e "${WHITE}[!] ERROR: The use of unprotected domains are not supported ${SERVICE_NAME}${NOCOLOR}"
+	  echo -e "${YELLOW}[!] ERROR: The use of unprotected domains are not supported ${SERVICE_NAME}${NOCOLOR}"
 		echo -e "${RED}[!] To use this feature, you have to activate it through the TorBox Menu. ${SERVICE_NAME}${NOCOLOR}"
 	  echo " "
 	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -76,9 +76,23 @@ read_config()
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		I_DEVICE1=$CLIENT_IFACE
 		if [ "$INTERNET_IFACE" == "eth0" ]; then I_DEVICE2="eth1"; else I_DEVICE2="eth0"; fi
+		if grep -q "^TORBOX_MINI=0" ${RUNFILE} ; then
+			I_DEVICE3="usb0"
+		else
+			I_DEVICE3="tun1"
+		fi
+	elif [ "$NUMBER_OF_WORD" == "2" ]; then
+		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		if grep -q "^TORBOX_MINI=0" ${RUNFILE} ; then
+			I_DEVICE3="usb0"
+		else
+			I_DEVICE3="tun1"
+		fi
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
 	fi
 }
 
@@ -107,8 +121,9 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=8; else R1=3; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=9; else R1=4; fi
 
+	# Remove old rules
 	# Old rules from set_interfaces_2 have to be catched and replaced by new rules (see below)
 	# The line below will create a iptables-legacy warning, but YOU SHOULDN'T CHANGE IT!!!
 	D_DEVICE_T=$(sudo iptables-save | grep "PREROUTING -i" | grep "\-p tcp" | grep "\-j REDIRECT --to-ports 9040" | cut -d ' ' -f4)
@@ -116,12 +131,35 @@ if [ "$FIRST_RUN" == "0" ]; then
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i $D_DEVICE_T -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+	elif [ "$NUMBER_OF_WORD" == "2" ]; then
+		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[0]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[1]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	else
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
+		# NEW v.0.5.4: Remove the log and block all the rest rules
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[0]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[1]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+		# (sudo $IPTABLES -t nat -A PREROUTING -i ${D_DEVICE_TA[2]} -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	fi
 
 	# New rules
@@ -129,16 +167,22 @@ if [ "$FIRST_RUN" == "0" ]; then
 	# If we have no VPN, then only the clearnet list will be used to route packages directly to the destination.
 	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST  dst -p tcp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -I PREROUTING $R1 -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p tcp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
+	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 
+	# NEW v.0.5.4: These rules are newly implemented in set_interfaces_2
 	# -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
-	sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 1 -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 2 -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# sudo $IPTABLES -I FORWARD 3 -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 	# -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE2 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
+	sudo $IPTABLES -A FORWARD -i $I_DEVICE3 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT
 
-	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+	# shellcheck disable=SC2034
+	(TRASH=$(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat")) 2>/dev/null
 fi

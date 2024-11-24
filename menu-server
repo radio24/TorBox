@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2024 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -48,7 +48,7 @@ MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
 RED='\033[1;31m'
-WHITE='\033[1;37m'
+YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
@@ -131,7 +131,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - OBFS4 BRIDGE RELAY" --menu "Choose an option (ESC -> back to the main menu)            ${TOGGLE07}" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "=============================================[Informational]===" \
 " 1" "RUN AN OBFS4 BRIDGE RELAY - READ ME FIRST"  \
 "==" "=======================================[OBFS4 bridges relay]==="  \
@@ -163,7 +163,7 @@ case "$CHOICE" in
 			if [ "$MODE_BRIDGES" != "UseBridges 1" ]; then
 				if grep "^ReachableAddresses" ${TORRC} ; then
 					INPUT=$(cat text/no_antifirewall-please-text)
-					if (whiptail --title "TorBox - INFO" --no-button "NO" --yes-button "DEACTIVATE IT!" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+					if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 						sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
 					fi
 				fi
@@ -215,9 +215,9 @@ case "$CHOICE" in
 			is_integer "${nORPORT}"
 			exitstatus=$?
 			# exitstatus == 1 means that $nORPORT is not an integer
-			if [ "$exitstatus" == "1" ]; then
+			if [ "$exitstatus" = "1" ]; then
 				clear
-				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 				sleep 5
 				clear
@@ -229,9 +229,9 @@ case "$CHOICE" in
 			is_integer "${nOBFS4PORT}"
 			exitstatus=$?
 			# exitstatus == 1 means that $nOBFS4PORT is not an integer
-			if [ "$exitstatus" == "1" ]; then
+			if [ "$exitstatus" = "1" ]; then
 				clear
-				echo -e "${WHITE}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
+				echo -e "${YELLOW}[!] WRONG INPUT - THIS IS NOT AN INTEGER!${NOCOLOR}"
 				echo -e "${RED}[+] I asked you for a number and you gave me... what??? ${NOCOLOR}"
 				sleep 5
 				clear
@@ -240,7 +240,7 @@ case "$CHOICE" in
 			fi
       nCONTACT=$(whiptail --title "Changing the configuration of the Bridge Relay -- Contact Email" --inputbox "\n\nAdd your contact email address so we can contact you if there are problems with your bridge.\n\nEnter your contact email address\n(ENTER -> $sCONTACT):" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
       [ -z "$nCONTACT" ] && nCONTACT=$sCONTACT
-			# # NEW v.0.5.3
+			# # NEW v.0.5.4
 			# Nickname: A handle for your relay, so people don't have to refer to it by key. Nicknames must be between 1 and 19 characters inclusive, and must contain only the characters [a-zA-Z0-9]. If not set, "Unnamed" will be used.
 			# See here: https://github.com/Ilshidur/tor-relay-docker/blob/master/torrc.bridge.default
       nNICK=$(whiptail --title "Changing the configuration of the Bridge Relay -- Nickname" --inputbox "\n\nAdd your nickname (optional; only letters and numbers; not more than 19 characters).\n\nEnter your nickname:" $MENU_HEIGHT_20 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
@@ -249,15 +249,15 @@ case "$CHOICE" in
 				if [[ $nNICK != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
 					clear
 					echo " "
-					echo -e "${WHITE}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
-					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					echo -e "${YELLOW}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+					echo -e "${YELLOW}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
 					nNICK=""
 					sleep 5
 				elif ${#nNICK} -gt 19 ; then
 					clear
 					echo " "
-					echo -e "${WHITE}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
-					echo -e "${WHITE}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
+					echo -e "${YELLOW}[!] The Nickname must not exceed 19 charcters!${NOCOLOR}"
+					echo -e "${YELLOW}[!] We didn't set a Nickname,yet. You can change the configuration later.${NOCOLOR}"
 					nNICK=""
 					sleep 5
 				fi
@@ -284,7 +284,7 @@ case "$CHOICE" in
       nORPORT="4235"
       nOBFS4PORT="443"
       nCONTACT="<address@email.com>"
-      nNICK="TorBox053"
+      nNICK="TorBox054"
       nBRIDGEDISTRIBUTION="any"
       change_config
       read_config
@@ -305,7 +305,7 @@ case "$CHOICE" in
       FINGERPRINT=$(sudo cat /var/lib/tor/fingerprint)
 			if [ -z "$FINGERPRINT" ]; then
 				clear
-				echo -e "${WHITE}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
+				echo -e "${YELLOW}[!] ERROR DISPLAYING YOUR PERSONAL OBFS4 BRIDGE ADDRESS!!${NOCOLOR}"
 				echo -e "${RED}[+] Did you forget to restart tor? Please use entry 7.${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p "Press any key to continue"
@@ -318,14 +318,14 @@ case "$CHOICE" in
       echo -e "${RED}[+] Below is your personal bridge address, which you can use with another TorBox or with the Tor Browser.${NOCOLOR}"
       echo -e "${RED}[+] Format: obfs4 <IP>:<Port> <Fingerprint> cert=<Certificate> iat-mode=0${NOCOLOR}"
       echo ""
-      echo -e "${WHITE}[!] obfs4 $BRIDGELINE"
+      echo -e "${YELLOW}[!] obfs4 $BRIDGELINE"
       echo ""
       echo -e "${RED}[+] Would you like to check the validity of the bridge?${NOCOLOR}"
       echo -e "${RED}[+] Go to https://metrics.torproject.org/rs.html and search for the fingerprint${NOCOLOR}"
       echo -e "${RED}[+] Or go to https://bridges.torproject.org/scan/ for a TCP reachability test${NOCOLOR}"
       echo " "
     else
-      echo -e "${WHITE}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
+      echo -e "${YELLOW}[!] DEACTIVATED BRIDGE RELAY!!${NOCOLOR}"
       echo -e "${RED}[+] There is no personal bridge address, yet. You have to activate the Bridge Relay first (menu entry 2).${NOCOLOR}"
       echo " "
     fi
@@ -381,7 +381,7 @@ case "$CHOICE" in
 		 	(sudo rm /var/lib/tor/fingerprint) 2>/dev/null
 		 	(sudo rm /var/lib/tor/hashed-fingerprint) 2>/dev/null
 		 	(sudo rm -r /var/lib/tor/pt_state) 2>/dev/null
-		 	echo -e "${RED}[+] Done!${NOCOLOR}"
+		 	echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
 		 	sleep 4
 		 	restarting_tor menu-server
 		 fi
