@@ -5,6 +5,8 @@
 ## Configuration for TorBox
 
 Log notice file /var/log/tor/notices.log
+# IPv6 support (only)
+#ClientUseIPv6 1
 VirtualAddrNetworkIPv4 10.192.0.0/10
 AutomapHostsSuffixes .onion,.exit
 AutomapHostsOnResolve 1
