@@ -357,9 +357,8 @@ download_and_compile_tor()
 		git config --global user.name "torbox"
 		git config --global user.email "torbox@localhost"
 		git commit -m "Initial commit"
-		# Don't use ./autogen.sh
 		sh autogen.sh
-		./configure
+		sh configure --disable-unittests
 		make
 		sudo make install
 		cd
