@@ -709,9 +709,10 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless and numpy hangs when installed with pip
 	# bcrypt needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
 	cd
 	pip install --upgrade pip
 	pip3 install pipenv
@@ -729,8 +730,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	sed -i "/^cryptography==.*/d" requirements.txt
 	sed -i "/^pip==.*/d" requirements.txt
 	sed -i "/^pillow==.*/d" requirements.txt
-	# NEW v.0.5.4-post
-	# sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
   pip3 install -r requirements.txt
   sleep 5

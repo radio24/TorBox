@@ -39,6 +39,10 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 
+# TorBox Repository
+[ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
+[ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
+
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
@@ -143,7 +147,8 @@ cd
 # 3. Execute: pipenv requirements >requirements.txt
 # 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
 # 5. Check the list of outdated packages: pip list --outdated
-sudo apt-get -y install python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy
+# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+sudo apt-get -y install python3-pip python3-pil python3-bcrypt python3-numpy
 sudo pip install --upgrade pip
 sudo pip3 install pipenv
 sudo pip install --only-binary=:all: cryptography
