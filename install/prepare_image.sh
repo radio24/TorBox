@@ -142,7 +142,7 @@ if [ ! -f requirements.txt ]; then
 	# 1. Check the Pipfile --> is the package in the list?
 	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
 	# 3. Execute: pipenv requirements >requirements.txt
-	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+	# 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
 	# 5. Check the list of outdated packages: pip list --outdated
 	sudo apt-get -y install python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy
 	sudo pip install --upgrade pip
