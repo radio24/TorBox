@@ -133,7 +133,6 @@ echo -e "${RED}Onion Services                         :$MODE_OS${NOCOLOR}"
 echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
-echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
 # For RaspberryPi OS based on Debian Bookworm needed
 PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
@@ -163,6 +162,8 @@ sudo sed -i "/^pip==.*/d" requirements.txt
 sudo sed -i "/^pillow==.*/g" requirements.txt
 sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 if [ -f "requirements.failed" ]; then rm requirements.failed; fi
+clear
+echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	REPLY=""
@@ -200,17 +201,6 @@ unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 
-# Are there any updates in the requirements?
-#clear
-#echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
-#echo -e "${RED}It doesn't mean that something is wrong!${NOCOLOR}"
-#echo -e "${RED}Updated Python libraries have to be tested to avoid bad surprises!${NOCOLOR}"
-#echo
-#pip list --outdated
-#unset REPLY
-#echo ""
-#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-
 # The additional network drivers are not installed on a TorBox mini or TorBox on a Cloud installation
 if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
@@ -218,7 +208,7 @@ if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   dkms status
 	echo ""
   echo -e "${RED}Does it look right?${NOCOLOR}"
-  read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
+  read -r -p $'\e[1;93mWould you like to re-install the aditional network drivers [y/N]? -> \e[0m'
   if [[ $REPLY =~ ^[YyNn]$ ]] ; then
     if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
       sudo dkms remove --all

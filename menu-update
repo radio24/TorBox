@@ -811,7 +811,6 @@ case "$CHOICE" in
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
 			echo " "
-			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
       # For RaspberryPi OS based on Debian Bookworm needed
       PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
       if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
@@ -841,6 +840,8 @@ case "$CHOICE" in
 			sudo sed -i "/^pillow==.*/g" requirements.txt
 			sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 			if [ -f requirements.failed ]; then rm requirements.failed; fi
+			clear
+			echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
 			REPLY="Y"
 			while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 				REPLY=""
