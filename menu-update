@@ -810,6 +810,8 @@ case "$CHOICE" in
 			sleep 10
 			echo ""
 			echo -e "${RED}[+] Updating the Python modules...${NOCOLOR}"
+			echo " "
+			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
       # For RaspberryPi OS based on Debian Bookworm needed
       PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
       if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
@@ -817,13 +819,30 @@ case "$CHOICE" in
       fi
 			# New way to install and check Python requirements
       cd
-      sudo pip3 install pipenv
-      wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-      wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-      pipenv requirements >requirements.txt
-			sleep 5
-			clear
-			echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
+			if [ ! -f requirements.txt ]; then
+				# Has to be the same as in run_install.sh
+				# How to deal with Pipfile, Pipfile.lock and requirements.txt:
+				# 1. Check the Pipfile --> is the package in the list?
+				# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
+				# 3. Execute: pipenv requirements >requirements.txt
+				# 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
+				# 5. Check the list of outdated packages: pip list --outdated
+				sudo apt-get -y install python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy
+				sudo pip install --upgrade pip
+				sudo pip3 install pipenv
+				sudo pip install --only-binary=:all: cryptography
+				sudo pip install --only-binary=:all: pillow
+				#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+				wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+			  pipenv requirements >requirements.txt
+				# If the creation of requirements.txt failes then use the (most probably older) one from our repository
+				# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+				sudo sed -i "/^cryptography==.*/d" requirements.txt
+				sudo sed -i "/^pip==.*/d" requirements.txt
+				sudo sed -i "/^pillow==.*/g" requirements.txt
+				# NEW v.0.5.4-post
+				# sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+			fi
 			if [ -f requirements.failed ]; then rm requirements.failed; fi
 			REPLY="Y"
 			while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
@@ -831,7 +850,7 @@ case "$CHOICE" in
 				readarray -t REQUIREMENTS < requirements.txt
 				for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 					if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-          VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+          VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
 			  	echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 					if [ -z "$VERSION" ]; then
 						# shellcheck disable=SC2059

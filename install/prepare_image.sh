@@ -153,10 +153,12 @@ if [ ! -f requirements.txt ]; then
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
   pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pip==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/g" requirements.txt
-	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	# NEW v.0.5.4-post
+	# sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 fi
 if [ -f "requirements.failed" ]; then rm requirements.failed; fi
 REPLY="Y"

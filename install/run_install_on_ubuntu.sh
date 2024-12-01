@@ -768,10 +768,12 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pip==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/d" requirements.txt
-	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
+	# NEW v.0.5.4-post
+	# sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
 	sudo pip3 install -r requirements.txt
 	sleep 5
@@ -788,7 +790,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 		for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 			# NEW v.0.5.4
 			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-			VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+			VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
   		echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 			if [ -z "$VERSION" ]; then
 				# shellcheck disable=SC2059
