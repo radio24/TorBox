@@ -563,6 +563,15 @@ clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 re-connect
+# NEW v.0.5.4-post
+# Avahi can lead loosing the IP address
+# See here: https://www.heise.de/ratgeber/Raspi-mit-Debian-verliert-Internet-Verbindung-9998575.html
+sudo systemctl mask avahi-daemon
+sudo systemctl disable avahi-daemon
+sudo systemctl stop avahi-daemon
+sudo systemctl mask avahi-daemon.socket
+sudo systemctl disable avahi-daemon.socket
+sudo systemctl stop avahi-daemon.socket
 
 if [ "$STEP_NUMBER" -le "1" ]; then
   # 1. Adjusting time, if needed
@@ -1169,8 +1178,12 @@ if [ "$STEP_NUMBER" -le "11" ]; then
       sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
     fi
   fi
+	sudo systemctl mask hciuart.service
   sudo systemctl disable hciuart.service
+	sudo systemctl stop hciuart.service
+	sudo systemctl mask bluetooth.service
   sudo systemctl disable bluetooth.service
+	sudo systemctl stop bluetooth.service
   sudo apt-get -y purge bluez
   sudo apt-get -y autoremove
   sudo rfkill block bluetooth

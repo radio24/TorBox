@@ -539,6 +539,15 @@ clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 re-connect
+# NEW v.0.5.4-post
+# Avahi can lead loosing the IP address
+# See here: https://www.heise.de/ratgeber/Raspi-mit-Debian-verliert-Internet-Verbindung-9998575.html
+systemctl mask avahi-daemon
+systemctl disable avahi-daemon
+systemctl stop avahi-daemon
+systemctl mask avahi-daemon.socket
+systemctl disable avahi-daemon.socket
+systemctl stop avahi-daemon.socket
 
 if [ "$STEP_NUMBER" -le "1" ]; then
   # 1. Adjusting time, if needed
