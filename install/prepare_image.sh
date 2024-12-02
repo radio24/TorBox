@@ -208,11 +208,11 @@ if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   dkms status
 	echo ""
   echo -e "${RED}Does it look right?${NOCOLOR}"
-  read -r -p $'\e[1;93mWould you like to re-install the aditional network drivers [y/N]? -> \e[0m'
+	read -r -p $'\e[1;93mWould you like to (re-)install the aditional network drivers [y/N]? -> \e[0m'
   if [[ $REPLY =~ ^[YyNn]$ ]] ; then
     if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-      sudo dkms remove --all
-      sudo bash install_network_drivers
+			sudo dkms remove --all -q
+			sudo bash ../bin/install_network_drivers
     fi
   fi
   echo ""
