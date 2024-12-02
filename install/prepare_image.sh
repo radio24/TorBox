@@ -212,7 +212,7 @@ if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   if [[ $REPLY =~ ^[YyNn]$ ]] ; then
     if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
 			sudo dkms remove --all -q
-			sudo bash bin/install_network_drivers
+			sudo bash install/install_network_drivers
     fi
   fi
   echo ""
