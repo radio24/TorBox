@@ -312,7 +312,7 @@ else
 		" 3" "Restart Tor - check if it is working (press q to quit)"  \
 		" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
 		"===" "===================================[Where is the Internet?]===" \
-		" 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
+		" 5" "Ethernet cable (eth0) or TorBox on a cloud (tun1)          "$FLASH_ETH0 \
 		"  " " " \
 		"  " "On TorBox on a Cloud, menu entry 6-10 are not available!   " \
 		"  " "For special requirements, please contact the TorBox        " \
@@ -338,9 +338,9 @@ else
   	" 3" "Restart Tor - check if it is working (press q to quit)"  \
   	" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
   	"===" "===================================[Where is the Internet?]===" \
-  	" 5" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
-  	" 6" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-  	" 7" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+		" 5" "Ethernet cable (eth0) or TorBox on a cloud (tun1)          "$FLASH_ETH0 \
+  	" 6" "Wireless network (USB adapter; wlan1)                      "$FLASH_WLAN1 \
+		" 7" "Wireless network or TorBox mini (onboard chip; wlan0)      "$FLASH_WLAN0 \
   	" 8" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
   	" 9" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
   	"10" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \
