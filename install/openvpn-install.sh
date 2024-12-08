@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091,SC2129,SC2164,SC2034,SC1072,SC1073,SC1009
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2024 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -1008,7 +1008,7 @@ function manageMenu() {
 
 	###### DISPLAY THE MENU ######
 	clear
-	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Add a new client"  \
 	" 2" "Revoke existing client"  \

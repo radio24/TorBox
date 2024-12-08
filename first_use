@@ -285,9 +285,9 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 				check_interface_with_internet
     		CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - FIRST START UP!" --menu "From where is the Internet coming? (ESC -> don't change)" 16 $MENU_WIDTH 8 \
     		"==" "===============================================================" \
-    		" 1" "Ethernet cable (eth0) or I'm on a cloud (tun1)             "$FLASH_ETH0 \
-    		" 2" "Wireless network (through an USB adapter; wlan1)           "$FLASH_WLAN1 \
-    		" 3" "Wireless network (through the onboard chip; wlan0)         "$FLASH_WLAN0 \
+    		" 1" "Ethernet cable (eth0) or TorBox on a cloud (tun1)          "$FLASH_ETH0 \
+    		" 2" "Wireless network (USB adapter; wlan1)                      "$FLASH_WLAN1 \
+    		" 3" "Wireless network or TorBox mini (onboard chip; wlan0)      "$FLASH_WLAN0 \
     		" 4" "Cellular, USB dongle or Tethering (Android) (ppp0; usb0)   "$FLASH_USB0 \
     		" 5" "USB ethernet adapter or Tethering (iOS) (eth1)             "$FLASH_ETH1 \
     		" 6" "Over a VPN connection (tun0)                               "$FLASH_TUN0 \

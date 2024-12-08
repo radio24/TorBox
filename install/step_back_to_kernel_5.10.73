@@ -18,6 +18,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 # DESCRIPTION
+# THIS SCRIPT IS INTENDED TO BE USED BY THE DEVELOPERS ONLY!
 # This file will install the Linux Kernel 5.10.49.
 # This "step back" may be necessary if newer network driver are needed but
 # not yet available.
@@ -30,25 +31,9 @@
 #
 # SIZE OF THE MENU
 #
-# How many items do you have in the main menu?
-NO_ITEMS=11
-#
-# How many lines are only for decoration and spaces?
-NO_SPACER=0
-#
 #Set the the variables for the menu
-MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_15=15
-MENU_HEIGHT_20=20
-MENU_HEIGHT_25=25
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
-MENU_LIST_HEIGHT=$((NO_ITEMS+$NO_SPACER))
-
-#Colors
-RED='\033[1;31m'
-YELLOW='\033[1;93m'
-NOCOLOR='\033[0m'
 
 # Commit hash from https://github.com/Hexxeh/rpi-firmware/commits/master
 # For newer builds see https://github.com/raspberrypi/rpi-firmware

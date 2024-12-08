@@ -824,33 +824,45 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
   echo ""
 
-	# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5)
-	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then PLATFORM="linux-armv6l";
+	# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5 with a 32 bit version of Raspberry Pi OS)
+	# This is for a 64bit Raspberry Pi OS
+	if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+	# This is for a 64bit Intel compatable architecture as used on a cloud
+	elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+	# This is for a 32bit Raspberry Pi OS
+	elif uname -m | grep -q -E "armv6l|armv7l"; then PLATFORM="linux-armv6l"
 	else
-		if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-		elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
-		else PLATFORM="linux-armv6l"
-  	fi
+		PLATFORM=""
+		DLCHECK=1
 	fi
 
   # Fetch the filename of the latest go version
-  GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
-  wget --no-cache "$GO_DL_PATH$GO_FILENAME"
-  DLCHECK=$?
-	# If the download failed, install the package from the distribution
-  if [ "$DLCHECK" != "0" ] ; then
-	  echo ""
-	  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
-	  echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-	  echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-	  echo
-	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		  echo ""
-		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		  clear
-	  else
-		  sleep 10
-	  fi
+	if [ "$PLATFORM" != "" ] ; then
+  	GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+  	wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+  	DLCHECK=$?
+		# If the download failed, install the package from the distribution
+  	if [ "$DLCHECK" != "0" ] ; then
+	  	echo ""
+	  	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	  	echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+	  	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	  	echo
+		fi
+	else
+		echo ""
+		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO because the platform is unknown!${NOCOLOR}"
+		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+		echo
+	fi
+	if [ "$PLATFORM" == "" ] || [ "$DLCHECK" != "0" ]; then
+  	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  	echo ""
+	  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  	clear
+  	else
+	  	sleep 10
+  	fi
 	  re-connect
 	  sudo apt-get -y install golang
 	  GO_PROGRAM="/usr/local/go/bin/go"
@@ -1315,7 +1327,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
       fi
     fi
   	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
-    	(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
+			(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | sudo tee -a ${CONFIGFILE}) >/dev/null 2>&1
   	fi
 		clear
 		echo -e "${RED}[+] Step 14: TorBox is configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
