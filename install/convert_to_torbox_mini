@@ -65,6 +65,7 @@ RUNFILE="torbox/run/torbox.run"
 INPUT=$(cat text/convert_to_torbox_mini-text)
 if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 	cd
+	cd torbox
 	#These packages are not necessary anymore
 	clear
 	echo -e "${RED}[+] These packages are not necessary anymore....${NOCOLOR}"
