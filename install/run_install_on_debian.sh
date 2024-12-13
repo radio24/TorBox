@@ -115,18 +115,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# Release Page of the unofficial Tor repositories on GitHub
-#TOR_RELEASE="unofficial"
-#TORURL="https://github.com/torproject/tor/tags"
-#TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# WARNING: Sometimes, GitHub will change this prefix!
-# TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED2="\" data-view-component=.*"
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-#TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
-
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL_WEB="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake"
 # Only until version 2.6.1
