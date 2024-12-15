@@ -1358,6 +1358,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
   	rm $logs
   	sleep 1
 	done
+	journalctl --vacuum-size=1M
 	echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 	#.bash_history is already deleted
 	history -c
