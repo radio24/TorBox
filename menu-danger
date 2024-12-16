@@ -452,6 +452,7 @@ case "$CHOICE" in
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
 		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
+			(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 		else
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed

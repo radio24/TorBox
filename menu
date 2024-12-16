@@ -605,7 +605,8 @@ case "$CHOICE" in
       		if [ -z "$INTERNETSELECTION" ]; then
         		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            # iptables cannot be saved !!
+						# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
+						if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             clear
             restarting_tor menu
             exit 0
