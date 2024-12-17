@@ -600,10 +600,12 @@ case "$CHOICE" in
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					# This code is only applied, if the client is solely connected through a ethernet cable
 					if [ -n "$ETH0_IP" ] && [ -z "$WLAN1_IP" ] && [ -z "$TUN1_IP" ] ; then
-						INPUT=$(cat text/wlan0-text)
+						INPUT=$(cat text/eth0-text)
 				    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 							sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
 							sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
+						else
+							break
 						fi
 					fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
