@@ -598,6 +598,14 @@ case "$CHOICE" in
 					if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
 					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
+					# This code is only applied, if the client is solely connected through a ethernet cable
+					if [ -n "$ETH0_IP" ] && [ -z "$WLAN1_IP" ] && [ -z "$TUN1_IP" ] ; then
+						INPUT=$(cat text/wlan0-text)
+				    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+							sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
+							sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
+						fi
+					fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
 
       		# The following line should minimize those cases where a restart is required.
