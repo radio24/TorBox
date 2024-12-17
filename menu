@@ -591,9 +591,6 @@ case "$CHOICE" in
 			if [ -n "$ETH0_UP" ] && [ -z "$WLAN1_UP" ] && [ -z "$TUN1_IP" ] ; then
 				INPUT=$(cat text/eth0-text)
 				if (whiptail --title "TorBox - INFO)" --yesno --defaultno "$INPUT" 21 $MENU_WIDTH); then
-					exitstatus=$?
-					# exitstatus == 255 means that the ESC key was pressed
-					[ "$exitstatus" == "255" ] && exit 0
 					sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
 					sudo cp etc/network/interface/wlan1eth0 /etc/network/interfaces
 					sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
@@ -601,6 +598,9 @@ case "$CHOICE" in
 					ETH0_exists
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
 				fi
+				exitstatus=$?
+				# exitstatus == 255 means that the ESC key was pressed
+				[ "$exitstatus" == "255" ] && exit 0
 			fi
 			TUN1_IP=""
 			CLIENT_IFACE_TUN1_IP=""
