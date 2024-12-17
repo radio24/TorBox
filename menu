@@ -590,7 +590,7 @@ case "$CHOICE" in
 			# This code is only applied, if the client is solely connected through a ethernet cable and not through wlan1
 			if [ -n "$ETH0_UP" ] && [ -z "$WLAN1_UP" ] && [ -z "$TUN1_IP" ] ; then
 				INPUT=$(cat text/eth0-text)
-				if (whiptail --title "TorBox - INFO)" --yesno "$INPUT" 21 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - INFO)" --yesno --defaultno "$INPUT" 21 $MENU_WIDTH); then
 					sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
 					sudo cp etc/network/interface/wlan1eth0 /etc/network/interfaces
 					sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
