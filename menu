@@ -563,6 +563,36 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
+			# NEW v.0.5.4-post
+			# This routine should make it possible that someone connected through wlan0 without an additional wifi adapter (wlan1) can switch to wlan0 --> eth0
+			WLAN1_UP=$(ip link | grep wlan1 | grep "state UP")
+			ETH0_UP=$(ip link | grep eth0 | grep "state UP")
+			# To check: can I switch from UNKNOWN
+			# NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+			if ip link | grep tun1 | grep "state UNKNOWN" ; then
+				TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+				CLIENT_IFACE_TUN1_IP="tun1"
+				clear
+			else
+				TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
+				CLIENT_IFACE_TUN1_IP="usb0"
+				clear
+			fi
+			# This code is only applied, if the client is solely connected through a ethernet cable and not through wlan1
+			if [ -n "$ETH0_UP" ] && [ -z "$WLAN1_UP" ] && [ -z "$TUN1_IP" ] ; then
+				INPUT=$(cat text/eth0-text)
+				if (whiptail --title "TorBox - INFO)" --scrolltext --yesno "$INPUT" 21 $MENU_WIDTH); then
+					sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
+					sudo cp etc/network/interface/wlan1eth0 /etc/network/interfaces
+					sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
+					torrc_reset
+					ETH0_exists
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+				fi
+			fi
+			TUN1_IP=""
+			CLIENT_IFACE_TUN1_IP=""
+			#
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -598,17 +628,6 @@ case "$CHOICE" in
 					if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
 					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
-					# This code is only applied, if the client is solely connected through a ethernet cable
-					if [ -n "$ETH0_IP" ] && [ -z "$WLAN1_IP" ] && [ -z "$TUN1_IP" ] ; then
-						INPUT=$(cat text/eth0-text)
-						if (whiptail --title "TorBox - INFO)" --scrolltext --yesno "$INPUT" 21 $MENU_WIDTH); then
-							sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
-							sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
-						else
-							trap "bash menu; exit 0" SIGINT
-							exit 0
-						fi
-					fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
 
       		# The following line should minimize those cases where a restart is required.
