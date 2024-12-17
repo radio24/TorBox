@@ -108,7 +108,12 @@ fi
 
 # If the configured interface is available, we will start hostapd
 INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
-if ip link | grep "$INTERFACE" ; then sudo systemctl restart hostapd; fi
+if ip link | grep "$INTERFACE" ; then
+	if ip link | grep "$INTERFACE" | grep -e "state UP" -e "DORMANT" ; then
+		sudo ifdown wlan0 &>/dev/null &
+		sudo ifup wlan0 &>/dev/null &
+	fi
+	sudo systemctl restart hostapd; fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
