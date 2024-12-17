@@ -1,9 +1,8 @@
-It seems that after finishing the configuration, your client will only be connected to the TorBox through an Ethernet cable (eth0). However, currently, you may be connected to the onboard WiFi chip. If this is the case and you find yourself disconnected from the TorBox, then just restart the TorBox and try to connect via the Ethernet cable.
+It seems that after finishing the configuration, your client will only be connected to the TorBox through an Ethernet cable (eth0). However, you may currently be connected to the onboard WiFi chip. If this is the case and you find yourself disconnected from the TorBox, then restart the TorBox, connect your client with the Ethernet cable to the TorBox and choose this menu entry again.
 
-To make it work, we will turn off a failsafe preventing you from being locked out of the TorBox.
+To make it work, we will turn off a failsafe, preventing you from being locked out of the TorBox.
 
 IMPORTANT
-- You should only continue if the client is connected through an Ethernet
-  cable with the TorBox to avoid a lock-out situation.
+To avoid a lock-out situation, you should only continue if the client can be connected through an Ethernet cable with the TorBox.
 
 Would you like to CONTINUE?

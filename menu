@@ -42,6 +42,7 @@ NO_SPACER=3
 MENU_WIDTH=80
 MENU_WIDTH_REDUX=60
 MENU_HEIGHT_25=25
+MENU_HEIGHT_20=20
 MENU_HEIGHT_15=15
 # MENU_HEIGHT should not exceed 26
 MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
@@ -601,11 +602,12 @@ case "$CHOICE" in
 					# This code is only applied, if the client is solely connected through a ethernet cable
 					if [ -n "$ETH0_IP" ] && [ -z "$WLAN1_IP" ] && [ -z "$TUN1_IP" ] ; then
 						INPUT=$(cat text/eth0-text)
-				    if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+						if (whiptail --title "TorBox - INFO)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 							sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
 							sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
 						else
-							break
+							trap "bash menu; exit 0" SIGINT
+							exit 0
 						fi
 					fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
