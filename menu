@@ -56,9 +56,6 @@ NOCOLOR='\033[0m'
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 
-# Read configuration from run/torbox.run
-TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
-
 #Other variables
 TORSTATS="sudo -u debian-tor nyx"
 TORRC="/etc/tor/torrc"
@@ -66,6 +63,9 @@ RUNFILE="/home/torbox/torbox/run/torbox.run"
 EXITID="EXITID=0"
 MMENUSTRING=""
 INTERNETSELECTION=$1
+
+# Read configuration from run/torbox.run
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
