@@ -423,7 +423,7 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n $MASQ_INTERFACE ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4.nat /etc/iptables.ipv4.nat ; fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -497,7 +497,7 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n $MASQ_INTERFACE ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
       display_net_reconfiguration_info
       (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -677,7 +677,7 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n $MASQ_INTERFACE ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -836,7 +836,7 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n $MASQ_INTERFACE ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
