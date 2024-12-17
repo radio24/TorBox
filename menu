@@ -111,9 +111,9 @@ check_bridge_relay()
     	(sudo iptables -A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null
   	fi
 	else
-		if iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
+		if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
     clear
-		if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
+		if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
     clear
 	fi
 }
@@ -423,7 +423,10 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
+				sudo cp etc/iptables.ipv4.nat /etc/iptables.ipv4.nat ;
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -497,7 +500,10 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then s
+				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
+			fi
       display_net_reconfiguration_info
       (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -677,7 +683,10 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
+				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
@@ -836,7 +845,10 @@ case "$CHOICE" in
 			fi
 			# NEW v.0.5.4-post
 			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ; fi
+			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
+				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+			fi
       display_net_reconfiguration_info
 			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"

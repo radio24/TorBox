@@ -133,8 +133,8 @@ if grep "^BridgeRelay" /etc/tor/torrc ; then
     (sudo /sbin/iptables -A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null
   fi
 else
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
+	if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
+	if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
 
 exit 0
