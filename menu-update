@@ -587,8 +587,8 @@ update_torbox_menu()
 		exitstatus=$?
 		if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 1 ; fi
 		if [ ! -z "$INPUT" ]; then TORBOXMENU_FORKNAME=$INPUT; else TORBOXMENU_FORKNAME=radio24; fi
+		TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   fi
-	TORBOXURL="https://github.com/$TORBOXMENU_FORKNAME/TorBox/archive/refs/heads/$TORBOXMENU_BRANCHNAME.zip"
   clear
   echo -e "${RED}[!] Starting with the update...${NOCOLOR}"
   echo ""
