@@ -292,3 +292,4 @@ if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 1
 fi
+exit 0

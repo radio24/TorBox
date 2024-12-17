@@ -299,6 +299,14 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       	if [ ! -z "$CHOICE" ]; then
         	if [[ $CHOICE -gt 0  && $CHOICE -lt 7 ]]; then
           	CHOICE=$((CHOICE+4))
+						# NEW v.0.5.4-post
+						# If something gets wrong, we want to be shure that tor is unmasked and that the first use dialogue is not started again
+						(sudo systemctl unmask tor) 2>/dev/null
+						(sudo systemctl unmask tor@default.service) 2>/dev/null
+						echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
+						echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
+						(sudo systemctl enable tor) 2>/dev/null
+						sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 						./menu $CHOICE
         	fi
       	fi
@@ -326,15 +334,15 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 					sudo $TORBOX_PATH/log_check.py &
 					echo -e "${RED}[+] TorBox's automatic countermeasure feature is activated!${NOCOLOR}"
 					sleep 2
-				fi
-			else
-				clear
-				sudo pkill -f "log_check.py"
-	     	(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
-	     	(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
-	     	(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
-      	sleep 1
-    	fi
+				else
+					clear
+					sudo pkill -f "log_check.py"
+	     		(sudo rm $TORBOX_PATH/log_check_config.py) &>/dev/null
+	     		(sudo find /var/log/tor/ | grep "automat" | xargs -d"\n" sudo rm) &>/dev/null
+	     		(sudo sed -i "s/^LOGCHECK=.*/LOGCHECK=0/" $RUNFILE) &>/dev/null
+      		sleep 1
+    		fi
+			fi
 
 			# Synchronize time to avoid problems with bridges
 			clear
@@ -393,10 +401,6 @@ while [ $FRESHINSTALLED -gt 0 ]; do
       echo -e "${RED}[+] Unmasking Tor...${NOCOLOR}"
       echo -e "${RED}[+] Enable Tor...${NOCOLOR}"
       (sudo systemctl enable tor) 2>/dev/null
-			# NEW v.0.5.4
-			# The `systemctl unmask` and `systemctl enable` commands already handle the necessary reloading of systemd’s configuration internally
-			# echo -e "${RED}[+] Daemon reload...${NOCOLOR}"
-			# sudo systemctl daemon-reload
       sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=0/" ${RUNFILE}
 			sleep 1
 			clear
