@@ -54,7 +54,7 @@ COMMIT
 -A PREROUTING -i wlan0 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i eth1 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i tun1 -p udp -j REDIRECT --to-ports 9040
--A PREROUTING -i tun1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
+-A PREROUTING -i wlan0 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 -A PREROUTING -i eth1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 -A PREROUTING -i tun1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 -A POSTROUTING -o eth0 -j MASQUERADE
