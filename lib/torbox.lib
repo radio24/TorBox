@@ -480,6 +480,7 @@ restarting_tor()
   sudo systemctl restart tor &
   sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 	stty intr ^c
+	trap
 }
 
 # connecting_to_VPN()
@@ -981,9 +982,7 @@ display_net_reconfiguration_info()
   echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
   echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
   echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-  echo -e "${RED}    source again (main menu 4-9),${NOCOLOR}"
-  echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
-  echo -e "${RED}    load the default values.${NOCOLOR}"
+	echo -e "${RED}    source again.${NOCOLOR}"
   echo ""
 }
 
