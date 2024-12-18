@@ -90,6 +90,8 @@ done
 # If the configured interface is available, we will start hostapd
 INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
 if ip link | grep "$INTERFACE" ; then
+	if ip link | grep "$INTERFACE" | grep -e "state DOWN" ; then
+		sudo ip link set dev $INTERFACE up
 	# DORMANT means in powersaving mode
 	if ip link | grep "$INTERFACE" | grep -e "state UP" -e "DORMANT" ; then
 		sudo ip link set wlan0 mode default
