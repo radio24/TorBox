@@ -666,14 +666,14 @@ case "$CHOICE" in
 				# NEW v.0.5.4-post
 				# We will first copy the configuration files and than try to reconfigure the network
 				# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
-				# IMPORTANT: if this works well, we should apply the same method for the other interfaces, too!
+				# IMPORTANT: If this works well, we should apply the same method for the other interfaces, too!
+				#            In this case, the first line can be removed in hostapd_fallback_komplex_* files
 				sudo cp etc/network/interface/wlan1eth0 /etc/network/interfaces
 				sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
       	display_net_reconfiguration_info
-				(nohup bin/hostapd_fallback_komplex_part_1 wlan1 eth0) 2>/dev/null
-				echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup bin/hostapd_fallback_komplex_part_2 wlan1 eth0) 2>/dev/null
+				echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+				(nohup bin/hostapd_fallback_komplex_part_new wlan1 eth0) 2>/dev/null
 				echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 				sleep 2
 				if ip link | grep wlan0; then
