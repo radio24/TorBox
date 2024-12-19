@@ -92,11 +92,13 @@ INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
 if ip link | grep "$INTERFACE" ; then
 	if ip link | grep "$INTERFACE" | grep -e "state DOWN" ; then
 		sudo ip link set dev $INTERFACE up
+	fi
 	# DORMANT means in powersaving mode
 	if ip link | grep "$INTERFACE" | grep -e "state UP" -e "DORMANT" ; then
 		sudo ip link set wlan0 mode default
 	fi
 	sudo systemctl restart hostapd; fi
+fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
