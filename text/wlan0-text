@@ -5,9 +5,9 @@ Please be patient during the network configuration. However, if TorBox remains s
 IMPORTANT
 - Not all USB WiFi adapters work correctly as an Access Point - the
   simpler the adapter, the higher the chance for success. USB WiFi
-	adapters supporting the 5 GHz band may not work correctly as an AP,
-	and we recommend using main menu entry 6 instead or connecting the
-	client with an Ethernet cable (eth0).
+  adapters supporting the 5 GHz band may not work correctly as an AP,
+  and we recommend using main menu entry 6 instead or connecting the
+  client with an Ethernet cable (eth0).
 - To avoid a lock-out situation, if the AP is not disabled in the
   Config sub-menu, the settings are automatically reset to the default
   values using the onboard wireless chip as AP during the next reboot.
