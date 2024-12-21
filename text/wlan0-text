@@ -1,11 +1,18 @@
-This menu entry supposes that TorBox should be connected to the Internet through the onboard wireless chip supporting the 2.5 and 5 GHz bands (wlan0). The process is complicated because, by default, TorBox is configured to use the onboard wireless chip as an Access Point for clients. During the network configuration, please be patient. However, if TorBox remains stuck, reboot it, and the new network configuration should be applied. You may choose this menu entry again after the reboot to connect to the Internet. There is also a fair risk of being locked out :-/ .
+This menu entry supposes that TorBox should be connected to the Internet through the onboard wireless chip supporting the 2.5 and 5 GHz bands (wlan0). The process is complicated because, by default, TorBox is configured to use the onboard wireless chip as an Access Point for clients. However, with this menu entry, you must use an additional WiFi adapter or an Ethernet cable to connect the client to the TorBox. If you disabled the AP on wlan1 failsafe in the Danger Zone and don't have an additional WiFi adapter or Ethernet cable attached, it can lead to a lock-out situation!
+
+Please be patient during the network configuration. However, if TorBox remains stuck, reboot it. The new network configuration will be reset (when AP on wlan1 failsafe enabled) or applied (when AP on wlan1 failsafe disabled), and you may choose this menu entry again after the reboot to connect to the Internet.
 
 IMPORTANT
-Not all USB WiFi adapters work correctly as an Access Point - the simpler
-the adapter, the higher the chance for success. Especially, USB WiFi
-adapters supporting the 5 GHz band usually don't work correctly as an AP,
-and we recommend using main menu entry 6 instead or connecting the
-client with an Ethernet cable (eth0).
+- Not all USB WiFi adapters work correctly as an Access Point - the
+  simpler the adapter, the higher the chance for success. USB WiFi
+	adapters supporting the 5 GHz band may not work correctly as an AP,
+	and we recommend using main menu entry 6 instead or connecting the
+	client with an Ethernet cable (eth0).
+- To avoid a lock-out situation, if the AP is not disabled in the
+  Config sub-menu, the settings are automatically reset to the default
+  values using the onboard wireless chip as AP during the next reboot.
+- That said, you can also make the change permanent by using the according
+  menu entry in the Danger Zone sub-menu.
 
 The next step is to set up TorBox so that your client devices can access TorBox's wireless network (wlan1) and/or Ethernet (eth0). In the second case, please plug in the ethernet cable with your client device NOW.
 

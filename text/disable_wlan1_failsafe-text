@@ -1,0 +1,7 @@
+During the start-up of TorBox, by default, there is a failsafe in place to put TorBox's AP back on wlan0 if it was used on wlan1. It will prevent the lock-out of the TorBox user.
+
+However, if the TorBox user will permanently has the TorBox AP on wlan1, which is usually a USB wlan adapter, he can DISABLE that failsafe by using this menu entry.
+
+By using this menu entry again, the failsafe can also be ENABLED again, which is the default.
+
+Would you like to ENABLE or DISABLE the wlan1 failsafe?

@@ -422,16 +422,10 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
+	    display_net_reconfiguration_info
 			# NEW v.0.5.4-post
-			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
-				sudo cp etc/iptables.ipv4.nat /etc/iptables.ipv4.nat ;
-				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
-			fi
-      display_net_reconfiguration_info
-			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			(nohup bin/hostapd_fallback_komplex_new wlan0 eth1) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth0; then
@@ -457,6 +451,8 @@ case "$CHOICE" in
 				fi
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] ; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -480,6 +476,8 @@ case "$CHOICE" in
       		fi
 				fi
 			else
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 				whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			fi
     fi
@@ -500,16 +498,10 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
-			# NEW v.0.5.4-post
-			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then s
-				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
-				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
-			fi
       display_net_reconfiguration_info
-      (nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			# NEW v.0.5.4-post
+			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep wlan1; then
@@ -535,6 +527,8 @@ case "$CHOICE" in
 				fi
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -559,6 +553,8 @@ case "$CHOICE" in
         	fi
 				fi
       else
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -568,10 +564,9 @@ case "$CHOICE" in
   # This menu entry temporary restores the wlan1 / eth0 configuration, which does not survive a reboot!
   # A failsave routine in rc.local takes care of it!
   7)
-		# The first part is for TorBox mini
 		if [ "$TORBOX_MINI" -eq "1" ]; then
 			INPUT=$(cat text/wlan0_on_torbox_mini-text)
-			if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				if ! ip link | grep wlan0; then
 					INPUT=$(cat text/no_interface_try_it_anyway-text)
 					if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
@@ -583,72 +578,10 @@ case "$CHOICE" in
 						exit 0
 					fi
 				fi
-				clear
-				echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
-				echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-				echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
-				echo -e "${RED}    this can take up to ${YELLOW}two minutes.${NOCOLOR}"
-				echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-				echo -e "${RED}    source again.${NOCOLOR}"
-				echo ""
-				(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-				echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-				(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
-				echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-				sleep 2
-				if ip link | grep wlan0; then
-					ask_captive
-					if ip link | grep wlan1 | grep "state UP" ; then
-						WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
-						clear
-					fi
-					if ip link | grep eth0 | grep "state UP" ; then
-						ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
-						clear
-					fi
-					# To check: can I switch from UNKNOWN
-					# NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
-					if ip link | grep tun1 | grep "state UNKNOWN" ; then
-						TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
-						CLIENT_IFACE_TUN1_IP="tun1"
-						clear
-					else
-						TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
-						CLIENT_IFACE_TUN1_IP="usb0"
-						clear
-					fi
-					# Configure torrc depending on the present interfaces
-					if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
-						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-					else
-						torrc_reset
-						if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
-						if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
-						if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
-						sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
-
-						# The following line should minimize those cases where a restart is required.
-						sudo systemctl restart isc-dhcp-server
-						if [ -z "$INTERNETSELECTION" ]; then
-							sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-							clear
-							restarting_tor menu
-							trap
-							exit 0
-						else
-							sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-							exit 0
-						fi
-					fi
-				else
-					whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-				fi
 			else
 				trap "bash menu; exit 0" EXIT
 				exit 0
 			fi
-			# END of the first part
-			# The second part is for a regular TorBox
 		else
 			INPUT=$(cat text/wlan0-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -663,69 +596,73 @@ case "$CHOICE" in
 						exit 0
 					fi
 				fi
-				# NEW v.0.5.4-post
-				# We will first copy the configuration files and than try to reconfigure the network
-				# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
-				# IMPORTANT: If this works well, we should apply the same method for the other interfaces, too!
-				#            In this case, the first line can be removed in hostapd_fallback_komplex_* files
-				sudo cp etc/network/interface/wlan1eth0 /etc/network/interfaces
-				sudo cp etc/iptables.ipv4-wlan1eth0.nat /etc/iptables.ipv4.nat
-				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
-      	display_net_reconfiguration_info
-				echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-				(nohup bin/hostapd_fallback_komplex_part_new wlan1 eth0) 2>/dev/null
-				echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-				sleep 2
-				if ip link | grep wlan0; then
-					ask_captive
-      		if ip link | grep wlan1 | grep "state UP" ; then
-        		WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
-        		clear
-      		fi
-      		if ip link | grep eth0 | grep "state UP" ; then
-        		ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
-        		clear
-      		fi
-        	# To check: can I switch from UNKNOWN
-        	# NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
-					if ip link | grep tun1 | grep "state UNKNOWN" ; then
-						TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
-          	CLIENT_IFACE_TUN1_IP="tun1"
-						clear
-        	else
-          	TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
-          	CLIENT_IFACE_TUN1_IP="usb0"
-          	clear
-					fi
-					# Configure torrc depending on the present interfaces
-					if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
-						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-					else
-						torrc_reset
-						if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
-						if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
-						if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
-						sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
-
-      			# The following line should minimize those cases where a restart is required.
-      			sudo systemctl restart isc-dhcp-server
-      			if [ -z "$INTERNETSELECTION" ]; then
-        			sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            	sleep 2
-							# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
-							if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
-            	clear
-            	restarting_tor menu
-            	exit 0
-      			else
-        			sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            	exit 0
-      			fi
-					fi
-				else
-					whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-				fi
+			else
+				trap "bash menu; exit 0" EXIT
+				exit 0
+			fi
+		fi
+		display_net_reconfiguration_info
+		# NEW v.0.5.4-post
+		# We will first copy the configuration files and than try to reconfigure the network (all done in hostapd_fallback_komplex_new)
+		# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
+		# WARNING: Thsi is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
+		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+		(nohup bin/hostapd_fallback_komplex_new wlan1 eth0) 2>/dev/null
+		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
+		sleep 2
+		if ip link | grep wlan0; then
+			ask_captive
+    	if ip link | grep wlan1 | grep "state UP" ; then
+    		WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
+    		clear
     	fi
+    	if ip link | grep eth0 | grep "state UP" ; then
+    		ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+      	clear
+      fi
+      # To check: can I switch from UNKNOWN
+      # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+			if ip link | grep tun1 | grep "state UNKNOWN" ; then
+				TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+      	CLIENT_IFACE_TUN1_IP="tun1"
+				clear
+      else
+      	TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
+      	CLIENT_IFACE_TUN1_IP="usb0"
+      	clear
+			fi
+			# Configure torrc depending on the present interfaces
+			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
+				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			else
+				torrc_reset
+				if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
+				if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
+				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
+      	# The following line should minimize those cases where a restart is required.
+      	sudo systemctl restart isc-dhcp-server
+      	if [ -z "$INTERNETSELECTION" ]; then
+      		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+        	sleep 2
+					# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run or if its on a TorBox mini
+					if [ "$TORBOX_MINI" -eq "1" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null;
+					elif grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+        	clear
+        	restarting_tor menu
+					trap
+        	exit 0
+      	else
+      		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+        	exit 0
+      	fi
+			fi
+		else
+			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+			if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
+			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
 
@@ -744,16 +681,10 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
-			# NEW v.0.5.4-post
-			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
-				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
-				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
-			fi
       display_net_reconfiguration_info
-			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			# NEW v.0.5.4-post
+			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -781,6 +712,8 @@ case "$CHOICE" in
 				fi
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -862,6 +795,8 @@ case "$CHOICE" in
   				fi
 					# Configure torrc depending on the present interfaces
 					if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+						sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+						if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 					else
 						torrc_reset
@@ -885,6 +820,8 @@ case "$CHOICE" in
           	fi
 					fi
         else
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
         fi
       fi
@@ -906,16 +843,10 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
-			# NEW v.0.5.4-post
-			MASQ_INTERFACE=$(grep "-o wlan0 -j MASQUERADE" /etc/iptables.ip4.nat)
-			if [ -n "$MASQ_INTERFACE" ] && [ "$TORBOX_MINI" -eq "0" ]; then
-				sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat ;
-				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
-			fi
       display_net_reconfiguration_info
-			(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-			echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+			# NEW v.0.5.4-post
+			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth1 ; then
@@ -941,6 +872,8 @@ case "$CHOICE" in
 				fi
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] ; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -964,6 +897,8 @@ case "$CHOICE" in
         	fi
 				fi
       else
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -981,9 +916,9 @@ case "$CHOICE" in
 					INPUT=$(cat text/tun0-not_connected-text)
 					if (whiptail --title "TorBox - INFO" --yesno --no-button "CONTINUE" --yes-button "CONNECT WLAN" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 						display_net_reconfiguration_info
-						(nohup bin/hostapd_fallback_komplex_part_1 wlan0 eth0) 2>/dev/null
-						echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-						(nohup bin/hostapd_fallback_komplex_part_2 wlan0 eth0) 2>/dev/null
+						# NEW v.0.5.4-post
+						echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+						(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
 						echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 						sleep 2
 						ask_captive
@@ -1017,6 +952,8 @@ case "$CHOICE" in
 				fi
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -1039,6 +976,8 @@ case "$CHOICE" in
         	fi
 				fi
       else
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi

@@ -113,6 +113,11 @@ EX_SLOW=0
 # 1 - Using unprotected domains activated
 UNPROTECTED_DOMAIN=0
 
+# WLAN Failsafe: rc.local will detect, if the TorBox AP is on wlan1 (USB wlan adapter)
+# Because using wlan1 as an AP could lock someone out, rc.local set it back to wlan0
+# However, this may not be what the user wants. 0 will disabled that failsafe.
+WLAN_FAILSAFE=1
+
 # Through an entry in the Danger Zone sub-menu or in dealing with Captive Portals, TorBox
 # only forwards the data stream without sending it through tor. In this case, a warning
 # will be displayed in the main menu.

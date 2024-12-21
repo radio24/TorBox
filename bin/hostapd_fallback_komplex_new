@@ -38,7 +38,7 @@
 # wlan1 entries in the configuration fails and substitutet them with wlan0.
 #
 #
-# EXCEPTION: don't run on TorBox mini (will replace /etc/network/interfaces)
+# EXCEPTION: don't run on TorBox mini because TorBox mini has /etc/network/interfaces.mini and /etc/iptables.ipv-mini
 #            --> asuming that we don't have clients on the wifi
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 if grep "^TORBOX_MINI=1" ${RUNFILE} ; then exit; fi
@@ -97,7 +97,15 @@ if pgrep -f "dhclient.$INTERFACE2" ; then
 	INTERFACE2_DOWN=1
 fi
 
-if [ "$ON_A_CLOUD" -eq "0" ]; then sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces; fi
+if [ "$ON_A_CLOUD" -eq "0" ]; then
+	sudo cp /etc/network/interfaces /etc/network/interfaces.bak
+	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces;
+	# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
+	if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then
+		sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak
+		sudo cp etc/iptables.ipv4-${INTERFACE1}${INTERFACE2}.nat /etc/iptables.ipv4.nat
+	fi
+fi
 
 if [ $INTERFACE1_DOWN = 1 ] ; then
 		sudo ifup $INTERFACE1 &>/dev/null
