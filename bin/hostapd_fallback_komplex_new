@@ -99,7 +99,7 @@ fi
 
 if [ "$ON_A_CLOUD" -eq "0" ]; then
 	sudo cp /etc/network/interfaces /etc/network/interfaces.bak
-	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces;
+	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
 	# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
 	if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then
 		sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak
@@ -131,8 +131,8 @@ if [ -z "$STATICIP1" ] ; then
 	# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 	sudo ifup $INTERFACE1 &>/dev/null
 fi
-# Avoiding to have the wrong IP
-STATICIP1=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
+# Avoiding to have no IP
+STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
 if [ -z "$STATICIP1" ] ; then
 	sudo ifdown $INTERFACE1 &>/dev/null
 	# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)

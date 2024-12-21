@@ -993,9 +993,10 @@ display_net_reconfiguration_info()
   	echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
   	echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
 		echo -e "${RED}    source again.${NOCOLOR}"
-		echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
-		echo -e "${RED}    load the default values if you didn't disable the AP on wlan1${NOCOLOR}"
-		echo -e "${RED}    failsafe in the Danger Room.${NOCOLOR}"
+		echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should load${NOCOLOR}"
+		echo -e "${RED}    the desired configuration or the default values depending on${NOCOLOR}"
+		echo -e "${RED}    the AP on wlan1 failsafe configuration in the Danger Room.${NOCOLOR}"
+		echo -e "${RED}    Keep in mind that booting up could take more time.${NOCOLOR}"
   	echo ""
 	fi
 }
