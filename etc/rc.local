@@ -93,7 +93,7 @@ if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
   	sudo ifdown wlan0
   	sudo ifdown wlan1
 		sudo cp /home/torbox/torbox/etc/network/interfaces.wlan0eth0 /etc/network/interfaces
-		sudo cp /home/torbox/torbox/etc/iptables.ipv4-wlan0eth0.net /etc/iptables
+		sudo cp /home/torbox/torbox/etc/iptables.ipv4-wlan0eth0.nat /etc/iptables
   	sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
   	sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
   	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
