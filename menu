@@ -425,7 +425,9 @@ case "$CHOICE" in
 	    display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_new wlan0 eth1) 2>/dev/null
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth1 > /dev/null 2>&1 &
+			pid=$!
+			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth0; then
@@ -501,7 +503,9 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			pid=$!
+			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep wlan1; then
@@ -607,7 +611,9 @@ case "$CHOICE" in
 		# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
 		# WARNING: Thsi is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		(nohup bin/hostapd_fallback_komplex_new wlan1 eth0) 2>/dev/null
+		nohup bin/hostapd_fallback_komplex_new wlan1 eth0 > /dev/null 2>&1 &
+		pid=$!
+		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 		if ip link | grep wlan0; then
@@ -684,7 +690,9 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 /dev/null 2>&1 &
+			pid=$!
+			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
@@ -846,7 +854,9 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			pid=$!
+			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			if ip link | grep eth1 ; then
@@ -918,7 +928,9 @@ case "$CHOICE" in
 						display_net_reconfiguration_info
 						# NEW v.0.5.4-post
 						echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-						(nohup bin/hostapd_fallback_komplex_new wlan0 eth0) 2>/dev/null
+						nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+						pid=$!
+						wait $pid
 						echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 						sleep 2
 						ask_captive

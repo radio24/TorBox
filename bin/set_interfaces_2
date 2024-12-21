@@ -112,7 +112,9 @@ captive_tunneling()
 		fi
 		# NEW v.0.5.4-post
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		(nohup bin/hostapd_fallback_komplex_new $I_DEVICE1 $I_DEVICE2 ) 2>/dev/null
+		nohup bin/hostapd_fallback_komplex_new $I_DEVICE1 $I_DEVICE2 > /dev/null 2>&1 &
+		pid=$!
+		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 	fi
