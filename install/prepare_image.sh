@@ -152,6 +152,8 @@ sudo pip install --upgrade pip
 sudo pip3 install pipenv
 sudo pip install --only-binary=:all: cryptography
 sudo pip install --only-binary=:all: pillow
+sudo rm Pipfile.lock*
+sudo rm requirements.txt
 #wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
 wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 pipenv requirements >requirements.txt
