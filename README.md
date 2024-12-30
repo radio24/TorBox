@@ -5,9 +5,9 @@
 # TorBox
 TorBox is an easy-to-use, anonymising router based on Raspberry Pi, which also runs on Debian and Ubuntu-based systems. TorBox can create a separate WiFi that routes the encrypted network data over the Tor network. However, TorBox also supports clients who are connected to a cable. As [TorBox mini](https://www.torbox.ch/?page_id=3544), it can be plugged into an USB socket and be used as a network device which sends all the traffic to the Tor network. [TorBox on a Cloud](https://www.torbox.ch/?page_id=3687) can be used on a cloud combined with an OpenVPN server -- it is literally a private VPN with tor functionality. Locally installed or on a cloud, TorBox also helps to publish data easily and safely through Onion Services. The type of client (desktop, laptop, tablet, mobile, etc.) and the operating system on the client don’t matter. For more information, visit the [TorBox website](https://www.torbox.ch).
 
-* **TorBox Image** (about 1 GB): [v.0.5.4 (08.12.2024)](https://www.torbox.ch/data/torbox-20241208-v054.img.xz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Image** (about 1 GB): [v.0.5.4 (30.12.2024)](https://www.torbox.ch/data/torbox-20241230-v054.img.xz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 * **TorBox mini Image** (about 1 GB): [v.0.5.4 (08.12.2024)](https://www.torbox.ch/data/torbox-mini-20241208-v054.img.xz) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
-* **TorBox Menu only**: [v.0.5.4 (08.12.2024)](https://www.torbox.ch/data/torbox054-20241208.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
+* **TorBox Menu only**: [v.0.5.4 (30.12.2024)](https://www.torbox.ch/data/torbox054-20241230.zip) – [SHA-256 values](https://www.torbox.ch/?page_id=1128)<br />
 
 Or download the image from [our TorBox on the cloud test installation](http://x63xkeiw3cgczc6lcwf62aoe35rp6hfcz3mympmuha7xhj63qdf3ngid.onion/).
 
