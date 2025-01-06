@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -W ignore::SyntaxWarning
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2024 radio24
