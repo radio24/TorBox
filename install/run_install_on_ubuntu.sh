@@ -641,8 +641,8 @@ if [ "$STEP_NUMBER" -le "2" ]; then
 	echo ""
 
 	echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
-	# Surpress the system restart dialog
-	sudo apt-get -y remove needrestart
+	# Surpress the system restart dialog and python3-blinker
+	sudo apt-get -y remove needrestart python3-blinker
 	sudo apt-get -y update
 	sudo apt-get -y dist-upgrade
 	sudo apt-get -y clean
