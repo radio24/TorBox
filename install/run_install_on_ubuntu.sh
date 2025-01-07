@@ -641,8 +641,8 @@ if [ "$STEP_NUMBER" -le "2" ]; then
 	echo ""
 
 	echo -e "${RED}[+] Step 2c: Updating the system...${NOCOLOR}"
-	# Surpress the system restart dialog and python3-blinker
-	sudo apt-get -y remove needrestart python3-blinker
+	# Surpress the system restart dialog
+	sudo apt-get -y remove needrestart
 	sudo apt-get -y update
 	sudo apt-get -y dist-upgrade
 	sudo apt-get -y clean
@@ -738,6 +738,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 	fi
+
+	# Uninstalling the blinker package, because it's installed in the requirements.txt
+	sudo apt -y uninstall python3-blinker
 
 	# Install and check Python requirements
 	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
