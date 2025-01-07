@@ -740,7 +740,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	fi
 
 	# Uninstalling the blinker package, because it's installed in the requirements.txt
-	sudo apt -y uninstall python3-blinker
+	sudo apt -y remove python3-blinker
 
 	# Install and check Python requirements
 	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
