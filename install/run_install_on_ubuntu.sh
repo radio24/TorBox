@@ -1258,12 +1258,6 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	# We can only start dnsmasq together with systemd-resolve, if we activate "bind-interface" in /etc/dnsmasq.conf
 	# --> https://unix.stackexchange.com/questions/304050/how-to-avoid-conflicts-between-dnsmasq-and-systemd-resolved
 	sudo sed -i "s/^#bind-interfaces/bind-interfaces/g" /etc/dnsmasq.conf
-
-	# We need to add server=127.0.0.53 to /etc/dnsmasq.conf to make it work with systemd-resolved
-	if ! grep "server=127.0.0.53" /etc/dnsmasq.conf; then
-		sudo printf "\n# Added by TorBox\nserver=127.0.0.53" | sudo tee -a /etc/dnsmasq.conf
-	fi
-
 	sudo systemctl unmask rc-local
 	sudo systemctl enable rc-local
 	echo ""
