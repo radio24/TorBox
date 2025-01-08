@@ -115,7 +115,7 @@ if ip link | grep "$INTERFACE" ; then
 	if ip link | grep "$INTERFACE" | grep -e "state UP" -e "DORMANT" ; then
 		sudo ip link set wlan0 mode default
 	fi
-	sudo systemctl restart hostapd; fi
+	sudo systemctl restart hostapd;
 fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
