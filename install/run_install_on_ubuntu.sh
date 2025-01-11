@@ -739,6 +739,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 	fi
 
+	# Uninstalling the blinker package, because it's installed in the requirements.txt
+	sudo apt -y remove python3-blinker
+
 	# Install and check Python requirements
 	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
 	# 1. Check the Pipfile --> is the package in the list?

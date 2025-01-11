@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -W ignore::SyntaxWarning
 # -*- coding: utf-8 -*-
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
