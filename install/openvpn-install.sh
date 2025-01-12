@@ -1008,7 +1008,7 @@ function manageMenu() {
 
 	###### DISPLAY THE MENU ######
 	clear
-	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.3 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Add a new client"  \
 	" 2" "Revoke existing client"  \
