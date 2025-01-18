@@ -206,7 +206,7 @@ add_open_dns()
 {
   echo -e "${RED}[+] Let's add some open nameservers to avoid cheap censorship mechanisms...${NOCOLOR}"
   echo -e "${RED}[+] These nameservers are only used for local resolution. All clients DNS${NOCOLOR}"
-  echo -e "${RED}[+] resquest are handled through Tor.${NOCOLOR}"
+  echo -e "${RED}[+] request are handled through Tor.${NOCOLOR}"
   NAMESERVERS=$(grep "^NAMESERVERS=" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
   ONE_NAMESERVER=$(cut -d ',' -f1 <<< $NAMESERVERS)
   NAMESERVERS=$(cut -f2- -d ',' <<< $NAMESERVERS)
@@ -480,6 +480,7 @@ restarting_tor()
   sudo systemctl restart tor &
   sudo tail -f -n 0 /var/log/tor/notices.log | sed -u 's#.*Bootstrapped 100% (done): Done#\x1b[93m&\x1b[0m#' | sed -u 's#Bootstrapped 100% (done): Done#Bootstrapped 100% (done): Done -- YOU CAN PRESS NOW Q!#' | grep -v -e "Rejecting ill-formed reverse lookup" -e "Missing mapping for virtual address" -e "You configured a non-loopback address" -e "opening log file" -e "Application request when we haven't" -e "Giving up. (waiting for circuit)" -e "New control connection opened from" -e "While fetching directory info, no running dirservers known"
 	stty intr ^c
+	trap
 }
 
 # connecting_to_VPN()
@@ -970,21 +971,34 @@ activate_snowflake_bridges()
 # Displays information before reconfigure the network (only used several times in menu)
 display_net_reconfiguration_info()
 {
-  clear
-  echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
-  echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
-  echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
-  echo -e "${RED}    this can take up to ${YELLOW}two minutes.${NOCOLOR}"
-  echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh session, but${NOCOLOR}"
-  echo -e "${RED}    disconnect and reconnect your client device from the TorBox${NOCOLOR}"
-  echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
-  echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
-  echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
-  echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
-  echo -e "${RED}    source again (main menu 4-9),${NOCOLOR}"
-  echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should automatically${NOCOLOR}"
-  echo -e "${RED}    load the default values.${NOCOLOR}"
-  echo ""
+	if grep -q "^TORBOX_MINI=1" ${RUNFILE} ; then
+		clear
+		echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+		echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+		echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
+		echo -e "${RED}    this can take up to ${YELLOW}two minutes.${NOCOLOR}"
+		echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+		echo -e "${RED}    source again.${NOCOLOR}"
+		echo ""
+	else
+  	clear
+  	echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
+  	echo -e "${RED}[+] We possibly have to reconfigure TorBox's network settings!${NOCOLOR}"
+  	echo -e "${RED}[+] Usually, the configuration continuous afterward -- however,${NOCOLOR}"
+  	echo -e "${RED}    this can take up to ${YELLOW}two minutes.${NOCOLOR}"
+  	echo -e "${RED}[+] If it doesn't, please DON'T CLOSE your ssh session, but${NOCOLOR}"
+  	echo -e "${RED}    disconnect and reconnect your client device from the TorBox${NOCOLOR}"
+  	echo -e "${RED}    until the client gets a valid IP address (192.168.42.* or${NOCOLOR}"
+  	echo -e "${RED}    192.168.43.*). After waiting a little bit longer, you should${NOCOLOR}"
+  	echo -e "${RED}    see TorBox's configuration dialogue in the SSH program again.${NOCOLOR}"
+  	echo -e "${RED}[+] Was it not successful? You may have to choose the Internet${NOCOLOR}"
+		echo -e "${RED}    source again.${NOCOLOR}"
+		echo -e "${RED}[+] Locked out? In this case, restart TorBox -- this should load${NOCOLOR}"
+		echo -e "${RED}    the desired configuration or the default values depending on${NOCOLOR}"
+		echo -e "${RED}    the AP on wlan1 failsafe configuration in the Danger Room.${NOCOLOR}"
+		echo -e "${RED}    Keep in mind that booting up could take more time.${NOCOLOR}"
+  	echo ""
+	fi
 }
 
 # find_virtport(<service_name>)

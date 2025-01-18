@@ -115,18 +115,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# Release Page of the unofficial Tor repositories on GitHub
-#TOR_RELEASE="unofficial"
-#TORURL="https://github.com/torproject/tor/tags"
-#TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# WARNING: Sometimes, GitHub will change this prefix!
-# TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED2="\" data-view-component=.*"
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-#TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
-
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL_WEB="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake"
 # Only until version 2.6.1
@@ -539,6 +527,15 @@ clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 re-connect
+# NEW v.0.5.4-post
+# Avahi can lead loosing the IP address
+# See here: https://www.heise.de/ratgeber/Raspi-mit-Debian-verliert-Internet-Verbindung-9998575.html
+systemctl mask avahi-daemon
+systemctl disable avahi-daemon
+systemctl stop avahi-daemon
+systemctl mask avahi-daemon.socket
+systemctl disable avahi-daemon.socket
+systemctl stop avahi-daemon.socket
 
 if [ "$STEP_NUMBER" -le "1" ]; then
   # 1. Adjusting time, if needed
@@ -635,7 +632,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   sleep 5
   check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
   # Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev"
+	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
   # IMPORTANT tor-geoipdb installs also the tor package
@@ -709,9 +706,10 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless and numpy hangs when installed with pip
 	# bcrypt needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
 	cd
 	pip install --upgrade pip
 	pip3 install pipenv
@@ -725,8 +723,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sed -i "/^cryptography==.*/d" requirements.txt
+	sed -i "/^pip==.*/d" requirements.txt
 	sed -i "/^pillow==.*/d" requirements.txt
 	sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
@@ -745,7 +744,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 			# NEW v.0.5.4
 			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
   	  echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		  if [ -z "$VERSION" ]; then
 			  # shellcheck disable=SC2059
@@ -1359,6 +1358,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
   	rm $logs
   	sleep 1
 	done
+	journalctl --vacuum-size=1M
 	echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 	#.bash_history is already deleted
 	history -c

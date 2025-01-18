@@ -120,7 +120,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" 
 "==" "=============================================[Lock-out risk]===" \
 " 4" "$TOGGLE20 the AP on wlan1 failsafe" \
 " 5" "$TOGGLE21 SSH password login" \
-"==" "==========================================[developer Tools]===" \
+"==" "==========================================[Developer Tools]===" \
 " 6" "Forwarding only - tor protection disabled" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
@@ -446,12 +446,13 @@ case "$CHOICE" in
 		read -n 1 -s -r -p "Press any key to continue"
 	;;
 
-  # Enable/Disable the AP on wlan1 failsafe
+	# Enable/Disable the AP on wlan1 failsafe
 	4)
 		clear
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
 		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
+			(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 		else
 			exitstatus=$?
 			# exitstatus == 255 means that the ESC key was pressed
@@ -507,7 +508,7 @@ case "$CHOICE" in
 	;;
 
 	# Forwarding only - tor protection disabled
-	6)
+	5)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients

@@ -39,6 +39,10 @@ NOCOLOR='\033[0m'
 TORRC="/etc/tor/torrc"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 
+# TorBox Repository
+[ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
+[ -z "$TORBOXMENU_BRANCHNAME" ] && TORBOXMENU_BRANCHNAME="master"
+
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
@@ -129,36 +133,39 @@ echo -e "${RED}Onion Services                         :$MODE_OS${NOCOLOR}"
 echo
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 clear
-echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
 # For RaspberryPi OS based on Debian Bookworm needed
 PYTHON_LIB_PATH=$(python3 -c "import sys; print(sys.path)" | cut -d ',' -f3 | sed "s/'//g" | sed "s/,//g" | sed "s/ //g")
 if [ -f "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED" ] ; then
   sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 fi
 cd
-if [ ! -f requirements.txt ]; then
-	# Has to be the same as in run_install.sh
-	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
-	# 1. Check the Pipfile --> is the package in the list?
-	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
-	# 3. Execute: pipenv requirements >requirements.txt
-	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
-	# 5. Check the list of outdated packages: pip list --outdated
-	sudo apt-get -y install python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy
-	sudo pip install --upgrade pip
-	sudo pip3 install pipenv
-	sudo pip install --only-binary=:all: cryptography
-	sudo pip install --only-binary=:all: pillow
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
-  pipenv requirements >requirements.txt
-	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
-	sudo sed -i "/^cryptography==.*/d" requirements.txt
-	sudo sed -i "/^pillow==.*/g" requirements.txt
-	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
-fi
+# Has to be the same as in run_install.sh
+# How to deal with Pipfile, Pipfile.lock and requirements.txt:
+# 1. Check the Pipfile --> is the package in the list?
+# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
+# 3. Execute: pipenv requirements >requirements.txt
+# 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
+# 5. Check the list of outdated packages: pip list --outdated
+# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+sudo apt-get -y install python3-pip python3-pil python3-bcrypt python3-numpy
+sudo pip install --upgrade pip
+sudo pip3 install pipenv
+sudo pip install --only-binary=:all: cryptography
+sudo pip install --only-binary=:all: pillow
+sudo rm Pipfile.lock*
+sudo rm requirements.txt
+#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
+wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
+pipenv requirements >requirements.txt
+# If the creation of requirements.txt failes then use the (most probably older) one from our repository
+# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+sudo sed -i "/^cryptography==.*/d" requirements.txt
+sudo sed -i "/^pip==.*/d" requirements.txt
+sudo sed -i "/^pillow==.*/g" requirements.txt
+sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 if [ -f "requirements.failed" ]; then rm requirements.failed; fi
+clear
+echo -e "${YELLOW}The following Python modules are installed:${NOCOLOR}"
 REPLY="Y"
 while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
 	REPLY=""
@@ -169,7 +176,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
   for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 		# NEW v.0.5.4
 		if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-    VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+		VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
     echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
     if [ -z "$VERSION" ]; then
       # shellcheck disable=SC2059
@@ -196,17 +203,6 @@ unset REPLY
 echo ""
 read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 
-# Are there any updates in the requirements?
-#clear
-#echo -e "${RED}This are all the outdated Python libraries!${NOCOLOR}"
-#echo -e "${RED}It doesn't mean that something is wrong!${NOCOLOR}"
-#echo -e "${RED}Updated Python libraries have to be tested to avoid bad surprises!${NOCOLOR}"
-#echo
-#pip list --outdated
-#unset REPLY
-#echo ""
-#read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-
 # The additional network drivers are not installed on a TorBox mini or TorBox on a Cloud installation
 if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   clear
@@ -214,11 +210,11 @@ if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
   dkms status
 	echo ""
   echo -e "${RED}Does it look right?${NOCOLOR}"
-  read -r -p $'\e[1;93mWould you like to  re-install the aditional network drivers [y/N]? -> \e[0m'
+	read -r -p $'\e[1;93mWould you like to (re-)install the aditional network drivers [y/N]? -> \e[0m'
   if [[ $REPLY =~ ^[YyNn]$ ]] ; then
     if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-      sudo dkms remove --all
-      sudo bash install_network_drivers
+			sudo dkms remove --all -q
+			sudo bash install/install_network_drivers
     fi
   fi
   echo ""

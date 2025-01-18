@@ -13,18 +13,18 @@ flask-restful = "*"
 flask-compress = "*"
 flask-cors = "4.0.2"
 gunicorn = "*"
+opencv-python-headless = "*"
 paramiko = "*"
 peewee = "*"
-pip = "*"
 pgpy = "*"
+PySocks = "*"
 pytesseract = "*"
 requests = "*"
-stem = "1.8.1"
+stem = "1.8.2"
 tornado = "*"
 urwid = "*"
 
 [dev-packages]
-opencv-python-headless = "*"
 pytest = "*"
 
 [requires]

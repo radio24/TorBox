@@ -103,7 +103,7 @@ elif [ $ARGUMENT = 2 ]; then
 		fi
   fi
 
-# Entry 3: Restart Tor, an reconect wifi, if needed.
+# Entry 3: Restart Tor, and reconect wifi, if needed.
 # This should work in every configuration
 elif [ $ARGUMENT = 3 ]; then
 	INTERNET_IFACE=$(grep "^INTERNET_IFACE=" $RUNFILE | sed "s/.*=//g")

@@ -114,18 +114,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# Release Page of the unofficial Tor repositories on GitHub
-#TOR_RELEASE="unofficial"
-#TORURL="https://github.com/torproject/tor/tags"
-#TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# WARNING: Sometimes, GitHub will change this prefix!
-# TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED2="\" data-view-component=.*"
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-#TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
-
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL_WEB="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake"
 # Only until version 2.6.1
@@ -548,6 +536,15 @@ clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, first, let's add some open nameservers!${NOCOLOR}"
 re-connect
+# NEW v.0.5.4-post
+# Avahi can lead loosing the IP address
+# See here: https://www.heise.de/ratgeber/Raspi-mit-Debian-verliert-Internet-Verbindung-9998575.html
+sudo systemctl mask avahi-daemon
+sudo systemctl disable avahi-daemon
+sudo systemctl stop avahi-daemon
+sudo systemctl mask avahi-daemon.socket
+sudo systemctl disable avahi-daemon.socket
+sudo systemctl stop avahi-daemon.socket
 
 if [ "$STEP_NUMBER" -le "1" ]; then
 	# 1. Adjusting time, if needed
@@ -675,9 +672,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	clear
 	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
 	# Necessary packages for Ubuntu systems (not necessary with Raspberry Pi OS)
-	check_install_packages "net-tools ifupdown unzip equivs rfkill iw"
+	check_install_packages "net-tools unzip equivs rfkill iw"
 	# Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev"
+	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 	# IMPORTANT tor-geoipdb installs also the tor package
@@ -742,6 +739,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 	fi
 
+	# Uninstalling the blinker package, because it's installed in the requirements.txt
+	sudo apt -y remove python3-blinker
+
 	# Install and check Python requirements
 	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
 	# 1. Check the Pipfile --> is the package in the list?
@@ -751,9 +751,10 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless and numpy hangs when installed with pip
 	# bcrypt needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
 	cd
 	sudo pip3 install pipenv
 	sudo pip install --upgrade pip
@@ -768,8 +769,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pip==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
@@ -788,7 +790,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 		for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 			# NEW v.0.5.4
 			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-			VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+			VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
   		echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 			if [ -z "$VERSION" ]; then
 				# shellcheck disable=SC2059
@@ -1426,6 +1428,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
   	sudo rm $logs
   	sleep 1
 	done
+	sudo journalctl --vacuum-size=1M
 	echo -e "${RED}[+]${NOCOLOR} Erasing History..."
 	#.bash_history is already deleted
 	history -c

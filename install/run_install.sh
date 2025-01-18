@@ -139,18 +139,6 @@ TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
-# Release Page of the unofficial Tor repositories on GitHub
-#TOR_RELEASE="unofficial"
-#TORURL="https://github.com/torproject/tor/tags"
-#TORPATH_TO_RELEASE_TAGS="/torproject/tor/releases/tag/"
-# WARNING: Sometimes, GitHub will change this prefix!
-# TOR_HREF_FOR_SED="href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED1="<h2 data-view-component=\"true\" class=\"f4 d-inline\"><a href=\"/torproject/tor/releases/tag/tor-"
-#TOR_HREF_FOR_SED2="\" data-view-component=.*"
-# TORURL_DL_PARTIAL is the the partial download path of the tor release packages
-# (highlighted with "-><-": ->https://github.com/torproject/tor/releases/tag/tor<- -0.4.6.6.tar.gz)
-#TORURL_DL_PARTIAL="https://github.com/torproject/tor/archive/refs/tags/tor-"
-
 # Snowflake repositories
 SNOWFLAKE_ORIGINAL_WEB="https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake"
 # Only until version 2.6.1
@@ -357,9 +345,8 @@ download_and_compile_tor()
 		git config --global user.name "torbox"
 		git config --global user.email "torbox@localhost"
 		git commit -m "Initial commit"
-		# Don't use ./autogen.sh
 		sh autogen.sh
-		./configure
+		sh configure --disable-unittests
 		make
 		sudo make install
 		cd
@@ -564,6 +551,15 @@ clear
 echo -e "${RED}[+] Step 0: Do we have Internet?${NOCOLOR}"
 echo -e "${RED}[+]         Nevertheless, to be sure, let's add some open nameservers!${NOCOLOR}"
 re-connect
+# NEW v.0.5.4-post
+# Avahi can lead loosing the IP address
+# See here: https://www.heise.de/ratgeber/Raspi-mit-Debian-verliert-Internet-Verbindung-9998575.html
+sudo systemctl mask avahi-daemon
+sudo systemctl disable avahi-daemon
+sudo systemctl stop avahi-daemon
+sudo systemctl mask avahi-daemon.socket
+sudo systemctl disable avahi-daemon.socket
+sudo systemctl stop avahi-daemon.socket
 
 if [ "$STEP_NUMBER" -le "1" ]; then
   # 1. Adjusting time, if needed
@@ -678,9 +674,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms libjpeg-dev"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms libjpeg-dev ifupdown"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -742,9 +738,10 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# opencv-python-headless and numpy hangs when installed with pip
 	# bcrypt needs rust, which waste 1 Gb of space.
-	check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
+	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
+	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
   cd
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
@@ -760,6 +757,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	sudo sed -i "/^pip==.*/d" requirements.txt
 	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
@@ -778,7 +776,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	  for REQUIREMENT in "${REQUIREMENTS[@]}"; do
 			# NEW v.0.5.4
 			if grep "==" <<< $REQUIREMENT ; then REQUIREMENT=$(sed s"/==.*//" <<< $REQUIREMENT); fi
-		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT | sed "s/${REQUIREMENT}==//i" 2>&1)
+		  VERSION=$(pip3 freeze | grep -i $REQUIREMENT== | sed "s/${REQUIREMENT}==//i" 2>&1)
   	  echo -e "${RED}${REQUIREMENT} version: ${YELLOW}$VERSION${NOCOLOR}"
 		  if [ -z "$VERSION" ]; then
 			  # shellcheck disable=SC2059
@@ -814,33 +812,45 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+]         Installing ${YELLOW}go${NOCOLOR}"
   echo ""
 
-	# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5)
-	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then PLATFORM="linux-armv6l";
+	# NEW v.0.5.4: New way to download the current version of go (and we cover the case if TorBox mini is build on a Raspberry Pi 5 with a 32 bit version of Raspberry Pi OS)
+	# This is for a 64bit Raspberry Pi OS
+	if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
+	# This is for a 64bit Intel compatable architecture as used on a cloud
+	elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
+	# This is for a 32bit Raspberry Pi OS
+	elif uname -m | grep -q -E "armv6l|armv7l"; then PLATFORM="linux-armv6l"
 	else
-		if uname -m | grep -q -E "arm64|aarch64"; then PLATFORM="linux-arm64"
-		elif uname -m | grep -q -E "x86_64"; then PLATFORM="linux-amd64"
-		else PLATFORM="linux-armv6l"
-  	fi
+		PLATFORM=""
+		DLCHECK=1
 	fi
 
   # Fetch the filename of the latest go version
-  GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
-  wget --no-cache "$GO_DL_PATH$GO_FILENAME"
-  DLCHECK=$?
-	# If the download failed, install the package from the distribution
-  if [ "$DLCHECK" != "0" ] ; then
-	  echo ""
-	  echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
-	  echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
-	  echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
-	  echo
-	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		  echo ""
-		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		  clear
-	  else
-		  sleep 10
-	  fi
+	if [ "$PLATFORM" != "" ] ; then
+  	GO_FILENAME=$(curl -s "$GO_DL_PATH" | grep "$PLATFORM" | grep -m 1 'class=\"download\"' | cut -d'"' -f6 | cut -d'/' -f3)
+  	wget --no-cache "$GO_DL_PATH$GO_FILENAME"
+  	DLCHECK=$?
+		# If the download failed, install the package from the distribution
+  	if [ "$DLCHECK" != "0" ] ; then
+	  	echo ""
+	  	echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO (for $PLATFORM)!${NOCOLOR}"
+	  	echo -e "${RED}[+] The go repositories may be blocked or offline!${NOCOLOR}"
+	  	echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+	  	echo
+		fi
+	else
+		echo ""
+		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD GO because the platform is unknown!${NOCOLOR}"
+		echo -e "${RED}[+] We try to install the distribution package, instead.${NOCOLOR}"
+		echo
+	fi
+	if [ "$PLATFORM" == "" ] || [ "$DLCHECK" != "0" ]; then
+  	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+	  	echo ""
+	  	read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+	  	clear
+  	else
+	  	sleep 10
+  	fi
 	  re-connect
 	  sudo apt-get -y install golang
 	  GO_PROGRAM="/usr/local/go/bin/go"
@@ -1168,8 +1178,12 @@ if [ "$STEP_NUMBER" -le "11" ]; then
       sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
     fi
   fi
+	sudo systemctl mask hciuart.service
   sudo systemctl disable hciuart.service
+	sudo systemctl stop hciuart.service
+	sudo systemctl mask bluetooth.service
   sudo systemctl disable bluetooth.service
+	sudo systemctl stop bluetooth.service
   sudo apt-get -y purge bluez
   sudo apt-get -y autoremove
   sudo rfkill block bluetooth
@@ -1301,7 +1315,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
       fi
     fi
   	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
-    	(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
+			(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | sudo tee -a ${CONFIGFILE}) >/dev/null 2>&1
   	fi
 		clear
 		echo -e "${RED}[+] Step 14: TorBox is configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
@@ -1345,6 +1359,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
     sudo rm $logs
     sleep 1
   done
+	sudo journalctl --vacuum-size=1M
   echo -e "${RED}[+]${NOCOLOR} Erasing History..."
   #.bash_history is already deleted
   history -c

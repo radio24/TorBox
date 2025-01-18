@@ -110,9 +110,11 @@ captive_tunneling()
 			echo -e "${YELLOW}    even if it shows already an IP!${NOCOLOR}"
 			echo ""
 		fi
-		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_1 wlan0 eth1) 2>/dev/null
-		echo -e "${YELLOW}[+] Step 1 of 2 done${NOCOLOR}"
-		(nohup $TORBOX_PATH/bin/hostapd_fallback_komplex_part_2 wlan0 eth1) 2>/dev/null
+		# NEW v.0.5.4-post
+		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+		nohup bin/hostapd_fallback_komplex_new $I_DEVICE1 $I_DEVICE2 > /dev/null 2>&1 &
+		pid=$!
+		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
 	fi
@@ -292,3 +294,4 @@ if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 1
 fi
+exit 0

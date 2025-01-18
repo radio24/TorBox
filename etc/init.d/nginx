@@ -20,7 +20,7 @@ if [ -r /etc/default/nginx ]; then
 	. /etc/default/nginx
 fi
 
-STOP_SCHEDULE="${STOP_SCHEDULE:-TERM/5/TERM/5/KILL/5}"
+STOP_SCHEDULE="${STOP_SCHEDULE:-TERM/5/KILL/5}"
 
 test -x $DAEMON || exit 0
 

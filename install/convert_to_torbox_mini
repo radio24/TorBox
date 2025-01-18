@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2024 radio24
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# THIS SCRIPT IS INTENDED TO BE USED BY THE DEVELOPERS ONLY!
+# This script converts a default TorBox installation to a TorBox mini installation.
+# Important: This script must be run locally and not via a network connection.
+#
+# SYNTAX
+# sudo bash convert_to_torbox_mini
+#
+#
+##### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_15=15
+
+#Colors
+RED='\033[1;31m'
+YELLOW='\033[1;93m'
+NOCOLOR='\033[0m'
+
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
+# Where is the config.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CONFIGFILE="/boot/firmware/config.txt"
+else
+  CONFIGFILE="/boot/config.txt"
+fi
+
+# Where is the cmdline.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CMDLINEFILE="/boot/firmware/cmdline.txt"
+else
+  CMDLINEFILE="/boot/cmdline.txt"
+fi
+
+#Other variables
+RUNFILE="run/torbox.run"
+
+##############################
+######## FUNCTIONS ###########
+
+INPUT=$(cat text/convert_to_torbox_mini-text)
+if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+	cd
+	cd torbox
+	#These packages are not necessary anymore
+	clear
+	echo -e "${RED}[+] These packages are not necessary anymore....${NOCOLOR}"
+	echo ""
+	echo -e "${RED}[+] Purging ${YELLOW}raspberrypi-kernel-headers dkms${NOCOLOR}"
+	echo ""
+	(sudo apt-get -y purge raspberrypi-kernel-headers dkms) 2>/dev/null
+	#Fixing and cleaning
+	echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
+	echo ""
+	sudo apt --fix-broken install
+	sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+	go clean -cache
+	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+	sudo systemctl daemon-reload
+	# Updating the system
+	echo -e "${RED}[+] Updating the system...${NOCOLOR}"
+	echo ""
+	sudo apt-get -y update
+	sudo apt-get -y dist-upgrade
+	sudo apt-get -y clean
+	sudo apt-get -y autoclean
+	sudo apt-get -y autoremove
+	echo -e "${RED}[+] Set up the system...${NOCOLOR}"
+	sudo cp etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
+	sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+	sudo cp etc/network/interfaces.mini /etc/network/interfaces
+	sudo cp etc/rc.local.mini /etc/rc.local
+	sudo systemctl stop hostapd
+	sudo systemctl disable hostapd
+	sudo systemctl mask hostapd
+	sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+	sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
+	if ! grep "dwc2,g_ether" ${CMDLINEFILE}; then
+		if grep "modules-load" ${CMDLINEFILE}; then
+			CMDLINE_STRING=$(grep -o "modules-load=.*" ${CMDLINEFILE} | cut -d ' ' -f 1)
+			CMDLINE_STRING_NEW="$CMDLINE_STRING,dwc2,g_ether"
+			sudo sed -i "s|${CMDLINE_STRING}|${CMDLINE_STRING_NEW}|g" ${CMDLINEFILE}
+		else
+			sudo sed -i "s|rootwait|modules-load=dwc2,g_ether rootwait|g" ${CMDLINEFILE}
+		fi
+	fi
+	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
+		(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | sudo tee -a ${CONFIGFILE}) >/dev/null 2>&1
+	fi
+	clear
+	echo -e "${RED}[+]TorBox is now configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
+fi

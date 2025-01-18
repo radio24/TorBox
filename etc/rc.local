@@ -92,23 +92,31 @@ if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
 	if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   	sudo ifdown wlan0
   	sudo ifdown wlan1
-  	sudo sed -i "s/^auto wlan0/auto wlan1/" /etc/network/interfaces
-  	sudo sed -i "s/^iface wlan0 inet dhcp/iface wlan1 inet dhcp/" /etc/network/interfaces
-  	sudo sed -i "s/^iface wlan1 inet static/iface wlan0 inet static/" /etc/network/interfaces
+		sudo cp /home/torbox/torbox/etc/network/interfaces.wlan0eth0 /etc/network/interfaces
+		sudo cp /home/torbox/torbox/etc/iptables.ipv4-wlan0eth0.nat /etc/iptables
   	sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
   	sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
   	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
   	sudo ifup wlan0 &>/dev/null &
   	sudo ifup wlan1 &>/dev/null &
+		sleep 2
 		sudo systemctl restart hostapd
 		sudo systemctl restart isc-dhcp-server
-		sleep 2
 	fi
 fi
 
 # If the configured interface is available, we will start hostapd
 INTERFACE=$(grep "^interface=" /etc/hostapd/hostapd.conf | sed "s/.*=//g")
-if ip link | grep "$INTERFACE" ; then sudo systemctl restart hostapd; fi
+if ip link | grep "$INTERFACE" ; then
+	if ip link | grep "$INTERFACE" | grep -e "state DOWN" ; then
+		sudo ip link set dev $INTERFACE up
+	fi
+	# DORMANT means in powersaving mode
+	if ip link | grep "$INTERFACE" | grep -e "state UP" -e "DORMANT" ; then
+		sudo ip link set wlan0 mode default
+	fi
+	sudo systemctl restart hostapd
+fi
 
 # If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
 if ip link | grep wlan1 ; then
@@ -188,8 +196,8 @@ if grep "^BridgeRelay" /etc/tor/torrc ; then
     (sudo /sbin/iptables -A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null
   fi
 else
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
-	if iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
+	if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $ORPORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $ORPORT -j ACCEPT) 2>/dev/null ; fi
+	if sudo iptables-save | grep -e "-A INPUT -p tcp --dport $OBFS4PORT -j ACCEPT" ; then (sudo /sbin/iptables -D INPUT -p tcp --dport $OBFS4PORT -j ACCEPT) 2>/dev/null ; fi
 fi
 
 exit 0
