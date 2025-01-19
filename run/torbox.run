@@ -83,12 +83,13 @@ CLIENT_IFACE=wlan0 eth1
 # if set to "random", the the MAC adress will be randomized (this is the default)
 # if set to "permanent", the permanent, unique MAC address will be used
 # if set to xx:xx:xx:xx:xx:xx, then this MAC address will be used after a reboot
-# NEW v.0.5.4: Randomizing usb0 will lock you out!!
+# NEW v.0.5.4: Randomizing usb0 and tun1 will lock you out!!
 MAC_eth0=random
 MAC_eth1=random
 MAC_wlan0=random
 MAC_wlan1=random
 MAC_usb0=permanent
+MAC_tun1=permanent
 
 # TWebSSH
 # 0 - TorBox's Web SSH is disabled

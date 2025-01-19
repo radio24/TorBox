@@ -1048,6 +1048,13 @@ if [[ -e $OPENVPN_CONF ]]; then
 	manageMenu
 else
 	clear
+	# This fix prevents trying to randomise the MAC address of the tun1 interface.
+	# It can be removed with TorBox v.0.5.5
+	MAC_USB0=$(grep "^MAC_usb0=" ${RUNFILE}) 2>/dev/null
+	MAC_TUN1=$(grep "^MAC_tun1=" ${RUNFILE}) 2>/dev/null
+	NEW_STRING="$MAC_USB0\nMAC_tun1=permanent"
+	if [ -z "$MAC_TUN1" ]; then sed -i "s/^MAC_usb0=.*/$NEW_STRING/" ${RUNFILE}; fi
+	######################################################################################
 	if [ "$ON_A_CLOUD" == "on_a_cloud" ]; then
 		INPUT=$(cat $TXT_DIR/openvpn_server_at_install-text)
 		if (whiptail --title "TorBox - INFO (scroll down!)" --yesno --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then

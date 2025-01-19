@@ -48,7 +48,7 @@ fi
 
 # Change the MAC address if needed
 # List all available network interfaces
-AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d")
+AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^tun1/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
 		# NEW v.0.5.4: After a restart, the default MAC address is already set.
