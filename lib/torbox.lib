@@ -365,7 +365,7 @@ erase_logs()
 	echo -e "${RED}[+]${NOCOLOR} Erasing nohup files"
 	find /home/torbox/ -name nohup -exec sudo rm {} \;
   echo -e "${RED}[+]${NOCOLOR} Erasing .bash_history"
-  (sudo rm ../.bash_history) 2>/dev/null
+  (sudo rm /home/torbox/.bash_history) 2>/dev/null
   history -c
 	(sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
 	(sudo chmod -R go-rwx /var/log/tor/notices.log) 2>/dev/null
