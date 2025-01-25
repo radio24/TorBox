@@ -123,7 +123,7 @@ echo -e "${RED}Tor version                            :${YELLOW} $(tor -v | head
 echo -e "${RED}Obfs4proxy version                     :${YELLOW} $(obfs4proxy --version | head -1 | sed "s/obfs4proxy-//")${NOCOLOR}"
 echo -e "${RED}Snowflake                              :${YELLOW} ${SNOWFLAKE_VERS}${NOCOLOR}"
 echo -e "${RED}Nyx version                            :${YELLOW} $(nyx -v | head -1 | sed "s/nyx version //")${NOCOLOR}"
-echo -e "${RED}Go version                             :${YELLOW} $(go version | head -1 | sed "s/go version //")${NOCOLOR}"
+echo -e "${RED}Go version                             :${YELLOW} $(/usr/local/go/bin/go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Firewall countermeasures               :$FIREWALL${NOCOLOR}"
 echo -e "${RED}Disconnection when idle countermeasure :$PING${NOCOLOR}"
 echo -e "${RED}TorBox's automatic counteractions are  :$LOGCHECK${NOCOLOR}"
