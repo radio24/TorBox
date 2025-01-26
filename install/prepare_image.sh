@@ -37,7 +37,8 @@ NOCOLOR='\033[0m'
 
 #Other variables
 TORRC="/etc/tor/torrc"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 
 # TorBox Repository
 [ -z "$TORBOXMENU_FORKNAME" ] && TORBOXMENU_FORKNAME="radio24"
@@ -279,17 +280,17 @@ echo -e "${RED}[+] Deleting all stored wireless passwords${NOCOLOR}"
 echo ""
 echo -e "${RED}[+] Copy default iptables.ipv4.nat${NOCOLOR}"
 if [ "$TORBOX_MINI" -eq "1" ]; then
-  sudo cp torbox/etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+	sudo cp $TORBOX_PATH/etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
 else
-  sudo cp torbox/etc/iptables.ipv4.nat /etc/
+  sudo cp $TORBOX_PATH/etc/iptables.ipv4.nat /etc/
 fi
 if [ "$ON_A_CLOUD" -eq "0" ]; then
 	echo ""
 	echo -e "${RED}[+] Copy default interfaces${NOCOLOR}"
 	if [ "$TORBOX_MINI" -eq "1" ]; then
-		sudo cp torbox/etc/network/interfaces.mini /etc/network/interfaces
+		sudo cp $TORBOX_PATH/etc/network/interfaces.mini /etc/network/interfaces
 	else
-  	sudo cp torbox/etc/network/interfaces /etc/network/
+  	sudo cp $TORBOX_PATH/etc/network/interfaces /etc/network/
 	fi
 fi
 echo ""
