@@ -637,6 +637,12 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
   # IMPORTANT tor-geoipdb installs also the tor package
   check_install_packages "tor-geoipdb"
+	# Install dbus, if not already installed (dietpi)
+	DBUS_STATUS=$(sudo systemctl is-active hostapd)
+	if [ "$DBUS_STATUS" = "inactive" ]; then
+		check_install_packages "dbus dbus-user-session systemd"
+		sudo systemctl restart dbus.service
+	fi
   systemctl stop tor
   systemctl mask tor
   # Both tor services have to be masked to block outgoing tor connections
@@ -1368,14 +1374,8 @@ if [ "$STEP_NUMBER" -le "15" ]; then
 	echo ""
 	echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 	# This has to be at the end to avoid unnecessary error messages
-	DBUS_STATUS=$(sudo systemctl is-active hostapd)
-	if [ "$DBUS_STATUS" = "inactive" ]; then
-		echo "$HOSTNAME" | sudo tee /etc/hostname
-		sudo hostname "$HOSTNAME"
-	else
-		(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-		systemctl restart systemd-hostnamed
-	fi
+	(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+	systemctl restart systemd-hostnamed
 	if grep 127.0.1.1.* /etc/hosts ; then
 		(sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 	else
