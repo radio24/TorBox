@@ -1368,8 +1368,14 @@ if [ "$STEP_NUMBER" -le "15" ]; then
 	echo ""
 	echo -e "${RED}[+] Setting up the hostname...${NOCOLOR}"
 	# This has to be at the end to avoid unnecessary error messages
-	(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
-	systemctl restart systemd-hostnamed
+	DBUS_STATUS=$(sudo systemctl is-active hostapd)
+	if [ "$DBUS_STATUS" = "inactive" ]; then
+		echo "$HOSTNAME" | sudo tee /etc/hostname
+		sudo hostname "$HOSTNAME"
+	else
+		(hostnamectl set-hostname "$HOSTNAME") 2>/dev/null
+		systemctl restart systemd-hostnamed
+	fi
 	if grep 127.0.1.1.* /etc/hosts ; then
 		(sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /etc/hosts) 2>/dev/null
 	else
