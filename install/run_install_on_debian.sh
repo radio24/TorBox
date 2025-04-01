@@ -637,6 +637,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
   # IMPORTANT tor-geoipdb installs also the tor package
   check_install_packages "tor-geoipdb"
+	# NEW v.0.5.4-post: DietPi support
 	# Install dbus, if not already installed (dietpi)
 	DBUS_STATUS=$(sudo systemctl is-active hostapd)
 	if [ "$DBUS_STATUS" = "inactive" ]; then
@@ -1210,6 +1211,11 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	# This doesn't work - rc-local will be still masked
 	#systemctl unmask rc-local
 	#systemctl enable rc-local
+
+	# NEW v.0.5.4-post: DietPi support
+	if [ -f "/boot/dietpi/.version" ] ; then
+		systemctl unmask systemd-logind.service
+	fi
 	echo ""
 	echo -e "${RED}[+]          Stop logging, now...${NOCOLOR}"
 	systemctl stop rsyslog
