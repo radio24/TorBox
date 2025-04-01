@@ -638,6 +638,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   # IMPORTANT tor-geoipdb installs also the tor package
   check_install_packages "tor-geoipdb"
 	# NEW v.0.5.4-post: DietPi support
+	if [ -f "/boot/dietpi/.version" ] ; then
+		check_install_packages "less"
+	fi
 	# Install dbus, if not already installed (dietpi)
 	DBUS_STATUS=$(sudo systemctl is-active hostapd)
 	if [ "$DBUS_STATUS" = "inactive" ]; then
@@ -1333,6 +1336,14 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	echo -e "${YELLOW}             and the default password \"$DEFAULT_PASS\"!!${NOCOLOR}"
 	echo ""
 	passwd
+	# NEW v.0.5.4-post: DietPi support - deactivate user dietpi
+	if [ -f "/boot/dietpi/.version" ] ; then
+	  sleep 10
+		echo -e "${RED}[+] Step 14: Disabling login for user dietpi ...${NOCOLOR}"
+		echo -e "${RED}[+]          For security reason, we disable the login for the user dietpi.${NOCOLOR}"
+		passwd -l dietpi
+		usermod -s /sbin/nologin dietpi
+	fi
 fi
 
 if [ "$STEP_NUMBER" -le "15" ]; then
