@@ -24,8 +24,6 @@
 -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i eth0 -o tun1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -m state --state INVALID -j DROP
--A FORWARD -p icmp -m icmp --icmp-type 8 -j ACCEPT
--A FORWARD -p icmp -m icmp --icmp-type 0 -j ACCEPT
 -A OUTPUT -m conntrack --ctstate INVALID -j DROP
 -A OUTPUT -m state --state INVALID -j DROP
 -A OUTPUT ! -s 127.0.0.1/32 ! -d 127.0.0.1/32 ! -o lo -p tcp -m tcp --tcp-flags RST,ACK RST,ACK -j DROP
@@ -54,6 +52,9 @@ COMMIT
 -A PREROUTING -i wlan0 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i eth1 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i tun1 -p udp -j REDIRECT --to-ports 9040
+-A PREROUTING -i wlan0 -p icmp -j REDIRECT --to-ports 9040
+-A PREROUTING -i eth0 -p icmp -j REDIRECT --to-ports 9040
+-A PREROUTING -i usb0 -p icmp -j REDIRECT --to-ports 9040
 -A PREROUTING -i wlan0 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 -A PREROUTING -i eth1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 -A PREROUTING -i tun1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
