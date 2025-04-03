@@ -131,8 +131,6 @@ if [ "$FIRST_RUN" == "0" ]; then
 	if [ "$NUMBER_OF_WORD" == "1" ]; then
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		# NEW v.0.5.4: Remove the log and block all the rest rules
 		(sudo $IPTABLES -t nat -D PREROUTING -i $D_DEVICE_T -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
 		# (sudo $IPTABLES -t nat -A PREROUTING -i $D_DEVICE_T -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -140,12 +138,8 @@ if [ "$FIRST_RUN" == "0" ]; then
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		# NEW v.0.5.4: Remove the log and block all the rest rules
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
@@ -155,16 +149,10 @@ if [ "$FIRST_RUN" == "0" ]; then
 		readarray -t D_DEVICE_TA < <(printf %s"${D_DEVICE_T}")
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p tcp -j REDIRECT --to-ports 9040) 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p udp -j REDIRECT --to-ports 9040) 2>/dev/null
-		# NEW v.0.5.4-post: Allow ICMP through tor
-		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[2]} -p icmp -j REDIRECT --to-ports 9040) 2>/dev/null
 		# NEW v.0.5.4: Remove the log and block all the rest rules
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[0]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
 		(sudo $IPTABLES -t nat -D PREROUTING -i ${D_DEVICE_TA[1]} -j LOG --log-prefix "FALLEN THROUGH PREROUTING ") 2>/dev/null
@@ -183,10 +171,6 @@ if [ "$FIRST_RUN" == "0" ]; then
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
 	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p udp -j REDIRECT --to-port 9040
-	# NEW v.0.5.4-post: Allow ICMP through tor
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -m set ! --match-set $CLEARNET_LIST dst -p icmp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -m set ! --match-set $CLEARNET_LIST dst -p icmp -j REDIRECT --to-port 9040
-	sudo $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -m set ! --match-set $CLEARNET_LIST dst -p icmp -j REDIRECT --to-port 9040
 
 	# -i is the interface where the clients are connected to the TorBox / -o is the interface with the Internet on it
 	sudo $IPTABLES -A FORWARD -i $I_DEVICE1 -o $O_DEVICE -m set --match-set $CLEARNET_LIST dst -j ACCEPT

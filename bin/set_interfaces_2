@@ -227,10 +227,6 @@ $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p udp --dport 53 -j REDIRECT --to-
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p udp -j REDIRECT --to-ports 9040
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p udp -j REDIRECT --to-ports 9040
-# NEW v.0.5.4-post: Allow ICMP through tor
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -p icmp -j REDIRECT --to-ports 9040
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -p icmp -j REDIRECT --to-ports 9040
-$IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -p icmp -j REDIRECT --to-ports 9040
 # NEW v.0.5.4: New log all the rest
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE2 -j LOG --log-prefix "FALLEN THROUGH PREROUTING "
