@@ -639,7 +639,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   check_install_packages "tor-geoipdb"
 	# NEW v.0.5.4-post: DietPi support
 	if [ -f "/boot/dietpi/.version" ] ; then
-		check_install_packages "less"
+		check_install_packages "less torsocks"
 	fi
 	# Install dbus, if not already installed (dietpi)
 	DBUS_STATUS=$(sudo systemctl is-active hostapd)
