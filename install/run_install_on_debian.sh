@@ -1179,7 +1179,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
     	fi
   	fi
 	fi
-	rfkill block bluetooth
+	if [ -e /dev/rfkill ]; then rfkill block bluetooth; fi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

@@ -1209,8 +1209,7 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   		sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n." | sudo tee -a /boot/firmware/config.txt
 		fi
 	fi
-	sudo rfkill block bluetooth
-
+	if [ -e /dev/rfkill ]; then	sudo rfkill block bluetooth; fi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

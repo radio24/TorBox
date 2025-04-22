@@ -22,8 +22,10 @@
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/usr/local/go/bin
 sudo dmesg -D
-rfkill unblock all
-rfkill block bluetooth
+if [ -e /dev/rfkill ]; then
+	rfkill unblock all
+	rfkill block bluetooth
+fi
 bash /home/torbox/torbox/bin/regset
 sudo systemctl stop hostapd
 sudo systemctl disable hostapd
