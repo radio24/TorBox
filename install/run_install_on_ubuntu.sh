@@ -318,7 +318,7 @@ download_and_compile_tor()
 	if [ $DLCHECK -eq 0 ]; then
 		echo -e "${RED}[+]         Successfully downloaded the selected tor version... ${NOCOLOR}"
 		tar xzf $filename
-		cd "$(ls -d -- */)"
+		cd $directoryname
 		echo -e "${RED}[+]         Starting configuring, compiling and installing... ${NOCOLOR}"
 		# Give it a touch of git (without these lines the compilation will break with a git error)
 		git init
@@ -327,7 +327,7 @@ download_and_compile_tor()
 		git config --global user.email "torbox@localhost"
 		git commit -m "Initial commit"
 		# Don't use ./autogen.sh
-		sh autogen.sh
+		if [ -f "autogen.sh" ]; then sh autogen.sh; fi
 		./configure
 		make
 		sudo make install
@@ -460,6 +460,7 @@ select_and_install_tor()
         	version_string="$(<<< ${torversion_versionsorted_new[$CHOICE_TOR]} sed -e 's/ //g')"
         	download_tor_url="$TORURL_DL_PARTIAL$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
+					directoryname="tor-$version_string"
 					download_and_compile_tor
 				else
 					clear
@@ -490,6 +491,7 @@ select_and_install_tor()
 					version_string="$(<<< ${torversion_versionsorted_new[$i]} sed -e 's/ //g')"
 					download_tor_url="$TORURL_DL_PARTIAL$version_string.tar.gz"
         	filename="tor-$version_string.tar.gz"
+					directoryname="tor-$version_string"
 					i=$number_torversion
 				fi
     	done
