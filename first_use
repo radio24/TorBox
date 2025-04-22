@@ -194,7 +194,7 @@ while [ $FRESHINSTALLED -gt 0 ]; do
 			sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 			FRESHINSTALLED=3
 			if [[ ! -e /etc/openvpn/server.conf ]]; then sudo bash $TORBOX_PATH/install/openvpn-install.sh on_a_cloud; fi
-      #sudo reboot
+			./menu 5
     ;;
 
     # This will generate new unique SSH server keys (only for images)
