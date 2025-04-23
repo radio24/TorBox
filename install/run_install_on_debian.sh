@@ -25,7 +25,7 @@
 # System (Tested with Bookworm).
 #
 # SYNTAX
-# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step] [--continue_with_step]
+# ./run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_owner_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]
 #
 # The -h or --help option shows the help screen.
 #
@@ -45,6 +45,10 @@
 #
 # The --on_a_cloud option has to be used if you install TorBox on a cloud or
 # as a cloud service. This will enable/disable some features.
+#
+# The --torbox_mini option creates the TorBox mini on a Raspberry Pi Zero 2 W.
+# Important: # Before the script can be started with this option, the Raspberry
+# Pi OS lite 32-bit must be installed on the SD card running in the Raspberry Pi Zero 2 W.
 #
 # The --step_by_step option execute the installation step by step, which
 # is ideal to find bugs.
@@ -72,9 +76,10 @@
 # 10. Disabling Bluetooth
 # 11. Configure the system services
 # 12. Updating run/torbox.run
-# 13. Adding and implementing the user torbox
-# 14. Setting/changing root password
-# 15. Finishing, cleaning and booting
+# 13. TorBox mini specific configurations
+# 14. Adding and implementing the user torbox
+# 15. Setting/changing root password
+# 16. Finishing, cleaning and booting
 
 ##########################################################
 
@@ -136,7 +141,7 @@ CHECK_URL2="google.com"
 DEFAULT_PASS="CHANGE-IT"
 
 # Catching command line options
-OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,on_a_cloud,step_by_step,continue_with_step: -n 'run-install' -- "$@")
+OPTIONS=$(getopt -o h --long help,randomize_hostname,select-tor,select-fork:,select-branch:,on_a_cloud,torbox_mini,step_by_step,continue_with_step: -n 'run-install' -- "$@")
 if [ $? != 0 ] ; then echo "Syntax error!"; echo ""; OPTIONS="-h" ; fi
 eval set -- "$OPTIONS"
 
@@ -150,7 +155,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2024 radio24, nyxnor (Contributor)"
-      echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step] [--continue_with_step]"
+      echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -160,6 +165,7 @@ while true; do
 			echo "         --select-branch branch_name"
 			echo "                        : Let select a specific TorBox branch (default: master)"
 			echo "         --on_a_cloud   : Installing on a cloud or as a cloud service"
+      echo "         --torbox_mini  : Installing TorBox mini on a Raspberry Pi Zero 2 W"
 			echo "         --step_by_step : Executes the installation step by step"
       echo "         --continue_with_step"
       echo "                        : Continue the installation with a certain step"
@@ -182,6 +188,7 @@ while true; do
 			shift 2
 		;;
 		--on_a_cloud ) ON_A_CLOUD="--on_a_cloud"; shift ;;
+    --torbox_mini ) TORBOX_MINI="--torbox_mini"; shift ;;
     --step_by_step ) STEP_BY_STEP="--step_by_step"; shift ;;
     --continue_with_step )
       # shellcheck disable=SC2034
@@ -498,7 +505,7 @@ select_and_install_tor()
 
 ###### DISPLAY THE INTRO ######
 clear
-if (whiptail --title "TorBox Installation for Debian-based systems (scroll down!)" --scrolltext --yes-button "INSTALL" --no-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON A DEBIAN-BASED SYSTEM\n\nPlease make sure that you started this script as root with ./run_install_debian in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--step_by_step : executes the installation step by step.\n--continue_with_step\n  	  	   :continue the installation with a certain step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
+if (whiptail --title "TorBox Installation for Debian-based systems (scroll down!)" --scrolltext --yes-button "INSTALL" --no-button "STOP!" --yesno "         WELCOME TO THE INSTALLATION OF TORBOX ON A DEBIAN-BASED SYSTEM\n\nPlease make sure that you started this script as root with ./run_install_debian in your home directory.\n\nThe installation process runs almost without user interaction. However, macchanger will ask for enabling an autmatic change of the MAC address - REPLY WITH NO!\n\nTHIS INSTALLATION WILL CHANGE/DELETE THE CURRENT CONFIGURATION!\n\nDuring the installation, we are going to set up the user \"torbox\" with the default password \"$DEFAULT_PASS\". This user name and the password will be used for logging into your TorBox and to administering it. Please, change the default passwords as soon as possible (the associated menu entries are placed in the configuration sub-menu).\n\nIMPORTANT\nInternet connectivity is necessary for the installation.\n\nAVAILABLE OPTIONS\n-h, --help     : shows a help screen\n--randomize_hostname\n  	  	   : randomize the hostname to prevent ISPs to see the default\n--select-tor   : select a specific tor version\n--select-fork fork_owner_name\n  	  	   : select a specific fork from a GitHub user\n--select-branch branch_name\n  	  	   : select a specific TorBox branch\n--on_a_cloud   : installing on a cloud or as a cloud service.\n--torbox_mini  : installing TorBox mini on a Raspberry Pi Zero 2 W.\n--step_by_step : executes the installation step by step.\n--continue_with_step\n  	  	   :continue the installation with a certain step.\n\nIn case of any problems, contact us on https://www.torbox.ch." $MENU_HEIGHT_25 $MENU_WIDTH); then
 	:
 else
 	clear
@@ -636,8 +643,12 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   sleep 5
   check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
   # Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
-  # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+	else
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
+	fi
+	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
   # IMPORTANT tor-geoipdb installs also the tor package
   check_install_packages "tor-geoipdb"
@@ -646,10 +657,10 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 		check_install_packages "less torsocks"
 	fi
 	# Install dbus, if not already installed (dietpi)
-	DBUS_STATUS=$(sudo systemctl is-active hostapd)
+	DBUS_STATUS=$(systemctl is-active hostapd)
 	if [ "$DBUS_STATUS" = "inactive" ]; then
 		check_install_packages "dbus dbus-user-session systemd"
-		sudo systemctl restart dbus.service
+		systemctl restart dbus.service
 	fi
   systemctl stop tor
   systemctl mask tor
@@ -890,6 +901,10 @@ if [ "$STEP_NUMBER" -le "5" ]; then
   git clone $OBFS4PROXY_USED
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
+		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+			export GOARCH=arm
+			export GOARM=6
+		fi
 	  export GO111MODULE="on"
 	  cd obfs4proxy
 		# NEW v.0.5.4 With or without the path
@@ -945,6 +960,10 @@ if [ "$STEP_NUMBER" -le "6" ]; then
   git clone $SNOWFLAKE_USED
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
+		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+			export GOARCH=arm
+			export GOARM=6
+		fi
 	  export GO111MODULE="on"
 	  cd snowflake/proxy
 	  $GO_PROGRAM get
@@ -1041,13 +1060,18 @@ if [ "$STEP_NUMBER" -le "9" ]; then
   cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhclient.conf -- backup done"
   (cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
-  cp etc/dhcp/dhcpd.conf /etc/dhcp/
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+    cp etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
+  else
+    cp etc/dhcp/dhcpd.conf /etc/dhcp/
+  fi
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/dhcp/dhcpd.conf -- backup done"
   (cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
   cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/hostapd/hostapd.conf -- backup done"
   (cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then cp etc/iptables.ipv4-cloud.nat /etc/iptables.ipv4.nat
+	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
   else cp etc/iptables.ipv4.nat /etc/; fi
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/iptables.ipv4.nat -- backup done"
   (cp /etc/motd /etc/motd.bak) 2>/dev/null
@@ -1058,11 +1082,10 @@ if [ "$STEP_NUMBER" -le "9" ]; then
   # 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
   # 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
   #     but disable with Predictable Network Interface Name in /etc/network/interfaces
-
+	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 	  NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
 	  if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
-		  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		  cp etc/network/interfaces /etc/network/
 		  echo
 		  echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
@@ -1070,7 +1093,6 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 		  echo
 		  sleep 10
 	  else
-		  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		  sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
 		  echo
 		  echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
@@ -1079,12 +1101,11 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 		  echo
 		  sleep 10
 	  fi
-  else
-	  (cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
-	  cp etc/network/interfaces /etc/network/
-	  echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
-  fi
-
+	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		cp etc/network/interfaces.mini /etc/network/interfaces
+	else
+		cp etc/network/interfaces /etc/network/
+	fi
   # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
   # Added for TorBox on a Cloud -- has to be tested with a common Debian image
 	if [ ! -f "/boot/dietpi/.version" ] ; then
@@ -1113,7 +1134,11 @@ if [ "$STEP_NUMBER" -le "9" ]; then
   # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
   cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-  cp etc/rc.local /etc/rc.local
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		cp etc/rc.local.mini /etc/rc.local
+	else
+		cp etc/rc.local /etc/
+	fi
   chmod a+x /etc/rc.local
   systemctl daemon-reload
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/rc.local -- backup done"
@@ -1277,12 +1302,17 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
 		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
 		sed -i "s/=random/=permanent/" ${RUNFILE}
+	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
 	else
 		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
 	fi
-
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  		echo ""
  		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1293,7 +1323,34 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 fi
 
 if [ "$STEP_NUMBER" -le "13" ]; then
-	# 13. Adding and implementing the user torbox
+	#13.  TorBox mini specific configurations
+  if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+    if ! grep "dwc2,g_ether" ${CMDLINEFILE}; then
+      if grep "modules-load" ${CMDLINEFILE}; then
+        CMDLINE_STRING=$(grep -o "modules-load=.*" ${CMDLINEFILE} | cut -d ' ' -f 1)
+        CMDLINE_STRING_NEW="$CMDLINE_STRING,dwc2,g_ether"
+        sed -i "s|${CMDLINE_STRING}|${CMDLINE_STRING_NEW}|g" ${CMDLINEFILE}
+      else
+        sed -i "s|rootwait|modules-load=dwc2,g_ether rootwait|g" ${CMDLINEFILE}
+      fi
+    fi
+  	if ! grep "dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
+			(printf "\ndtoverlay=dwc2,dr_mode=peripheral\n" | tee -a ${CONFIGFILE}) >/dev/null 2>&1
+  	fi
+		clear
+		echo -e "${RED}[+] Step 14: TorBox is configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
+		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
+			echo ""
+			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+			clear
+		else
+			sleep 10
+		fi
+	fi
+fi
+
+if [ "$STEP_NUMBER" -le "14" ]; then
+	# 14. Adding and implementing the user torbox
 	clear
 	echo -e "${RED}[+] Step 13: Set up the torbox user...${NOCOLOR}"
 	echo -e "${RED}[+]          In this step the user \"torbox\" with the default${NOCOLOR}"
@@ -1331,8 +1388,8 @@ if [ "$STEP_NUMBER" -le "13" ]; then
 	fi
 fi
 
-if [ "$STEP_NUMBER" -le "14" ]; then
-	# 14. Setting/changing root password
+if [ "$STEP_NUMBER" -le "15" ]; then
+	# 15. Setting/changing root password
 	clear
 	echo -e "${RED}[+] Step 14: Setting/changing the root password...${NOCOLOR}"
 	echo -e "${RED}[+]          For security reason, we will ask you now for a (new) root password.${NOCOLOR}"
@@ -1352,8 +1409,8 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	fi
 fi
 
-if [ "$STEP_NUMBER" -le "15" ]; then
-	# 15. Finishing, cleaning and booting
+if [ "$STEP_NUMBER" -le "16" ]; then
+	# 16. Finishing, cleaning and booting
 	sleep 10
 	clear
 	echo -e "${RED}[+] Step 15: We are finishing and cleaning up now!${NOCOLOR}"

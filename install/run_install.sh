@@ -171,7 +171,7 @@ while true; do
   case "$1" in
     -h | --help )
 			echo "Copyright (C) 2024 radio24, nyxnor (Contributor)"
-			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]"
+			echo "Syntax : run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
 			echo "                        : Randomizes the hostname to prevent ISPs to see the default"
@@ -1098,7 +1098,6 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
   	NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
   	if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
-  		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
   		sudo cp etc/network/interfaces /etc/network/
   		echo
   		echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
@@ -1106,7 +1105,6 @@ if [ "$STEP_NUMBER" -le "10" ]; then
   		echo
   		sleep 10
   	else
-  		(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
   		sudo sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
   		echo
   		echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
