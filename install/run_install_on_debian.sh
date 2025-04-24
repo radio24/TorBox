@@ -100,6 +100,20 @@ NOCOLOR='\033[0m'
 # What main version is installed
 DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
 
+# Where is the config.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CONFIGFILE="/boot/firmware/config.txt"
+else
+  CONFIGFILE="/boot/config.txt"
+fi
+
+# Where is the cmdline.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CMDLINEFILE="/boot/firmware/cmdline.txt"
+else
+  CMDLINEFILE="/boot/cmdline.txt"
+fi
+
 # Changes in the variables below (until the ####### delimiter) will be saved
 # into run/torbox.run and used after the installation (we not recommend to
 # change the values until zou precisely know what you are doing)
@@ -1191,18 +1205,10 @@ if [ "$STEP_NUMBER" -le "10" ]; then
 	# 10. Disabling Bluetooth
 	clear
 	echo -e "${RED}[+] Step 10: Because of security considerations, we completely disable Bluetooth functionality, if available${NOCOLOR}"
-	if [ "$DEBIAN_VERSION" -gt "11" ]; then
-  	if [ -f "/boot/firmware/config.txt" ] ; then
-    	if ! grep "# Added by TorBox" /boot/firmware/config.txt ; then
-      	printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/firmware/config.txt
-    	fi
-  	fi
-	else
-  	if [ -f "/boot/config.txt" ] ; then
-    	if ! grep "# Added by TorBox" /boot/config.txt ; then
-      	printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | tee -a /boot/config.txt
-    	fi
-  	fi
+	if [ -f "${CONFIGFILE}" ] ; then
+		if ! grep "# Added by TorBox" ${CONFIGFILE} ; then
+			sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
+		fi
 	fi
 	if [ -e /dev/rfkill ]; then rfkill block bluetooth; fi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
