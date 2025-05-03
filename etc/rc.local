@@ -147,13 +147,24 @@ fi
 # If a cellular device is available, and previously used then let's check if we can auto-connect
 if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
 
-# Sometimes, connected to eth0 doesn't result in a default gateway (is this necessary for other interfaces, too?)
+# Sometimes, connected to eth0 doesn't result in a default gateway
 if ip link | grep eth0 ; then
 	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
 		if ! sudo timeout 5 sudo route | grep -m 1 default; then
 			sudo ifdown eth0 2>/dev/null
 			ip addr flush dev eth0
 			sudo ifup eth0 2>/dev/null
+		fi
+	fi
+fi
+
+# Sometimes, connected to eth1 doesn't result in a default gateway
+if ip link | grep eth1 ; then
+	if grep "INTERNET_IFACE=eth1" /home/torbox/torbox/run/torbox.run ; then
+		if ! sudo timeout 5 sudo route | grep -m 1 default; then
+			sudo ifdown eth1 2>/dev/null
+			ip addr flush dev eth1
+			sudo ifup eth1 2>/dev/null
 		fi
 	fi
 fi
