@@ -135,7 +135,7 @@ finish_bridge_start1()
  		exit 0
  	else
     INPUT=$(cat $TXT_DIR/first_use-anti-firewall-text)
-    if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+		if (whiptail --title "TorBox - FIRST START UP!" --no-button "SUB-MENU" --yes-button "CHANGE ANTI-FIREWALL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			CHECK=$(grep "^#ReachableAddresses" ${TORRC})
 			if [ -z ${CHECK} ] ; then
 				sudo sed -i "s/^ReachableAddresses /#ReachableAddresses /g" ${TORRC}
