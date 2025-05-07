@@ -490,7 +490,7 @@ connecting_to_VPN()
 {
   clear
 	# shellcheck disable=SC2012
-	readarray -t ovpnlist < <(ls -1X ../../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
+	readarray -t ovpnlist < <(ls -1X ../openvpn/*.ovpn | sed "s/..\/openvpn\///" | sed "s/.ovpn//")
   if [ -z "${ovpnlist[0]}" ] ; then
     whiptail --title "TorBox - INFO" --textbox $TXT_DIR/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
     trap "bash menu; exit 0" EXIT
