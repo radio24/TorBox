@@ -981,7 +981,7 @@ case "$CHOICE" in
           clear
         fi
         # To check: can I switch from UNKNOWN
-        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+				# NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="tun1"
@@ -1006,6 +1006,8 @@ case "$CHOICE" in
         	# The following line should minimize those cases where a restart is required.
         	sudo systemctl restart isc-dhcp-server
         	if [ -z "$INTERNETSELECTION" ]; then
+						# NEW v.0.5.4-post: Added to solve Issue #342
+						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
             sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
