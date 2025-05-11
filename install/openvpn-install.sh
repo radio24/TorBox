@@ -86,7 +86,7 @@ function checkOS() {
 			if [[ $VERSION_ID -lt 9 ]]; then
 				echo "Your version of Debian is not supported."
 				echo ""
-				echo "However, if you're using Debian >= 9 or unstable/testing then you can continue, at your own risk."
+				echo "However, if you're using Debian >= 9 or unstable/testing, you can continue at your own risk."
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
 					read -rp "Continue? [y/n]: " -e CONTINUE
@@ -101,7 +101,7 @@ function checkOS() {
 			if [[ $MAJOR_UBUNTU_VERSION -lt 16 ]]; then
 				echo "Your version of Ubuntu is not supported."
 				echo ""
-				echo "However, if you're using Ubuntu >= 16.04 or beta, then you can continue, at your own risk."
+				echo "However, if you're using Ubuntu >= 16.04 or beta, you can continue at your own risk."
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
 					read -rp "Continue? [y/n]: " -e CONTINUE
@@ -112,7 +112,7 @@ function checkOS() {
 			fi
 		fi
 	else
-		echo "Looks like you aren't running this installer on a Rapberry PI OS, Debian or Ubuntu system."
+		echo "It looks like you aren't running this installer on a Rapberry PI OS, Debian or Ubuntu system."
 		echo "Please report this error to anonym@torbox.ch"
 		exit 1
 	fi
@@ -120,11 +120,11 @@ function checkOS() {
 
 function initialCheck() {
 	if ! isRoot; then
-		echo "Sorry, you need to run this as root"
+		echo "Sorry, you need to run this script as root"
 		exit 1
 	fi
 	if ! tunAvailable; then
-		echo "TUN is not available"
+		echo "TUN is not available."
 		exit 1
 	fi
 	checkOS
@@ -185,7 +185,7 @@ function installQuestions() {
 	clear
 	echo -e "${YELLOW}[+] Hello!${NOCOLOR}"
 	echo -e "${RED}[+] I need to ask you a few questions before starting the setup.${NOCOLOR}"
-	echo -e "${RED}[+] You can leave the default options and just press enter if you are ok with them.${NOCOLOR}"
+	echo -e "${RED}[+] You can leave the default options and just press enter if you are okay with them.${NOCOLOR}"
 	echo ""
 	echo -e "${RED}[+] I need to know the IPv4 address of the network interface you want OpenVPN listening to.${NOCOLOR}"
 	echo -e "${RED}[+] Unless your server is behind NAT, it should be your public IPv4 address, inserted below.${NOCOLOR}"
@@ -504,7 +504,7 @@ function installOpenVPN() {
 	# $NIC can not be empty for script rm-openvpn-rules.sh
 	if [[ -z $NIC ]]; then
 		echo
-		echo "Can not detect public interface."
+		echo "Could not detect public interface."
 		echo "This needs for setup MASQUERADE."
 		until [[ $CONTINUE =~ (y|n) ]]; do
 			read -rp "Continue? [y/n]: " -e CONTINUE
