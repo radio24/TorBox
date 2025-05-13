@@ -1289,13 +1289,16 @@ case "$CHOICE" in
         fi
         cd
         if (whiptail --defaultno --yesno "Do you want to activate the auto login feature on the TFT display?" $MENU_HEIGHT_10 $MENU_WIDTH_REDUX); then
-          if ! grep -q "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf ; then
+					sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
+          if ! grep -q "# Added by TorBox  LCD35-show script" /etc/systemd/system/getty@tty1.service.d/override.conf 2>/dev/null ; then
             sudo printf "# Added by TorBox LCD35-show script\n[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin torbox --noclear %%I linux\n" | sudo tee -a /etc/systemd/system/getty@tty1.service.d/override.conf
-            sudo systemctl enable getty@tty1.service
+            sudo systemctl daemon-reexec
             sudo systemctl daemon-reload
+            sudo systemctl restart getty@tty1.service
           fi
         else
-          (sudo systemctl disable /etc/systemd/system/getty@tty1.service.d/override.conf) 2>/dev/null
+          sudo rm -f /etc/systemd/system/getty@tty1.service.d/override.conf
+          sudo systemctl daemon-reexec
           sudo systemctl daemon-reload
         fi
         if (whiptail --defaultno --yesno "Would you like to use the TorBox menu on the TFT display without an additional keyboard and activate \"screen accessibility\"?\n\nFor more information see here: https://www.torbox.ch/?page_id=982" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
