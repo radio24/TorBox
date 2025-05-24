@@ -576,7 +576,7 @@ case "$CHOICE" in
     fi
   ;;
 
-	# Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0 / tun1 /usb0)
+	# Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0 / tun1 / usb0)
   # This menu entry temporary restores the wlan1 / eth0 configuration, which does not survive a reboot!
   # A failsave routine in rc.local takes care of it!
   7)
