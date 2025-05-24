@@ -230,5 +230,5 @@ fi
 # This last part resets the dhcp server and opens the iptables to access TorBox
 # This function has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
-sudo systemctl restart isc-dhcp-server
+if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
 sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
