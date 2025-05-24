@@ -743,9 +743,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   	sudo rm "$PYTHON_LIB_PATH/EXTERNALLY-MANAGED"
 	fi
 
-	# Uninstalling the blinker package, because it's installed in the requirements.txt
-	sudo apt -y remove python3-blinker
-
 	# Install and check Python requirements
 	# How to deal with Pipfile, Pipfile.lock and requirements.txt:
 	# 1. Check the Pipfile --> is the package in the list?
@@ -760,7 +757,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
 	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
 	cd
-	sudo pip3 install pipenv
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
 	# bcrypt needs rust, which waste 1 Gb of space, but the python3- package is too old
