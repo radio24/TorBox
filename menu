@@ -474,7 +474,7 @@ case "$CHOICE" in
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
           sleep 2
-					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
 					trap
@@ -482,7 +482,7 @@ case "$CHOICE" in
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 					sleep 2
-					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           exit 0
     		fi
 			fi
@@ -552,7 +552,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
 						trap
@@ -561,7 +561,7 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
         	fi
 				fi
@@ -664,7 +664,7 @@ case "$CHOICE" in
 					# By default, the menu script should save iptables (if not on a cloud) and let rc.local heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated
 					# in the DANGER ZONE that disabling the AP on wlan1 failsafe can lead to a lock-out situation. Because the setting in the DANGER ZONE was added
 					# later, it might not taken into account in the menu script.
-					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         	clear
         	restarting_tor menu
 					trap
@@ -673,7 +673,7 @@ case "$CHOICE" in
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 					sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
-					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         	exit 0
       	fi
 			fi
@@ -732,7 +732,7 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -746,7 +746,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
             exit 0
@@ -754,7 +754,7 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
         	fi
 				fi
@@ -831,7 +831,7 @@ case "$CHOICE" in
           	if [ -z "$INTERNETSELECTION" ]; then
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
               sleep 2
-              if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
               clear
               restarting_tor menu
               exit 0
@@ -839,7 +839,7 @@ case "$CHOICE" in
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 							sleep 2
 							# NEW v.0.5.4-post: Added to solve Issue #334
-							if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+							(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
               exit 0
           	fi
 					fi
@@ -911,7 +911,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
             exit 0
@@ -919,7 +919,7 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 	          exit 0
         	fi
 				fi
@@ -995,7 +995,7 @@ case "$CHOICE" in
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
             sleep 2
-            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
             exit 0
@@ -1003,7 +1003,7 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
         	fi
 				fi
