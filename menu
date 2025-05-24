@@ -470,7 +470,9 @@ case "$CHOICE" in
 				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
     		# The following line should minimize those cases where a restart is required.
-    		if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+    		if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo systemctl restart isc-dhcp-server
+				fi
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
           sleep 2
@@ -548,7 +550,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -656,7 +660,9 @@ case "$CHOICE" in
 				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
       	# The following line should minimize those cases where a restart is required.
-      	if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+      	if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo systemctl restart isc-dhcp-server
+				fi
       	if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
         	sleep 2
@@ -742,7 +748,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-          if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+          if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -827,7 +835,9 @@ case "$CHOICE" in
 						sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
 
           	# The following line should minimize those cases where a restart is required.
-          	if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+          	if [ "$ON_A_CLOUD" -eq "0" ]; then
+							sudo systemctl restart isc-dhcp-server
+						fi
           	if [ -z "$INTERNETSELECTION" ]; then
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
               sleep 2
@@ -907,7 +917,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+					if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -990,7 +1002,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
