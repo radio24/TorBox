@@ -462,7 +462,6 @@ case "$CHOICE" in
 			# Configure torrc depending on the present interfaces
 			if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] ; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			else
 				torrc_reset
@@ -475,7 +474,7 @@ case "$CHOICE" in
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
           sleep 2
-          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
           clear
           restarting_tor menu
 					trap
@@ -483,13 +482,12 @@ case "$CHOICE" in
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 					sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
           exit 0
     		fi
 			fi
 		else
 			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-			if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
@@ -541,7 +539,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -555,7 +552,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             clear
             restarting_tor menu
 						trap
@@ -564,13 +561,12 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             exit 0
         	fi
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -652,7 +648,6 @@ case "$CHOICE" in
 			# Configure torrc depending on the present interfaces
 			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			else
 				torrc_reset
@@ -666,13 +661,10 @@ case "$CHOICE" in
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
         	sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
-					# The following lines seems to be wrong or unnecessary. By default, the menu script should always save iptables and let rc.local
-					# heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated in the DANGER ZONE that disabling the AP on wlan1 failsafe
-					# can lead to a lock-out situation. Because the setting in the DANGER ZONE was added later, it might not taken into account in the menu script.
-					# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run or if its on a TorBox mini
-					# if [ "$TORBOX_MINI" -eq "1" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null;
-					# elif grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+					# By default, the menu script should save iptables (if not on a cloud) and let rc.local heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated
+					# in the DANGER ZONE that disabling the AP on wlan1 failsafe can lead to a lock-out situation. Because the setting in the DANGER ZONE was added
+					# later, it might not taken into account in the menu script.
+					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
         	clear
         	restarting_tor menu
 					trap
@@ -681,13 +673,12 @@ case "$CHOICE" in
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 					sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
         	exit 0
       	fi
 			fi
 		else
 			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-			if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
@@ -741,7 +732,7 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat
+					if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -755,7 +746,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             clear
             restarting_tor menu
             exit 0
@@ -763,7 +754,7 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             exit 0
         	fi
 				fi
@@ -827,7 +818,6 @@ case "$CHOICE" in
 					# Configure torrc depending on the present interfaces
 					if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 						sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-						if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 					else
 						torrc_reset
@@ -841,7 +831,7 @@ case "$CHOICE" in
           	if [ -z "$INTERNETSELECTION" ]; then
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
               sleep 2
-              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+              if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
               clear
               restarting_tor menu
               exit 0
@@ -849,13 +839,12 @@ case "$CHOICE" in
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 							sleep 2
 							# NEW v.0.5.4-post: Added to solve Issue #334
-							(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+							if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
               exit 0
           	fi
 					fi
         else
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
         fi
       fi
@@ -909,7 +898,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] ; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -923,7 +911,7 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             clear
             restarting_tor menu
             exit 0
@@ -931,13 +919,12 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
 	          exit 0
         	fi
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -994,7 +981,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -1009,7 +995,7 @@ case "$CHOICE" in
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
             sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+            if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             clear
             restarting_tor menu
             exit 0
@@ -1017,13 +1003,12 @@ case "$CHOICE" in
           	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
-						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+						if [ "$ON_A_CLOUD" -eq "0" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
             exit 0
         	fi
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
