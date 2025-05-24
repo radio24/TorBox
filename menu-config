@@ -1014,7 +1014,8 @@ case "$CHOICE" in
         echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
         ($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-        sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
+				if [ "$ON_A_CLOUD" -eq "1" ]; then sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=2/" ${RUNFILE}
+				else sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}; fi
         sleep 2
       fi
     fi
