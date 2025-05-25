@@ -996,25 +996,25 @@ case "$CHOICE" in
 
 	#This disables / enables root access
   13)
-		if [ "$TOGGLE10" = "Enable" ]; then
+		if [ "$TOGGLE11" = "Enable" ]; then
 			INPUT=$(cat text/root_access-on-txt)
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				clear
 				echo " "
 				echo -e "${RED}[+] Enable root access!${NOCOLOR}"
-				passwd -u root
-				usermod -s /bin/bash root
+				sudo passwd -u root
+				sudo usermod -s /bin/bash root
 				sudo passwd root
 			fi
 		fi
-		if [ "$TOGGLE10" = "Disable" ]; then
+		if [ "$TOGGLE11" = "Disable" ]; then
 			INPUT=$(cat text/root_access-off-txt)
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				clear
 				echo " "
 				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
-				passwd -l root
-				usermod -s /sbin/nologin root
+				sudo passwd -l root
+				sudo usermod -s /sbin/nologin root
 				sleep 2
 			fi
 		fi
