@@ -205,9 +205,9 @@ read_config()
 	else
 	  # Check if /etc/securetty allows root login (e.g., on tty1, tty2, etc.)
 	  if [ -s /etc/securetty ]; then
-			TOGGLE11="Enable"
-	  else
 			TOGGLE11="Disable"
+	  else
+			TOGGLE11="Enable"
 	  fi
 	fi
 
