@@ -199,7 +199,7 @@ read_config()
   fi
 
 	# TOGGLE11 shows if TorBox can be accessed by root
-	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -qE '^!|^\*')
+	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -E '^!|^\*')
 	if [ -z "$ROOT_SHADOW_LINE" ]; then
 		TOGGLE11="Disable"
 	else
