@@ -198,6 +198,19 @@ read_config()
     TOGGLE10="Disable"
   fi
 
+	# TOGGLE11 shows if TorBox can be accessed by root
+	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -qE '^!|^\*')
+	if [ -z "$ROOT_SHADOW_LINE" ]; then
+		TOGGLE11="Disable"
+	else
+	  # Check if /etc/securetty allows root login (e.g., on tty1, tty2, etc.)
+	  if [ -s /etc/securetty ]; then
+			TOGGLE11="Enable"
+	  else
+			TOGGLE11="Disable"
+	  fi
+	fi
+
   # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
   RULE_CHECK=0
   ($IPTABLES -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -281,20 +294,21 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - CONFIGURATION
 "11" "$TOGGLE09 TorBox's WLAN"  \
 "==" "=================================================[Security]===" \
 "12" "$TOGGLE17 Torbox's WebSSH access" \
-"13" "$TOGGLE10 SSH access from the Internet" \
-"14" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-"15" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"13" "$TOGGLE11 root access" \
+"14" "$TOGGLE10 SSH access from the Internet" \
+"15" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"16" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"16" "$TOGGLE18 excluding slow tor relays"  \
-"17" "Enter the advanced tor configuration editor"  \
+"17" "$TOGGLE18 excluding slow tor relays"  \
+"18" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"18" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"19" "Erase all log files" \
+"19" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"20" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"20" "$TOGGLE22" \
-"21" "Support for Adafruit's PiTFT displays (reboot required)" \
-"22" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"23" "Support for Sixfab Shields/HATs for cellular connections" \
+"21" "$TOGGLE22" \
+"22" "Support for Adafruit's PiTFT displays (reboot required)" \
+"23" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"24" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -980,8 +994,34 @@ case "$CHOICE" in
 		read_config
   ;;
 
-  #This disables / enables SSH access through Internet
+	#This disables / enables root access
   13)
+		if [ "$TOGGLE10" = "Enable" ]; then
+			INPUT=$(cat text/root_access-on-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Enable root access!${NOCOLOR}"
+				passwd -u root
+				usermod -s /bin/bash root
+				sudo passwd root
+			fi
+		fi
+		if [ "$TOGGLE10" = "Disable" ]; then
+			INPUT=$(cat text/root_access-off-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
+				passwd -l root
+				usermod -s /sbin/nologin root
+				sleep 2
+			fi
+		fi
+  ;;
+
+  #This disables / enables SSH access through Internet
+	14)
     if [ "$TOGGLE10" = "Enable" ]; then
       INPUT=$(cat text/ssh_i_access-on-txt)
       ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
@@ -1022,7 +1062,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables the access to the Tor control port from clients
-  14)
+	15)
     if [ "$TOGGLE14" = "Enable" ]; then
       INPUT=$(cat text/tor_control_port_enable-text)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -1048,7 +1088,7 @@ case "$CHOICE" in
   ;;
 
   #This disables / enables HTTP plain text traffic block
-  15)
+	16)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -1085,7 +1125,7 @@ case "$CHOICE" in
   ;;
 
 	# Exclude slow tor relays
-  16)
+	17)
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
 			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -1134,7 +1174,7 @@ case "$CHOICE" in
   ;;
 
 	# Enter the advanced configuration editor
-  17)
+	18)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -1148,7 +1188,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-  18)
+	19)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 			LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
 			LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
@@ -1199,14 +1239,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-  19)
+	20)
     clear
     erase_logs
     sleep 2
   ;;
 
 	#This is for installing, managing or removing the OpenVPN server
-  20)
+	21)
 		clear
 		sudo bash install/openvpn-install.sh
 		read_config
@@ -1214,7 +1254,7 @@ case "$CHOICE" in
 	;;
 
   #This is the support for Adafruit's PiTFT displays
-  21)
+	22)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT
@@ -1249,7 +1289,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-  22)
+	23)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT
@@ -1329,7 +1369,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.4 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-  23)
+	24)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT
