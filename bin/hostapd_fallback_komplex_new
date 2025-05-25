@@ -101,10 +101,11 @@ if [ "$ON_A_CLOUD" -eq "0" ]; then
 	sudo cp /etc/network/interfaces /etc/network/interfaces.bak
 	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
 	# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
-	if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then
-		sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak
-		sudo cp etc/iptables.ipv4-${INTERFACE1}${INTERFACE2}.nat /etc/iptables.ipv4.nat
-	fi
+	# CHANGE v.0.5.4-post: I don't think these lines are necessary
+	# if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then
+	#	sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak
+	#	sudo cp etc/iptables.ipv4-${INTERFACE1}${INTERFACE2}.nat /etc/iptables.ipv4.nat
+	# fi
 fi
 
 if [ $INTERFACE1_DOWN = 1 ] ; then
@@ -231,4 +232,5 @@ fi
 # This function has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
 if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
-sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+# CHANGE v.0.5.4-post: I don't think this line are necessary
+# sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat

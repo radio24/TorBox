@@ -460,9 +460,29 @@ case "$CHOICE" in
         clear
 			fi
 			# Configure torrc depending on the present interfaces
-			if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] ; then
+			if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ] ; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			# NEW v.0.5.4-post: This should avoid a error message if the OpenVPN server is not installed, yet
+			# Because on a TorBox on a Cloud only this menu entry is available to use, this part of the code is
+			# only here necessary and not in other parts of the menu-script.
+			elif [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "1" ] ; then
+				whiptail --title "TorBox - INFO" --textbox text/no_interface_yet-text $MENU_HEIGHT_15 $MENU_WIDTH
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+				if [ -z "$INTERNETSELECTION" ]; then
+      		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+          sleep 2
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
+          restarting_tor menu
+					trap
+          exit 0
+    		else
+      		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+					sleep 2
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          exit 0
+    		fi
 			else
 				torrc_reset
     		if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
