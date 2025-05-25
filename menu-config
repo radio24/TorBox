@@ -87,6 +87,7 @@ HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
 TORRC="/etc/tor/torrc"
 BAK="/etc/tor/torrc.bak"
+SSHD_CONFIG="/etc/ssh/sshd_config"
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 TOR_INCLUDE_EX_SLOW="%include /etc/tor/torrc.exclude-slow"
 # This is necessary to work with special characters in sed
@@ -1005,6 +1006,12 @@ case "$CHOICE" in
 				sudo passwd -u root
 				sudo usermod -s /bin/bash root
 				sudo passwd root
+				if grep -qE '^PermitRootLogin' "$SSH_CONFIG"; then
+					sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' ${SSHD_CONFIG}
+				else
+					(printf "PermitRootLogin yes\n" | tee -a "$SSH_CONFIG") >/dev/null 2>&1
+				fi
+				sudo systemctl reload sshd 2>/dev/null
 			fi
 		fi
 		if [ "$TOGGLE11" = "Disable" ]; then
@@ -1015,6 +1022,8 @@ case "$CHOICE" in
 				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
 				sudo passwd -l root
 				sudo usermod -s /sbin/nologin root
+				sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' ${SSHD_CONFIG}
+				sudo systemctl reload sshd 2>/dev/null
 				sleep 2
 			fi
 		fi
