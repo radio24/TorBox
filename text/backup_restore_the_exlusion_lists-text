@@ -7,8 +7,8 @@ BACKUP MANUALLY
 - Go to ~/torbox/run/ and download the following files, if existing:
   clearnet-list.own vpn-list.own
 - Alternatively, you can copy these files by connecting an USB stick to
-  your TorBox. You can mount the USB stick, most probably by "sudo mount
-	/dev/sda /mnt".
+  your TorBox. You can mount the USB stick, most probably by
+	"sudo mount /dev/sda /mnt".
 
 RESTORE MANUALLY
 - Stop the exclusion of domains from tor protection in the Danger Zone
