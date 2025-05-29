@@ -1,0 +1,21 @@
+HOW CAN I BACKUP/RESTORE THE EXCLUSION LISTS?
+The exclusion lists are backed up and restored by the backup and restore options in the Update and Maintenance sub-menu. However, you can also backup/restore the exclusion list manually.
+
+BACKUP MANUALLY
+- Access TorBox's home directory by using an SFTP client (it uses the same
+  login and password as your SSH client).
+- Go to ~/torbox/run/ and download the following files, if existing:
+  clearnet-list.own vpn-list.own
+- Alternatively, you can copy these files by connecting an USB stick to
+  your TorBox. You can mount the USB stick, most probably by "sudo mount
+	/dev/sda /mnt".
+
+RESTORE MANUALLY
+- Stop the exclusion of domains from tor protection in the Danger Zone
+  sub-menu, if not already done.
+- Access TorBox's home directory by using an SFTP client (it uses the same
+  login and password as your SSH client).
+- Go to ~/torbox/run/ and upload the previously saved files:
+  clearnet-list.own vpn-list.own
+- Start the exclusion of domains from tor protection in the Danger Zone
+  sub-menu.

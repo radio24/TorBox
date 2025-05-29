@@ -31,7 +31,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=6
+NO_ITEMS=7
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -117,11 +117,12 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" 
 " 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 " 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
 " 3" "List the exclusion lists" \
+" 4" "Backup/restore the exlusion lists" \
 "==" "=============================================[Lock-out risk]===" \
-" 4" "$TOGGLE20 the AP on wlan1 failsafe" \
-" 5" "$TOGGLE21 SSH password login" \
+" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
+" 6" "$TOGGLE21 SSH password login" \
 "==" "==========================================[Developer Tools]===" \
-" 6" "Forwarding only - tor protection disabled" \
+" 7" "Forwarding only - tor protection disabled" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -446,8 +447,15 @@ case "$CHOICE" in
 		read -n 1 -s -r -p "Press any key to continue"
 	;;
 
-	# Enable/Disable the AP on wlan1 failsafe
+	# Backup/restore the exlusion lists
 	4)
+		clear
+		INPUT=$(cat text/backup_restore_the_exlusion_lists-text)
+		whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
+	;;
+
+	# Enable/Disable the AP on wlan1 failsafe
+	5)
 		clear
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
 		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
@@ -462,7 +470,7 @@ case "$CHOICE" in
 	;;
 
 	# Enable/disable SSH password login
-	5)
+	6)
 		clear
 		if [ "$TOGGLE21" == "Disable" ]; then
 			cd
@@ -508,7 +516,7 @@ case "$CHOICE" in
 	;;
 
 	# Forwarding only - tor protection disabled
-	5)
+	7)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients
