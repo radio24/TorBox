@@ -101,14 +101,18 @@ NOCOLOR='\033[0m'
 DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
 
 # Where is the config.txt?
-if [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ -f "/boot/dietpi/.version" ]; then
+	CONFIGFILE="/boot/config.txt"
+elif [ "$DEBIAN_VERSION" -gt "11" ]; then
   CONFIGFILE="/boot/firmware/config.txt"
 else
   CONFIGFILE="/boot/config.txt"
 fi
 
 # Where is the cmdline.txt?
-if [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ -f "/boot/dietpi/.version" ]; then
+	CMDLINEFILE="/boot/cmdline.txt"
+elif [ "$DEBIAN_VERSION" -gt "11" ]; then
   CMDLINEFILE="/boot/firmware/cmdline.txt"
 else
   CMDLINEFILE="/boot/cmdline.txt"
