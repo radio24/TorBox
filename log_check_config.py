@@ -32,6 +32,13 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
+        "match": "*Your system clock just jumped*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/bin/automat 5',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
         "match": "*Most likely this means the Tor network is overloaded*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd

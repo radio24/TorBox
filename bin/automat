@@ -36,8 +36,6 @@ TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 LOG=""
 RETURN=0
-i=0
-n=0
 
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
@@ -137,4 +135,6 @@ elif [ $ARGUMENT = 4 ]; then
 
 # Entry 5: Synchronize time
 # This should work in every configuration
-elif [ $ARGUMENT = 5 ]; then (sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null; fi
+elif [ $ARGUMENT = 5 ]; then
+	(sudo /usr/sbin/ntpdate pool.ntp.org) &>/dev/null; fi
+	sudo systemctl restart tor
