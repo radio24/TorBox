@@ -460,10 +460,29 @@ case "$CHOICE" in
         clear
 			fi
 			# Configure torrc depending on the present interfaces
-			if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] ; then
+			if [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ] ; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			# NEW v.0.5.4-post: This should avoid a error message if the OpenVPN server is not installed, yet
+			# Because on a TorBox on a Cloud only this menu entry is available to use, this part of the code is
+			# only here necessary and not in other parts of the menu-script.
+			elif [ -z "$WLAN0_IP" ] && [ -z "$ETH1_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "1" ] ; then
+				whiptail --title "TorBox - INFO" --textbox text/no_interface_yet-text $MENU_HEIGHT_15 $MENU_WIDTH
+				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+				if [ -z "$INTERNETSELECTION" ]; then
+      		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+          sleep 2
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          clear
+          restarting_tor menu
+					trap
+          exit 0
+    		else
+      		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+					sleep 2
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          exit 0
+    		fi
 			else
 				torrc_reset
     		if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
@@ -471,11 +490,13 @@ case "$CHOICE" in
 				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
     		# The following line should minimize those cases where a restart is required.
-    		sudo systemctl restart isc-dhcp-server
+    		if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo systemctl restart isc-dhcp-server
+				fi
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
           sleep 2
-          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
 					trap
@@ -489,7 +510,6 @@ case "$CHOICE" in
 			fi
 		else
 			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-			if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
@@ -541,7 +561,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -551,7 +570,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	sudo systemctl restart isc-dhcp-server
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -570,13 +591,12 @@ case "$CHOICE" in
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
   ;;
 
-	# Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0 / tun1 /usb0)
+	# Wireless network (through the onboard chip; wlan0 --> wlan1 / eth0 / tun1 / usb0)
   # This menu entry temporary restores the wlan1 / eth0 configuration, which does not survive a reboot!
   # A failsave routine in rc.local takes care of it!
   7)
@@ -652,7 +672,6 @@ case "$CHOICE" in
 			# Configure torrc depending on the present interfaces
 			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			else
 				torrc_reset
@@ -661,17 +680,16 @@ case "$CHOICE" in
 				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
       	# The following line should minimize those cases where a restart is required.
-      	sudo systemctl restart isc-dhcp-server
+      	if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo systemctl restart isc-dhcp-server
+				fi
       	if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
         	sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
-					# The following lines seems to be wrong or unnecessary. By default, the menu script should always save iptables and let rc.local
-					# heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated in the DANGER ZONE that disabling the AP on wlan1 failsafe
-					# can lead to a lock-out situation. Because the setting in the DANGER ZONE was added later, it might not taken into account in the menu script.
-					# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run or if its on a TorBox mini
-					# if [ "$TORBOX_MINI" -eq "1" ]; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null;
-					# elif grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null ; fi
+					# By default, the menu script should save iptables (if not on a cloud) and let rc.local heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated
+					# in the DANGER ZONE that disabling the AP on wlan1 failsafe can lead to a lock-out situation. Because the setting in the DANGER ZONE was added
+					# later, it might not taken into account in the menu script.
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         	clear
         	restarting_tor menu
@@ -687,7 +705,6 @@ case "$CHOICE" in
 			fi
 		else
 			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-			if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
@@ -741,7 +758,7 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat
+					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -751,7 +768,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	sudo systemctl restart isc-dhcp-server
+          if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -827,7 +846,6 @@ case "$CHOICE" in
 					# Configure torrc depending on the present interfaces
 					if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 						sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-						if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 					else
 						torrc_reset
@@ -837,7 +855,9 @@ case "$CHOICE" in
 						sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
 
           	# The following line should minimize those cases where a restart is required.
-          	sudo systemctl restart isc-dhcp-server
+          	if [ "$ON_A_CLOUD" -eq "0" ]; then
+							sudo systemctl restart isc-dhcp-server
+						fi
           	if [ -z "$INTERNETSELECTION" ]; then
             	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
               sleep 2
@@ -855,7 +875,6 @@ case "$CHOICE" in
 					fi
         else
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
           whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
         fi
       fi
@@ -909,7 +928,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] ; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -919,7 +937,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	sudo systemctl restart isc-dhcp-server
+					if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
             sleep 2
@@ -937,7 +957,6 @@ case "$CHOICE" in
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -994,7 +1013,6 @@ case "$CHOICE" in
 				# Configure torrc depending on the present interfaces
 				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
@@ -1004,7 +1022,9 @@ case "$CHOICE" in
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
 
         	# The following line should minimize those cases where a restart is required.
-        	sudo systemctl restart isc-dhcp-server
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
         	if [ -z "$INTERNETSELECTION" ]; then
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
@@ -1023,7 +1043,6 @@ case "$CHOICE" in
 				fi
       else
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-				if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then (sudo cp /etc/iptables.ipv4.nat.bak /etc/iptables.ipv4.nat) 2>/dev/null ; fi
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi

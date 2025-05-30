@@ -32,6 +32,13 @@ matches = [
     },
     {
         "file": '/var/log/tor/notices.log',
+        "match": "*Your system clock just jumped*",  # use * as wildcard
+        "match_count": 1,  # min matches to execute command
+        "match_time": 60*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/bin/automat 5',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
         "match": "*Most likely this means the Tor network is overloaded*",  # use * as wildcard
         "match_count": 1,  # min matches to execute command
         "match_time": 60*60,  # (seconds) time range of match count to execute cmd
@@ -78,5 +85,12 @@ matches = [
         "match_count": 25,  # min matches to execute command
         "match_time": 2*60,  # (seconds) time range of match count to execute cmd
         "command": 'sudo bash /home/torbox/torbox/bin/automat 2 1',
+    },
+    {
+        "file": '/var/log/tor/notices.log',
+        "match": "*ailed to find node for hop*",  # use * as wildcard
+        "match_count": 2,  # min matches to execute command
+        "match_time": 2*60,  # (seconds) time range of match count to execute cmd
+        "command": 'sudo bash /home/torbox/torbox/bin/automat 3',
     },
 ]

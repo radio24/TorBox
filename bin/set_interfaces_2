@@ -82,6 +82,11 @@ TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITLOOP=0
 
+#Check if this installation is on a cloud
+ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+
+#Check SSH acces from the Internet
+SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ###########
@@ -241,7 +246,11 @@ $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -j LOG --log-prefix "FALLEN THROUGH
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 
 ###### SSH access through Internet ######
-if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+# NEW v.0.5.4-post: SSH access on a cloud to prevent a locked out situation
+if [ "$ON_A_CLOUD" -eq "1" ] && [ "$SSH_FROM_INTERNET" -lt "2" ]; then
+	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
+	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
+elif grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
 else

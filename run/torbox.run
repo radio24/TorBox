@@ -50,6 +50,7 @@ FRESH_INSTALLED=0
 # SSH access from the Internet
 # 0 - SSH access from the Internet is blocked (default)
 # 1 - SSH access from the Internet is allowed
+# 2 - SSH access from the Internet is blocked on a cloud installation
 SSH_FROM_INTERNET=0
 
 # NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support

@@ -890,7 +890,7 @@ function newClient() {
 	echo -e "${YELLOW}[+] All done! The ovpn-file has been written to $homeDir/$CLIENT.ovpn.${NOCOLOR}"
 	echo -e "${RED}[+] Download the ovpn-file to your client machine.${NOCOLOR}"
 	echo -e "${RED}[+] You will be able to generate a client ovpn-file at the end of the configuration.${NOCOLOR}"
-	echo -e "${RED}[+] You can access it by using an SFTP client (it uses the same login and password as your SSH client).${NOCOLOR}"
+	echo -e "${RED}[+] You can access it by using a SFTP client (it uses the same login and password as your SSH client).${NOCOLOR}"
 	echo -e "${RED}[+] Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/.${NOCOLOR}"
 	echo ""
 	echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
@@ -1055,7 +1055,7 @@ function manageMenu() {
 	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Add a new client"  \
-	" 2" "Revoke existing client"  \
+	" 2" "Revoke an existing client"  \
 	" 3" "$TOGGLE01 the OpenVPN server $TOGGLE02"  \
 	" 4" "Remove the OpenVPN server capability and configuration" \
 	"==" "===============================================================" \
