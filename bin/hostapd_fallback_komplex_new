@@ -56,7 +56,7 @@ INTERFACE_USB0_DOWN=0
 TORBOX_MINI_STANDARD=0
 
 # Is it a TorBox mini standard configuration?
-if [ "$INTERFACE1" == "wlan1" && "$INTERFACE2" == "eth1" && "$TORBOX_MINI" -eq "1" && "$NOTUSB0" == "" && "$ON_A_CLOUD" -eq "0" ]; then
+if [ "$INTERFACE1" == "wlan1" ] && [ "$INTERFACE2" == "eth1" ] && [ "$TORBOX_MINI" -eq "1" ] && [ "$NOTUSB0" == "" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 	if ip link | grep $INTERFACE1; then
 		TORBOX_MINI_STANDARD=0
 	else
