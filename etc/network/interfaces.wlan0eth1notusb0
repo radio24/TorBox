@@ -5,14 +5,15 @@
 # source-directory /etc/network/interfaces.d
 
 auto lo
-auto eth1
+auto eth0
 auto wlan1
 auto usb0
 
 iface lo inet loopback
-iface eth1 inet dhcp
+iface eth0 inet dhcp
 iface wlan1 inet dhcp
   wireless-power off
+iface usb0 inet dhcp
 allow-hotplug wlan0 wlan1 eth0 eth1 usb0
 
 iface wlan0 inet static
@@ -20,10 +21,6 @@ iface wlan0 inet static
   netmask 255.255.255.0
 	wireless-power off
 
-iface eth0 inet static
+iface eth1 inet static
   address 192.168.43.1
-  netmask 255.255.255.0
-
-iface usb0 inet static
-  address 192.168.44.1
   netmask 255.255.255.0

@@ -96,6 +96,7 @@ TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
 # Read configuration from run/torbox.run
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ########
@@ -926,8 +927,11 @@ case "$CHOICE" in
               echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
               sudo systemctl mask --now hostapd
               sudo systemctl daemon-reload
-              # No special rc.local for Debian/Ubuntu anymore
-              sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							if [ "$TORBOX_MINI" -eq "1" ]; then
+								sudo cp etc/rc.local.mini /etc/rc.local
+							else
+              	sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							fi
 							sudo chmod a+x /etc/rc.local
             fi
           fi
@@ -949,7 +953,6 @@ case "$CHOICE" in
         	clear
         	echo " "
         	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        	# No special rc.local for Debian/Ubuntu anymore
         	sudo cp etc/rc.local /etc/rc.local
 					sudo chmod a+x /etc/rc.local
         	sudo systemctl unmask hostapd
