@@ -438,7 +438,7 @@ update_torcfg()
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
 
 	# NEW v.0.5.4: Don't change /etc/network/interfaces on a cloud and respect TorBox mini
-	if [ "$TORBOX_MINI" -eq "0" && "$ON_A_CLOUD" -eq "0" ]; then
+	if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		cp etc/network/interfaces /etc/network/
 		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"

@@ -219,7 +219,7 @@ fi
 # Is USB0 ready (only used in TorBox mini)?
 if [ "$TORBOX_MINI" -eq "1" ]; then
 	if ip link | grep usb0 | grep "state UP" ; then
-		STATICIP_USB==$(ip addr show usb0 | grep -w inet)
+		STATICIP_USB=$(ip addr show usb0 | grep -w inet)
 		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
 		if [ -z "$STATICIP_USB0" ] ; then
 			sudo ifdown usb0 &>/dev/null
@@ -240,6 +240,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
 	fi
+fi
 
 # Is INTERFACE3 ready?
 # Because it is a possible Internet source, the Interface should be up, but
