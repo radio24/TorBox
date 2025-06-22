@@ -1020,7 +1020,7 @@ case "$CHOICE" in
 						if ip link | grep usb0; then
 							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
 						else
-							nohup bin/hostapd_fallback_komplex_new wlan0 eth1 notusb0 > /dev/null 2>&1 &
+							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
 						fi
 						pid=$!
 						wait $pid

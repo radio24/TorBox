@@ -25,7 +25,3 @@ iface wlan1 inet static
 iface eth0 inet static
   address 192.168.43.1
   netmask 255.255.255.0
-
-iface usb0 inet static
-  address 192.168.44.1
-  netmask 255.255.255.0

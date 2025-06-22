@@ -1,6 +1,6 @@
 This menu entry supposes that TorBox should be connected to the Internet through an USB WiFi adapter (wlan1). Often, only 2.5 GHz band USB WiFi adapters  work out of the box, but we installed additional drivers to support some common 5 GHz band USB WiFi adapters (see also here: https://www.torbox.ch/?p=1747). Also, another menu entry allows you to connect to the Internet through the onboard wireless chip,  which also supports the 5 GHz band.
 
-The next step is to set up TorBox so that your client devices have access through TorBox's wireless network if enabled in the Configuration sub-menu (wlan0), through Ethernet (eth0), and/or via an installed VPN server (tun1). In case of a cable connection: please, plug in the ethernet cable with your client device NOW.
+The next step is to set up TorBox so that your client devices have access through TorBox's wireless network if enabled in the Configuration sub-menu (wlan0), through Ethernet (eth0), and/or via an installed VPN server (tun1). This configuration also supports TorBox mini (usb0). In case of a cable connection: please, plug in the ethernet cable with your client device NOW.
 
 If we have to restart TorBox's wireless network, please reconnect your client without closing the ssh session. Usually, the configuration continuous -- if not, then please repeat the process.
 

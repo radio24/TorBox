@@ -1,3 +1,5 @@
 This menu entry supposes that TorBox mini should be connected to the Internet through the onboard wireless chip supporting the 2.5 and 5 GHz bands (wlan0). It is also the default configuration for the TorBox mini.
 
+If available, the following interfaces are also available for client devices: if enabled in the Configuration sub-menu (wlan0), through Ethernet (eth0), and/or via an installed VPN server (tun1).
+
 Would you like to CONTINUE?
