@@ -54,6 +54,12 @@ INTERFACE2_DOWN=0
 INTERFACE3_DOWN=0
 INTERFACE_USB0_DOWN=0
 
+# Check for active SSH connections on USB0 before restarting
+USB0_SSH_ACTIVE=0
+if ss -tn | grep -q ":22.*192\.168\.44\." ; then
+	USB0_SSH_ACTIVE=1
+fi
+
 # INTERFACE1 and INTERFACE2 are clients - INTERFACE3 and INTERFACE4 are potential Internet sources
 if [ "$INTERFACE1" == "wlan1" ] ; then
 	INTERFACE3="wlan0"
@@ -99,7 +105,7 @@ fi
 
 if [ "$TORBOX_MINI" -eq "1" ]; then
 	NOTUSB0=""
-	if pgrep -f "dhclient.usb0" ; then
+	if pgrep -f "dhclient.usb0" && [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
 		(sudo dhclient -r) 2>&1
 		sudo ifdown usb0 &>/dev/null
 		# NEW v.0.5.4-post: This will disconnect a cable connection
@@ -199,8 +205,8 @@ fi
 if [ "$TORBOX_MINI" -eq "1" ]; then
 	if ip link | grep usb0 | grep "state UP" ; then
 		STATICIP_USB=$(ip addr show usb0 | grep -w inet)
-		# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
-		if [ -z "$STATICIP_USB0" ] ; then
+		# If usb0 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
@@ -208,16 +214,18 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 		unset STATICIP_USB0
 		# Avoiding to have no IP
 		STATICIP_USB0=$(ip addr show usb0 | grep 192.168.44.1)
-		if [ -z "$STATICIP_USB0" ] ; then
+		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
 		fi
 	else
+		if [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
 			sudo ifdown usb0 &>/dev/null
 			ip addr flush dev usb0
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
+		fi
 	fi
 fi
 
