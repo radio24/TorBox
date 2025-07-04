@@ -900,6 +900,7 @@ case "$CHOICE" in
 		clear
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
+			UBS0=$(ip addr show ubs0 | grep -w 192.168.44.1)
 			VPN=$(ip addr show tun1 | grep -w 192.168.44.1)
 			clear
       if [ -z "$CABLE" ]; then
@@ -907,7 +908,7 @@ case "$CHOICE" in
 				clear
       fi
       clear
-      if [ -n "$CABLE" ] || [ -n "$VPN" ]; then
+			if [ -n "$CABLE" ] || [ -n "$VPN" ] || [ -n "$USB0" ]; then
         INPUT=$(cat text/disable_wlan-text)
         DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
         "1" "Temporary   - Disable TorBox's WLAN until next boot" OFF \

@@ -66,6 +66,7 @@ INTERNETSELECTION=$1
 
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
@@ -334,6 +335,32 @@ else
 		"===" "========================================[Reboot & Shutdown]===" \
 		"19" "Reboot / Shutdown TorBox" \
 		3>&1 1>&2 2>&3)
+	elif [ "$TORBOX_MINI" -eq "1" ] && [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+			CHOICE=$(whiptail --nocancel --title "TorBox on a cloud v.0.5.4 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)           $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+			" 1" "Tor statistics (press m for menu / q to quit)" \
+			" 2" "Enforce a new exit node with a new IP" \
+			" 3" "Restart Tor - check if it is working (press q to quit)"  \
+			" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
+			"===" "===================================[Where is the Internet?]===" \
+			"  " " " \
+			"  " " " \
+			" 7" "TorBox mini default (wlan0 --> ubs0)   "$FLASH_USB0 \
+			"  " " " \
+			"  " "Go to the Danger Zone to activate other connection options!    " \
+			"  " " " \
+			"===" "================================================[Sub-Menus]===" \
+			"11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
+			"12" "Go to the Configuration sub-menu..." \
+			"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
+			"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
+			"15" "Go to the Danger Zone..." \
+			"16" "Go to the Update and Maintenance sub-menu..." \
+			"==" "============================================[Informational]===" \
+			"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+			"18" "HOW CAN I HELP WITH TORBOX?" \
+			"===" "========================================[Reboot & Shutdown]===" \
+			"19" "Reboot / Shutdown TorBox" \
+			3>&1 1>&2 2>&3)
 	else
   	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   	" 1" "Tor statistics (press m for menu / q to quit)" \
