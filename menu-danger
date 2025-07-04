@@ -574,12 +574,13 @@ case "$CHOICE" in
 		else
 			INPUT=$(cat text/enable_TorBox_mini_default-text)
 			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-			sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
-			echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
-			sudo systemctl mask --now hostapd
-			sudo systemctl daemon-reload
-			sudo cp etc/rc.local.mini /etc/rc.local
-			sudo chmod a+x /etc/rc.local
+				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
+				echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
+				sudo systemctl mask --now hostapd
+				sudo systemctl daemon-reload
+				sudo cp etc/rc.local.mini /etc/rc.local
+				sudo chmod a+x /etc/rc.local
+			fi
 		fi
 	;;
 
