@@ -129,7 +129,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
 	" 3" "List the exclusion lists" \
-	" 4" "Backup/restore the exlusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
 	" 6" "$TOGGLE21 SSH password login" \
@@ -143,7 +143,7 @@ else
 	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
 	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
 	" 3" "List the exclusion lists" \
-	" 4" "Backup/restore the exlusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
 	" 6" "$TOGGLE21 SSH password login" \
@@ -477,7 +477,7 @@ case "$CHOICE" in
 	# Backup/restore the exlusion lists
 	4)
 		clear
-		INPUT=$(cat text/backup_restore_the_exlusion_lists-text)
+		INPUT=$(cat text/backup_restore_the_exclusion_lists-text)
 		whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
