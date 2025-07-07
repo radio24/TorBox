@@ -97,6 +97,7 @@ TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 # Read configuration from run/torbox.run
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ########
@@ -949,8 +950,20 @@ case "$CHOICE" in
 			COUNT_WLAN=$(sudo lshw | grep ethernet | grep -c wireless)
 			clear
 			if [ "$COUNT_WLAN" -gt "0" ]; then
-      	INPUT=$(cat text/enable_wlan-text)
-      	if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+					INPUT=$(cat text/torbox_mini_wifi_default_warning-text)
+					whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+					exit 0
+				fi
+				EXECUTE=0
+				if [ "$TORBOX_MINI" -eq "1" ]; then
+					INPUT=$(cat text/torbox_mini_wifi_warning-text)
+					if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then EXECUTE=1; fi
+				else
+					INPUT=$(cat text/enable_wlan-text)
+      		if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then EXECUTE=1; fi
+				fi
+				if [ "$EXECUTE" -eq "1" ]; then
         	clear
         	echo " "
         	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
