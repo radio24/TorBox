@@ -104,9 +104,9 @@ read_config()
 
 	# TOGGLE23 shows if TorBox mini default configuration is enabled or disable
 	if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
-		TOOGLE23="Activate"
+		TOGGLE23="Activate"
 	else
-		TOOGLE23="Deactivate"
+		TOGGLE23="Deactivate"
 	fi
 }
 
@@ -568,14 +568,18 @@ case "$CHOICE" in
 		clear
 		if [ "$TOGGLE23" == "Activate" ]; then
 			INPUT=$(cat text/disable_TorBox_mini_default-text)
-			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now activated!${NOCOLOR}"
+				sleep 3
 			fi
 		else
 			INPUT=$(cat text/enable_TorBox_mini_default-text)
 			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
 				echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now deactivated!${NOCOLOR}"
+				sleep 3
 				sudo systemctl mask --now hostapd
 				sudo systemctl daemon-reload
 				sudo cp etc/rc.local.mini /etc/rc.local

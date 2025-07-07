@@ -389,8 +389,16 @@ else
   	3>&1 1>&2 2>&3)
 	fi
 	exitstatus=$?
-	# exitstatus == 255 means that the ESC key was pressed
-	[ "$exitstatus" == "255" ] && exit 0
+	# exitstatus == 1 means that the ESC key was pressed
+	if [ "$exitstatus" == "1" ]; then
+		clear
+		#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+		PROMPTTEXT=$(cat text/prompt-text)
+		echo -e "$PROMPTTEXT"
+		echo " "
+		exit 0
+	fi
 fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -1187,13 +1195,13 @@ case "$CHOICE" in
     fi
   ;;
 
-  *)
-    clear
+#  *)
+#    clear
 		#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
-		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-    PROMPTTEXT=$(cat text/prompt-text)
-    echo -e "$PROMPTTEXT"
-    echo " "
-    exit 0
+#		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+#    PROMPTTEXT=$(cat text/prompt-text)
+#    echo -e "$PROMPTTEXT"
+#    echo " "
+#    exit 0
 esac
 bash menu
