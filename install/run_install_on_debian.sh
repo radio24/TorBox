@@ -101,18 +101,14 @@ NOCOLOR='\033[0m'
 DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
 
 # Where is the config.txt?
-if [ -f "/boot/dietpi/.version" ]; then
-	CONFIGFILE="/boot/config.txt"
-elif [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CONFIGFILE="/boot/firmware/config.txt"
 else
   CONFIGFILE="/boot/config.txt"
 fi
 
 # Where is the cmdline.txt?
-if [ -f "/boot/dietpi/.version" ]; then
-	CMDLINEFILE="/boot/cmdline.txt"
-elif [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CMDLINEFILE="/boot/firmware/cmdline.txt"
 else
   CMDLINEFILE="/boot/cmdline.txt"
@@ -275,26 +271,26 @@ re-connect()
 	  echo -e "${RED}[+]        We will check again in about 30 seconds...${NOCOLOR}"
 	  sleep 30
 	  echo ""
-	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  echo -e "${RED}[+]        Trying again...${NOCOLOR}"
 	  ping -c 1 -q $CHECK_URL2 >&/dev/null
 	  if [ $? -eq 0 ]; then
 	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	  else
-	    echo -e "${YELLOW}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+	    echo -e "${YELLOW}[!]        Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]        We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
 	    (dhclient -r) 2>&1
 	    sleep 5
 	    dhclient &>/dev/null &
 	    sleep 30
 	    echo ""
-	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    echo -e "${RED}[+]        Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
 	    if [ $? -eq 0 ]; then
-	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	      echo -e "${RED}[+]        Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	    else
-				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
+				echo -e "${RED}[+]        Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]        Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]        Please, try to fix the problem and re-run the installation!${NOCOLOR}"
 				exit 1
 	    fi
 	  fi
