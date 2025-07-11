@@ -57,7 +57,11 @@ SSH_FROM_INTERNET=0
 # OPENVPN access from the Internet
 # 0 - OPENVPN access from the Internet is blocked
 # 1 - OPENVPN access from the Internet is allowed (default)
-OPENVPN_FROM_INTERNET=1
+OPENVPN_FROM_INTERNET=0
+
+# NEW v.0.5.4-post: New added with default 1194
+# Default OPENVPN port
+OPENVPN_PORT=1194
 
 # Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)

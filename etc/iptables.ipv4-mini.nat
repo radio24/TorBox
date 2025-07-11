@@ -17,8 +17,8 @@
 -A INPUT -i usb0 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
--A INPUT -p udp -m udp --dport 443 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 1194 -j ACCEPT
+-A INPUT -p udp -m udp --dport 1194 -j ACCEPT
 -A FORWARD -i wlan0 -o usb0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i wlan0 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -48,6 +48,9 @@ COMMIT
 -A PREROUTING -i wlan1 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
 -A PREROUTING -i eth0 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
 -A PREROUTING -i usb0 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
+-A PREROUTING -i wlan1 -p udp --dport 1194 -j ACCEPT
+-A PREROUTING -i eth0 -p udp --dport 1194 -j ACCEPT
+-A PREROUTING -i usb0 -p udp --dport 1194 -j ACCEPT
 -A PREROUTING -i wlan1 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i eth0 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i usb0 -p udp -j REDIRECT --to-ports 9040

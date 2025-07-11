@@ -84,6 +84,9 @@ EXITLOOP=0
 
 #Check if this installation is on a cloud
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+OPENVPN_PORT=$(grep "^OPENVPN_PORT=.*" ${RUNFILE} | sed "s/.*=//g")
+#Can be removed with v.0.5.5
+if [ -z "$OPENVPN_PORT" ]; then OPENVPN_PORT="1194"; fi
 
 #Check SSH acces from the Internet
 SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=.*" ${RUNFILE} | sed "s/.*=//g")
@@ -97,16 +100,16 @@ SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=.*" ${RUNFILE} | sed "s/.*=//g")
 # This function pass through Captive Portals using the TUNNELLING nethod
 captive_tunneling()
 {
-	sudo bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
+	bash $TORBOX_PATH/bin/set_captive_2 $O_DEVICE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
 	EXITLOOP=$?
 	if [ $EXITLOOP == 0 ]; then
 		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
 		echo ""
 		# That should improve the connectivity with the captive portal
-		sudo ifdown $O_DEVICE
+		ifdown $O_DEVICE
 		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $O_DEVICE
-		sudo ifup $O_DEVICE &>/dev/null &
+		ifup $O_DEVICE &>/dev/null &
 		echo ""
 		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
 		echo ""
@@ -129,12 +132,12 @@ captive_tunneling()
 while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
 	if [ "$O_DEVICE" = "wlan0" ] || [ "$O_DEVICE" = "wlan1" ]; then
 		if [ $CAPTIVE = 2 ]; then
-			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
+			bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
 		fi
 		clear
 		echo -e "${RED}[+] Starting TorBox Wireless Manager...${NOCOLOR}"
 		sleep 2
-		sudo $TORBOX_PATH/lib/torbox_wireless_manager.py -i $O_DEVICE
+		$TORBOX_PATH/lib/torbox_wireless_manager.py -i $O_DEVICE
 		clear
 		if [ $CAPTIVE = 1 ]; then
 			captive_tunneling
@@ -143,7 +146,7 @@ while [ $EXITLOOP == 0 ] && [ "$ONLY_RESET" != "1" ]; do
 		fi
 	else
 		if [ $CAPTIVE = 2 ]; then
-			sudo bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
+			bash $TORBOX_PATH/bin/change_MAC $O_DEVICE 3
 		elif [ $CAPTIVE = 1 ]; then
 			captive_tunneling
 		else
@@ -205,9 +208,9 @@ $IPTABLES -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-fl
 echo -e "${RED}[+] Setting up FORWARD chain...${NOCOLOR}"
 # NEW v.0.5.4: Necessary for TorBox on a Cloud --> This rule allows the forwarding of network packets that come in via the Internet-interface and go out via the network- or VPN-interface. The packets have to belong to already established connections or are related to them.
 # -i is the interface with the Internet on it / -o is the interface where the clients are connected to the TorBox
-sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
-sudo $IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE2 -m state --state RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -I FORWARD -i $O_DEVICE -o $I_DEVICE3 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # State tracking rules
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
@@ -216,7 +219,7 @@ $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 # $IPTABLES -A FORWARD -p icmp --icmp-type echo-reply -j ACCEPT
 
 ###### NAT rules ######
-sudo sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=0/" ${RUNFILE}
+sed -i "s/^FORWARDING_ONLY=.*/FORWARDING_ONLY=0/" ${RUNFILE}
 echo -e "${RED}[+] Setting up PREROUTING chain...${NOCOLOR}"
 # Access on the box's own IP should be granted (only TCP)
 $IPTABLES -t nat -A PREROUTING -i $I_DEVICE1 -d $MY_OWN_IP1 -p tcp -j REDIRECT
@@ -261,11 +264,12 @@ fi
 ###### OPENVPN access through Internet ######
 if grep -q "^OPENVPN_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up OPENVPN access through the Internet...${NOCOLOR}"
-	$IPTABLES -A INPUT -p tcp --dport 443 -j ACCEPT
-	$IPTABLES -A INPUT -p udp --dport 443 -j ACCEPT
-else
-	($IPTABLES -D INPUT -p tcp --dport 443 -j ACCEPT) 2>/dev/null
-	($IPTABLES -D INPUT -p udp --dport 443 -j ACCEPT) 2>/dev/null
+	$IPTABLES -A INPUT -p tcp --dport $OPENVPN_PORT -j ACCEPT
+	$IPTABLES -A INPUT -p udp --dport $OPENVPN_PORT -j ACCEPT
+	# NEW v.0.5.4-post: OpenVPN fix July 2025 (the -D roule is not necessary)
+	$IPTABLES -t nat -I PREROUTING 10 -i $I_DEVICE1 -p udp --dport $OPENVPN_PORT -j ACCEPT
+	$IPTABLES -t nat -I PREROUTING 10 -i $I_DEVICE2 -p udp --dport $OPENVPN_PORT -j ACCEPT
+	if grep "^TORBOX_MINI=1" ${RUNFILE} ; then $IPTABLES -t nat -I PREROUTING 10 -i $I_DEVICE3 -p udp --dport $OPENVPN_PORT -j ACCEPT; fi
 fi
 
 ###### HTTP plain text traffic blocker ######
@@ -297,10 +301,10 @@ if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfa
 # REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	echo -e "${RED}[+] Finishing...${NOCOLOR}"
-	(sudo ifdown $O_DEVICE) 2>/dev/null
+	(ifdown $O_DEVICE) 2>/dev/null
 	# Test lowered sleep from 2 to 1
 	sleep 1
-	(sudo ifup $O_DEVICE) 2>/dev/null
+	(ifup $O_DEVICE) 2>/dev/null
 	sleep 1
 fi
 exit 0

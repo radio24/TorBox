@@ -47,9 +47,13 @@ NOCOLOR='\033[0m'
 OPENVPN_CONF_PATH="/etc/openvpn"
 OPENVPN_CONF="$OPENVPN_CONF_PATH/server.conf"
 TORBOX_PATH="/home/torbox/torbox"
+CONFIG_PATH="$TORBOX_PATH/etc"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 TXT_DIR="$TORBOX_PATH/text"
 ON_A_CLOUD=$1
+OPENVPN_PORT=$(grep "^OPENVPN_PORT=.*" ${RUNFILE} | sed "s/.*=//g")
+#Can be removed with v.0.5.5
+if [ -z "$OPENVPN_PORT" ]; then OPENVPN_PORT="1194"; fi
 
 ######## PREPARATIONS ########
 # Resetting
@@ -188,7 +192,8 @@ function installQuestions() {
 	echo -e "${RED}[+] You can leave the default options and just press enter if you are okay with them.${NOCOLOR}"
 	echo ""
 	echo -e "${RED}[+] I need to know the IPv4 address of the network interface you want OpenVPN listening to.${NOCOLOR}"
-	echo -e "${RED}[+] Unless your server is behind NAT, it should be your public IPv4 address, inserted below.${NOCOLOR}"
+	echo -e "${RED}[+] On a Cloud: Unless your server is behind NAT, it should be your public IPv4 address, inserted below.${NOCOLOR}"
+	echo -e "${RED}[+] On a real Box: It is dependent on your connection --> wlan0/1: 192.168.42.1 - eth0/1: 192.168.43.1.${NOCOLOR}"
 
 	# Detect public IPv4 address and pre-fill for the client
 	IP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | head -1)
@@ -197,24 +202,26 @@ function installQuestions() {
 		# Detect public IPv6 address
 		IP=$(ip -6 addr | sed -ne 's|^.* inet6 \([^/]*\)/.* scope global.*$|\1|p' | head -1)
 	fi
-	APPROVE_IP=${APPROVE_IP:-n}
-	if [[ $APPROVE_IP =~ n ]]; then
-		read -rp "IP address: " -e -i "$IP" IP
-	fi
-	# If $IP is a private IP address, the server must be behind NAT
-	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
-		sleep 3
-		echo ""
-		echo -e "${YELLOW}[!] It seems this server is behind NAT. What is its public IPv4 address or hostname?${NOCOLOR}"
-		echo -e "${YELLOW}[!] We need it for the clients to connect to the server.${NOCOLOR}"
+	read -rp "IP address: " -e -i "$IP" IP
+	ON_A_CLOUD_RUNFILE=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+	if [ "$ON_A_CLOUD_RUNFILE" -eq "1" ]; then
+		# If $IP is a private IP address, the server must be behind NAT
+		if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
+			sleep 3
+			echo ""
+			echo -e "${YELLOW}[!] It seems this server is behind NAT. What is its public IPv4 address or hostname?${NOCOLOR}"
+			echo -e "${YELLOW}[!] We need it for the clients to connect to the server.${NOCOLOR}"
 
-		# New v.0.5.4-post: Fix Public IP detection - Fix issue when seeip.org is unreachable. It solves the issue angristan#1241 (https://github.com/angristan/openvpn-install/issues/1241)
-		if [[ -z $ENDPOINT ]]; then
-			DEFAULT_ENDPOINT=$(resolvePublicIP)
+			# New v.0.5.4-post: Fix Public IP detection - Fix issue when seeip.org is unreachable. It solves the issue angristan#1241 (https://github.com/angristan/openvpn-install/issues/1241)
+			if [[ -z $ENDPOINT ]]; then
+				DEFAULT_ENDPOINT=$(resolvePublicIP)
+			fi
+			until [[ $ENDPOINT != "" ]]; do
+				read -rp "Public IPv4 address or hostname: " -e -i "$DEFAULT_ENDPOINT" ENDPOINT
+			done
 		fi
-		until [[ $ENDPOINT != "" ]]; do
-			read -rp "Public IPv4 address or hostname: " -e -i "$DEFAULT_ENDPOINT" ENDPOINT
-		done
+	else
+		ENDPOINT="$IP"
 	fi
 
 	echo ""
@@ -241,7 +248,22 @@ function installQuestions() {
 	# In the original script, choosing the port number, the protocol (UDP or TCP) and the compression was possible.
 	# We removed it for the sake of simplicity.
 	# To add it again, see here: https://github.com/angristan/openvpn-install/blob/master/openvpn-install.sh
-	PORT="443"
+	PORT="1194"
+	clear
+	echo -e "${YELLOW}[+] Do you want to customize the VPN port (not recommended)?${NOCOLOR}"
+	echo -e "${RED}[+] 1194 is the standard port, however, if blocked by a firewall, you might try another port.${NOCOLOR}"
+	echo ""
+	echo -e "${YELLOW}[!] IMPORTANT: Using a port number other than 1194 is risky and can seriously compromise your security!${NOCOLOR}"
+	echo -e "${YELLOW}[!] ALL UDP traffic on this port number will go directly to and evuentaly through the TorBox by avoiding Tor.${NOCOLOR}"
+	echo -e "${YELLOW}[!] For example, using 443 (UDP) let QIUC pass through the TorBox by avoiding the Tor network (see here: https://t.ly/Fag_j).${NOCOLOR}"
+	read -rp "Port: " -e -i "$PORT" PORT
+	if [ "$PORT" -ne "$OPENVPN_PORT" ]; then
+		sed -i "s/--dport $OPENVPN_PORT/--dport $PORT/g" "$CONFIG_PATH"
+		# shellcheck disable=SC2034
+		(TRASH=$(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat")) 2>/dev/null
+		sed -i "s/--dport $OPENVPN_PORT/--dport $PORT/g" "/etc/iptables.ipv4.nat"
+		sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat
+	fi
 	PROTOCOL="udp"
 	clear
 	echo -e "${YELLOW}[+] Do you want to customize encryption settings?${NOCOLOR}"
@@ -484,8 +506,10 @@ function installQuestions() {
 	echo -e "${NOCOLOR}    After the generation, download the ovpn-file from the TorBox's home directory to your client machine."
 	echo -e "${NOCOLOR}    You can access it by using an SFTP client (it uses the same login and password as your SSH client)."
 	echo -e "${NOCOLOR}    Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/."
+	echo -e "${NOCOLOR}    With a MacOS client, we recommend Tunnelblick because of its security features: https://tunnelblick.net/"
 	echo ""
-	echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+	echo -e "${YELLOW}[!] IMPORTANT 1: To activate the OpenVPN Server, you have to select again the Internet source in the Main Menu (entry 5-10)!${NOCOLOR}"
+	echo -e "${YELLOW}[!] IMPORTANT 2: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 }
@@ -685,6 +709,10 @@ verb 3" >>$OPENVPN_CONF
 			fi
 		fi
 	fi
+
+	# Setting torbox.run
+	sudo sed -i "s/^OPENVPN_FROM_INTERNET=.*/OPENVPN_FROM_INTERNET=1/" ${RUNFILE}
+	sudo sed -i "s/^OPENVPN_PORT=.*/OPENVPN_FROM_INTERNET=$PORT/" ${RUNFILE}
 
 	# Finally, restart and enable OpenVPN
 		# Don't modify package-provided service
@@ -892,6 +920,7 @@ function newClient() {
 	echo -e "${RED}[+] You will be able to generate a client ovpn-file at the end of the configuration.${NOCOLOR}"
 	echo -e "${RED}[+] You can access it by using a SFTP client (it uses the same login and password as your SSH client).${NOCOLOR}"
 	echo -e "${RED}[+] Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/.${NOCOLOR}"
+	echo -e "${RED}[+] With a MacOS client, we recommend Tunnelblick because of its security features: https://tunnelblick.net/"
 	echo ""
 	echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
 	echo ""
@@ -963,6 +992,8 @@ function stopOpenVPN() {
 					sudo systemctl mask --now openvpn@server
 					sudo systemctl mask --now openvpn
 					sudo systemctl daemon-reload
+					# Setting torbox.run
+					sudo sed -i "s/^OPENVPN_FROM_INTERNET=.*/OPENVPN_FROM_INTERNET=0/" ${RUNFILE}
 					sleep 2
 				fi
 			fi
@@ -981,6 +1012,8 @@ function stopOpenVPN() {
 				sudo systemctl enable openvpn
 				sudo systemctl start openvpn@server
 				sudo systemctl start openvpn
+				# Setting torbox.run
+				sudo sed -i "s/^OPENVPN_FROM_INTERNET=.*/OPENVPN_FROM_INTERNET=1/" ${RUNFILE}
 				sleep 2
 			fi
 	fi
@@ -1032,6 +1065,8 @@ function removeOpenVPN() {
 		rm -f $OPENVPN_CONF_PATH/tls-crypt.key
 		rm -f /etc/sysctl.d/99-openvpn.conf
 		rm -r /var/log/openvpn
+		# Setting torbox.run
+		sudo sed -i "s/^OPENVPN_FROM_INTERNET=.*/OPENVPN_FROM_INTERNET=0/" ${RUNFILE}
 		echo ""
 		echo -e "${YELLOW}[+] OpenVPN removed!${NOCOLOR}"
 		sleep 2
