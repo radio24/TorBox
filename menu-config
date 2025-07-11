@@ -974,15 +974,20 @@ case "$CHOICE" in
 					sudo chmod a+x /etc/rc.local
 					sudo cp etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf
         	sudo systemctl unmask hostapd
-        	sudo systemctl enable hostapd
+					sudo systemctl daemon-reload
+					sudo systemctl enable --now hostapd
+					# eth0 --> wlan0 / eth1 / usb0
+					if ip link | grep usb0; then
+						sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
+					else
+						sudo cp etc/network/interfaces.wlan0eth1notusb /etc/network/interfaces
+					fi
 					if pgrep -f "dhclient.wlan0" ; then
 						(sudo dhclient -r) 2>&1
 						sudo ifdown wlan0 &>/dev/null
-						sudo cp etc/network/interfaces /etc/network/interfaces
 						sudo ifup wlan0 &>/dev/null
 					fi
         	sudo systemctl start hostapd
-        	sudo systemctl daemon-reload
 					echo -e "${RED}[+] TorBox's WLAN is enabled!${NOCOLOR}"
 					echo -e "${RED}[+] You can use it by selecting another connection setup with${NOCOLOR}"
 					echo -e "${RED}[+] TorBox's Main Menu (entry 5-10) or after rebooting TorBox${NOCOLOR}"
