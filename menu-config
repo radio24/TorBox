@@ -978,8 +978,10 @@ case "$CHOICE" in
 					# eth0 --> wlan0 / eth1 / usb0
 					if ip link | grep usb0; then
 						sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
+						sudo cp etc/iptables.ipv4-wlan0eth0 /etc/iptables.ipv4.nat
 					else
-						sudo cp etc/network/interfaces.wlan0eth1notusb /etc/network/interfaces
+						sudo cp etc/network/interfaces.wlan0eth1notusb0 /etc/network/interfaces
+						sudo cp etc/iptables.ipv4-wlan0eth0notusb0 /etc/iptables.ipv4.nat
 					fi
 					if pgrep -f "dhclient.wlan0" ; then
 						(sudo dhclient -r) 2>&1
