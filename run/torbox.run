@@ -53,10 +53,9 @@ FRESH_INSTALLED=0
 # 2 - SSH access from the Internet is blocked on a cloud installation
 SSH_FROM_INTERNET=0
 
-# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
 # OPENVPN access from the Internet
-# 0 - OPENVPN access from the Internet is blocked
-# 1 - OPENVPN access from the Internet is allowed (default)
+# 0 - OPENVPN access from the Internet is blocked (default)
+# 1 - OPENVPN access from the Internet is allowed
 OPENVPN_FROM_INTERNET=0
 
 # NEW v.0.5.4-post: New added with default 1194

@@ -757,6 +757,7 @@ configure_system_service()
 
 ######## PREPARATIONS ########
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c

@@ -273,6 +273,7 @@ read_config
 clear
 
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && (sudo rm nohup.out) 2>/dev/null
 stty intr ^c
@@ -948,7 +949,6 @@ case "$CHOICE" in
         whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
       fi
     else
-			# NEW v.0.5.4: TEST only allow to enable, if wifi hardware is present
 			COUNT_WLAN=0
 			COUNT_WLAN=$(sudo lshw | grep ethernet | grep -c wireless)
 			clear

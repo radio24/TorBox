@@ -121,8 +121,10 @@ fi
 
 ######## PREPARATIONS ########
 read_config
+clear
 
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c

@@ -220,22 +220,24 @@ TUN1_exists()
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan0 " ${RUNFILE})
 	if [ -n "$CLIENT_IFACE" ] ; then
 		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
-	fi
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan1 " ${RUNFILE})
-	if [ -n "$CLIENT_IFACE" ] ; then
-		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
-	fi
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
-	if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth0" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth1" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	else
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=$CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+		CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan1 " ${RUNFILE})
+		if [ -n "$CLIENT_IFACE" ] ; then
+			CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
+		else
+			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
+			if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth0" ] ; then
+					sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth1" ] ; then
+					sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			else
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=$CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			fi
+		fi
 	fi
 }
 
@@ -262,6 +264,7 @@ torrc_reset()
 
 ######## PREPARATIONS ########
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
@@ -784,6 +787,7 @@ case "$CHOICE" in
     	display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			# Because usb0 is a potential Internet ressource, usb0 cannot be a client interfaces --> notusb0
 			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 /dev/null 2>&1 &
 			pid=$!
 			wait $pid
@@ -857,7 +861,7 @@ case "$CHOICE" in
 			sleep 2
 			ask_captive
 		fi
-		if [ "$TORBOX_MINI" -eq "1" ] || [ "$NOUSB" -eq "1" ]; then
+		if [ "$TORBOX_MINI" -eq "1" ] || [ "$NOUSB0" -eq "1" ]; then
   		if pgrep -f "pppd"; then
       	if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					clear

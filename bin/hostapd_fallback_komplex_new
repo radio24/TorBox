@@ -27,10 +27,11 @@
 # network can be found on wlan0.
 #
 # SYNTAX
-# nohup ./hostapd_fallback_komplex_new <interface 1> <interface 2>
+# nohup ./hostapd_fallback_komplex_new <interface 1> <interface 2> <notusb0>
 #
 # <interface 1>: Is the interface with the AP: wlan0 or wlan1.
 # <interface 2>: Is the interface with the connected cable client: eth0 or eth1
+# <notusb0>: If set, there is no usb0-client present
 #
 # IMPORTANT
 # There is no failsave configuration in this procedure, because it interfered
@@ -154,6 +155,7 @@ if ip link | grep $INTERFACE1 | grep "state UP"; then
 	STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
 	if [ -z "$STATICIP1" ] ; then
 		sudo ifdown $INTERFACE1 &>/dev/null
+		ip addr flush dev $INTERFACE1
 		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE1 &>/dev/null
 	fi
@@ -170,6 +172,7 @@ if ip link | grep $INTERFACE2 | grep "state UP" ; then
 	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
 	if [ -z "$STATICIP2" ] ; then
 		sudo ifdown $INTERFACE2 &>/dev/null
+		ip addr flush dev $INTERFACE1
 		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
 	fi
@@ -204,7 +207,7 @@ fi
 # Is USB0 ready (only used in TorBox mini)?
 if [ "$TORBOX_MINI" -eq "1" ]; then
 	if ip link | grep usb0 | grep "state UP" ; then
-		STATICIP_USB=$(ip addr show usb0 | grep -w inet)
+		STATICIP_USB0=$(ip addr show usb0 | grep -w inet)
 		# If usb0 doesn't have an IP address then we have to do something about it!
 		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
@@ -216,6 +219,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 		STATICIP_USB0=$(ip addr show usb0 | grep 192.168.44.1)
 		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
+			ip addr flush dev $INTERFACE1
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
 		fi
@@ -243,13 +247,11 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	STATICIP3=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
 	if [ -n "$STATICIP3" ] ; then
 		sudo ifdown $INTERFACE3 &>/dev/null
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE3 &>/dev/null
 		sudo ifup $INTERFACE3 &>/dev/null &
 	fi
 else
 		sudo ifdown $INTERFACE3 &>/dev/null
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE3
 		sudo ifup $INTERFACE3 &>/dev/null &
 fi
@@ -268,13 +270,11 @@ if ip link | grep $INTERFACE4 | grep "state UP" ; then
 	STATICIP4=$(ip addr show $INTERFACE4 | grep 192.168.43.1)
 	if [ -n "$STATICIP4" ] ; then
 		sudo ifdown $INTERFACE4
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 	fi
 else
 		sudo ifdown $INTERFACE4
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 fi
