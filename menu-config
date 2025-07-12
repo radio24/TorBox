@@ -968,7 +968,6 @@ case "$CHOICE" in
 				fi
 				if [ "$EXECUTE" -eq "1" ]; then
         	clear
-        	echo " "
         	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
         	sudo cp etc/rc.local /etc/rc.local
 					sudo chmod a+x /etc/rc.local
@@ -988,6 +987,7 @@ case "$CHOICE" in
 						sudo ifup wlan0 &>/dev/null
 					fi
         	sudo systemctl start hostapd
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
 					echo -e "${RED}[+] TorBox's WLAN is enabled!${NOCOLOR}"
 					echo -e "${RED}[+] You can use it by selecting another connection setup with${NOCOLOR}"
 					echo -e "${RED}[+] TorBox's Main Menu (entry 5-10) or after rebooting TorBox${NOCOLOR}"
