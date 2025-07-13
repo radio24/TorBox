@@ -17,8 +17,8 @@
 -A INPUT -i tun1 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 -A INPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
--A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
--A INPUT -p udp -m udp --dport 443 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 1194 -j ACCEPT
+-A INPUT -p udp -m udp --dport 1194 -j ACCEPT
 -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -i eth0 -o tun1 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -38,8 +38,6 @@ COMMIT
 -A PREROUTING -d 192.168.43.1/32 -i eth1 -p tcp -j REDIRECT
 -A PREROUTING -d 192.168.44.1/32 -i tun1 -p tcp -j REDIRECT
 -A PREROUTING -d 10.192.0.0/10 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
--A PREROUTING -p tcp -m tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-tcp-options --log-ip-options
--A PREROUTING -p udp -m udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
 -A PREROUTING -p tcp -m tcp --dport 80 -j DNAT --to-destination 0.0.0.0
 -A PREROUTING -p udp -m udp --dport 80 -j DNAT --to-destination 0.0.0.0
 -A PREROUTING -i wlan0 -p tcp -j REDIRECT --to-ports 9040
@@ -48,6 +46,8 @@ COMMIT
 -A PREROUTING -i wlan0 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
 -A PREROUTING -i eth1 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
 -A PREROUTING -i tun1 -p udp -m udp --dport 53 -j REDIRECT --to-ports 9053
+-A PREROUTING -i wlan0 -p udp --dport 1194 -j ACCEPT
+-A PREROUTING -i eth1 -p udp --dport 1194 -j ACCEPT
 -A PREROUTING -i wlan0 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i eth1 -p udp -j REDIRECT --to-ports 9040
 -A PREROUTING -i tun1 -p udp -j REDIRECT --to-ports 9040

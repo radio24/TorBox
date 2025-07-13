@@ -53,11 +53,14 @@ FRESH_INSTALLED=0
 # 2 - SSH access from the Internet is blocked on a cloud installation
 SSH_FROM_INTERNET=0
 
-# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
 # OPENVPN access from the Internet
-# 0 - OPENVPN access from the Internet is blocked
-# 1 - OPENVPN access from the Internet is allowed (default)
-OPENVPN_FROM_INTERNET=1
+# 0 - OPENVPN access from the Internet is blocked (default)
+# 1 - OPENVPN access from the Internet is allowed
+OPENVPN_FROM_INTERNET=0
+
+# NEW v.0.5.4-post: New added with default 1194
+# Default OPENVPN port
+OPENVPN_PORT=1194
 
 # Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)
@@ -125,11 +128,20 @@ WLAN_FAILSAFE=1
 # will be displayed in the main menu.
 FORWARDING_ONLY=0
 
-# TorBox is running on a cloud or as a cloud service
+# Is TorBox running on a cloud or as a cloud service
+# 0 - No (default)
+# 1 - Yes
 ON_A_CLOUD=0
 
-# TorBox is running on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget
+# Is TorBox running as TorBox Mini on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget?
+# 0 - No (default)
+# 1 - Yes
 TORBOX_MINI=0
+
+# Is this a TorBox Mini default installation?
+# 0 - No
+# 1 - Yes (default)
+TORBOX_MINI_DEFAULT=1
 
 ## Global variables to help inter-script communication - don't change them!!
 

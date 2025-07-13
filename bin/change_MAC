@@ -115,6 +115,7 @@ change_mac_address()
 				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+					clear
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -142,6 +143,7 @@ change_mac_address()
 				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+					clear
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -181,6 +183,7 @@ change_mac_address()
 					# We have only to put an interface down, if it is not already down
 					# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 					if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+						clear
 						echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 			 	 		sudo ip link set dev $O_DEVICE down
 						INTERFACE1_DOWN=1
@@ -222,7 +225,7 @@ change_mac_address_finish()
 	# if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
 	if [[ "$CLIENT_IFACE" =~ "$O_DEVICE" ]]; then
 		# New v.0.5.4 avoid to run hostapd if it is masked
-		AP_STATUS=$(sudo systemctl is-enable hostapd)
+		AP_STATUS=$(sudo systemctl is-enabled hostapd)
 		if [ "$AP_STATUS" != "masked" ] ; then
 			echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
 			sudo systemctl restart hostapd

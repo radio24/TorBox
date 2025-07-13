@@ -27,10 +27,6 @@ if [ -e /dev/rfkill ]; then
 	rfkill block bluetooth
 fi
 bash /home/torbox/torbox/bin/regset
-sudo systemctl stop hostapd
-sudo systemctl disable hostapd
-sudo systemctl mask hostapd
-sudo /sbin/iwconfig wlan0 power off
 
 if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
@@ -82,8 +78,7 @@ for INTERFACE in $AVAILABLE_INTERFACES ; do
 	fi
 done
 
-# NEW v.0.5.4: This should work without problem - has to be tested !!!
-# If the internal wlan chip was previously used then let's check if we can auto-connect to a wireless network
+# Let's check if we can auto-connect to a wireless network
 if ip link | grep wlan0 ; then
 	if grep "INTERNET_IFACE=wlan0" /home/torbox/torbox/run/torbox.run ; then
 		exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan0 -a)
@@ -91,6 +86,43 @@ if ip link | grep wlan0 ; then
 			# NEW v.0.5.4
 			sleep 2
 			systemctl restart tor
+		fi
+	fi
+fi
+
+# If a wireless USB dongle is available, and previously used then let's check if we can auto-connect to a wireless network
+if ip link | grep wlan1 ; then
+ if grep "INTERNET_IFACE=wlan1" /home/torbox/torbox/run/torbox.run ; then
+	 exitstatus=$(sudo /usr/bin/python3 /home/torbox/torbox/lib/torbox_wireless_manager.py -i wlan1 -a)
+	 if [ "$exitstatus" = "1" ]; then
+		 # NEW v.0.5.4
+		 sleep 2
+		 systemctl restart tor
+	 fi
+ fi
+fi
+
+# If a cellular device is available, and previously used then let's check if we can auto-connect
+if grep "INTERNET_IFACE=ppp0" /home/torbox/torbox/run/torbox.run ; then pon ; fi
+
+# Sometimes, connected to eth0 doesn't result in a default gateway
+if ip link | grep eth0 ; then
+	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
+		if ! sudo timeout 5 sudo route | grep -m 1 default; then
+			sudo ifdown eth0 2>/dev/null
+			ip addr flush dev eth0
+			sudo ifup eth0 2>/dev/null
+		fi
+	fi
+fi
+
+# Sometimes, connected to eth1 doesn't result in a default gateway
+if ip link | grep eth1 ; then
+	if grep "INTERNET_IFACE=eth1" /home/torbox/torbox/run/torbox.run ; then
+		if ! sudo timeout 5 sudo route | grep -m 1 default; then
+			sudo ifdown eth1 2>/dev/null
+			ip addr flush dev eth1
+			sudo ifup eth1 2>/dev/null
 		fi
 	fi
 fi

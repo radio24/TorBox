@@ -66,6 +66,7 @@ INTERNETSELECTION=$1
 
 # Read configuration from run/torbox.run
 TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 #Check freshinstalled
 FRESHINSTALLED=$(grep "^FRESH_INSTALLED=.*" ${RUNFILE} | sed "s/.*=//g") 2>/dev/null
@@ -219,22 +220,24 @@ TUN1_exists()
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan0 " ${RUNFILE})
 	if [ -n "$CLIENT_IFACE" ] ; then
 		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
-	fi
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan1 " ${RUNFILE})
-	if [ -n "$CLIENT_IFACE" ] ; then
-		CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
-	fi
-	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
-	if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth0" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
-	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth1" ] ; then
-			sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
 	else
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=$CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+		CLIENT_IFACE=$(grep "^CLIENT_IFACE=wlan1 " ${RUNFILE})
+		if [ -n "$CLIENT_IFACE" ] ; then
+			CLIENT_IFACE="${CLIENT_IFACE} $CLIENT_IFACE_TUN1_IP"
+		else
+			CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
+			if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth0" ] ; then
+					sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=eth1" ] ; then
+					sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1 $CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			else
+				sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=$CLIENT_IFACE_TUN1_IP/" ${RUNFILE}
+			fi
+		fi
 	fi
 }
 
@@ -261,6 +264,7 @@ torrc_reset()
 
 ######## PREPARATIONS ########
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
@@ -334,6 +338,32 @@ else
 		"===" "========================================[Reboot & Shutdown]===" \
 		"19" "Reboot / Shutdown TorBox" \
 		3>&1 1>&2 2>&3)
+	elif [ "$TORBOX_MINI" -eq "1" ] && [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+			CHOICE=$(whiptail --nocancel --title "TorBox on a cloud v.0.5.4 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)           $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+			" 1" "Tor statistics (press m for menu / q to quit)" \
+			" 2" "Enforce a new exit node with a new IP" \
+			" 3" "Restart Tor - check if it is working (press q to quit)"  \
+			" 4" "Display the Tor log file - quick and dirty (press q to quit)" \
+			"===" "===================================[Where is the Internet?]===" \
+			"  " " " \
+			"  " " " \
+			" 7" "TorBox mini default (wlan0 --> usb0)   "$FLASH_USB0 \
+			"  " " " \
+			"  " "Go to the Danger Zone to activate other connection options!    " \
+			"  " " " \
+			"===" "================================================[Sub-Menus]===" \
+			"11" "Go to the Countermeasure sub-menu...          ${MMENUSTRING}" \
+			"12" "Go to the Configuration sub-menu..." \
+			"13" "Go to run an OBFS4 Bridge Relay...            ${TOGGLE07}" \
+			"14" "Go to run an Onion Service...                 ${TOGGLE16}" \
+			"15" "Go to the Danger Zone..." \
+			"16" "Go to the Update and Maintenance sub-menu..." \
+			"==" "============================================[Informational]===" \
+			"17" "HOW CAN I SUPPORT THE TOR PROJECT!" \
+			"18" "HOW CAN I HELP WITH TORBOX?" \
+			"===" "========================================[Reboot & Shutdown]===" \
+			"19" "Reboot / Shutdown TorBox" \
+			3>&1 1>&2 2>&3)
 	else
   	CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - MAIN MENU" --menu "Choose an option (ESC -> command prompt)            $TOR_STATUS" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   	" 1" "Tor statistics (press m for menu / q to quit)" \
@@ -362,8 +392,16 @@ else
   	3>&1 1>&2 2>&3)
 	fi
 	exitstatus=$?
-	# exitstatus == 255 means that the ESC key was pressed
-	[ "$exitstatus" == "255" ] && exit 0
+	# exitstatus == 1 means that the ESC key was pressed
+	if [ "$exitstatus" == "1" ]; then
+		clear
+		#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
+		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+		PROMPTTEXT=$(cat text/prompt-text)
+		echo -e "$PROMPTTEXT"
+		echo " "
+		exit 0
+	fi
 fi
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
@@ -407,7 +445,7 @@ case "$CHOICE" in
 		trap
   ;;
 
-  # Ethernet cable internet eth0 --> wlan0 / eth1 / tun1
+	# Ethernet cable internet eth0 --> wlan0 / eth1 / usb0 / tun1
   5)
 		if [[ "$INTERNETSELECTION" -eq "5" && "$ON_A_CLOUD" -eq "1" ]]; then
 			:
@@ -433,7 +471,11 @@ case "$CHOICE" in
 	  display_net_reconfiguration_info
 		# NEW v.0.5.4-post
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		nohup bin/hostapd_fallback_komplex_new wlan0 eth1 > /dev/null 2>&1 &
+		if ip link | grep usb0; then
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth1 > /dev/null 2>&1 &
+		else
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth1 notusb0 > /dev/null 2>&1 &
+		fi
 		pid=$!
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
@@ -448,8 +490,8 @@ case "$CHOICE" in
       	ETH1_IP=$(ip addr show eth1 | grep -w 192.168.43.1)
       	clear
     	fi
-			# To check: can I switch from UNKNOWN
-      # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+			# The state of tun1 is always UNKNOWN
+			# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 			if ip link | grep tun1 | grep "state UNKNOWN" ; then
 				TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
         CLIENT_IFACE_TUN1_IP="tun1"
@@ -499,7 +541,6 @@ case "$CHOICE" in
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
-					trap
           exit 0
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
@@ -509,12 +550,14 @@ case "$CHOICE" in
     		fi
 			fi
 		else
-			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			if [ "$ON_A_CLOUD" -eq "0" ]; then
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+			fi
+			whiptail --title "TorBox - INFO" --textbox text/no_eth0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
 
-  # Wireless network (through an USB adapter; wlan1 --> wlan0 / eth0 / tun1)
+	# Wireless network (through an USB adapter; wlan1 --> wlan0 / eth0 / usb0 / tun1)
   6)
     INPUT=$(cat text/wlan1-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -532,7 +575,11 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			if ip link | grep usb0; then
+				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			else
+				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
+			fi
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
@@ -547,8 +594,8 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-        # To check: can I switch from UNKNOWN
-        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+        # The state of tun1 is always UNKNOWN
+        # TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="tun1"
@@ -559,7 +606,7 @@ case "$CHOICE" in
           clear
 				fi
 				# Configure torrc depending on the present interfaces
-				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
@@ -568,7 +615,6 @@ case "$CHOICE" in
 	      	if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
-
         	# The following line should minimize those cases where a restart is required.
         	if [ "$ON_A_CLOUD" -eq "0" ]; then
 						sudo systemctl restart isc-dhcp-server
@@ -590,7 +636,9 @@ case "$CHOICE" in
         	fi
 				fi
       else
-				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				fi
         whiptail --title "TorBox - INFO" --textbox text/no_wlan1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -641,9 +689,13 @@ case "$CHOICE" in
 		# NEW v.0.5.4-post
 		# We will first copy the configuration files and than try to reconfigure the network (all done in hostapd_fallback_komplex_new)
 		# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
-		# WARNING: Thsi is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
+		# WARNING: This is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		nohup bin/hostapd_fallback_komplex_new wlan1 eth0 > /dev/null 2>&1 &
+		if ip link | grep usb0; then
+			nohup bin/hostapd_fallback_komplex_new wlan1 eth0 > /dev/null 2>&1 &
+		else
+			nohup bin/hostapd_fallback_komplex_new wlan1 eth0 notusb0 > /dev/null 2>&1 &
+		fi
 		pid=$!
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
@@ -658,8 +710,8 @@ case "$CHOICE" in
     		ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
       	clear
       fi
-      # To check: can I switch from UNKNOWN
-      # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+			# The state of tun1 is always UNKNOWN
+			# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 			if ip link | grep tun1 | grep "state UNKNOWN" ; then
 				TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
       	CLIENT_IFACE_TUN1_IP="tun1"
@@ -670,7 +722,7 @@ case "$CHOICE" in
       	clear
 			fi
 			# Configure torrc depending on the present interfaces
-			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			else
@@ -704,27 +756,102 @@ case "$CHOICE" in
       	fi
 			fi
 		else
-			sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+			if [ "$ON_A_CLOUD" -eq "0" ]; then
+				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+			fi
 			whiptail --title "TorBox - INFO" --textbox text/no_wlan0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 		fi
   ;;
 
-  # Cellular or other connections (ppp0; usb0 --> wlan0 / eth0 / tun1)
+	# Cellular or other connections (ppp0; usb0 --> wlan0 / eth0 / tun1) / for Torbox mini (ppp0 --> wlan0 / eth0 / tun1 / usb0)
   8)
-    INPUT=$(cat text/ppp0-text)
-    if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			if [ "$ON_A_CLOUD" -eq "1" ]; then
-				INPUT=$(cat text/on_a_cloud_warning-text)
-				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-					exitstatus=$?
-					# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-					if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
-				else
-					trap "bash menu; exit 0" EXIT
-					exit 0
-				fi
+		if [ "$TORBOX_MINI" -eq "1" ]; then
+			INPUT=$(cat text/ppp0_on_torbox_mini-text)
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				:
+			else
+				trap "bash menu; exit 0" EXIT
+				exit 0
 			fi
-      display_net_reconfiguration_info
+		else
+			INPUT=$(cat text/ppp0-text)
+    	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				:
+			else
+				trap "bash menu; exit 0" EXIT
+				exit 0
+			fi
+		fi
+		NOUSB0="0"
+		if [ "$TORBOX_MINI" -eq "0" ]; then
+    	display_net_reconfiguration_info
+			# NEW v.0.5.4-post
+			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
+			# Because usb0 is a potential Internet ressource, usb0 cannot be a client interfaces --> notusb0
+			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 /dev/null 2>&1 &
+			pid=$!
+			wait $pid
+			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
+			sleep 2
+			ask_captive
+			# The interface to the Internet is called usb0
+    	if ip link | grep usb0 ; then
+      	if ip link | grep wlan0 | grep "state UP" ; then
+        	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+        	clear
+      	fi
+      	if ip link | grep eth0 | grep "state UP" ; then
+        	ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+        	clear
+      	fi
+				# The state of tun1 is always UNKNOWN
+				# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
+				if ip link | grep tun1 | grep "state UNKNOWN" ; then
+					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+        	CLIENT_IFACE_TUN1_IP="tun1"
+					clear
+      	else
+        	TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
+        	CLIENT_IFACE_TUN1_IP="usb0"
+        	clear
+				fi
+				# Configure torrc depending on the present interfaces
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+				else
+					torrc_reset
+					if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
+					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
+					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
+      		# The following line should minimize those cases where a restart is required.
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
+						sudo systemctl restart isc-dhcp-server
+					fi
+      		if [ -z "$INTERNETSELECTION" ]; then
+        		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+          	sleep 2
+          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          	clear
+          	restarting_tor menu
+						trap
+          	exit 0
+      		else
+        		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+						sleep 2
+						# NEW v.0.5.4-post: Added to solve Issue #334
+						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          	exit 0
+      		fi
+				fi
+			else
+				NOUSB0="1"
+			fi
+		fi
+		# The interface to the Internet is called pppd
+		if [ "$TORBOX_MINI" -eq "1" ]; then
+			display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
 			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 /dev/null 2>&1 &
@@ -733,155 +860,102 @@ case "$CHOICE" in
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
 			ask_captive
-
-			# The interface to the Internet is called usb0
-      if ip link | grep usb0 ; then
-        if ip link | grep wlan0 | grep "state UP" ; then
-          WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
-          clear
-        fi
-        if ip link | grep eth0 | grep "state UP" ; then
-          ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
-          clear
-        fi
-        # To check: can I switch from UNKNOWN
-        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
-				if ip link | grep tun1 | grep "state UNKNOWN" ; then
-					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
-          CLIENT_IFACE_TUN1_IP="tun1"
+		fi
+		if [ "$TORBOX_MINI" -eq "1" ] || [ "$NOUSB0" -eq "1" ]; then
+  		if pgrep -f "pppd"; then
+      	if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
 					clear
-        else
-          TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
-          CLIENT_IFACE_TUN1_IP="usb0"
-          clear
+					echo -e "${RED}[+] Reset PPP connection (you may check the output for errors)${NOCOLOR}"
+					echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
+					echo ""
+					trap "bash menu; exit 0" SIGINT
+					stty intr q
+					sudo bin/poff
+					sleep 5
+					sudo pon
+					echo ""
+					sleep 2
+					read -n 1 -s -r -p "Press any key to continue"
+					stty intr ^c
+					trap
 				fi
+      else
+      	echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
+      	echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
+      	echo ""
+				trap "bash menu; exit 0" SIGINT
+				stty intr q
+				if pgrep -f "pppd"; then
+					sudo bin/poff
+					sleep 5
+				fi
+      	sudo pon
+      	echo ""
+      	sleep 2
+      	read -n 1 -s -r -p "Press any key to continue"
+				stty intr ^c
+				trap
+			fi
+      if ip link | grep ppp0 > /dev/null; then
+      	if ip link | grep wlan0 | grep "state UP" ; then
+        	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
+        	clear
+      	fi
+      	if ip link | grep eth0 | grep "state UP" ; then
+        	ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+        	clear
+      	fi
+				# The state of tun1 is always UNKNOWN
+        # TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
+  			if ip link | grep tun1 | grep "state UNKNOWN" ; then
+  				TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
+        	CLIENT_IFACE_TUN1_IP="tun1"
+  				clear
+      	else
+        	TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
+        	CLIENT_IFACE_TUN1_IP="usb0"
+        	clear
+  			fi
 				# Configure torrc depending on the present interfaces
-				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
 					if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
 					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
-					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
-
-        	# The following line should minimize those cases where a restart is required.
-          if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
+    			# The following line should minimize those cases where a restart is required.
+        	if [ "$ON_A_CLOUD" -eq "0" ]; then
 						sudo systemctl restart isc-dhcp-server
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-            clear
-            restarting_tor menu
-            exit 0
-        	else
-          	sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+        		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
+          	sleep 2
+          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          	clear
+          	restarting_tor menu
+						trap
+        		exit 0
+      		else
+        		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-            exit 0
-        	fi
+          	exit 0
+      		fi
 				fi
-
-			# The interface to the Internet is called pppd
-      else
-        if pgrep -f "pppd"; then
-          if (whiptail --title "TorBox - INFO" --no-button "CONTINUE" --yes-button "RESET" --yesno "\nThe PPP connection is already up!\n\nDo you want to reset the PPP connection or continue with the already existing one?" $MENU_HEIGHT_15 $MENU_WIDTH); then
-						clear
-						echo -e "${RED}[+] Reset PPP connection (you may check the output for errors)${NOCOLOR}"
-						echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
-						echo ""
-						trap "bash menu; exit 0" SIGINT
-						stty intr q
-						sudo bin/poff
-						sleep 5
-						sudo pon
-						echo ""
-						sleep 2
-						read -n 1 -s -r -p "Press any key to continue"
-						stty intr ^c
-						trap
-					fi
-        else
-        	echo -e "${RED}[+] Activating PPP connection (you may check the output for errors)${NOCOLOR}"
-        	echo -e "${RED}[+] If stuck, please press q${NOCOLOR}"
-        	echo ""
-					trap "bash menu; exit 0" SIGINT
-					stty intr q
-					if pgrep -f "pppd"; then
-						sudo bin/poff
-						sleep 5
-					fi
-        	sudo pon
-        	echo ""
-        	sleep 2
-        	read -n 1 -s -r -p "Press any key to continue"
-					stty intr ^c
-					trap
-				fi
-        if ip link | grep ppp0 > /dev/null; then
-          if ip link | grep wlan0 | grep "state UP" ; then
-            WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
-            clear
-          fi
-          if ip link | grep eth0 | grep "state UP" ; then
-            ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
-            clear
-          fi
-          # To check: can I switch from UNKNOWN
-          # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
-  				if ip link | grep tun1 | grep "state UNKNOWN" ; then
-  					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
-            CLIENT_IFACE_TUN1_IP="tun1"
-  					clear
-          else
-            TUN1_IP=$(ip addr show usb0 | grep -w 192.168.44.1)
-            CLIENT_IFACE_TUN1_IP="usb0"
-            clear
-  				fi
-					# Configure torrc depending on the present interfaces
-					if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
-						sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-						whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-					else
-						torrc_reset
-						if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
-						if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
-						if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
-						sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=ppp0/" ${RUNFILE}
-
-          	# The following line should minimize those cases where a restart is required.
-          	if [ "$ON_A_CLOUD" -eq "0" ]; then
-							sudo systemctl restart isc-dhcp-server
-						fi
-          	if [ -z "$INTERNETSELECTION" ]; then
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-              sleep 2
-              (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-              clear
-              restarting_tor menu
-              exit 0
-          	else
-            	sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-							sleep 2
-							# NEW v.0.5.4-post: Added to solve Issue #334
-							(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-              exit 0
-          	fi
-					fi
-        else
+    	else
+				if [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-          whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
-        fi
-      fi
-    fi
+				fi
+      	whiptail --title "TorBox - INFO" --textbox text/no_ppp0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+    	fi
+  	fi
   ;;
 
-  # Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0 / tun1)
+	# Tethering or USB ethernet adapter (eth1 --> wlan0 / eth0 / usb0 / tun1)
   9)
     INPUT=$(cat text/tethering-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -899,7 +973,11 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			if ip link | grep usb0; then
+				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+			else
+				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
+			fi
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
@@ -914,8 +992,8 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-        # To check: can I switch from UNKNOWN
-        # NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TroBox mini)
+				# The state of tun1 is always UNKNOWN
+				# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="tun1"
@@ -926,7 +1004,7 @@ case "$CHOICE" in
           clear
 				fi
 				# Configure torrc depending on the present interfaces
-				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] ; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ] ; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
@@ -935,7 +1013,6 @@ case "$CHOICE" in
 					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
-
         	# The following line should minimize those cases where a restart is required.
 					if [ "$ON_A_CLOUD" -eq "0" ]; then
 						sudo systemctl restart isc-dhcp-server
@@ -945,6 +1022,7 @@ case "$CHOICE" in
             sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
+						trap
             restarting_tor menu
             exit 0
         	else
@@ -956,13 +1034,15 @@ case "$CHOICE" in
         	fi
 				fi
       else
-				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
-        whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+				if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				fi
+      	whiptail --title "TorBox - INFO" --textbox text/no_eth1-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
   ;;
 
-  # Over a VPN connection (tun0 --> wlan0 / eth0 / tun1)
+	# Over a VPN connection (tun0 --> wlan0 / eth0 / usb0 / tun1)
   10)
     INPUT=$(cat text/tun0-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -976,7 +1056,11 @@ case "$CHOICE" in
 						display_net_reconfiguration_info
 						# NEW v.0.5.4-post
 						echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-						nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+						if ip link | grep usb0; then
+							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
+						else
+							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
+						fi
 						pid=$!
 						wait $pid
 						echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
@@ -989,8 +1073,7 @@ case "$CHOICE" in
 				connecting_to_VPN
 				sleep 3
 			fi
-			tun0up=$(ip link | grep tun0)
-      if [ ! -z "$tun0up" ] ; then
+			if ip link | grep tun0; then
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
@@ -999,8 +1082,8 @@ case "$CHOICE" in
           ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
-        # To check: can I switch from UNKNOWN
-				# NEW with TorBox-mini: TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
+				# The state of tun1 is always UNKNOWN
+				# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 				if ip link | grep tun1 | grep "state UNKNOWN" ; then
 					TUN1_IP=$(ip addr show tun1 | grep -w 192.168.44.1)
           CLIENT_IFACE_TUN1_IP="tun1"
@@ -1011,7 +1094,7 @@ case "$CHOICE" in
           clear
 				fi
 				# Configure torrc depending on the present interfaces
-				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ]; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
@@ -1020,21 +1103,21 @@ case "$CHOICE" in
 					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=tun0/" ${RUNFILE}
-
         	# The following line should minimize those cases where a restart is required.
         	if [ "$ON_A_CLOUD" -eq "0" ]; then
 						sudo systemctl restart isc-dhcp-server
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
 						# NEW v.0.5.4-post: Added to solve Issue #342
-						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
+						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
             sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
+						trap
             exit 0
         	else
-          	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 tun1 0 1
+          	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
 						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
@@ -1042,7 +1125,9 @@ case "$CHOICE" in
         	fi
 				fi
       else
-				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				if [ "$ON_A_CLOUD" -eq "0" ]; then
+					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
+				fi
         whiptail --title "TorBox - INFO" --textbox text/no_tun0-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
       fi
     fi
@@ -1114,13 +1199,13 @@ case "$CHOICE" in
     fi
   ;;
 
-  *)
-    clear
+#  *)
+#    clear
 		#Probabaly only under Ubuntu shell output line separator fails to get reset: https://superuser.com/questions/1650758/how-does-the-shell-output-line-separator-fail-to-get-reset
-		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
-    PROMPTTEXT=$(cat text/prompt-text)
-    echo -e "$PROMPTTEXT"
-    echo " "
-    exit 0
+#		if [ "$CHECK_OS" == "Ubuntu" ]; then stty sane; fi
+#    PROMPTTEXT=$(cat text/prompt-text)
+#    echo -e "$PROMPTTEXT"
+#    echo " "
+#    exit 0
 esac
 bash menu

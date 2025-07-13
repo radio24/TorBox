@@ -96,6 +96,8 @@ TOR_INCLUDE_EX_SLOW="$(<<< "$TOR_INCLUDE_EX_SLOW" sed -e 's`[][\\/.*^$]`\\&`g')"
 
 # Read configuration from run/torbox.run
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ########
@@ -271,6 +273,7 @@ read_config
 clear
 
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && (sudo rm nohup.out) 2>/dev/null
 stty intr ^c
@@ -899,6 +902,7 @@ case "$CHOICE" in
 		clear
     if [ "$TOGGLE09" = "Disable" ]; then
       CABLE=$(ip addr show eth0 | grep -w 192.168.43.1)
+			USB0=$(ip addr show usb0 | grep -w 192.168.44.1)
 			VPN=$(ip addr show tun1 | grep -w 192.168.44.1)
 			clear
       if [ -z "$CABLE" ]; then
@@ -906,9 +910,9 @@ case "$CHOICE" in
 				clear
       fi
       clear
-      if [ -n "$CABLE" ] || [ -n "$VPN" ]; then
+			if [ -n "$CABLE" ] || [ -n "$VPN" ] || [ -n "$USB0" ]; then
         INPUT=$(cat text/disable_wlan-text)
-        DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
+				DISABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH 2 \
         "1" "Temporary   - Disable TorBox's WLAN until next boot" OFF \
         "2" "Permanently - Disable TorBox's WLAN until enabled again" OFF 3>&1 1>&2 2>&3)
         exitstatus=$?
@@ -926,37 +930,70 @@ case "$CHOICE" in
               echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
               sudo systemctl mask --now hostapd
               sudo systemctl daemon-reload
-              # No special rc.local for Debian/Ubuntu anymore
-              sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							if [ "$TORBOX_MINI" -eq "1" ]; then
+								sudo cp etc/rc.local.mini /etc/rc.local
+								sudo cp etc/network/interfaces.mini /etc/network/interfaces
+							else
+              	sudo cp etc/rc.local.disable_wlan /etc/rc.local
+							fi
 							sudo chmod a+x /etc/rc.local
             fi
+						echo -e "${RED}[+] TorBox's WLAN is disabled!${NOCOLOR}"
+						sleep 3
           fi
         else
           clear
         fi
       else
         INPUT=$(cat text/disable_wlan_error-text)
-        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+        whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
       fi
     else
-			# NEW v.0.5.4: TEST only allow to enable, if wifi hardware is present
 			COUNT_WLAN=0
 			COUNT_WLAN=$(sudo lshw | grep ethernet | grep -c wireless)
 			clear
 			if [ "$COUNT_WLAN" -gt "0" ]; then
-      	INPUT=$(cat text/enable_wlan-text)
-      	if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+					INPUT=$(cat text/torbox_mini_wifi_default_warning-text)
+					whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+					exit 0
+				fi
+				EXECUTE=0
+				if [ "$TORBOX_MINI" -eq "1" ]; then
+					INPUT=$(cat text/torbox_mini_wifi_warning-text)
+					if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then EXECUTE=1; fi
+				else
+					INPUT=$(cat text/enable_wlan-text)
+      		if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then EXECUTE=1; fi
+				fi
+				if [ "$EXECUTE" -eq "1" ]; then
         	clear
-        	echo " "
         	echo -e "${RED}[+] Enabling TorBox's WLAN now...${NOCOLOR}"
-        	# No special rc.local for Debian/Ubuntu anymore
         	sudo cp etc/rc.local /etc/rc.local
 					sudo chmod a+x /etc/rc.local
+					sudo cp etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf
         	sudo systemctl unmask hostapd
-        	sudo systemctl enable hostapd
+					sudo systemctl daemon-reload
+					sudo systemctl enable --now hostapd
+					# eth0 --> wlan0 / eth1 / usb0
+					if ip link | grep usb0; then
+						sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
+						sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat
+					else
+						sudo cp etc/network/interfaces.wlan0eth1notusb0 /etc/network/interfaces
+						sudo cp etc/iptables.ipv4-wlan0eth0notusb0.nat /etc/iptables.ipv4.nat
+					fi
+					if pgrep -f "dhclient.wlan0" ; then
+						(sudo dhclient -r) 2>&1
+						sudo ifdown wlan0 &>/dev/null
+						sudo ifup wlan0 &>/dev/null
+					fi
         	sudo systemctl start hostapd
-        	sudo systemctl daemon-reload
-        	sleep 2
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+					echo -e "${RED}[+] TorBox's WLAN is enabled!${NOCOLOR}"
+					echo -e "${RED}[+] You can use it by selecting another connection setup with${NOCOLOR}"
+					echo -e "${RED}[+] TorBox's Main Menu (entry 5-10) or after rebooting TorBox${NOCOLOR}"
+					sleep 3
 				fi
 			else
 				whiptail --title "TorBox - INFO" --textbox text/no_wireless_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
@@ -1107,10 +1144,10 @@ case "$CHOICE" in
 				# Not necessary, as all local connections to the box port 22 and 80 etc. are accepted.
 				# All TCP connection requests from devices in the 192.168.0.0/16 network are redirected to the web server on port 80 (webssh).
 				# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 7 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 8 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+				# ($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
         sleep 2
@@ -1122,8 +1159,8 @@ case "$CHOICE" in
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
 				# ($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+				# ($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+				# ($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null

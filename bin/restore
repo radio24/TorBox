@@ -228,8 +228,8 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 				CHOICE=$(eval $WHIPTAIL_LINE)
 				exitstatus=$?
 				clear
-				# exitstatus == 255 means that the ESC key was pressed
-				[ "$exitstatus" == "255" ] && exit 1
+				# exitstatus == 1 means that the ESC key was pressed
+				[ "$exitstatus" == "1" ] && exit 1
 				OBFS4RELAY=0
 				ONIONSERVICES=0
 				ONIONAUTH=0

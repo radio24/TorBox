@@ -1,0 +1,8 @@
+This menu entry supposes that TorBox mini should be connected to the Internet through a cellular link (ppp0, for example, the Sixfab Shields/HATs for
+cellular connections). These interfaces have to be configured BEFOREHAND.
+
+If available, the following interfaces are also available for client devices: if enabled in the Configuration sub-menu (wlan0), through Ethernet (eth0), and/or via an installed VPN server (tun1).
+
+Important: USB dongle creating usbX interfaces are not supported under TorBox mini. For special requirements, please contact the TorBox development team --> https://www.torbox.ch
+
+Would you like to CONTINUE?

@@ -419,20 +419,26 @@ update_torcfg()
   sudo cp etc/dhcp/dhclient.conf /etc/dhcp/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhclient.conf -- backup done"
   (sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.bak) 2>/dev/null
-  sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		sudo cp etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
+	else
+		sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
+	fi
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/dhcp/dhcpd.conf -- backup done"
   (sudo cp /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak) 2>/dev/null
   sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/hostapd/hostapd.conf -- backup done"
   (sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak) 2>/dev/null
-  sudo cp etc/iptables.ipv4.nat /etc/
+	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/iptables.ipv4-cloud.nat /etc/iptables.ipv4.nat
+	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then sudo cp etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
+	else sudo cp etc/iptables.ipv4.nat /etc/; fi
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/iptables.ipv4.nat -- backup done"
   (sudo cp /etc/motd /etc/motd.bak) 2>/dev/null
   sudo cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/motd -- backup done"
 
 	# NEW v.0.5.4: Don't change /etc/network/interfaces on a cloud and respect TorBox mini
-	if [ "$ON_A_CLOUD" -eq "0" ]; then
+	if [ "$TORBOX_MINI" -eq "0" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		cp etc/network/interfaces /etc/network/
 		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
@@ -468,7 +474,11 @@ update_torcfg()
 	fi
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
-  sudo cp etc/rc.local /etc/rc.local
+	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+		sudo cp etc/rc.local.mini /etc/rc.local
+	else
+		sudo cp etc/rc.local /etc/
+	fi
   sudo chmod a+x /etc/rc.local
   echo -e "${RED}[+]${NOCOLOR} Copied /etc/rc.local -- backup done"
   if [ "$CHECK_OS" == "Ubuntu" ]; then
@@ -747,6 +757,7 @@ configure_system_service()
 
 ######## PREPARATIONS ########
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
@@ -776,8 +787,8 @@ CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - UPDATE & MAINTENANCE MENU
 "17" "Just fixing and cleaning" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
-# exitstatus == 255 means that the ESC key was pressed
-[ "$exitstatus" == "255" ] && exit 0
+# exitstatus == 1 means that the ESC key was pressed
+[ "$exitstatus" == "1" ] && exit 0
 
 CHOICE=$(echo "$CHOICE" | tr -d ' ')
 case "$CHOICE" in

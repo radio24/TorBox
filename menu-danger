@@ -64,6 +64,10 @@ VPN_LIST_FILE="run/$VPN_LIST"
 # Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
 VPN_LIST_FILE_OWN="run/vpn-list.own"
 
+# Read configuration from run/torbox.run
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
+
 ##############################
 ######## FUNCTIONS ########
 
@@ -97,33 +101,59 @@ read_config()
 	else
 		TOGGLE21="Disable"
 	fi
+
+	# TOGGLE23 shows if TorBox mini default configuration is enabled or disable
+	if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+		TOGGLE23="Activate"
+	else
+		TOGGLE23="Deactivate"
+	fi
 }
 
 
 ######## PREPARATIONS ########
+read_config
+clear
+
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
 trap
-read_config
 
 
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"==" "==========================================[Domain Exclusion]===" \
-" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
-" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
-" 3" "List the exclusion lists" \
-" 4" "Backup/restore the exlusion lists" \
-"==" "=============================================[Lock-out risk]===" \
-" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
-" 6" "$TOGGLE21 SSH password login" \
-"==" "==========================================[Developer Tools]===" \
-" 7" "Forwarding only - tor protection disabled" \
-3>&1 1>&2 2>&3)
+if [ "$TORBOX_MINI" -eq "1" ]; then
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	"==" "==========================================[Domain Exclusion]===" \
+	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
+	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
+	" 3" "List the exclusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
+	"==" "=============================================[Lock-out risk]===" \
+	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
+	" 6" "$TOGGLE21 SSH password login" \
+	"==" "==============================================[Expert Tools]===" \
+	" 7" "Forwarding only - tor protection disabled" \
+	" 8" "$TOGGLE23 other connection options in TorBox mini's Main Menu" \
+	3>&1 1>&2 2>&3)
+else
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	"==" "==========================================[Domain Exclusion]===" \
+	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
+	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
+	" 3" "List the exclusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
+	"==" "=============================================[Lock-out risk]===" \
+	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
+	" 6" "$TOGGLE21 SSH password login" \
+	"==" "==========================================[Developer Tools]===" \
+	" 7" "Forwarding only - tor protection disabled" \
+	3>&1 1>&2 2>&3)
+fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
 [ "$exitstatus" == "255" ] && exit 0
@@ -450,7 +480,7 @@ case "$CHOICE" in
 	# Backup/restore the exlusion lists
 	4)
 		clear
-		INPUT=$(cat text/backup_restore_the_exlusion_lists-text)
+		INPUT=$(cat text/backup_restore_the_exclusion_lists-text)
 		whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
@@ -534,6 +564,31 @@ case "$CHOICE" in
 			I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 		fi
     sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
+	;;
+
+	# Activate / Deactivate other connection options in TorBox mini's Main Menu"
+	8)
+		clear
+		if [ "$TOGGLE23" == "Activate" ]; then
+			INPUT=$(cat text/disable_TorBox_mini_default-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now activated!${NOCOLOR}"
+				sleep 3
+			fi
+		else
+			INPUT=$(cat text/enable_TorBox_mini_default-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
+				echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now deactivated!${NOCOLOR}"
+				sleep 3
+				sudo systemctl mask --now hostapd
+				sudo systemctl daemon-reload
+				sudo cp etc/rc.local.mini /etc/rc.local
+				sudo chmod a+x /etc/rc.local
+			fi
+		fi
 	;;
 
   *)
