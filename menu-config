@@ -1144,10 +1144,10 @@ case "$CHOICE" in
 				# Not necessary, as all local connections to the box port 22 and 80 etc. are accepted.
 				# All TCP connection requests from devices in the 192.168.0.0/16 network are redirected to the web server on port 80 (webssh).
 				# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 7 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
-				($IPTABLES -t nat -I PREROUTING 8 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+				# ($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
+				($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         sudo sed -i "s/^BLOCK_HTTP=.*/BLOCK_HTTP=1/" ${RUNFILE}
         sleep 2
@@ -1159,8 +1159,8 @@ case "$CHOICE" in
         echo -e "${RED}[+] Unblock HTTP plain text traffic!${NOCOLOR}"
 				($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
 				# ($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.0.0/16 -j REDIRECT --to-ports 80) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
+				# ($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
+				# ($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 				($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null

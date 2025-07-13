@@ -38,8 +38,6 @@ COMMIT
 -A PREROUTING -d 192.168.43.1/32 -i eth0 -p tcp -j REDIRECT
 -A PREROUTING -d 192.168.44.1/32 -i usb0 -p tcp -j REDIRECT
 -A PREROUTING -d 10.192.0.0/10 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
--A PREROUTING -p tcp -m tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-tcp-options --log-ip-options
--A PREROUTING -p udp -m udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options
 -A PREROUTING -p tcp -m tcp --dport 80 -j DNAT --to-destination 0.0.0.0
 -A PREROUTING -p udp -m udp --dport 80 -j DNAT --to-destination 0.0.0.0
 -A PREROUTING -i wlan0 -p tcp -j REDIRECT --to-ports 9040
