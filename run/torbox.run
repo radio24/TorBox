@@ -49,7 +49,6 @@ FRESH_INSTALLED=0
 # SSH access from the Internet
 # 0 - SSH access from the Internet is blocked (default on a TorBox / TorBox mini)
 # 1 - SSH access from the Internet is allowed (default on a TorBox on a Cloud)
-# 2 - SSH access from the Internet is blocked on a cloud installation
 SSH_FROM_INTERNET=0
 
 # OPENVPN access from the Internet

@@ -1,4 +1,4 @@
- This option will close SSH port 22 to external Internet access, significantly improving your TorBox security. After disabling, you can only access SSH from:
+ This menu entry will close SSH port 22 to external Internet access, significantly improving your TorBox security. After disabling, you can only access SSH from:
  - Local network devices connected to TorBox (wlan0, eth1, tun1 interfaces)
  - Remote connections through OpenVPN tunnel (if configured)
 
