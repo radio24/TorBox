@@ -1141,7 +1141,7 @@ case "$CHOICE" in
 	15)
 		clear
 		INPUT=$(cat text/menu_danger-text)
-		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH
+		whiptail --title "TorBox - INFO" --msgbox "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH
 		bash menu-danger
 	;;
   16)

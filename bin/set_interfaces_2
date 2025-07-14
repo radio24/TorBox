@@ -254,10 +254,7 @@ $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 
 ###### SSH access through Internet ######
 # NEW v.0.5.4-post: SSH access on a cloud to prevent a locked out situation
-if [ "$ON_A_CLOUD" -eq "1" ] && [ "$SSH_FROM_INTERNET" -lt "2" ]; then
-	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
-	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
-elif grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
+if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
 else

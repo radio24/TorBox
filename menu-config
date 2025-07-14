@@ -1043,10 +1043,10 @@ case "$CHOICE" in
 				sudo passwd -u root
 				sudo usermod -s /bin/bash root
 				sudo passwd root
-				if grep -qE '^PermitRootLogin' "$SSH_CONFIG"; then
+				if grep -qE '^PermitRootLogin' "$SSHD_CONFIG"; then
 					sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' ${SSHD_CONFIG}
 				else
-					(printf "PermitRootLogin yes\n" | tee -a "$SSH_CONFIG") >/dev/null 2>&1
+					(printf "PermitRootLogin yes\n" | tee -a "$SSHD_CONFIG") >/dev/null 2>&1
 				fi
 				sudo systemctl reload sshd 2>/dev/null
 			fi
@@ -1100,8 +1100,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
         ($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
         (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-				if [ "$ON_A_CLOUD" -eq "1" ]; then sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=2/" ${RUNFILE}
-				else sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}; fi
+				sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
         sleep 2
       fi
     fi

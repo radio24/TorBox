@@ -1,4 +1,9 @@
+This option will close SSH port 22 to external Internet access, significantly improving your TorBox security. After disabling, you can only access SSH from:
+- Local network devices connected to TorBox (wlan0, eth1, tun1 interfaces)
+- Remote connections through OpenVPN tunnel (if configured)
 
-Disabling SSH access from the Internet means you can only use SSH from a client device connected to the TorBox. If you are using TorBox on a Cloud, then you can only log into TorBox with SSH when the client is connected to the server via OpenVPN. Be careful not to lock yourself out of the box!
+WARNING
+If you're running TorBox on a cloud, make sure you have OpenVPN properly configured and tested BEFORE disabling SSH Internet access!
+Without OpenVPN, you might be locked out of your TorBox on a cloud.
 
 Would you like to disable SSH access from the Internet (this is the default)?
