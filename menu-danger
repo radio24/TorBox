@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2062
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
 # Copyright (C) 2024 radio24
@@ -31,7 +32,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=7
+NO_ITEMS=10
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -80,6 +81,39 @@ read_config()
 	# Is TorBox connected to a VPN?
 	tun0up=$(ip link | grep tun0)
 	clear
+
+	# TOGGLE17 shows if TWEBSSH is enabled or disabled
+	clear
+	# TOGGLE10 shows if TorBox can be accessed from the Internet
+	RULE_CHECK=0
+	($IPTABLES -C INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
+	RULE_CHECK=$?
+	if [ $RULE_CHECK = 1 ]; then
+		TOGGLE10="Enable"
+	else
+		TOGGLE10="Disable"
+	fi
+
+	# TOGGLE11 shows if TorBox can be accessed by root
+	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -E '^!|^\*')
+	if [ -z "$ROOT_SHADOW_LINE" ]; then
+		TOGGLE11="Disable"
+	else
+	  # Check if /etc/securetty allows root login (e.g., on tty1, tty2, etc.)
+	  if [ -s /etc/securetty ]; then
+			TOGGLE11="Disable"
+	  else
+			TOGGLE11="Enable"
+	  fi
+	fi
+
+	if grep -q "TWEBSSH=1" ${RUNFILE} ; then
+		clear
+		TOGGLE17="Disable"
+	else
+		clear
+		TOGGLE17="Enable"
+	fi
 
 	# TOGGLE19 shows if domain exclusion active or not
 	if grep -q "UNPROTECTED_DOMAIN=0" ${RUNFILE} ; then
@@ -135,10 +169,13 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 	" 4" "Backup/restore the exclusion lists" \
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
-	" 6" "$TOGGLE21 SSH password login" \
+	" 6" "$TOGGLE17 Torbox's WebSSH access" \
+	" 7" "$TOGGLE10 SSH access from the Internet" \
+	" 8" "$TOGGLE21 SSH password login" \
 	"==" "==============================================[Expert Tools]===" \
-	" 7" "Forwarding only - tor protection disabled" \
-	" 8" "$TOGGLE23 other connection options in TorBox mini's Main Menu" \
+	" 9" "$TOGGLE11 root access" \
+	"10" "Forwarding only - tor protection disabled" \
+	"11" "$TOGGLE23 other connection options in TorBox mini's Main Menu" \
 	3>&1 1>&2 2>&3)
 else
 	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -149,9 +186,12 @@ else
 	" 4" "Backup/restore the exclusion lists" \
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
-	" 6" "$TOGGLE21 SSH password login" \
+	" 6" "$TOGGLE17 Torbox's WebSSH access" \
+	" 7" "$TOGGLE10 SSH access from the Internet" \
+	" 8" "$TOGGLE21 SSH password login" \
 	"==" "==========================================[Developer Tools]===" \
-	" 7" "Forwarding only - tor protection disabled" \
+	" 9" "$TOGGLE11 root access" \
+	"10" "Forwarding only - tor protection disabled" \
 	3>&1 1>&2 2>&3)
 fi
 exitstatus=$?
@@ -499,8 +539,79 @@ case "$CHOICE" in
 		fi
 	;;
 
-	# Enable/disable SSH password login
+	#This disables / enables Torbox's WebSSH access
 	6)
+		if [ "$TOGGLE17" = "Disable" ]; then
+			INPUT=$(cat text/disable_twebssh-text)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo pkill -f "twebssh"
+				sudo rm /etc/nginx/sites-enabled/webssh.conf
+        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+				clear
+				sudo systemctl restart nginx
+				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
+			fi
+		else
+			INPUT=$(cat text/enable_twebssh-text)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				clear
+				sleep 5
+				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+				clear
+				sleep 2
+				sudo systemctl restart nginx
+				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
+			fi
+		fi
+		read_config
+  ;;
+
+	#This disables / enables SSH access through Internet
+	7)
+    if [ "$TOGGLE10" = "Enable" ]; then
+      INPUT=$(cat text/ssh_i_access-on-txt)
+      ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
+      "1" "Temporary until reconfiguration or restart" OFF \
+      "2" "Permanently until disabled again" OFF \
+      3>&1 1>&2 2>&3)
+      exitstatus=$?
+      if [ $exitstatus = 0 ]; then
+        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g | sed s/192.168.44.1[[:space:]]//g)
+        clear
+        echo " "
+        echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
+        echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
+        echo ""
+        echo -e "${YELLOW}[!] $INTERNET_IP"
+        echo ""
+        read -n 1 -s -r -p "Press any key to continue"
+        ($IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
+        if [ $ENABLED_CHOICE = 2 ]; then
+          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
+        fi
+      fi
+    fi
+    if [ "$TOGGLE10" = "Disable" ]; then
+			INPUT=$(cat text/ssh_i_access-off-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+        clear
+        echo " "
+        echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
+        ($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
+        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+				if [ "$ON_A_CLOUD" -eq "1" ]; then sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=2/" ${RUNFILE}
+				else sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}; fi
+        sleep 2
+      fi
+    fi
+  ;;
+
+	# Enable/disable SSH password login
+	8)
 		clear
 		if [ "$TOGGLE21" == "Disable" ]; then
 			cd
@@ -545,8 +656,42 @@ case "$CHOICE" in
 		fi
 	;;
 
+	#This disables / enables root access
+	9)
+		if [ "$TOGGLE11" = "Enable" ]; then
+			INPUT=$(cat text/root_access-on-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Enable root access!${NOCOLOR}"
+				sudo passwd -u root
+				sudo usermod -s /bin/bash root
+				sudo passwd root
+				if grep -qE '^PermitRootLogin' "$SSHD_CONFIG"; then
+					sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' ${SSHD_CONFIG}
+				else
+					(printf "PermitRootLogin yes\n" | tee -a "$SSHD_CONFIG") >/dev/null 2>&1
+				fi
+				sudo systemctl reload sshd 2>/dev/null
+			fi
+		fi
+		if [ "$TOGGLE11" = "Disable" ]; then
+			INPUT=$(cat text/root_access-off-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
+				sudo passwd -l root
+				sudo usermod -s /sbin/nologin root
+				sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' ${SSHD_CONFIG}
+				sudo systemctl reload sshd 2>/dev/null
+				sleep 2
+			fi
+		fi
+  ;;
+
 	# Forwarding only - tor protection disabled
-	7)
+	10)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients
@@ -567,7 +712,7 @@ case "$CHOICE" in
 	;;
 
 	# Activate / Deactivate other connection options in TorBox mini's Main Menu"
-	8)
+	11)
 		clear
 		if [ "$TOGGLE23" == "Activate" ]; then
 			INPUT=$(cat text/disable_TorBox_mini_default-text)

@@ -1274,17 +1274,20 @@ if [ "$STEP_NUMBER" -le "13" ]; then
   # Important: Randomizing MAC addresses could prevent the assignement of an IP address on a cloud
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 	  sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 	  sudo sed -i "s/=random/=permanent/" ${RUNFILE}
   elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
     sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
   else
 	  sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
