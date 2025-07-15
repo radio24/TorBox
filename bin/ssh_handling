@@ -1,0 +1,390 @@
+#!/bin/bash
+# shellcheck disable=SC2001,SC2034,SC2064
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2024 radio24
+# Contact: anonym@torbox.ch
+# Website: https://www.torbox.ch
+# Github:  https://github.com/radio24/TorBox
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# This script provides comprehensive SSH access control for TorBox, allowing
+# users to configure SSH access from different network interfaces and the Internet.
+#
+# SYNTAX
+# ./ssh_handling
+#
+# The script displays a whiptail menu showing current SSH access status and
+# allows configuration of SSH access from WiFi (192.168.42.x), cable (192.168.43.x),
+# USB/VPN (192.168.44.x), and Internet connections.
+#
+
+###### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+# How many items do you have in the main menu?
+NO_ITEMS=6
+#
+# How many lines are only for decoration and spaces?
+NO_SPACER=4
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_WIDTH_REDUX=60
+MENU_HEIGHT_10=10
+MENU_HEIGHT_15=15
+MENU_HEIGHT_20=20
+MENU_HEIGHT_25=25
+# MENU_HEIGHT should not exceed 26
+MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
+MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
+
+#Colors
+RED='\033[1;31m'
+YELLOW='\033[1;93m'
+GREEN='\033[1;32m'
+NOCOLOR='\033[0m'
+
+#Other variables
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
+SSHD_CONFIG="/etc/ssh/sshd_config"
+TXT_DIR="$TORBOX_PATH/text"
+
+# Network interface ranges
+WIFI_NETWORK="192.168.42.0/24"
+CABLE_NETWORK="192.168.43.0/24"
+USB_VPN_NETWORK="192.168.44.0/24"
+
+##############################
+######## FUNCTIONS ###########
+
+# include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+# This function checks the current SSH configuration status
+check_ssh_status()
+{
+    # Check if SSH service is running
+    if systemctl is-active --quiet sshd; then
+        SSH_SERVICE_STATUS="ENABLED"
+    else
+        SSH_SERVICE_STATUS="DISABLED"
+    fi
+    
+    # Check SSH access from Internet
+    if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} 2>/dev/null; then
+        SSH_INTERNET_STATUS="ENABLED"
+    else
+        SSH_INTERNET_STATUS="DISABLED"
+    fi
+    
+    # Check iptables rules for different network interfaces
+    # WiFi network (192.168.42.x)
+    if sudo iptables -L INPUT -n | grep -q "192.168.42.0/24.*dpt:22.*ACCEPT" 2>/dev/null; then
+        SSH_WIFI_STATUS="ENABLED"
+    else
+        SSH_WIFI_STATUS="DISABLED"
+    fi
+    
+    # Cable network (192.168.43.x)
+    if sudo iptables -L INPUT -n | grep -q "192.168.43.0/24.*dpt:22.*ACCEPT" 2>/dev/null; then
+        SSH_CABLE_STATUS="ENABLED"
+    else
+        SSH_CABLE_STATUS="DISABLED"
+    fi
+    
+    # USB/VPN network (192.168.44.x)
+    if sudo iptables -L INPUT -n | grep -q "192.168.44.0/24.*dpt:22.*ACCEPT" 2>/dev/null; then
+        SSH_USB_VPN_STATUS="ENABLED"
+    else
+        SSH_USB_VPN_STATUS="DISABLED"
+    fi
+    
+    # Check if password authentication is enabled
+    if sudo grep -q "^PasswordAuthentication no" ${SSHD_CONFIG} 2>/dev/null; then
+        SSH_PASSWORD_STATUS="DISABLED"
+    else
+        SSH_PASSWORD_STATUS="ENABLED"
+    fi
+}
+
+# This function creates checklist status for the menu
+create_checklist_status()
+{
+    # Create ON/OFF status for checklist based on current configuration
+    if [ "$SSH_SERVICE_STATUS" = "ENABLED" ]; then
+        SERVICE_CHECK="ON"
+    else
+        SERVICE_CHECK="OFF"
+    fi
+    
+    if [ "$SSH_INTERNET_STATUS" = "ENABLED" ]; then
+        INTERNET_CHECK="ON"
+    else
+        INTERNET_CHECK="OFF"
+    fi
+    
+    if [ "$SSH_WIFI_STATUS" = "ENABLED" ]; then
+        WIFI_CHECK="ON"
+    else
+        WIFI_CHECK="OFF"
+    fi
+    
+    if [ "$SSH_CABLE_STATUS" = "ENABLED" ]; then
+        CABLE_CHECK="ON"
+    else
+        CABLE_CHECK="OFF"
+    fi
+    
+    if [ "$SSH_USB_VPN_STATUS" = "ENABLED" ]; then
+        USB_VPN_CHECK="ON"
+    else
+        USB_VPN_CHECK="OFF"
+    fi
+    
+    if [ "$SSH_PASSWORD_STATUS" = "ENABLED" ]; then
+        PASSWORD_CHECK="ON"
+    else
+        PASSWORD_CHECK="OFF"
+    fi
+}
+
+# This function applies SSH service configuration
+apply_ssh_service()
+{
+    local enable_service=$1
+    
+    if [ "$enable_service" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH service...${NOCOLOR}"
+        sudo systemctl enable sshd
+        sudo systemctl start sshd
+        sleep 2
+        if systemctl is-active --quiet sshd; then
+            echo -e "${GREEN}[+] SSH service has been enabled successfully.${NOCOLOR}"
+        else
+            echo -e "${RED}[!] Failed to enable SSH service.${NOCOLOR}"
+        fi
+    else
+        echo -e "${RED}[+] Disabling SSH service...${NOCOLOR}"
+        sudo systemctl stop sshd
+        sudo systemctl disable sshd
+        sleep 2
+        if ! systemctl is-active --quiet sshd; then
+            echo -e "${GREEN}[+] SSH service has been disabled successfully.${NOCOLOR}"
+        else
+            echo -e "${RED}[!] Failed to disable SSH service.${NOCOLOR}"
+        fi
+    fi
+}
+
+# This function applies SSH Internet access configuration
+apply_ssh_internet()
+{
+    local enable_internet=$1
+    
+    if [ "$enable_internet" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH access from the Internet - be careful!${NOCOLOR}"
+        sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
+        echo -e "${GREEN}[+] SSH Internet access has been enabled.${NOCOLOR}"
+    else
+        echo -e "${RED}[+] Disabling SSH access from the Internet...${NOCOLOR}"
+        sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
+        echo -e "${GREEN}[+] SSH Internet access has been disabled.${NOCOLOR}"
+    fi
+}
+
+# This function applies SSH WiFi access configuration
+apply_ssh_wifi()
+{
+    local enable_wifi=$1
+    
+    if [ "$enable_wifi" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH access from WiFi network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+        sudo iptables -I INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j ACCEPT
+        echo -e "${GREEN}[+] SSH WiFi access has been enabled.${NOCOLOR}"
+    else
+        echo -e "${RED}[+] Disabling SSH access from WiFi network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j ACCEPT 2>/dev/null
+        sudo iptables -I INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j DROP
+        echo -e "${GREEN}[+] SSH WiFi access has been disabled.${NOCOLOR}"
+    fi
+}
+
+# This function applies SSH Cable access configuration
+apply_ssh_cable()
+{
+    local enable_cable=$1
+    
+    if [ "$enable_cable" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH access from cable network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+        sudo iptables -I INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j ACCEPT
+        echo -e "${GREEN}[+] SSH cable access has been enabled.${NOCOLOR}"
+    else
+        echo -e "${RED}[+] Disabling SSH access from cable network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j ACCEPT 2>/dev/null
+        sudo iptables -I INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j DROP
+        echo -e "${GREEN}[+] SSH cable access has been disabled.${NOCOLOR}"
+    fi
+}
+
+# This function applies SSH USB/VPN access configuration
+apply_ssh_usb_vpn()
+{
+    local enable_usb_vpn=$1
+    
+    if [ "$enable_usb_vpn" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH access from USB/VPN network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+        sudo iptables -I INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j ACCEPT
+        echo -e "${GREEN}[+] SSH USB/VPN access has been enabled.${NOCOLOR}"
+    else
+        echo -e "${RED}[+] Disabling SSH access from USB/VPN network...${NOCOLOR}"
+        sudo iptables -D INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j ACCEPT 2>/dev/null
+        sudo iptables -I INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP
+        echo -e "${GREEN}[+] SSH USB/VPN access has been disabled.${NOCOLOR}"
+    fi
+}
+
+# This function applies SSH password authentication configuration
+apply_ssh_password()
+{
+    local enable_password=$1
+    
+    if [ "$enable_password" = "enable" ]; then
+        echo -e "${RED}[+] Enabling SSH password login...${NOCOLOR}"
+        sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}
+        sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}
+        echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
+        sudo systemctl restart sshd
+        echo -e "${GREEN}[+] SSH password login has been enabled.${NOCOLOR}"
+    else
+        if [ -f ~/.ssh/authorized_keys ]; then
+            echo -e "${RED}[+] Disabling SSH password login...${NOCOLOR}"
+            sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}
+            sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}
+            printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG >/dev/null
+            echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
+            sudo systemctl restart sshd
+            echo -e "${GREEN}[+] SSH password login has been disabled.${NOCOLOR}"
+        else
+            echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${NOCOLOR}"
+            echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys are configured.${NOCOLOR}"
+            echo -e "${RED}[!] Password authentication will remain enabled.${NOCOLOR}"
+        fi
+    fi
+}
+
+##############################
+######## MAIN MENU ##########
+
+# Loop until user exits
+while true; do
+    # Check current SSH status
+    check_ssh_status
+    
+    # Create checklist status
+    create_checklist_status
+    
+    # Build the checklist
+    CHOICES=$(whiptail --title "TorBox - SSH Access Control" --checklist "Select SSH access methods to enable (use SPACE to select/deselect, TAB to navigate, ENTER to apply)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+    "service" "SSH Service" $SERVICE_CHECK \
+    "internet" "SSH Internet Access" $INTERNET_CHECK \
+    "wifi" "SSH WiFi Access (192.168.42.x)" $WIFI_CHECK \
+    "cable" "SSH Cable Access (192.168.43.x)" $CABLE_CHECK \
+    "usb_vpn" "SSH USB/VPN Access (192.168.44.x)" $USB_VPN_CHECK \
+    "password" "SSH Password Login" $PASSWORD_CHECK \
+    3>&1 1>&2 2>&3)
+    
+    # Exit if user cancelled
+    if [ $? -ne 0 ]; then
+        clear
+        exit 0
+    fi
+    
+    # Show confirmation dialog with dangerous options warning
+    DANGEROUS_OPTIONS=""
+    if echo "$CHOICES" | grep -q "internet"; then
+        DANGEROUS_OPTIONS="$DANGEROUS_OPTIONS\n- SSH Internet Access (DANGEROUS!)"
+    fi
+    if echo "$CHOICES" | grep -q "password"; then
+        DANGEROUS_OPTIONS="$DANGEROUS_OPTIONS\n- SSH Password Login (LESS SECURE)"
+    fi
+    
+    CONFIRM_MSG="Apply the selected SSH configuration?"
+    if [ ! -z "$DANGEROUS_OPTIONS" ]; then
+        CONFIRM_MSG="$CONFIRM_MSG\n\nWARNING: You have selected potentially dangerous options:$DANGEROUS_OPTIONS\n\nAre you sure you want to continue?"
+    fi
+    
+    if ! (whiptail --title "TorBox - Confirm SSH Configuration" --yesno "$CONFIRM_MSG" $MENU_HEIGHT_20 $MENU_WIDTH); then
+        continue
+    fi
+    
+    # Clear screen and start applying changes
+    clear
+    echo -e "${RED}[+] Applying SSH configuration changes...${NOCOLOR}"
+    echo ""
+    
+    # Apply SSH service configuration
+    if echo "$CHOICES" | grep -q "service"; then
+        apply_ssh_service "enable"
+    else
+        apply_ssh_service "disable"
+    fi
+    
+    # Apply SSH Internet access configuration
+    if echo "$CHOICES" | grep -q "internet"; then
+        apply_ssh_internet "enable"
+    else
+        apply_ssh_internet "disable"
+    fi
+    
+    # Apply SSH WiFi access configuration
+    if echo "$CHOICES" | grep -q "wifi"; then
+        apply_ssh_wifi "enable"
+    else
+        apply_ssh_wifi "disable"
+    fi
+    
+    # Apply SSH Cable access configuration
+    if echo "$CHOICES" | grep -q "cable"; then
+        apply_ssh_cable "enable"
+    else
+        apply_ssh_cable "disable"
+    fi
+    
+    # Apply SSH USB/VPN access configuration
+    if echo "$CHOICES" | grep -q "usb_vpn"; then
+        apply_ssh_usb_vpn "enable"
+    else
+        apply_ssh_usb_vpn "disable"
+    fi
+    
+    # Apply SSH password authentication configuration
+    if echo "$CHOICES" | grep -q "password"; then
+        apply_ssh_password "enable"
+    else
+        apply_ssh_password "disable"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}[+] SSH configuration changes have been applied successfully.${NOCOLOR}"
+    echo ""
+    read -n 1 -s -r -p "Press any key to continue"
+done
