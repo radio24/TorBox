@@ -36,7 +36,7 @@
 NO_ITEMS=5
 #
 # How many lines are only for decoration and spaces?
-NO_SPACER=4
+NO_SPACER=0
 #
 #Set the the variables for the menu
 MENU_WIDTH=80
@@ -219,12 +219,12 @@ while true; do
     check_ssh_status
 
     # Build the checklist
-		CHOICES=$(whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --checklist "Select SSH access methods to enable (use SPACE to select/deselect, ENTER to apply, ESC to go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+		CHOICES=$(whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --checklist "\nSelect SSH access methods to enable/disable.\nIMPORTANT: These settings are also valid for webssh!\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." 17 $MENU_WIDTH $MENU_LIST_HEIGHT \
 		"1" "SSH Service enabled" $SSH_SERVICE_CHECK \
 		"2" "SSH access from the Internet" $SSH_INTERNET_CHECK \
 		"3" "SSH access from WiFi clients (192.168.42.x)" $SSH_WIFI_CHECK \
 		"4" "SSH access from Cable clients (192.168.43.x)" $SSH_CABLE_CHECK \
-		"5" "SSH access from USB/VPN clients (192.168.44.x)          " $SSH_USB_VPN_CHECK \
+		"5" "SSH access from USB/VPN clients (192.168.44.x)              " $SSH_USB_VPN_CHECK \
     3>&1 1>&2 2>&3)
 
     # Exit if user cancelled
