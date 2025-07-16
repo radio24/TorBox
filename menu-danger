@@ -82,18 +82,6 @@ read_config()
 	tun0up=$(ip link | grep tun0)
 	clear
 
-	# TOGGLE17 shows if TWEBSSH is enabled or disabled
-	clear
-	# TOGGLE10 shows if TorBox can be accessed from the Internet
-	RULE_CHECK=0
-	($IPTABLES -C INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-	RULE_CHECK=$?
-	if [ $RULE_CHECK = 1 ]; then
-		TOGGLE10="Enable"
-	else
-		TOGGLE10="Disable"
-	fi
-
 	# TOGGLE11 shows if TorBox can be accessed by root
 	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -E '^!|^\*')
 	if [ -z "$ROOT_SHADOW_LINE" ]; then
@@ -107,6 +95,8 @@ read_config()
 	  fi
 	fi
 
+	# TOGGLE17 shows if TWEBSSH is enabled or disabled
+	clear
 	if grep -q "TWEBSSH=1" ${RUNFILE} ; then
 		clear
 		TOGGLE17="Disable"
@@ -170,7 +160,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
 	" 6" "$TOGGLE17 Torbox's WebSSH access" \
-	" 7" "$TOGGLE10 SSH access from the Internet" \
+	" 7" "Change SSH access from the Internet and from the Clients" \
 	" 8" "$TOGGLE21 SSH password login" \
 	"==" "==============================================[Expert Tools]===" \
 	" 9" "$TOGGLE11 root access" \
@@ -187,7 +177,7 @@ else
 	"==" "=============================================[Lock-out risk]===" \
 	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
 	" 6" "$TOGGLE17 Torbox's WebSSH access" \
-	" 7" "$TOGGLE10 SSH access from the Internet" \
+	" 7" "Change SSH access from the Internet and from the Clients" \
 	" 8" "$TOGGLE21 SSH password login" \
 	"==" "==========================================[Developer Tools]===" \
 	" 9" "$TOGGLE11 root access" \
@@ -286,8 +276,8 @@ case "$CHOICE" in
 				DOMAINNAME=$(grep -P '(?=^.{4,253}$)(^(?:[a-zA-Z0-9](?:(?:[a-zA-Z0-9\-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,}|xn--[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$)' <<< "$DOMAINNAME")
 				if [ "$DOMAINNAME" == "" ] ; then
 					clear
-					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${NOCOLOR}"
+					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					clear
@@ -465,8 +455,8 @@ case "$CHOICE" in
 				if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then bin/set_interfaces_3; fi
 			else
 				clear
-				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
-				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${NOCOLOR}"
+				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				clear
@@ -558,7 +548,7 @@ case "$CHOICE" in
 				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 				clear
-				sleep 5
+				sleep 3
 				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
 				clear
 				sleep 2
@@ -571,42 +561,7 @@ case "$CHOICE" in
 
 	#This disables / enables SSH access through Internet
 	7)
-    if [ "$TOGGLE10" = "Enable" ]; then
-      INPUT=$(cat text/ssh_i_access-on-txt)
-      ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
-      "1" "Temporary until reconfiguration or restart" OFF \
-      "2" "Permanently until disabled again" OFF \
-      3>&1 1>&2 2>&3)
-      exitstatus=$?
-      if [ $exitstatus = 0 ]; then
-        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g | sed s/192.168.44.1[[:space:]]//g)
-        clear
-        echo " "
-        echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
-        echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
-        echo ""
-        echo -e "${YELLOW}[!] $INTERNET_IP"
-        echo ""
-        read -n 1 -s -r -p "Press any key to continue"
-        ($IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-        if [ $ENABLED_CHOICE = 2 ]; then
-          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
-        fi
-      fi
-    fi
-    if [ "$TOGGLE10" = "Disable" ]; then
-			INPUT=$(cat text/ssh_i_access-off-txt)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-        echo " "
-        echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
-        ($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-				sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
-        sleep 2
-      fi
-    fi
+		sudo bash bin/ssh_handling
   ;;
 
 	# Enable/disable SSH password login
@@ -617,40 +572,41 @@ case "$CHOICE" in
 			if [ -f .ssh/authorized_keys ]; then
 				cd torbox
 				INPUT=$(cat text/disable_SSH_pasword_login-text)
-				if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					clear
-					echo -e "${RED}[+] Disabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] Disabling SSH password login...${NOCOLOR}"
 					(sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG) 2>/dev/null
 					echo ""
-					echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[+] Make sure that you are able to log into TorBox with the${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[+] SSH key before you leave the actual SSH session!${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
 					sudo systemctl restart sshd
-					echo " "
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					echo -e "${RED}[+] SSH password login has been disabled.${NOCOLOR}"
+					echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
+					sleep 3
 					clear
 				fi
 			else
 				cd torbox
 				clear
-				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
-				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys"
-				echo -e "${RED}[!] keys are generated, and the public key is on the TorBox ready to work."
+				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${NOCOLOR}"
+				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys are configured.${NOCOLOR}"
+				echo -e "${RED}[!] Password authentication will remain enabled.${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				clear
 			fi
 		else
 			clear
-			echo -e "${RED}[+] Enabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+			echo -e "${RED}[+] Enabling SSH password login...${NOCOLOR}"
 			(sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}) 2>/dev/null
 			(sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}) 2>/dev/null
 			echo ""
-			echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
-			echo -e "${RED}[+] DONE! ${SERVICE_NAME}${NOCOLOR}"
-			sleep 5
+			echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
+			sudo systemctl restart sshd
+			echo -e "${RED}[+] SSH password login has been enabled.${NOCOLOR}"
+			echo -e "${YELLOW}[+] DONE! ${NOCOLOR}"
+			sleep 3
 			clear
 		fi
 	;;
