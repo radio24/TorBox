@@ -54,6 +54,7 @@ YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 #Other variables
+IPTABLES="/sbin/iptables"
 TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 TXT_DIR="$TORBOX_PATH/text"
@@ -152,12 +153,14 @@ apply_ssh_wifi()
         echo -e "${RED}[+] Enabling SSH access from WiFi network...${NOCOLOR}"
         sudo iptables -D INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
 				sudo sed -i "s/^SSH_FROM_WIFI=.*/SSH_FROM_WIFI=1/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH WiFi access has been enabled.${NOCOLOR}"
 				echo ""
     else
         echo -e "${RED}[+] Disabling SSH access from WiFi network...${NOCOLOR}"
 				sudo iptables -I INPUT 3 -s $WIFI_NETWORK -p tcp --dport 22 -j DROP
 				sudo sed -i "s/^SSH_FROM_WIFI=.*/SSH_FROM_WIFI=0/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH WiFi access has been disabled.${NOCOLOR}"
 				echo ""
     fi
@@ -172,12 +175,14 @@ apply_ssh_cable()
         echo -e "${RED}[+] Enabling SSH access from cable network...${NOCOLOR}"
         sudo iptables -D INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
 				sudo sed -i "s/^SSH_FROM_CABLE=.*/SSH_FROM_CABLE=1/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH cable access has been enabled.${NOCOLOR}"
 				echo ""
     else
         echo -e "${RED}[+] Disabling SSH access from cable network...${NOCOLOR}"
 				sudo iptables -I INPUT 3 -s $CABLE_NETWORK -p tcp --dport 22 -j DROP
 				sudo sed -i "s/^SSH_FROM_CABLE=.*/SSH_FROM_CABLE=0/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH cable access has been disabled.${NOCOLOR}"
 				echo ""
     fi
@@ -192,12 +197,14 @@ apply_ssh_usb_vpn()
         echo -e "${RED}[+] Enabling SSH access from USB/VPN network...${NOCOLOR}"
         sudo iptables -D INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
 				sudo sed -i "s/^SSH_FROM_USB=.*/SSH_FROM_USB=1/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH USB/VPN access has been enabled.${NOCOLOR}"
 				echo ""
     else
         echo -e "${RED}[+] Disabling SSH access from USB/VPN network...${NOCOLOR}"
 				sudo iptables -I INPUT 3 -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP
 				sudo sed -i "s/^SSH_FROM_USB=.*/SSH_FROM_USB=0/" ${RUNFILE}
+				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         echo -e "${RED}[+] SSH USB/VPN access has been disabled.${NOCOLOR}"
 				echo ""
     fi
@@ -210,9 +217,6 @@ apply_ssh_usb_vpn()
 while true; do
     # Check current SSH status
     check_ssh_status
-
-    # Create checklist status
-    create_checklist_status
 
     # Build the checklist
 		CHOICES=$(whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --checklist "Select SSH access methods to enable (use SPACE to select/deselect, ENTER to apply, ESC to go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \

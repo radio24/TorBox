@@ -81,7 +81,7 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
 #Other variables
-IPTABLES="sudo iptables"
+IPTABLES="/sbin/iptables"
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
