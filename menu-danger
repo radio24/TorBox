@@ -97,7 +97,8 @@ read_config()
 
 	# TOGGLE17 shows if TWEBSSH is enabled or disabled
 	clear
-	if grep -q "TWEBSSH=1" ${RUNFILE} ; then
+	check_ssh_status
+	if grep -q "TWEBSSH=1" ${RUNFILE} && [ "$SSH_SERVICE_CHECK" == "ON" ]; then
 		clear
 		TOGGLE17="Disable"
 	else
@@ -542,18 +543,22 @@ case "$CHOICE" in
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
 			fi
 		else
-			INPUT=$(cat text/enable_twebssh-text)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-				clear
-				sleep 3
-				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
-				clear
-				sleep 2
-				sudo systemctl restart nginx
-				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
+			if [ "$SSH_SERVICE_CHECK" == "OFF" ]; then
+				whiptail --title "TorBox - INFO" --textbox text/no_ssh-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			else
+				INPUT=$(cat text/enable_twebssh-text)
+				if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+					[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+					[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+					sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+					clear
+					sleep 3
+					(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+					clear
+					sleep 2
+					sudo systemctl restart nginx
+					sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
+				fi
 			fi
 		fi
 		read_config
