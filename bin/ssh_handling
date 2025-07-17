@@ -42,10 +42,7 @@ NO_SPACER=0
 MENU_WIDTH=80
 MENU_HEIGHT_10=10
 MENU_HEIGHT_20=20
-# shellcheck disable=SC2034
-MENU_HEIGHT_25=25
 # MENU_HEIGHT should not exceed 26
-MENU_HEIGHT=$((8+NO_ITEMS+NO_SPACER))
 MENU_LIST_HEIGHT=$((NO_ITEMS+NO_SPACER))
 
 #Colors
@@ -95,6 +92,16 @@ apply_ssh_service()
         	sleep 2
         	if ! systemctl is-active --quiet sshd; then
             echo -e "${RED}[+] SSH service has been disabled successfully.${NOCOLOR}"
+						echo ""
+						echo -e "${RED}[+] Disabling WebSSH...${NOCOLOR}"
+						sudo pkill -f "twebssh"
+						sudo rm /etc/nginx/sites-enabled/webssh.conf
+						# shellcheck disable=SC2062
+						sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+						clear
+						sudo systemctl restart nginx
+						sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
+						echo -e "${RED}[+] WebSSH has been disabled successfully.${NOCOLOR}"
         	else
             echo -e "${RED}[!] Failed to disable SSH service.${NOCOLOR}"
         	fi
