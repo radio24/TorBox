@@ -136,7 +136,7 @@ GO_PROGRAM="/usr/local/go/bin/go"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
-TOR_HREF_FOR_SED_NEW="s|<a href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # Snowflake repositories
