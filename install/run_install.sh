@@ -400,7 +400,9 @@ select_and_install_tor()
 		clear
 	fi
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+	# With TOR_HREF_FOR_SED, because of .*
+	# readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
