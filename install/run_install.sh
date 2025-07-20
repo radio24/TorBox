@@ -135,6 +135,7 @@ GO_PROGRAM="/usr/local/go/bin/go"
 # Release Page of the official Tor repositories
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix!
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"

@@ -128,10 +128,11 @@ GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the official Tor repositories
-TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix!
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # Snowflake repositories
@@ -358,7 +359,7 @@ download_and_compile_tor()
 	else
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -376,7 +377,7 @@ download_and_compile_tor()
 select_and_install_tor()
 {
   # Difference to the update-function - we cannot use torsocks yet
-	echo -e "${RED}[+]         Can we access the $TOR_RELEASE Tor repositories on GitHub?${NOCOLOR}"
+	echo -e "${RED}[+]         Can we access the official Tor repositories on GitHub?${NOCOLOR}"
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
@@ -385,7 +386,7 @@ select_and_install_tor()
 	else
 		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -395,19 +396,16 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	if [ "$TOR_RELEASE" == "official" ]; then
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
-	elif [ "$TOR_RELEASE" == "unofficial" ]; then
-		# shellcheck disable=SC2153
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	fi
+	# With TOR_HREF_FOR_SED, because of .*
+	# readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
