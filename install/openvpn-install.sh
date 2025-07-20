@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091,SC2129,SC2164,SC2034,SC1072,SC1073,SC1009
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 Patrick Truffer
+# Copyright (C) 2025 Patrick Truffer
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -254,8 +254,8 @@ function installQuestions() {
 	echo -e "${RED}[+] 1194 is the standard port, however, if blocked by a firewall, you might try another port.${NOCOLOR}"
 	echo ""
 	echo -e "${YELLOW}[!] IMPORTANT: Using a port number other than 1194 is risky and can seriously compromise your security!${NOCOLOR}"
-	echo -e "${YELLOW}[!] ALL UDP traffic on this port number will go directly to and evuentaly through the TorBox by avoiding Tor.${NOCOLOR}"
-	echo -e "${YELLOW}[!] For example, using 443 (UDP) let QIUC pass through the TorBox by avoiding the Tor network (see here: https://t.ly/Fag_j).${NOCOLOR}"
+	echo -e "${YELLOW}[!] ALL UDP traffic on this port number will go directly to and eventually through the TorBox by avoiding Tor.${NOCOLOR}"
+	echo -e "${YELLOW}[!] For example, using 443 (UDP) let QIUC pass through the TorBox by avoiding the Tor network (see here: https://t.ly/UlrbR).${NOCOLOR}"
 	read -rp "Port: " -e -i "$PORT" PORT
 	if [ "$PORT" -ne "$OPENVPN_PORT" ]; then
 		sed -i "s/--dport $OPENVPN_PORT/--dport $PORT/g" "$CONFIG_PATH"
