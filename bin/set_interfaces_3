@@ -121,7 +121,7 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=10; else R1=8; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=7; else R1=5; fi
 
 	# Remove old rules
 	# Old rules from set_interfaces_2 have to be catched and replaced by new rules (see below)
