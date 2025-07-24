@@ -513,15 +513,13 @@ case "$CHOICE" in
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
 				if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+  				(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
 					trap
           exit 0
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           exit 0
     		fi
@@ -537,14 +535,12 @@ case "$CHOICE" in
 				fi
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          sleep 2
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
           exit 0
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           exit 0
     		fi
@@ -621,7 +617,6 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
@@ -629,7 +624,6 @@ case "$CHOICE" in
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
@@ -737,7 +731,6 @@ case "$CHOICE" in
 				fi
       	if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-        	sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
 					# By default, the menu script should save iptables (if not on a cloud) and let rc.local heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated
 					# in the DANGER ZONE that disabling the AP on wlan1 failsafe can lead to a lock-out situation. Because the setting in the DANGER ZONE was added
@@ -749,7 +742,6 @@ case "$CHOICE" in
         	exit 0
       	else
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
 					# NEW v.0.5.4-post: Added to solve Issue #334
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         	exit 0
@@ -831,7 +823,6 @@ case "$CHOICE" in
 					fi
       		if [ -z "$INTERNETSELECTION" ]; then
         		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          	sleep 2
           	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	clear
           	restarting_tor menu
@@ -839,7 +830,6 @@ case "$CHOICE" in
           	exit 0
       		else
         		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	exit 0
@@ -932,7 +922,6 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
         		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          	sleep 2
           	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	clear
           	restarting_tor menu
@@ -940,7 +929,6 @@ case "$CHOICE" in
         		exit 0
       		else
         		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	exit 0
@@ -1019,7 +1007,6 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
 						trap
@@ -1027,7 +1014,6 @@ case "$CHOICE" in
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 	          exit 0
@@ -1110,7 +1096,6 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
-            sleep 2
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
@@ -1118,7 +1103,6 @@ case "$CHOICE" in
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
-						sleep 2
 						# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
