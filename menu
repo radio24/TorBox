@@ -151,8 +151,7 @@ ask_captive()
 	else
 		CAPTIVE=0
 	fi
-	sleep 2
-}
+	}
 
 # This functions handles the configuration in torrc dependent on the present interfaces
 WLAN0_exists()
@@ -183,8 +182,7 @@ UNIFIED_BRIDGE_exists()
 	# Setup unified bridge with available ethernet interfaces
 	echo -e "${YELLOW}[+] Setting up unified bridge for ethernet interfaces...${NOCOLOR}"
 	sudo bash bin/bridge_setup_unified setup
-	sleep 2
-
+	
 	# Configure Tor for bridge interface
 	sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
 	sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
@@ -424,8 +422,7 @@ case "$CHOICE" in
     clear
     echo -e "${RED}[+] Requesting new identity...${YELLOW}"
     echo ""
-    sleep 2
-    sudo -u debian-tor tor-prompt --run 'SIGNAL NEWNYM'
+        sudo -u debian-tor tor-prompt --run 'SIGNAL NEWNYM'
     echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
     sleep 4
   ;;
@@ -485,8 +482,7 @@ case "$CHOICE" in
 		pid=$!
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-		sleep 2
-		if ip link | grep eth0; then
+				if ip link | grep eth0; then
 			ask_captive
     	if ip link | grep wlan0 | grep "state UP" ; then
       	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -519,16 +515,14 @@ case "$CHOICE" in
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
 				if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
 					trap
           exit 0
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+										(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           exit 0
     		fi
 			else
@@ -543,15 +537,13 @@ case "$CHOICE" in
 				fi
     		if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           clear
           restarting_tor menu
           exit 0
     		else
       		sudo bash bin/set_interfaces_2 eth0 wlan0 eth1 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
-					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+										(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           exit 0
     		fi
 			fi
@@ -589,8 +581,7 @@ case "$CHOICE" in
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			if ip link | grep wlan1; then
+						if ip link | grep wlan1; then
         ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -636,16 +627,14 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+                        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
 						trap
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
-						# NEW v.0.5.4-post: Added to solve Issue #334
+												# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
         	fi
@@ -714,8 +703,7 @@ case "$CHOICE" in
 		pid=$!
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-		sleep 2
-		if ip link | grep wlan0; then
+				if ip link | grep wlan0; then
 			ask_captive
     	if ip link | grep wlan1 | grep "state UP" ; then
     		WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
@@ -761,8 +749,7 @@ case "$CHOICE" in
 				fi
       	if [ -z "$INTERNETSELECTION" ]; then
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-        	sleep 2
-					# NEW v.0.5.4-post: Added to solve Issue #334
+        						# NEW v.0.5.4-post: Added to solve Issue #334
 					# By default, the menu script should save iptables (if not on a cloud) and let rc.local heal a lock-out situation, if "WLAN_FAILSAFE=1". It is clearly stated
 					# in the DANGER ZONE that disabling the AP on wlan1 failsafe can lead to a lock-out situation. Because the setting in the DANGER ZONE was added
 					# later, it might not taken into account in the menu script.
@@ -773,8 +760,7 @@ case "$CHOICE" in
         	exit 0
       	else
       		sudo bash bin/set_interfaces_2 wlan0 wlan1 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-					sleep 2
-					# NEW v.0.5.4-post: Added to solve Issue #334
+										# NEW v.0.5.4-post: Added to solve Issue #334
 					(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
         	exit 0
       	fi
@@ -816,8 +802,7 @@ case "$CHOICE" in
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			ask_captive
+						ask_captive
 			# The interface to the Internet is called usb0
     	if ip link | grep usb0 ; then
       	if ip link | grep wlan0 | grep "state UP" ; then
@@ -867,16 +852,14 @@ case "$CHOICE" in
 					fi
       		if [ -z "$INTERNETSELECTION" ]; then
         		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          	sleep 2
-          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          	          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	clear
           	restarting_tor menu
 						trap
           	exit 0
       		else
         		sudo bash bin/set_interfaces_2 usb0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
-						# NEW v.0.5.4-post: Added to solve Issue #334
+												# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	exit 0
       		fi
@@ -894,8 +877,7 @@ case "$CHOICE" in
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			ask_captive
+						ask_captive
 		fi
 		if [ "$TORBOX_MINI" -eq "1" ] || [ "$NOUSB0" -eq "1" ]; then
   		if pgrep -f "pppd"; then
@@ -910,8 +892,7 @@ case "$CHOICE" in
 					sleep 5
 					sudo pon
 					echo ""
-					sleep 2
-					read -n 1 -s -r -p "Press any key to continue"
+										read -n 1 -s -r -p "Press any key to continue"
 					stty intr ^c
 					trap
 				fi
@@ -927,8 +908,7 @@ case "$CHOICE" in
 				fi
       	sudo pon
       	echo ""
-      	sleep 2
-      	read -n 1 -s -r -p "Press any key to continue"
+      	      	read -n 1 -s -r -p "Press any key to continue"
 				stty intr ^c
 				trap
 			fi
@@ -968,16 +948,14 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
         		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-          	sleep 2
-          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+          	          	(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	clear
           	restarting_tor menu
 						trap
         		exit 0
       		else
         		sudo bash bin/set_interfaces_2 ppp0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
-						# NEW v.0.5.4-post: Added to solve Issue #334
+												# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
           	exit 0
       		fi
@@ -1017,8 +995,7 @@ case "$CHOICE" in
 			pid=$!
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-			sleep 2
-			if ip link | grep eth1 ; then
+						if ip link | grep eth1 ; then
 				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -1055,16 +1032,14 @@ case "$CHOICE" in
 					fi
         	if [ -z "$INTERNETSELECTION" ]; then
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-            sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+                        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
 						trap
             restarting_tor menu
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 eth1 wlan0 eth0 $CLIENT_IFACE_TUN1_IP $CAPTIVE
-						sleep 2
-						# NEW v.0.5.4-post: Added to solve Issue #334
+												# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
 	          exit 0
         	fi
@@ -1100,8 +1075,7 @@ case "$CHOICE" in
 						pid=$!
 						wait $pid
 						echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
-						sleep 2
-						ask_captive
+												ask_captive
 						# set_interfaces_2 will do the captive portal handling, if necessary and start TWM, but it will not restart tor
 						sudo bash bin/set_interfaces_2 wlan1 wlan0 eth0 $CAPTIVE 0
 			  	fi
@@ -1146,16 +1120,14 @@ case "$CHOICE" in
         	if [ -z "$INTERNETSELECTION" ]; then
 						# NEW v.0.5.4-post: Added to solve Issue #342
 						sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
-            sleep 2
-            (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
+                        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
             restarting_tor menu
 						trap
             exit 0
         	else
           	sudo bash bin/set_interfaces_2 tun0 wlan0 eth0 $CLIENT_IFACE_TUN1_IP 0 1
-						sleep 2
-						# NEW v.0.5.4-post: Added to solve Issue #334
+												# NEW v.0.5.4-post: Added to solve Issue #334
 						(sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             exit 0
         	fi
@@ -1218,8 +1190,7 @@ case "$CHOICE" in
         echo -e "${YELLOW}[!] If you have activated Bridges or Bridge Relay, these services will be reactivated automatically after the restart.${NOCOLOR}"
         echo ""
         sync
-        sleep 2
-        sudo reboot
+                sudo reboot
         exit 0
       elif [ $CHOICE_EXIT = 2 ]; then
         clear
@@ -1228,8 +1199,7 @@ case "$CHOICE" in
         echo -e "${YELLOW}[!] You can disconnect TorBox from the power source in about 30 second...${NOCOLOR}"
         echo ""
         sync
-        sleep 2
-        sudo shutdown -h now
+                sudo shutdown -h now
         exit 0
       fi
     fi

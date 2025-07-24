@@ -120,8 +120,11 @@ if ip link | grep eth0 ; then
 	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
 		if ! sudo timeout 5 sudo route | grep -m 1 default; then
 			sudo ifdown eth0 2>/dev/null
+			sleep 3
 			ip addr flush dev eth0
+			sleep 1
 			sudo ifup eth0 2>/dev/null
+			sleep 3
 		fi
 	fi
 fi
@@ -131,8 +134,11 @@ if ip link | grep eth1 ; then
 	if grep "INTERNET_IFACE=eth1" /home/torbox/torbox/run/torbox.run ; then
 		if ! sudo timeout 5 sudo route | grep -m 1 default; then
 			sudo ifdown eth1 2>/dev/null
+			sleep 3
 			ip addr flush dev eth1
+			sleep 1
 			sudo ifup eth1 2>/dev/null
+			sleep 3
 		fi
 	fi
 fi
