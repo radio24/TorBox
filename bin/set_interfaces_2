@@ -107,9 +107,12 @@ captive_tunneling()
 		echo ""
 		# That should improve the connectivity with the captive portal
 		sudo ifdown $O_DEVICE
+		sleep 3
 		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $O_DEVICE
+		sleep 1
 		sudo ifup $O_DEVICE &>/dev/null &
+		sleep 5
 		echo ""
 		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
 		echo ""
@@ -303,9 +306,8 @@ if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfa
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	echo -e "${RED}[+] Finishing...${NOCOLOR}"
 	(sudo ifdown $O_DEVICE) 2>/dev/null
-	# Test lowered sleep from 2 to 1
-	sleep 1
+	sleep 3
 	(sudo ifup $O_DEVICE) 2>/dev/null
-	sleep 1
+	sleep 5
 fi
 exit 0

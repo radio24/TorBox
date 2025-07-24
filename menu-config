@@ -986,7 +986,9 @@ case "$CHOICE" in
 					if pgrep -f "dhclient.wlan0" ; then
 						(sudo dhclient -r) 2>&1
 						sudo ifdown wlan0 &>/dev/null
+						sleep 3
 						sudo ifup wlan0 &>/dev/null
+						sleep 3
 					fi
         	sudo systemctl start hostapd
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
