@@ -175,44 +175,38 @@ WLAN1_exists()
 	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1/" ${RUNFILE}
 }
 
-# Geändert durch Claude Code - bridge-option
-# IMPORTANT: the bridge etup can only be used for entry 6,7 and 8
-# Unified bridge function replaces ETH0_exists and ETH1_exists
-UNIFIED_BRIDGE_exists()
+ETH0_exists()
 {
-	# Setup unified bridge with available ethernet interfaces
-	echo -e "${YELLOW}[+] Setting up unified bridge for ethernet interfaces...${NOCOLOR}"
-	sudo bash bin/bridge_setup_unified setup
-	sleep 2
-
-	# Configure Tor for bridge interface
 	sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
 	sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
 	sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
 	sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
 	sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
-
-	# Set CLIENT_IFACE to always use br0
 	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
 	if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 br0/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" ${RUNFILE}
 	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 br0/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 eth0/" ${RUNFILE}
 	else
-		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=br0/" ${RUNFILE}
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth0/" ${RUNFILE}
 	fi
-}
-
-# Geändert durch Claude Code - bridge-option
-# Legacy functions kept for compatibility but redirect to unified bridge
-ETH0_exists()
-{
-	UNIFIED_BRIDGE_exists
 }
 
 ETH1_exists()
 {
-	UNIFIED_BRIDGE_exists
+	sudo sed -i "s/^#TransPort 192.168.43.1:9040/TransPort 192.168.43.1:9040/" ${TORRC}
+	sudo sed -i "s/^#DNSPort 192.168.43.1:9053/DNSPort 192.168.43.1:9053/" ${TORRC}
+	sudo sed -i "s/^#SocksPort 192.168.43.1:9050/SocksPort 192.168.43.1:9050/" ${TORRC}
+	sudo sed -i "s/^#SocksPort 192.168.43.1:9052/SocksPort 192.168.43.1:9052/" ${TORRC}
+	sudo sed -i "$CONTROLPORT_ETH" ${TORRC}
+	CLIENT_IFACE=$(grep "^CLIENT_IFACE=" ${RUNFILE})
+	if [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan0" ] ; then
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth1/" ${RUNFILE}
+	elif [ "$CLIENT_IFACE" == "CLIENT_IFACE=wlan1" ] ; then
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan1 eth1/" ${RUNFILE}
+	else
+		sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=eth1/" ${RUNFILE}
+	fi
 }
 
 # This function is used for TorBox on a Cloud (tun1) and for TorBox mini (usb0)
@@ -596,14 +590,8 @@ case "$CHOICE" in
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
         fi
-        # Geändert durch Claude Code - bridge-option
-        # Unified ethernet interface handling - always use bridge
-        if ip link show eth0 &>/dev/null || ip link show eth1 &>/dev/null; then
-          BRIDGE_IP=$(ip addr show br0 2>/dev/null | grep -w 192.168.43.1)
-          if [ -z "$BRIDGE_IP" ]; then
-            # Bridge will be set up by UNIFIED_BRIDGE_exists function
-            BRIDGE_IP="pending"
-          fi
+        if ip link | grep eth0 | grep "state UP" ; then
+          ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
           clear
         fi
         # The state of tun1 is always UNKNOWN
@@ -617,17 +605,14 @@ case "$CHOICE" in
           CLIENT_IFACE_TUN1_IP="usb0"
           clear
 				fi
-				# Geändert durch Claude Code - bridge-option
 				# Configure torrc depending on the present interfaces
-				if [ -z "$WLAN0_IP" ] && [ -z "$BRIDGE_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
 	      	if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
-	      	# Geändert durch Claude Code - bridge-option
-	      	# Use unified bridge for any ethernet interface
-	      	if [ -n "$BRIDGE_IP" ] ; then UNIFIED_BRIDGE_exists; fi
+	      	if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" ${RUNFILE}
         	# The following line should minimize those cases where a restart is required.
@@ -721,16 +706,10 @@ case "$CHOICE" in
     		WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
     		clear
     	fi
-    	# Geändert durch Claude Code - bridge-option
-    	# Unified ethernet interface handling - always use bridge
-    	if ip link show eth0 &>/dev/null || ip link show eth1 &>/dev/null; then
-    		BRIDGE_IP=$(ip addr show br0 2>/dev/null | grep -w 192.168.43.1)
-    		if [ -z "$BRIDGE_IP" ]; then
-    			# Bridge will be set up by UNIFIED_BRIDGE_exists function
-    			BRIDGE_IP="pending"
-    		fi
-    		clear
-    	fi
+    	if ip link | grep eth0 | grep "state UP" ; then
+    		ETH0_IP=$(ip addr show eth0 | grep -w 192.168.43.1)
+      	clear
+      fi
 			# The state of tun1 is always UNKNOWN
 			# TUN1_IP is used for tun1 (TorBox on a Cloud) and usb0 (TorBox mini)
 			if ip link | grep tun1 | grep "state UNKNOWN" ; then
@@ -742,17 +721,14 @@ case "$CHOICE" in
       	CLIENT_IFACE_TUN1_IP="usb0"
       	clear
 			fi
-			# Geändert durch Claude Code - bridge-option
 			# Configure torrc depending on the present interfaces
-			if [ -z "$WLAN1_IP" ] && [ -z "$BRIDGE_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
+			if [ -z "$WLAN1_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 				sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 				whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			else
 				torrc_reset
 				if [ -n "$WLAN1_IP" ] ; then WLAN1_exists; fi
-				# Geändert durch Claude Code - bridge-option
-				# Use unified bridge for any ethernet interface
-				if [ -n "$BRIDGE_IP" ] ; then UNIFIED_BRIDGE_exists; fi
+				if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 				if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 				sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan0/" ${RUNFILE}
       	# The following line should minimize those cases where a restart is required.
@@ -839,26 +815,14 @@ case "$CHOICE" in
         	CLIENT_IFACE_TUN1_IP="usb0"
         	clear
 				fi
-				# Geändert durch Claude Code - bridge-option
-				# Unified ethernet interface handling - always use bridge
-				if ip link show eth0 &>/dev/null || ip link show eth1 &>/dev/null; then
-					BRIDGE_IP=$(ip addr show br0 2>/dev/null | grep -w 192.168.43.1)
-					if [ -z "$BRIDGE_IP" ]; then
-						# Bridge will be set up by UNIFIED_BRIDGE_exists function
-						BRIDGE_IP="pending"
-					fi
-				fi
 				# Configure torrc depending on the present interfaces
-				# Geändert durch Claude Code - bridge-option
-				if [ -z "$WLAN0_IP" ] && [ -z "$BRIDGE_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
+				if [ -z "$WLAN0_IP" ] && [ -z "$ETH0_IP" ] && [ -z "$TUN1_IP" ] && [ "$ON_A_CLOUD" -eq "0" ]; then
 					sudo cp /etc/network/interfaces.bak /etc/network/interfaces
 					whiptail --title "TorBox - INFO" --textbox text/no_interface-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 				else
 					torrc_reset
 					if [ -n "$WLAN0_IP" ] ; then WLAN0_exists; fi
-					# Geändert durch Claude Code - bridge-option
-					# Use unified bridge for any ethernet interface
-					if [ -n "$BRIDGE_IP" ] ; then UNIFIED_BRIDGE_exists; fi
+					if [ -n "$ETH0_IP" ] ; then ETH0_exists; fi
 					if [ -n "$TUN1_IP" ] ; then TUN1_exists; fi
 					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=usb0/" ${RUNFILE}
       		# The following line should minimize those cases where a restart is required.
