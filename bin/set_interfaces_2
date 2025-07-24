@@ -106,10 +106,10 @@ captive_tunneling()
 		echo -e "${RED}[+] Restarting the network...${NOCOLOR}"
 		echo ""
 		# That should improve the connectivity with the captive portal
-		ifdown $O_DEVICE
+		sudo ifdown $O_DEVICE
 		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $O_DEVICE
-		ifup $O_DEVICE &>/dev/null &
+		sudo ifup $O_DEVICE &>/dev/null &
 		echo ""
 		echo -e "${RED}[+] Setting up the interfaces, please wait...${NOCOLOR}"
 		echo ""
@@ -302,10 +302,10 @@ if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then $TORBOX_PATH/bin/set_interfa
 # REMARK: Open wlan are disconnected for a second. It seems unproblematic, but this is not sure. Workaround: use the captive portal settings to test.
 if [ $CAPTIVE != 1 ] && [ $CAPTIVE != 2 ] && [ "$O_DEVICE" != "ppp0" ]; then
 	echo -e "${RED}[+] Finishing...${NOCOLOR}"
-	(ifdown $O_DEVICE) 2>/dev/null
+	(sudo ifdown $O_DEVICE) 2>/dev/null
 	# Test lowered sleep from 2 to 1
 	sleep 1
-	(ifup $O_DEVICE) 2>/dev/null
+	(sudo ifup $O_DEVICE) 2>/dev/null
 	sleep 1
 fi
 exit 0
