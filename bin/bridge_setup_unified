@@ -1,0 +1,116 @@
+#!/bin/bash
+# Geändert durch Claude Code - bridge-option
+# Unified Bridge Setup Script - works with eth0, eth1, or both
+
+setup_unified_bridge() {
+    echo "Setting up unified bridge for available Ethernet interfaces..."
+    
+    # Geändert durch Claude Code - bridge-option
+    # Install bridge utilities if not present
+    if ! command -v brctl &> /dev/null; then
+        echo "Installing bridge utilities..."
+        sudo apt-get update
+        sudo apt-get install -y bridge-utils
+    fi
+    
+    # Geändert durch Claude Code - bridge-option  
+    # Create bridge interface (ignore if already exists)
+    sudo brctl addbr br0 2>/dev/null || true
+    sudo brctl stp br0 off
+    
+    # Geändert durch Claude Code - bridge-option
+    # Add available ethernet interfaces to bridge
+    ETH_COUNT=0
+    if ip link show eth0 &>/dev/null; then
+        echo "Adding eth0 to bridge..."
+        sudo ip link set dev eth0 down 2>/dev/null || true
+        sudo brctl addif br0 eth0 2>/dev/null || true
+        sudo ip link set dev eth0 up 2>/dev/null || true
+        ETH_COUNT=$((ETH_COUNT + 1))
+    fi
+    
+    if ip link show eth1 &>/dev/null; then
+        echo "Adding eth1 to bridge..."
+        sudo ip link set dev eth1 down 2>/dev/null || true
+        sudo brctl addif br0 eth1 2>/dev/null || true  
+        sudo ip link set dev eth1 up 2>/dev/null || true
+        ETH_COUNT=$((ETH_COUNT + 1))
+    fi
+    
+    # Geändert durch Claude Code - bridge-option
+    # Configure bridge interface
+    sudo ip link set dev br0 up 2>/dev/null || true
+    
+    # Configure IP address (only if not already configured)
+    if ! ip addr show br0 | grep -q "192.168.43.1"; then
+        sudo ip addr add 192.168.43.1/24 dev br0 2>/dev/null || true
+    fi
+    
+    echo "Unified bridge br0 created with $ETH_COUNT ethernet interface(s)"
+    
+    # Show bridge status
+    echo "Bridge configuration:"
+    brctl show br0 2>/dev/null || echo "Bridge command failed"
+}
+
+remove_unified_bridge() {
+    echo "Removing unified bridge br0..."
+    
+    # Geändert durch Claude Code - bridge-option
+    # Remove interfaces from bridge
+    sudo brctl delif br0 eth0 2>/dev/null || true
+    sudo brctl delif br0 eth1 2>/dev/null || true
+    
+    # Remove bridge
+    sudo ip link set dev br0 down 2>/dev/null || true
+    sudo brctl delbr br0 2>/dev/null || true
+    
+    # Restore individual interface configuration
+    if ip link show eth0 &>/dev/null; then
+        sudo ip addr add 192.168.43.1/24 dev eth0 2>/dev/null || true
+    elif ip link show eth1 &>/dev/null; then
+        sudo ip addr add 192.168.43.1/24 dev eth1 2>/dev/null || true
+    fi
+    
+    echo "Unified bridge br0 removed"
+}
+
+status_unified_bridge() {
+    echo "Unified bridge status:"
+    # Geändert durch Claude Code - bridge-option
+    if ip link show br0 &>/dev/null; then
+        echo "Bridge br0 exists:"
+        brctl show br0 2>/dev/null || echo "brctl command failed"
+        echo ""
+        echo "IP configuration:"
+        ip addr show br0 2>/dev/null || echo "IP show failed"
+        echo ""
+        echo "Available ethernet interfaces:"
+        ip link show eth0 2>/dev/null && echo "- eth0: available" || echo "- eth0: not available"
+        ip link show eth1 2>/dev/null && echo "- eth1: available" || echo "- eth1: not available"
+    else
+        echo "Bridge br0 does not exist"
+        echo "Individual interface configuration:"
+        ip addr show eth0 2>/dev/null | grep "192.168.43.1" && echo "- eth0: configured" || true
+        ip addr show eth1 2>/dev/null | grep "192.168.43.1" && echo "- eth1: configured" || true
+    fi
+}
+
+case "$1" in
+    setup)
+        setup_unified_bridge
+        ;;
+    remove)
+        remove_unified_bridge
+        ;;
+    status)
+        status_unified_bridge
+        ;;
+    *)
+        echo "Usage: $0 {setup|remove|status}"
+        echo "  setup  - Create unified bridge with available ethernet interfaces"
+        echo "  remove - Remove unified bridge and restore individual configuration"
+        echo "  status - Show unified bridge status"
+        exit 1
+        ;;
+esac
