@@ -172,7 +172,7 @@ if ip link | grep $INTERFACE2 | grep "state UP" ; then
 	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
 	if [ -z "$STATICIP2" ] ; then
 		sudo ifdown $INTERFACE2 &>/dev/null
-		ip addr flush dev $INTERFACE1
+		ip addr flush dev $INTERFACE2
 		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
 	fi
@@ -219,7 +219,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 		STATICIP_USB0=$(ip addr show usb0 | grep 192.168.44.1)
 		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
-			ip addr flush dev $INTERFACE1
+			ip addr flush dev usb0
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
 		fi
