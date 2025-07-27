@@ -88,10 +88,8 @@ elif [ $ARGUMENT = 2 ]; then
 		if [ -z "$STATICIP1" ] ; then
 			(printf %s"[$DATE] - TACA TRIGGER #2a - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 			(sudo ifdown $INTERNET_IFACE) &>/dev/null
-			sleep 3
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			(sudo ifup $INTERNET_IFACE) &>/dev/null
-			sleep 5
 		fi
 		if [ ! -z "$ARGUMENT2" ]; then
 			(printf %s"[$DATE] - TACA TRIGGER #2b - Changing to TACA TRIGGER $ARGUMENT2.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
@@ -121,10 +119,8 @@ elif [ $ARGUMENT = 3 ]; then
 		if [ -z "$STATICIP1" ] ; then
 			(printf %s"[$DATE] - TACA TRIGGER #3  - IP address on $INTERNET_IFACE is missing - restart interface!\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
 			(sudo ifdown $INTERNET_IFACE) &>/dev/null
-			sleep 3
 			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			(sudo ifup $INTERNET_IFACE) &>/dev/null
-			sleep 5
 		fi
 	fi
   (printf %s"[$DATE] - TACA TRIGGER #3  - Restart tor.\n" | sudo -u debian-tor tee -a $LOG) &>/dev/null
