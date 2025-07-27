@@ -88,12 +88,10 @@ if pgrep -f "dhclient.$INTERFACE1" ; then
 	# We can only do that, if the interface is not used as AP
 	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
 		sudo ifdown $INTERFACE1 &>/dev/null
-		sleep 3
 		INTERFACE1_DOWN=1
 	fi
 	if ! grep "^interface=$INTERFACE3" ${HOSTAPD} ; then
 		sudo ifdown $INTERFACE3 &>/dev/null
-		sleep 3
 		INTERFACE3_DOWN=1
 	fi
 fi
@@ -101,7 +99,8 @@ fi
 if pgrep -f "dhclient.$INTERFACE2" ; then
 	(sudo dhclient -r) 2>&1
 	sudo ifdown $INTERFACE2 &>/dev/null
-	sleep 3
+	# NEW v.0.5.4-post: This will disconnect a cable connection
+	# sudo ifdown $INTERFACE4
 	INTERFACE2_DOWN=1
 fi
 
@@ -110,7 +109,8 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 	if pgrep -f "dhclient.usb0" && [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
 		(sudo dhclient -r) 2>&1
 		sudo ifdown usb0 &>/dev/null
-		sleep 3
+		# NEW v.0.5.4-post: This will disconnect a cable connection
+		# sudo ifdown $INTERFACE4
 		INTERFACE_USB0_DOWN=1
 	fi
 fi
@@ -147,28 +147,23 @@ if ip link | grep $INTERFACE1 | grep "state UP"; then
 	# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
 	if [ -z "$STATICIP1" ] ; then
 		sudo ifdown $INTERFACE1 &>/dev/null
-		sleep 3
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE1 &>/dev/null
-		sleep 3
 	fi
 	unset STATICIP1
 	# Avoiding to have no IP
 	STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
 	if [ -z "$STATICIP1" ] ; then
 		sudo ifdown $INTERFACE1 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE1
-		sleep 1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE1 &>/dev/null
-		sleep 3
 	fi
 else
 		sudo ifdown $INTERFACE1 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE1
-		sleep 1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE1 &>/dev/null
-		sleep 3
 fi
 
 # Is INTERFACE2 ready?
@@ -177,19 +172,15 @@ if ip link | grep $INTERFACE2 | grep "state UP" ; then
 	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
 	if [ -z "$STATICIP2" ] ; then
 		sudo ifdown $INTERFACE2 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE2
-		sleep 1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
-		sleep 3
 	fi
 else
 		sudo ifdown $INTERFACE2 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE2
-		sleep 1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
-		sleep 3
 fi
 
 # If wlan0 or wlan1 is not acting as AP then we have to do something about it!
@@ -220,29 +211,24 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 		# If usb0 doesn't have an IP address then we have to do something about it!
 		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
-			sleep 3
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
-			sleep 3
 		fi
 		unset STATICIP_USB0
 		# Avoiding to have no IP
 		STATICIP_USB0=$(ip addr show usb0 | grep 192.168.44.1)
 		if [ -z "$STATICIP_USB0" ]; then
 			sudo ifdown usb0 &>/dev/null
-			sleep 3
 			ip addr flush dev usb0
-			sleep 1
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
-			sleep 3
 		fi
 	else
 		if [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
 			sudo ifdown usb0 &>/dev/null
-			sleep 3
 			ip addr flush dev usb0
-			sleep 1
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 			sudo ifup usb0 &>/dev/null
-			sleep 3
 		fi
 	fi
 fi
@@ -254,27 +240,20 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	STATICIP3=$(ip addr show $INTERFACE3 | grep -w inet)
 	if [ -z "$STATICIP3" ] ; then
 		sudo ifdown $INTERFACE3 &>/dev/null
-		sleep 3
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE3 &>/dev/null
-		sleep 3
 	fi
 	unset STATICIP3
 	STATICIP3=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
 	if [ -n "$STATICIP3" ] ; then
 		sudo ifdown $INTERFACE3 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE3 &>/dev/null
-		sleep 1
 		sudo ifup $INTERFACE3 &>/dev/null &
-		sleep 3
 	fi
 else
 		sudo ifdown $INTERFACE3 &>/dev/null
-		sleep 3
 		ip addr flush dev $INTERFACE3
-		sleep 1
 		sudo ifup $INTERFACE3 &>/dev/null &
-		sleep 3
 fi
 
 # Is INTERFACE4 ready?
@@ -284,27 +263,20 @@ if ip link | grep $INTERFACE4 | grep "state UP" ; then
 	STATICIP4=$(ip addr show $INTERFACE4 | grep -w inet)
 	if [ -z "$STATICIP4" ] ; then
 		sudo ifdown $INTERFACE4 &>/dev/null
-		sleep 3
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE4 &>/dev/null
-		sleep 3
 	fi
 	unset STATICIP4
 	STATICIP4=$(ip addr show $INTERFACE4 | grep 192.168.43.1)
 	if [ -n "$STATICIP4" ] ; then
 		sudo ifdown $INTERFACE4
-		sleep 3
 		ip addr flush dev $INTERFACE4
-		sleep 1
 		sudo ifup $INTERFACE4 &>/dev/null &
-		sleep 3
 	fi
 else
 		sudo ifdown $INTERFACE4
-		sleep 3
 		ip addr flush dev $INTERFACE4
-		sleep 1
 		sudo ifup $INTERFACE4 &>/dev/null &
-		sleep 3
 fi
 
 # This last part resets the dhcp server, which has to be used after an ifup command
