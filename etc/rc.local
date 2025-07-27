@@ -93,18 +93,15 @@ done
 if grep "WLAN_FAILSAFE=1" /home/torbox/torbox/run/torbox.run ; then
 	if grep "iface wlan1 inet static" /etc/network/interfaces || grep "^interface=wlan1" /etc/hostapd/hostapd.conf ; then
   	sudo ifdown wlan0
-		sleep 3
   	sudo ifdown wlan1
-		sleep 3
 		sudo cp /home/torbox/torbox/etc/network/interfaces.wlan0eth0 /etc/network/interfaces
 		sudo cp /home/torbox/torbox/etc/iptables.ipv4-wlan0eth0.nat /etc/iptables
   	sudo sed -i "s/^interface=wlan1/interface=wlan0/" /etc/hostapd/hostapd.conf
   	sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=wlan1/" /home/torbox/torbox/run/torbox.run
   	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth0/" /home/torbox/torbox/run/torbox.run
   	sudo ifup wlan0 &>/dev/null &
-		sleep 3
   	sudo ifup wlan1 &>/dev/null &
-		sleep 3
+		sleep 2
 		sudo systemctl restart hostapd
 		sudo systemctl restart isc-dhcp-server
 	fi
@@ -155,11 +152,8 @@ if ip link | grep eth0 ; then
 	if grep "INTERNET_IFACE=eth0" /home/torbox/torbox/run/torbox.run ; then
 		if ! sudo timeout 5 sudo route | grep -m 1 default; then
 			sudo ifdown eth0 2>/dev/null
-			sleep 3
 			ip addr flush dev eth0
-			sleep 1
 			sudo ifup eth0 2>/dev/null
-			sleep 3
 		fi
 	fi
 fi
@@ -169,11 +163,8 @@ if ip link | grep eth1 ; then
 	if grep "INTERNET_IFACE=eth1" /home/torbox/torbox/run/torbox.run ; then
 		if ! sudo timeout 5 sudo route | grep -m 1 default; then
 			sudo ifdown eth1 2>/dev/null
-			sleep 3
 			ip addr flush dev eth1
-			sleep 1
 			sudo ifup eth1 2>/dev/null
-			sleep 3
 		fi
 	fi
 fi
