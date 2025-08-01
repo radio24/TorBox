@@ -164,7 +164,12 @@ select_eth_client()
 	i=0
 	readarray -t iface_array < <(ls /sys/class/net | grep '^eth')
 	for iface in "${iface_array[@]}"; do
-		if [ "$(cat /sys/class/net/$iface/operstate)" = "up" ]; then i=$((i+1)); fi
+		if [ "$(cat /sys/class/net/$iface/operstate)" = "up" ]; then
+			i=$((i+1));
+		else
+			array_number=$((i-1))
+			unset 'arr[$arraynumber]'
+		fi
 	done
 	if [ $i -gt 1 ]; then
 		n=0
@@ -605,10 +610,11 @@ case "$CHOICE" in
 					exit 0
 				fi
 			fi
+			select_eth_client
+			clear
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			select_eth_client
 			if ip link | grep usb0; then
 				nohup bin/hostapd_fallback_komplex_new wlan0 $INTERFACE > /dev/null 2>&1 &
 			else
@@ -718,13 +724,14 @@ case "$CHOICE" in
 				exit 0
 			fi
 		fi
+		select_eth_client
+		clear
 		display_net_reconfiguration_info
 		# NEW v.0.5.4-post
 		# We will first copy the configuration files and than try to reconfigure the network (all done in hostapd_fallback_komplex_new)
 		# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
 		# WARNING: This is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		select_eth_client
 		if ip link | grep usb0; then
 			nohup bin/hostapd_fallback_komplex_new wlan1 $INTERFACE > /dev/null 2>&1 &
 		else
@@ -817,10 +824,11 @@ case "$CHOICE" in
 		fi
 		NOUSB0="0"
 		if [ "$TORBOX_MINI" -eq "0" ]; then
+			select_eth_client
+			clear
     	display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			select_eth_client
 			# Because usb0 is a potential Internet ressource, usb0 cannot be a client interfaces --> notusb0
 			nohup bin/hostapd_fallback_komplex_new wlan0 $INTERFACE notusb0 /dev/null 2>&1 &
 			pid=$!
@@ -883,10 +891,11 @@ case "$CHOICE" in
 		fi
 		# The interface to the Internet is called pppd
 		if [ "$TORBOX_MINI" -eq "1" ]; then
+			select_eth_client
+			clear
 			display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			select_eth_client
 			nohup bin/hostapd_fallback_komplex_new wlan0 $INTERFACE /dev/null 2>&1 &
 			pid=$!
 			wait $pid
