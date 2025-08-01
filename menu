@@ -168,9 +168,10 @@ select_eth_client()
 			i=$((i+1));
 		else
 			array_number=$((i-1))
-			unset 'arr[$arraynumber]'
+			unset 'iface_array[$arraynumber]'
 		fi
 	done
+	iface_array=( "${iface_array[@]}" )
 	if [ $i -gt 1 ]; then
 		n=0
 		WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox v.0.5.4 - Where is your cable client?\" --radiolist \"Choose with SPACE and then press ENTER (ESC -> you don't have any cable client)\n\" 9 $MENU_WIDTH 3"
