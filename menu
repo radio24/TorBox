@@ -653,7 +653,7 @@ case "$CHOICE" in
         	if [ "$ON_A_CLOUD" -eq "0" ]; then
 						sudo systemctl restart isc-dhcp-server
 					fi
-        	if [ -z "$INTERNETSELECTION" ];
+					if [ -z "$INTERNETSELECTION" ]; then
 						sudo bash bin/set_interfaces_2 wlan1 wlan0 $INTERFACE $CLIENT_IFACE_TUN1_IP $CAPTIVE
             (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
             clear
