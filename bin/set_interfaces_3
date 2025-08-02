@@ -83,7 +83,7 @@ read_config()
 		fi
 	elif [ "$NUMBER_OF_WORD" == "2" ]; then
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		if grep -q "^TORBOX_MINI=0" ${RUNFILE} ; then
 			I_DEVICE3="usb0"
 		else
@@ -91,8 +91,8 @@ read_config()
 		fi
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE3=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 	fi
 }
 
