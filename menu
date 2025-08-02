@@ -494,7 +494,7 @@ case "$CHOICE" in
 		else
 			INPUT=$(cat text/cable-text)
     	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				if ! ip link | grep eth0; then
+				if ! ip link | grep eth0 > /dev/null; then
 					INPUT=$(cat text/no_interface_try_it_anyway-text)
 					if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 						exitstatus=$?
@@ -513,7 +513,7 @@ case "$CHOICE" in
 	  display_net_reconfiguration_info
 		# NEW v.0.5.4-post
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		if ip link | grep usb0; then
+		if ip link | grep usb0 > /dev/null; then
 			nohup bin/hostapd_fallback_komplex_new wlan0 eth1 > /dev/null 2>&1 &
 		else
 			nohup bin/hostapd_fallback_komplex_new wlan0 eth1 notusb0 > /dev/null 2>&1 &
@@ -522,7 +522,7 @@ case "$CHOICE" in
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
-		if ip link | grep eth0; then
+		if ip link | grep eth0 > /dev/null; then
 			ask_captive
     	if ip link | grep wlan0 | grep "state UP" ; then
       	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -600,7 +600,7 @@ case "$CHOICE" in
   6)
     INPUT=$(cat text/wlan1-text)
     if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			if ! ip link | grep wlan1; then
+			if ! ip link | grep wlan1 > /dev/null; then
 				INPUT=$(cat text/no_interface_try_it_anyway-text)
 				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 					exitstatus=$?
@@ -616,7 +616,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			if ip link | grep usb0; then
+			if ip link | grep usb0 > /dev/null; then
 				nohup bin/hostapd_fallback_komplex_new wlan0 $INTERFACE > /dev/null 2>&1 &
 			else
 				nohup bin/hostapd_fallback_komplex_new wlan0 $INTERFACE notusb0 > /dev/null 2>&1 &
@@ -625,7 +625,7 @@ case "$CHOICE" in
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
-			if ip link | grep wlan1; then
+			if ip link | grep wlan1 > /dev/null; then
         ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -691,7 +691,7 @@ case "$CHOICE" in
 		if [ "$TORBOX_MINI" -eq "1" ]; then
 			INPUT=$(cat text/wlan0_on_torbox_mini-text)
 			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-				if ! ip link | grep wlan0; then
+				if ! ip link | grep wlan0 > /dev/null; then
 					INPUT=$(cat text/no_interface_try_it_anyway-text)
 					if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 						exitstatus=$?
@@ -709,7 +709,7 @@ case "$CHOICE" in
 		else
 			INPUT=$(cat text/wlan0-text)
     	if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				if ! ip link | grep wlan0; then
+				if ! ip link | grep wlan0 > /dev/null; then
 					INPUT=$(cat text/no_interface_try_it_anyway-text)
 					if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 						exitstatus=$?
@@ -742,7 +742,7 @@ case "$CHOICE" in
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
-		if ip link | grep wlan0; then
+		if ip link | grep wlan0 > /dev/null; then
 			ask_captive
     	if ip link | grep wlan1 | grep "state UP" ; then
     		WLAN1_IP=$(ip addr show wlan1 | grep -w 192.168.42.1)
@@ -838,7 +838,7 @@ case "$CHOICE" in
 			sleep 2
 			ask_captive
 			# The interface to the Internet is called usb0
-    	if ip link | grep usb0 ; then
+    	if ip link | grep usb0 > /dev/null; then
       	if ip link | grep wlan0 | grep "state UP" ; then
         	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
         	clear
@@ -1000,7 +1000,7 @@ case "$CHOICE" in
   9)
     INPUT=$(cat text/tethering-text)
     if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-			if ! ip link | grep eth1; then
+			if ! ip link | grep eth1 > /dev/null; then
 				INPUT=$(cat text/no_interface_try_it_anyway-text)
 				if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
 					exitstatus=$?
@@ -1014,7 +1014,7 @@ case "$CHOICE" in
       display_net_reconfiguration_info
 			# NEW v.0.5.4-post
 			echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-			if ip link | grep usb0; then
+			if ip link | grep usb0 > /dev/null; then
 				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
 			else
 				nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
@@ -1023,7 +1023,7 @@ case "$CHOICE" in
 			wait $pid
 			echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 			sleep 2
-			if ip link | grep eth1 ; then
+			if ip link | grep eth1 > /dev/null; then
 				ask_captive
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
@@ -1095,7 +1095,7 @@ case "$CHOICE" in
 						display_net_reconfiguration_info
 						# NEW v.0.5.4-post
 						echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-						if ip link | grep usb0; then
+						if ip link | grep usb0 > /dev/null; then
 							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 > /dev/null 2>&1 &
 						else
 							nohup bin/hostapd_fallback_komplex_new wlan0 eth0 notusb0 > /dev/null 2>&1 &
@@ -1112,7 +1112,7 @@ case "$CHOICE" in
 				connecting_to_VPN
 				sleep 3
 			fi
-			if ip link | grep tun0; then
+			if ip link | grep tun0 > /dev/null; then
         if ip link | grep wlan0 | grep "state UP" ; then
           WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
           clear
