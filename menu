@@ -733,7 +733,7 @@ case "$CHOICE" in
 		# In case of a restart, the correct configuration should prevent a lock-out and apply the changed configuration
 		# WARNING: This is the only menu entry, which needs an WiFi adapter or a Ethernet connection with the client - a lock out is possible
 		echo -e "${YELLOW}[+] Step 1 of 2 ...${NOCOLOR}"
-		if ip link | grep usb0; then
+		if ip link | grep usb0  > /dev/null; then
 			nohup bin/hostapd_fallback_komplex_new wlan1 $INTERFACE > /dev/null 2>&1 &
 		else
 			nohup bin/hostapd_fallback_komplex_new wlan1 $INTERFACE notusb0 > /dev/null 2>&1 &
