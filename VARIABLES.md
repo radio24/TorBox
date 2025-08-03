@@ -15,7 +15,7 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 | TOGGLE07 | Bridge Relay mode status / WLAN channel number | Used |
 | TOGGLE08 | Bridge Relay mode toggle target / SSID visibility | Used |
 | TOGGLE09 | TorBox WLAN enable/disable status | Used |
-| TOGGLE10 | NOT USED | Not Used |
+| TOGGLE10 | Tor Bandwidth Limit started/stopped status | Used |
 | TOGGLE11 | Root access enable/disable status | Used |
 | TOGGLE12 | HTTP plain text traffic block enable/disable status | Used |
 | TOGGLE13 | HTTP block additional info message (SOCKS 5 note) | Used |
@@ -55,8 +55,8 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 - **Function**: Shows if TorBox's WLAN is enabled or disabled.
 
 ### TOGGLE10
-- **Status**: NOT USED
-- **Function**: Reserved for future use.
+- **Status**: `menu-config`
+- **Function**: Shows if tor bandwidth limit is started or not
 
 ### TOGGLE11
 - **Location**: `menu-config`
