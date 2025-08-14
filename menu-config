@@ -952,10 +952,10 @@ case "$CHOICE" in
 					# eth0 --> wlan0 / eth1 / usb0
 					if ip link | grep usb0; then
 						sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
-						sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat
+						sudo cp etc/iptables.ipv4-wlan0eth1.nat /etc/iptables.ipv4.nat
 					else
 						sudo cp etc/network/interfaces.wlan0eth1notusb0 /etc/network/interfaces
-						sudo cp etc/iptables.ipv4-wlan0eth0notusb0.nat /etc/iptables.ipv4.nat
+						sudo cp etc/iptables.ipv4-wlan0eth1notusb0.nat /etc/iptables.ipv4.nat
 					fi
 					if pgrep -f "dhclient.wlan0" ; then
 						(sudo dhclient -r) 2>&1
@@ -963,7 +963,7 @@ case "$CHOICE" in
 						sudo ifup wlan0 &>/dev/null
 					fi
         	sudo systemctl start hostapd
-					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
 					echo -e "${RED}[+] TorBox's WLAN is enabled!${NOCOLOR}"
 					echo -e "${RED}[+] You can use it by selecting another connection setup with${NOCOLOR}"
 					echo -e "${RED}[+] TorBox's Main Menu (entry 5-10) or after rebooting TorBox${NOCOLOR}"
