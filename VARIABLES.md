@@ -29,7 +29,7 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 | TOGGLE21 | SSH password login enable/disable status | Used |
 | TOGGLE22 | OpenVPN server management/installation status | Used |
 | TOGGLE23 | TorBox mini default configuration activate/deactivate | Used |
-| TOGGLE24 | NOT USED | Not Used |
+| TOGGLE24 | Passwordless TorBox's WLAN | Used |
 | TOGGLE25 | NOT USED | Not Used |
 
 ## Detailed Descriptions
@@ -102,6 +102,10 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 - **Location**: `menu-danger`
 - **Function**: Shows if TorBox mini default configuration is activated or deactivated.
 
-### TOGGLE24 & TOGGLE25
+### TOGGLE24
+- **Status**: `menu-danger`
+- **Function**: Passwordless TorBox's WLAN.
+
+### TOGGLE25
 - **Status**: NOT USED
 - **Function**: Reserved for future use.
