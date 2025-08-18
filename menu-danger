@@ -687,7 +687,7 @@ case "$CHOICE" in
 				exit 0
 			fi
 		fi
-		if [ "$TOGGLE23" == "Activate" ]; then
+		if [ "$TOGGLE24" == "Activate" ]; then
 			INPUT=$(cat text/enable_passwordless_wifi-text)
 			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
 				sudo sed -i "s/^wpa=.*/wpa=0/" ${HOSTAPD}
