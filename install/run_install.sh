@@ -133,7 +133,6 @@ GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the official Tor repositories
-TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
 # WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
