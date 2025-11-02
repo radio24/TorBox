@@ -1,10 +1,10 @@
-This menu entry will open SSH port 22 to the Internet, allowing remote access to your TorBox from anywhere.
+WARNING
+Your selection will open SSH port 22 to the Internet, allowing remote access to your TorBox from anywhere.
 
 This poses significant security risks:
 - Your TorBox becomes vulnerable to brute-force attacks
 - Malicious actors can attempt to gain unauthorized access
 
- Only enable this if you understand the security implications and have
- proper safeguards in place (strong passwords, key-based auth, etc.).
+Only enable this if you understand the security implications and have proper safeguards in place (strong passwords, key-based auth, etc.).
 
- How do you want to enable SSH access from the Internet (ESC -> go back)?
+How do you want to enable SSH access from the Internet (ESC -> go back)?

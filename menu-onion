@@ -1243,7 +1243,7 @@ case "$CHOICE" in
               done
               clear
               if [ $n -gt 11 ]; then n=11; fi
-              WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --checklist --separate-output \"Clients for the Onion Service named $SERVICE_NAME\n\nChoose with SPACE and then press ENTER (ESC -> go back)\" $((n+10)) 80 $n ${CLIENT_LIST} 3>&1 1>&2 2>&3"
+							WHIPTAIL_LINE="whiptail --nocancel --title \"TorBox - INFO\" --checklist --separate-output \"Clients for the Onion Service named $SERVICE_NAME\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back.\" $((n+11)) 80 $n ${CLIENT_LIST} 3>&1 1>&2 2>&3"
               CHOICE_CLIENT=$(eval $WHIPTAIL_LINE)
               exitstatus=$?
               CLIENT_NAME_LIST_NUMBERS=$(printf %s"${CHOICE_CLIENT}")
@@ -1675,7 +1675,7 @@ case "$CHOICE" in
 											  sudo -utorbox mkdir -p $TFS_PATH
 										  fi
 										  ##### DISPLAY THE AVAILABLE OPTIONS ######
-					      		  CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_15 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 					     			  " 1" "Allow uploading" ON \
 						     		  " 2" "Allow downloading" ON \
 						     		  3>&1 1>&2 2>&3)
@@ -1735,22 +1735,22 @@ case "$CHOICE" in
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
 										if grep "\-ad 0 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 0 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 0" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
 										elif grep "\-ad 1 \-au 1" <<< "$TFS_CONFIG_LIST"; then
-											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading:" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)

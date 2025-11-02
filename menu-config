@@ -81,7 +81,7 @@ CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
 if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbian" ; fi
 
 #Other variables
-IPTABLES="sudo iptables"
+IPTABLES="/sbin/iptables"
 CRDAFILE="/etc/default/crda"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 HOSTAPD_SAV="/etc/hostapd/hostapd.conf.tbx"
@@ -191,29 +191,6 @@ read_config()
     TOGGLE09="Disable"
   fi
 
-  # TOGGLE10 shows if TorBox can be accessed from the Internet
-  RULE_CHECK=0
-  ($IPTABLES -C INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-  RULE_CHECK=$?
-  if [ $RULE_CHECK = 1 ]; then
-    TOGGLE10="Enable"
-  else
-    TOGGLE10="Disable"
-  fi
-
-	# TOGGLE11 shows if TorBox can be accessed by root
-	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -E '^!|^\*')
-	if [ -z "$ROOT_SHADOW_LINE" ]; then
-		TOGGLE11="Disable"
-	else
-	  # Check if /etc/securetty allows root login (e.g., on tty1, tty2, etc.)
-	  if [ -s /etc/securetty ]; then
-			TOGGLE11="Disable"
-	  else
-			TOGGLE11="Enable"
-	  fi
-	fi
-
   # TOGGLE12 / TOGGLE13 shows if HTTP plain text traffic is blocked
   RULE_CHECK=0
   ($IPTABLES -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
@@ -238,16 +215,6 @@ read_config()
     TOGGLE15="(recommended!)"
   fi
 
-	# TOGGLE17 shows if TWEBSSH is enabled or disabled
-	clear
-	if grep -q "TWEBSSH=1" ${RUNFILE} ; then
-		clear
-		TOGGLE17="Disable"
-	else
-		clear
-		TOGGLE17="Enable"
-	fi
-
 	# TOGGLE18 shows if slow tor relays are excluded or not
 	clear
 	if grep -q "EX_SLOW=0" ${RUNFILE} ; then
@@ -256,6 +223,16 @@ read_config()
 	else
 		clear
 		TOGGLE18="Stop"
+	fi
+
+	# TOGGLE10 shows if tor bandwidth limit is started or not
+	clear
+	if grep -q "^BandwidthRate" ${TORRC} ; then
+		clear
+		TOGGLE10="Stop"
+	else
+		clear
+		TOGGLE10="Start"
 	fi
 
 	# TOGGLE22 shows if the OpenVPN server is configured
@@ -296,23 +273,20 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - CONFIGURATION
 " 9" "Change/randomize/list the MAC adresses of TorBox's interfaces" \
 "10" "$TOGGLE08 TorBox's WLAN"  \
 "11" "$TOGGLE09 TorBox's WLAN"  \
-"==" "=================================================[Security]===" \
-"12" "$TOGGLE17 Torbox's WebSSH access" \
-"13" "$TOGGLE11 root access" \
-"14" "$TOGGLE10 SSH access from the Internet" \
-"15" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
-"16" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
+"12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
-"17" "$TOGGLE18 excluding slow tor relays"  \
-"18" "Enter the advanced tor configuration editor"  \
+"13" "$TOGGLE18 excluding slow tor relays"  \
+"14" "$TOGGLE10 Tor network bandwidth limitation"
+"15" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
+"16" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
-"19" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
-"20" "Erase all log files" \
+"17" "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" \
+"18" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
-"21" "$TOGGLE22" \
-"22" "Support for Adafruit's PiTFT displays (reboot required)" \
-"23" "Support for 3.5\" no-name TFT displays (reboot required)" \
-"24" "Support for Sixfab Shields/HATs for cellular connections" \
+"19" "$TOGGLE22" \
+"10" "Support for Adafruit's PiTFT displays (reboot required)" \
+"21" "Support for 3.5\" no-name TFT displays (reboot required)" \
+"22" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -381,7 +355,7 @@ case "$CHOICE" in
 				exit 0
 			fi
 		fi
-		INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter you new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+		INPUT=$(whiptail --title "Changing the configuration of the WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter your new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
     if [ ! -z "$INPUT" ]; then
       if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
         clear
@@ -978,10 +952,10 @@ case "$CHOICE" in
 					# eth0 --> wlan0 / eth1 / usb0
 					if ip link | grep usb0; then
 						sudo cp etc/network/interfaces.wlan0eth1 /etc/network/interfaces
-						sudo cp etc/iptables.ipv4-wlan0eth0.nat /etc/iptables.ipv4.nat
+						sudo cp etc/iptables.ipv4-wlan0eth1.nat /etc/iptables.ipv4.nat
 					else
 						sudo cp etc/network/interfaces.wlan0eth1notusb0 /etc/network/interfaces
-						sudo cp etc/iptables.ipv4-wlan0eth0notusb0.nat /etc/iptables.ipv4.nat
+						sudo cp etc/iptables.ipv4-wlan0eth1notusb0.nat /etc/iptables.ipv4.nat
 					fi
 					if pgrep -f "dhclient.wlan0" ; then
 						(sudo dhclient -r) 2>&1
@@ -989,7 +963,7 @@ case "$CHOICE" in
 						sudo ifup wlan0 &>/dev/null
 					fi
         	sudo systemctl start hostapd
-					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth1/" ${RUNFILE}
+					sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
 					echo -e "${RED}[+] TorBox's WLAN is enabled!${NOCOLOR}"
 					echo -e "${RED}[+] You can use it by selecting another connection setup with${NOCOLOR}"
 					echo -e "${RED}[+] TorBox's Main Menu (entry 5-10) or after rebooting TorBox${NOCOLOR}"
@@ -1002,138 +976,8 @@ case "$CHOICE" in
     read_config
   ;;
 
-	#This disables / enables Torbox's WebSSH access
-  12)
-		if [ "$TOGGLE17" = "Disable" ]; then
-			INPUT=$(cat text/disable_twebssh-text)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-				sudo pkill -f "twebssh"
-				sudo rm /etc/nginx/sites-enabled/webssh.conf
-        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
-				clear
-				sudo systemctl restart nginx
-				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
-			fi
-		else
-			INPUT=$(cat text/enable_twebssh-text)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
-				[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-				sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
-				clear
-				sleep 5
-				(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
-				clear
-				sleep 2
-				sudo systemctl restart nginx
-				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
-			fi
-		fi
-		read_config
-  ;;
-
-	#This disables / enables root access
-  13)
-		if [ "$TOGGLE11" = "Enable" ]; then
-			INPUT=$(cat text/root_access-on-txt)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-				clear
-				echo " "
-				echo -e "${RED}[+] Enable root access!${NOCOLOR}"
-				sudo passwd -u root
-				sudo usermod -s /bin/bash root
-				sudo passwd root
-				if grep -qE '^PermitRootLogin' "$SSHD_CONFIG"; then
-					sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' ${SSHD_CONFIG}
-				else
-					(printf "PermitRootLogin yes\n" | tee -a "$SSHD_CONFIG") >/dev/null 2>&1
-				fi
-				sudo systemctl reload sshd 2>/dev/null
-			fi
-		fi
-		if [ "$TOGGLE11" = "Disable" ]; then
-			INPUT=$(cat text/root_access-off-txt)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-				clear
-				echo " "
-				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
-				sudo passwd -l root
-				sudo usermod -s /sbin/nologin root
-				sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' ${SSHD_CONFIG}
-				sudo systemctl reload sshd 2>/dev/null
-				sleep 2
-			fi
-		fi
-  ;;
-
-  #This disables / enables SSH access through Internet
-	14)
-    if [ "$TOGGLE10" = "Enable" ]; then
-      INPUT=$(cat text/ssh_i_access-on-txt)
-      ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox - INFO" --radiolist "$INPUT" $MENU_HEIGHT $MENU_WIDTH 2 \
-      "1" "Temporary until reconfiguration or restart" OFF \
-      "2" "Permanently until disabled again" OFF \
-      3>&1 1>&2 2>&3)
-      exitstatus=$?
-      if [ $exitstatus = 0 ]; then
-        INTERNET_IP=$(hostname -I | sed s/192.168.43.1[[:space:]]//g | sed s/192.168.42.1[[:space:]]//g | sed s/192.168.44.1[[:space:]]//g)
-        clear
-        echo " "
-        echo -e "${RED}[+] Enable SSH access from the Internet - be careful!${NOCOLOR}"
-        echo -e "${RED}[+] Currently this is your IP address:${NOCOLOR}"
-        echo ""
-        echo -e "${YELLOW}[!] $INTERNET_IP"
-        echo ""
-        read -n 1 -s -r -p "Press any key to continue"
-        ($IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-        if [ $ENABLED_CHOICE = 2 ]; then
-          (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-          sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
-        fi
-      fi
-    fi
-    if [ "$TOGGLE10" = "Disable" ]; then
-			INPUT=$(cat text/ssh_i_access-off-txt)
-			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-        clear
-        echo " "
-        echo -e "${RED}[+] Disable SSH access from the Internet!${NOCOLOR}"
-        ($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
-        (sudo sh -c "iptables-save > /etc/iptables.ipv4.nat") 2>/dev/null
-				sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
-        sleep 2
-      fi
-    fi
-  ;;
-
-  #This disables / enables the access to the Tor control port from clients
-	15)
-    if [ "$TOGGLE14" = "Enable" ]; then
-      INPUT=$(cat text/tor_control_port_enable-text)
-      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-        clear
-        sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=0/TOR_CONTROL_PORT_ACCESS=1/" ${RUNFILE}
-      fi
-    fi
-    if [ "$TOGGLE14" = "Disable" ]; then
-      clear
-      echo " "
-      echo -e "${RED}[+] Disable access to the Tor control port from clients!${NOCOLOR}"
-      sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=1/TOR_CONTROL_PORT_ACCESS=0/" ${RUNFILE}
-      sudo sed -i "s/^ControlPort 192.168.42.1:9051/#ControlPort 192.168.42.1:9051/" ${TORRC}
-      sudo sed -i "s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/" ${TORRC}
-      sudo sed -i "s/^ControlPort 192.168.44.1:9051/#ControlPort 192.168.44.1:9051/" ${TORRC}
-      sleep 5
-      echo -e "${RED}[+] Restart Tor...${NOCOLOR}"
-      sudo systemctl stop tor
-      sudo systemctl restart tor
-      echo -e "${YELLOW}[+] DONE! The access to the Tor control port from clients is disabled!${NOCOLOR}"
-      sleep 5
-    fi
-  ;;
-
   #This disables / enables HTTP plain text traffic block
-	16)
+	12)
     if [ "$TOGGLE12" = "Enable" ]; then
       INPUT=$(cat text/block-limitation-txt)
       if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
@@ -1170,14 +1014,17 @@ case "$CHOICE" in
   ;;
 
 	# Exclude slow tor relays
-	17)
+	13)
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
-			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				SPEED=$(whiptail --title "Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if (whiptail --title "TorBox v.0.5.4 - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				SPEED=$(whiptail --title "TorBox v.0.5.4 - Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
-				# exitstatus == 255 means that the ESC key was pressed
-				[ "$exitstatus" == "255" ] && exit 1
+				if [ "$exitstatus" == "1" ] || [ "$exitstatus" == "255" ]; then
+					clear
+					trap "bash menu-config; exit 0" EXIT
+					exit 1
+				fi
 				if [ "$SPEED" != "" ] ; then
 					is_integer "${SPEED}"
 					exitstatus=$?
@@ -1199,7 +1046,6 @@ case "$CHOICE" in
 				sudo bin/exclude-slow-tor-relays-ng -b $SPEED
 				sleep 5
 				clear
-#				sudo mv torrc.exclude-slow /etc/tor
 				sudo sed -i "s/^#$TOR_INCLUDE_EX_SLOW/$TOR_INCLUDE_EX_SLOW/" ${TORRC}
 				sudo sed -i "s/^EX_SLOW=.*/EX_SLOW=$SPEED/" ${RUNFILE}
 				restarting_tor menu-config
@@ -1218,8 +1064,98 @@ case "$CHOICE" in
 		fi
   ;;
 
+	# Limit Bandwidth for tor network traffic
+	14)
+		if [ "$TOGGLE10" = "Start" ]; then
+			OLD_LIMIT=$(grep "^BandwidthRate .*" "$TORRC" | sed "s/^BandwidthRate *//")
+			if [ -z "$OLD_LIMIT" ] ; then OLD_LIMIT="1 GB"; fi
+			INPUT=$(cat text/limit_tor_bandwidth-text)
+			LIMIT=$(whiptail --title "TorBox v.0.5.4 - Bandwidth limit" --inputbox "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH $OLD_LIMIT 3>&1 1>&2 2>&3)
+			exitstatus=$?
+			if [ "$exitstatus" == "1" ] || [ "$exitstatus" == "255" ]; then
+				clear
+				trap "bash menu-config; exit 0" EXIT
+				exit 1
+			fi
+			if [ "$LIMIT" != "" ] ; then
+				NUMBER=$(cut -d ' ' -f1 <<< $LIMIT)
+				UNIT=$(cut -d ' ' -f2 <<< $LIMIT)
+				if [ -z "$UNIT" ]; then
+					clear
+					echo -e "${YELLOW}[!] WRONG INPUT - bytes, KB, MB or GB is missing!${NOCOLOR}"
+					sleep 5
+					clear
+					trap "bash menu-config; exit 0" EXIT
+					exit 1
+				else
+					if [[ "$UNIT" != "bytes" && "$UNIT" != "KB" && "$UNIT" != "MB" && "$UNIT" != "GB" ]]; then
+						clear
+						echo -e "${YELLOW}[!] WRONG INPUT - Unit has to be bytes, KB, MB or GB!${NOCOLOR}"
+						sleep 5
+						clear
+						trap "bash menu-config; exit 0" EXIT
+						exit 1
+					fi
+				fi
+				is_integer "${NUMBER}"
+				exitstatus=$?
+				# exitstatus == 1 means that $NUMBER is not an integer
+				if [ "$exitstatus" = "1" ]; then
+					clear
+					echo -e "${YELLOW}[!] WRONG INPUT - THE NUMBER IS NOT AN INTEGER!${NOCOLOR}"
+					sleep 5
+					clear
+					trap "bash menu-config; exit 0" EXIT
+					exit 1
+				fi
+				clear
+				echo -e "${RED}[+] Setting a bandwidth limit for the Tor networ traffic...${NOCOLOR}"
+				if grep "^#BandwidthRate" ${TORRC}; then sed -i "s/#BandwidthRate/BandwidthRate/" ${TORRC}; fi
+				if grep "^BandwidthRate" ${TORRC}; then sudo sed -i "s/^BandwidthRate .*/BandwidthRate $NUMBER $UNIT/" ${TORRC}; fi
+				if grep "^#BandwidthBurst" ${TORRC}; then sed -i "s/#BandwidthBurst/BandwidthBurst/" ${TORRC}; fi
+				if grep "^BandwidthBurst" ${TORRC}; then sudo sed -i "s/^BandwidthBurst .*/BandwidthBurst $NUMBER $UNIT/" ${TORRC}; fi
+				sleep 5
+				restarting_tor menu-config
+			fi
+		fi
+		if [ "$TOGGLE10" = "Stop" ]; then
+			clear
+			echo -e "${RED}[+] Removing the bandwidth limit for the Tor networ traffic...${NOCOLOR}"
+			sudo sed -i "s/^BandwidthRate .*/#BandwidthRate 1 GB/" ${TORRC}
+			sudo sed -i "s/^BandwidthBurst .*/#BandwidthBurst 1 GB/" ${TORRC}
+			sleep 5
+			restarting_tor menu-config
+		fi
+	;;
+
+	#This disables / enables the access to the Tor control port from clients
+	15)
+    if [ "$TOGGLE14" = "Enable" ]; then
+      INPUT=$(cat text/tor_control_port_enable-text)
+      if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+        clear
+        sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=0/TOR_CONTROL_PORT_ACCESS=1/" ${RUNFILE}
+      fi
+    fi
+    if [ "$TOGGLE14" = "Disable" ]; then
+      clear
+      echo " "
+      echo -e "${RED}[+] Disable access to the Tor control port from clients!${NOCOLOR}"
+      sudo sed -i "s/^TOR_CONTROL_PORT_ACCESS=1/TOR_CONTROL_PORT_ACCESS=0/" ${RUNFILE}
+      sudo sed -i "s/^ControlPort 192.168.42.1:9051/#ControlPort 192.168.42.1:9051/" ${TORRC}
+      sudo sed -i "s/^ControlPort 192.168.43.1:9051/#ControlPort 192.168.43.1:9051/" ${TORRC}
+      sudo sed -i "s/^ControlPort 192.168.44.1:9051/#ControlPort 192.168.44.1:9051/" ${TORRC}
+      sleep 5
+      echo -e "${RED}[+] Restart Tor...${NOCOLOR}"
+      sudo systemctl stop tor
+      sudo systemctl restart tor
+      echo -e "${YELLOW}[+] DONE! The access to the Tor control port from clients is disabled!${NOCOLOR}"
+      sleep 5
+    fi
+  ;;
+
 	# Enter the advanced configuration editor
-	18)
+	16)
     INPUT=$(cat text/advanced-OS-text)
     if (whiptail --title "TorBox - INFO" --defaultno --no-button "DON'T CHANGE" --yes-button "CHANGE NOW" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
       sudo cp ${TORRC} ${BAK}
@@ -1233,7 +1169,7 @@ case "$CHOICE" in
   ;;
 
   #This changes the extent of the logging
-	19)
+	17)
     if (whiptail --title "Changing the extent of logging ($TOGGLE03b -> $TOGGLE04b)" --defaultno --yes-button "High" --no-button "LOW" --yesno "\nWould you like to change the extend of logging?" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3); then
 			LOG_STATUS_001=$(sudo systemctl is-active rsyslog)
 			LOG_STATUS_002=$(sudo systemctl is-active systemd-journald.service)
@@ -1284,14 +1220,14 @@ case "$CHOICE" in
   ;;
 
   #This erases all log files
-	20)
+	18)
     clear
     erase_logs
     sleep 2
   ;;
 
 	#This is for installing, managing or removing the OpenVPN server
-	21)
+	19)
 		clear
 		sudo bash install/openvpn-install.sh
 		read_config
@@ -1299,7 +1235,7 @@ case "$CHOICE" in
 	;;
 
   #This is the support for Adafruit's PiTFT displays
-	22)
+	20)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT
@@ -1334,7 +1270,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for 3.5" no-name TFT displays
-	23)
+	21)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT
@@ -1414,7 +1350,7 @@ case "$CHOICE" in
   #This is the support for Sixfab Shields/HATs for cellular connections
   #Remark for TorBox v.0.5.4 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp wiringpi
-	24)
+	22)
 		if [ -z "$CHECK_HD3" ]; then
 			whiptail --title "TorBox - INFO" --textbox text/no_raspi-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
 			trap "bash menu-config; exit 0" EXIT

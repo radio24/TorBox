@@ -1,9 +1,11 @@
 ## This is the configuration file of Tor
 
-## DON'T CHANGE THE FOLLOWING 20 LINES!
+## DON'T CHANGE THE FOLLOWING LINES!
 ######################################################
 ## Configuration for TorBox
 
+#BandwidthRate 1 GB
+#BandwidthBurst 1 GB
 Log notice file /var/log/tor/notices.log
 # IPv6 support (only)
 #ClientUseIPv6 1

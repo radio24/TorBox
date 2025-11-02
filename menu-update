@@ -69,6 +69,7 @@ if [ "$CHECK_OS" == "Debian" ] && [ -f /etc/rpi-issue ] ; then CHECK_OS="Raspbia
 # Release Page of the official Tor repositories
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
 TOR_HREF_FOR_SED="<a class=\"gl-font-bold\" href=\"/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
@@ -162,7 +163,7 @@ check_install_packages()
 
 # This function prepares the tor update
 # Syntax update_tor_preparations
-# Used predefined variables: $torversion_versionsorted_new RED, WHITE, NOCOLOR, TORCONNECT, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED1, TOR_HREF_FOR_SED2
+# Used predefined variables: $torversion_versionsorted_new RED, WHITE, NOCOLOR, TORCONNECT, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED_NEW
 # Provides the following variables: $torversion_versionsorted_new
 update_tor_preparations()
 {

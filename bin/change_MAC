@@ -259,7 +259,7 @@ case "$CHOICE3" in
 		if [ -z "$CHOICE2" ]; then
 			if grep -q "usb0" <<< "$AVAILABLE_INTERFACES"; then
 				###### DISPLAY THE AVAILABLE INTERFACES inluding usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_15 $MENU_WIDTH 5 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
@@ -268,7 +268,7 @@ case "$CHOICE3" in
 				3>&1 1>&2 2>&3)
 			else
 				###### DISPLAY THE AVAILABLE INTERFACES without usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\n\Please, use SPACE to select/deselect, ENTER to apply, ESC to go back." 11 $MENU_WIDTH 4 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \

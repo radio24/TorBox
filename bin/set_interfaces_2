@@ -82,14 +82,15 @@ TORBOX_PATH="/home/torbox/torbox"
 RUNFILE="$TORBOX_PATH/run/torbox.run"
 EXITLOOP=0
 
+# Network interface ranges
+WIFI_NETWORK="192.168.42.0/24"
+CABLE_NETWORK="192.168.43.0/24"
+USB_VPN_NETWORK="192.168.44.0/24"
+
 #Check if this installation is on a cloud
-ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 OPENVPN_PORT=$(grep "^OPENVPN_PORT=.*" ${RUNFILE} | sed "s/.*=//g")
 #Can be removed with v.0.5.5
 if [ -z "$OPENVPN_PORT" ]; then OPENVPN_PORT="1194"; fi
-
-#Check SSH acces from the Internet
-SSH_FROM_INTERNET=$(grep "^SSH_FROM_INTERNET=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ###########
@@ -253,7 +254,7 @@ $IPTABLES -t nat -A PREROUTING -i $I_DEVICE3 -j LOG --log-prefix "FALLEN THROUGH
 $IPTABLES -t nat -A POSTROUTING -o $O_DEVICE -j MASQUERADE
 
 ###### SSH access through Internet ######
-# NEW v.0.5.4-post: SSH access on a cloud to prevent a locked out situation
+check_ssh_status
 if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up SSH access through the Internet...${NOCOLOR}"
 	$IPTABLES -A INPUT -p tcp --dport 22 -j ACCEPT
@@ -261,7 +262,30 @@ else
 	($IPTABLES -D INPUT -p tcp --dport 22 -j ACCEPT) 2>/dev/null
 fi
 
-# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
+if [ "$SSH_WIFI_STATUS" == "ENABLED" ]; then
+	echo -e "${RED}[+] Enabling SSH access from WiFi network...${NOCOLOR}"
+	sudo iptables -D INPUT -s $WIFI_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+else
+	echo -e "${RED}[+] Disabling SSH access from WiFi network...${NOCOLOR}"
+	sudo iptables -I INPUT 3 -s $WIFI_NETWORK -p tcp --dport 22 -j DROP
+fi
+
+if [ "$SSH_CABLE_STATUS" == "ENABLED" ]; then
+	echo -e "${RED}[+] Enabling SSH access from cable network...${NOCOLOR}"
+	sudo iptables -D INPUT -s $CABLE_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+else
+	echo -e "${RED}[+] Disabling SSH access from cable network...${NOCOLOR}"
+	sudo iptables -I INPUT 3 -s $CABLE_NETWORK -p tcp --dport 22 -j DROP
+fi
+
+if [ "$SSH_USB_VPN_STATUS" == "ENABLED" ]; then
+	echo -e "${RED}[+] Enabling SSH access from USB/VPN network...${NOCOLOR}"
+	sudo iptables -D INPUT -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP 2>/dev/null
+else
+	echo -e "${RED}[+] Disabling SSH access from USB/VPN network...${NOCOLOR}"
+	sudo iptables -I INPUT 3 -s $USB_VPN_NETWORK -p tcp --dport 22 -j DROP
+fi
+
 ###### OPENVPN access through Internet ######
 if grep -q "^OPENVPN_FROM_INTERNET=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up OPENVPN access through the Internet...${NOCOLOR}"
@@ -278,18 +302,10 @@ fi
 if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then
 	echo -e "${RED}[+] Setting up HTTP plain text traffic blocker...${NOCOLOR}"
 	($IPTABLES -t nat -I PREROUTING 4 -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-	# Not necessary, as all local connections to the box port 22 and 80 etc. are accepted.
-	# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --syn -d 192.168.44.0/10 -j REDIRECT --to-ports 80) 2>/dev/null
-	# ($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-	# ($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 	($IPTABLES -t nat -I PREROUTING 5 -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	($IPTABLES -t nat -I PREROUTING 6 -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 else
 	($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 10.192.0.0/10 -j REDIRECT --to-ports 9040) 2>/dev/null
-	# Not necessary, as all local connections to the box port 22 and 80 etc. are accepted.
-	# ($IPTABLES -t nat -D PREROUTING -p tcp --syn -d 192.168.44.0/10 -j REDIRECT --to-ports 80) 2>/dev/null
-	# ($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j LOG --log-prefix "HTTP-REQUEST TCP " --log-ip-options --log-tcp-options) 2>/dev/null
-	# ($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j LOG --log-prefix "HTTP-REQUEST UDP " --log-ip-options) 2>/dev/null
 	($IPTABLES -t nat -D PREROUTING -p tcp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 	($IPTABLES -t nat -D PREROUTING -p udp --dport 80 -j DNAT --to-destination 0.0.0.0) 2>/dev/null
 fi

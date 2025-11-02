@@ -5,12 +5,14 @@
 # Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
+# MODIFIED VERSION WITH WPA3 SUPPORT
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it is useful,
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -174,10 +176,13 @@ class WirelessManagerScanner:
             if quality > 100:
                 quality = 100
 
-            # Net Security
+            # Net Security - Enhanced WPA3 detection
             security = c[3].decode("utf-8")
             q = re.search(r"\[(.*?)\]", security)
             security = q[0]
+
+            # Detect WPA3/SAE support
+            is_wpa3 = "SAE" in security or "WPA3" in security
 
             # Net Name
             try:
@@ -185,13 +190,14 @@ class WirelessManagerScanner:
             except:
                 essid = "?"
 
-            output.append([essid, quality, security, bssid, channel, dbm_signal])
+            output.append([essid, quality, security, bssid, channel, dbm_signal, is_wpa3])
             # 0        essid,
             # 1        quality,
             # 2        security,
             # 3        bssid,
             # 4        channel,
             # 5        dbm_signal
+            # 6        is_wpa3 (NEW)
 
         # Sort by signal strength
         output.sort(key=lambda x: x[1], reverse=True)
@@ -523,7 +529,9 @@ class WirelessManager:
 
         _netlist = []
         for network in network_list:
-            row = SelectableRow(network, hidden_show, self.__connect_network)
+            # Truncate network list to display format (remove WPA3 flag for display)
+            display_network = network[:6]  # Only show first 6 elements for display
+            row = SelectableRow(display_network, hidden_show, self.__connect_network, network)
             _netlist.append(row)
 
         _netlist = urwid.ListBox(urwid.SimpleFocusListWalker(_netlist))
@@ -548,10 +556,12 @@ class WirelessManager:
         """
         If network is already configured  connect without asking password
         If security is ESS, we don't ask for password
+        WPA3 networks are handled with SAE configuration
         """
         essid = network[0]
         bssid = network[3]
         security = network[2]
+        is_wpa3 = network[6] if len(network) > 6 else False
 
         # Look for saved networks
         cmd = "wpa_cli -i %s list_networks |grep '%s'" % (self.interface, bssid)
@@ -608,7 +618,7 @@ class WirelessManager:
             self.loop.set_alarm_in(
                 0.1,
                 self.__network_connect,
-                user_data=[essid, bssid, False, False, network_id],
+                user_data=[essid, bssid, False, False, network_id, is_wpa3],
             )
 
     def __connect_dialog(self, network, widget=False):
@@ -617,6 +627,7 @@ class WirelessManager:
         # Network info
         essid = network[0]
         bssid = network[3]
+        is_wpa3 = network[6] if len(network) > 6 else False
 
         # Callbacks for buttons
         def _button_connect_callback(
@@ -662,7 +673,7 @@ class WirelessManager:
             self.loop.set_alarm_in(
                 0.1,
                 self.__network_connect,
-                user_data=[essid, bssid, password, hidden_flag, False],
+                user_data=[essid, bssid, password, hidden_flag, False, is_wpa3],
             )
 
         def _button_cancel_callback(widget):
@@ -674,8 +685,9 @@ class WirelessManager:
             else:
                 return urwid.Frame.keypress(self.connect_box, size, key)
 
-        # Header
-        _header = urwid.Text("Connect to [%s]" % essid, align="center")
+        # Header with WPA3 indication
+        wpa3_indicator = " (WPA3)" if is_wpa3 else ""
+        _header = urwid.Text("Connect to [%s]%s" % (essid, wpa3_indicator), align="center")
         _header = urwid.AttrMap(_header, "connect_title")
         _divider = urwid.Divider("-")
         _divider = urwid.AttrMap(_divider, "connect_title_divider")
@@ -767,6 +779,7 @@ class WirelessManager:
         password = _data[2]
         hidden_flag = _data[3]
         saved_network = _data[4]
+        is_wpa3 = _data[5] if len(_data) > 5 else False
 
         # we need to disconnect 1st If we are connected and trying to connect
         if self.connected:
@@ -775,7 +788,7 @@ class WirelessManager:
         if saved_network is not False:
             network_id = saved_network
         else:
-            """Configure NEW connection"""
+            """Configure NEW connection with WPA3 support"""
 
             # We get a new network id on wpa_supplicant
             cmd = ["wpa_cli", "-i", self.interface, "add_network"]
@@ -811,21 +824,65 @@ class WirelessManager:
             )
 
             if password is not False:
-                # Set the password
-                cmd = [
-                    "wpa_cli",
-                    "-i",
-                    self.interface,
-                    "set_network",
-                    "{}".format(network_id),
-                    "psk",
-                    '"{}"'.format(password),
-                ]
-                r = subprocess.check_call(
-                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
+                if is_wpa3:
+                    # WPA3-Personal (SAE) configuration
+                    # Set key management to SAE
+                    cmd = [
+                        "wpa_cli",
+                        "-i",
+                        self.interface,
+                        "set_network",
+                        "{}".format(network_id),
+                        "key_mgmt",
+                        "SAE",
+                    ]
+                    r = subprocess.check_call(
+                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+
+                    # Set SAE password
+                    cmd = [
+                        "wpa_cli",
+                        "-i",
+                        self.interface,
+                        "set_network",
+                        "{}".format(network_id),
+                        "sae_password",
+                        '"{}"'.format(password),
+                    ]
+                    r = subprocess.check_call(
+                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+
+                    # Enable PMF (Protected Management Frames) - required for WPA3
+                    cmd = [
+                        "wpa_cli",
+                        "-i",
+                        self.interface,
+                        "set_network",
+                        "{}".format(network_id),
+                        "ieee80211w",
+                        "2",
+                    ]
+                    r = subprocess.check_call(
+                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+                else:
+                    # WPA2-Personal (PSK) configuration
+                    cmd = [
+                        "wpa_cli",
+                        "-i",
+                        self.interface,
+                        "set_network",
+                        "{}".format(network_id),
+                        "psk",
+                        '"{}"'.format(password),
+                    ]
+                    r = subprocess.check_call(
+                        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
             else:
-                # No key management
+                # No key management (open network)
                 cmd = [
                     "wpa_cli",
                     "-i",
@@ -971,7 +1028,7 @@ class WirelessManager:
             _text = urwid.Pile([urwid.Divider(" "), _text, urwid.Divider(" ")])
 
             # Args to pass to __connect_dialog
-            _network = [essid, 0, 0, bssid]
+            _network = [essid, 0, 0, bssid, 0, 0, is_wpa3]
 
             # buttons
             _button_new_password_button = urwid.Button("New Password")
@@ -1119,10 +1176,11 @@ class WirelessManager:
 
 
 class SelectableRow(urwid.WidgetWrap):
-    """Urwid class for custom list"""
+    """Urwid class for custom list - enhanced for WPA3 support"""
 
-    def __init__(self, contents, hidden, on_select=None):
+    def __init__(self, contents, hidden, on_select=None, full_network_data=None):
         self.contents = contents
+        self.full_network_data = full_network_data or contents
         self.on_select = on_select
 
         self._columns = urwid.Columns([urwid.Text(str(c)) for c in contents])
@@ -1147,10 +1205,10 @@ class SelectableRow(urwid.WidgetWrap):
             w.set_text(t)
 
     def keypress(self, size, key):
-        # onSelect
+        # onSelect - pass full network data including WPA3 flag
         if self.on_select and key in ("enter",):
             # if self.on_select and key.lower() == 'c':
-            self.on_select(self.contents)
+            self.on_select(self.full_network_data)
             pass
 
         return key

@@ -51,6 +51,21 @@ FRESH_INSTALLED=0
 # 1 - SSH access from the Internet is allowed (default on a TorBox on a Cloud)
 SSH_FROM_INTERNET=0
 
+# SSH access from the Wifi
+# 0 - SSH access from the WiFi is blocked
+# 1 - SSH access from the WiFi is allowed (default)
+SSH_FROM_WIFI=1
+
+# SSH access from the Cable
+# 0 - SSH access from the Cable is blocked
+# 1 - SSH access from the Cable is allowed (default)
+SSH_FROM_CABLE=1
+
+# SSH access from the USB/VPN
+# 0 - SSH access from the USB/VPN is blocked
+# 1 - SSH access from the USB/VPN is allowed (default)
+SSH_FROM_USB=1
+
 # OPENVPN access from the Internet
 # 0 - OPENVPN access from the Internet is blocked (default)
 # 1 - OPENVPN access from the Internet is allowed

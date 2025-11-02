@@ -110,7 +110,7 @@ GO_PROGRAM="/usr/local/go/bin/go"
 # Release Page of the official Tor repositories
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
-# WARNING: Sometimes, GitLab will change this prefix!
+# WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
 TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
@@ -357,7 +357,7 @@ download_and_compile_tor()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED_NEW
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
@@ -382,8 +382,7 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	# With TOR_HREF_FOR_SED, because of .*
-	# readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+	# With TOR_HREF_FOR_SED, because of .*, sed -e has to be used!!
 	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
@@ -1321,7 +1320,7 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 		sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
-		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 		sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
 		sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
 		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}

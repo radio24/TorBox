@@ -15,7 +15,7 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 | TOGGLE07 | Bridge Relay mode status / WLAN channel number | Used |
 | TOGGLE08 | Bridge Relay mode toggle target / SSID visibility | Used |
 | TOGGLE09 | TorBox WLAN enable/disable status | Used |
-| TOGGLE10 | SSH access from Internet enable/disable status | Used |
+| TOGGLE10 | Tor Bandwidth Limit started/stopped status | Used |
 | TOGGLE11 | Root access enable/disable status | Used |
 | TOGGLE12 | HTTP plain text traffic block enable/disable status | Used |
 | TOGGLE13 | HTTP block additional info message (SOCKS 5 note) | Used |
@@ -29,7 +29,7 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 | TOGGLE21 | SSH password login enable/disable status | Used |
 | TOGGLE22 | OpenVPN server management/installation status | Used |
 | TOGGLE23 | TorBox mini default configuration activate/deactivate | Used |
-| TOGGLE24 | NOT USED | Not Used |
+| TOGGLE24 | Passwordless TorBox's WLAN | Used |
 | TOGGLE25 | NOT USED | Not Used |
 
 ## Detailed Descriptions
@@ -55,8 +55,8 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 - **Function**: Shows if TorBox's WLAN is enabled or disabled.
 
 ### TOGGLE10
-- **Location**: `menu-config`
-- **Function**: Shows if TorBox can be accessed from the Internet via SSH.
+- **Status**: `menu-config`
+- **Function**: Shows if tor bandwidth limit is started or not
 
 ### TOGGLE11
 - **Location**: `menu-config`
@@ -102,6 +102,10 @@ This document lists all TOGGLE variables used in the TorBox project with their f
 - **Location**: `menu-danger`
 - **Function**: Shows if TorBox mini default configuration is activated or deactivated.
 
-### TOGGLE24 & TOGGLE25
+### TOGGLE24
+- **Status**: `menu-danger`
+- **Function**: Passwordless TorBox's WLAN.
+
+### TOGGLE25
 - **Status**: NOT USED
 - **Function**: Reserved for future use.
