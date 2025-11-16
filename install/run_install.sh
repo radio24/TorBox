@@ -632,15 +632,15 @@ if [ "$STEP_NUMBER" -le "2" ]; then
   echo -e "${RED}[+] Step 2a: Check the status of the WLAN regulatory domain...${NOCOLOR}"
   COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
   if [ "$COUNTRY" = "00:" ]; then
-    echo -e "${YELLOW}[!]         No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
-    echo -e "${YELLOW}[!]         Therefore we will set it to US! You can change it later.${NOCOLOR}"
+    echo -e "${YELLOW}[!]          No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
+    echo -e "${YELLOW}[!]          Therefore we will set it to US! You can change it later.${NOCOLOR}"
     sudo iw reg set US
     INPUT="REGDOMAIN=US"
     sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
   else
-    echo -e "${RED}[+]         The WLAN regulatory domain is set correctly! ${NOCOLOR}"
+    echo -e "${RED}[+]          The WLAN regulatory domain is set correctly! ${NOCOLOR}"
   fi
-  echo -e "${RED}[+]         To be sure we will unblock wlan, now! ${NOCOLOR}"
+  echo -e "${RED}[+]          To be sure we will unblock wlan, now! ${NOCOLOR}"
   sudo rfkill unblock wlan
   sleep 10
 
@@ -675,11 +675,14 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   # 4. Installing all necessary packages
   clear
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+	echo -e " "
+	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
+	LINUX_HEADERS="linux-headers-$(uname -r)"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw $LINUX_HEADERS dkms libjpeg-dev ifupdown"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
