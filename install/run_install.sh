@@ -150,9 +150,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4Proxy
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi
-WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
-
 # Connectivity check
 CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
@@ -284,10 +281,7 @@ re-connect()
 	  else
 	    echo -e "${YELLOW}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    (sudo dhclient -r) 2>&1
-	    sleep 5
-	    sudo dhclient &>/dev/null &
-	    sleep 30
+			sudo dhcpcd -n
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -680,9 +674,9 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	LINUX_HEADERS="linux-headers-$(uname -r)"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw $LINUX_HEADERS dkms libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw $LINUX_HEADERS dkms libjpeg-dev ifupdown"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -696,25 +690,6 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   if [[ -d /etc/openvpn/easy-rsa/ ]]; then
 	  rm -rf /etc/openvpn/easy-rsa/
   fi
-
-  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	  echo ""
-	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	  clear
-  fi
-
-  # Install wiringpi
-  clear
-  echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-  echo ""
-  echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-  echo ""
-  wget $WIRINGPI_USED
-  sudo dpkg -i wiringpi-latest.deb
-  # Not nice, but working
-  sudo apt -y --fix-broken install
-  sudo dpkg -i wiringpi-latest.deb
-  sudo rm wiringpi-latest.deb
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	  echo ""
@@ -970,7 +945,7 @@ if [ "$STEP_NUMBER" -le "7" ]; then
   echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
   echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
   cd
-  git clone $SNOWFLAKE_USED
+  git clone $SNOWFLAKE_ORIGINAL_WEB
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
 		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
@@ -1182,13 +1157,14 @@ if [ "$STEP_NUMBER" -le "11" ]; then
       sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
     fi
   fi
-	sudo systemctl mask hciuart.service
-  sudo systemctl disable hciuart.service
 	sudo systemctl stop hciuart.service
-	sudo systemctl mask bluetooth.service
-  sudo systemctl disable bluetooth.service
+	sudo systemctl disable hciuart.service
+	sudo systemctl mask hciuart.service
 	sudo systemctl stop bluetooth.service
-  sudo apt-get -y purge bluez
+	sudo systemctl disable bluetooth.service
+	sudo systemctl mask bluetooth.service
+	# CHANGED v.0.5.5: Additional packages to remove
+  sudo apt-get purge -y bluez bluez-firmware pi-bluetooth
   sudo apt-get -y autoremove
   sudo rfkill block bluetooth
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1269,8 +1245,7 @@ if [ "$STEP_NUMBER" -le "13" ]; then
   sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
   sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
   sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-  sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-  sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+  sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
   # NEW v.0.5.4: Specifc configurations for an installation on a cloud and for TorBox mini
   # Important: Randomizing MAC addresses could prevent the assignement of an IP address on a cloud
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then

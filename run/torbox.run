@@ -36,9 +36,6 @@ OBFS4PROXY_USED=https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git
 # Snowflake repositories
 SNOWFLAKE_USED=https://github.com/tgragnato/snowflake
 
-# Wiringpi
-WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
-
 # Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)

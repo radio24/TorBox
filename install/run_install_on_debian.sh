@@ -145,9 +145,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi - DEBIAN / UBUNTU SPECIFIC
-WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
-
 # Connectivity check
 CHECK_URL1="debian.org"
 CHECK_URL2="google.com"
@@ -279,10 +276,7 @@ re-connect()
 	  else
 	    echo -e "${YELLOW}[!]        Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]        We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    (dhclient -r) 2>&1
-	    sleep 5
-	    dhclient &>/dev/null &
-	    sleep 30
+			sudo dhcpcd -n
 	    echo ""
 	    echo -e "${RED}[+]        Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -655,9 +649,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
   # Installation of standard packages
 	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
 	else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
 	fi
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
@@ -683,36 +677,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   fi
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	  echo ""
-	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	  clear
-  fi
-
-  #Install wiringpi
-  clear
-  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-  echo ""
-  echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-  echo ""
-  cd
-  git clone $WIRINGPI_USED
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ]; then
-	  cd WiringPi
-	  ./build
-	  cd
-	  rm -r WiringPi
-	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		  echo ""
-		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		  clear
-	  fi
-  else
-	  echo ""
-	  echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
-	  echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
-	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	  echo ""
 	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	  clear
@@ -968,7 +932,7 @@ if [ "$STEP_NUMBER" -le "6" ]; then
   echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
   echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
   cd
-  git clone $SNOWFLAKE_USED
+  git clone $SNOWFLAKE_ORIGINAL_WEB
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
 		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
@@ -1298,8 +1262,7 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 	sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 	sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-	sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-	sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+	sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
 	# NEW v.0.5.4: Specifc configurations for an installation on a cloud
 	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
@@ -1436,7 +1399,6 @@ if [ "$STEP_NUMBER" -le "16" ]; then
 	read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 	clear
 	echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-	(rm -r WiringPi) 2>/dev/null
 	# Find the bigest space waster packages: dpigs -H
 	apt-get -y --purge remove exim4 exim4-base exim4-config exim4-daemon-light
 	apt-get -y remove libgl1-mesa-dri texlive* lmodern

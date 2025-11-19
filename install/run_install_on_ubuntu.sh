@@ -125,9 +125,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 # OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
 
-# Wiringpi - DEBIAN / UBUNTU SPECIFIC
-WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
-
 # above values will be saved into run/torbox.run #######
 
 # Connectivity check
@@ -266,10 +263,7 @@ re-connect()
 				(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 			fi
 			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-			(sudo dhclient -r) 2>&1
-	    sleep 5
-	    sudo dhclient &>/dev/null &
-	    sleep 30
+			sudo dhcpcd -n
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -675,7 +669,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# Necessary packages for Ubuntu-based systems (not necessary with Raspberry Pi OS)
 	check_install_packages "net-tools unzip equivs rfkill iw"
 	# Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
+	check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 	# IMPORTANT tor-geoipdb installs also the tor package
@@ -690,36 +684,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	fi
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	fi
-
-	#Install wiringpi
-	clear
-	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	echo ""
-	echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-	echo ""
-	cd
-	git clone $WIRINGPI_USED
-	DLCHECK=$?
-	if [ $DLCHECK -eq 0 ]; then
-		cd WiringPi
-		sudo ./build
-		cd
-		sudo rm -r WiringPi
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		fi
-	else
-		echo ""
-		echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
-		echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -957,7 +921,7 @@ if [ "$STEP_NUMBER" -le "6" ]; then
 	echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 	echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
 	cd
-	git clone $SNOWFLAKE_USED
+	git clone $SNOWFLAKE_ORIGINAL_WEB
 	DLCHECK=$?
 	if [ $DLCHECK -eq 0 ]; then
 		export GO111MODULE="on"
@@ -1314,8 +1278,7 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 	sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 	sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-	sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-	sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+	sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
 	# NEW v.0.5.4: Specifc configurations for an installation on a cloud
 	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
@@ -1392,7 +1355,6 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 	clear
 	echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-	(sudo rm -r WiringPi) 2>/dev/null
 	(sudo rm -r Downloads) 2>/dev/null
 	(sudo rm -r get-pip.py) 2>/dev/null
 	(sudo rm -r python-urwid*) 2>/dev/null

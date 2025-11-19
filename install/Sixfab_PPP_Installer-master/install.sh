@@ -37,18 +37,6 @@ BLUE='\033[1;34m'
 WHITE='\033[1;37m'
 SET='\033[0m'
 
-# Global Varibales
-POWERUP_REQ=1
-POWERUP_NOT_REQ=0
-STATUS_GPRS=19
-STATUS_CELL_IOT_APP=20
-STATUS_CELL_IOT=23
-STATUS_TRACKER=23
-POWERKEY_GPRS=26
-POWERKEY_CELL_IOT_APP=11
-POWERKEY_CELL_IOT=24
-POWERKEY_TRACKER=24
-
 # Paths
 SOURCE_PATH="/home/torbox/torbox/install/Sixfab_PPP_Installer-master/src"
 SCRIPT_PATH="$SOURCE_PATH/reconnect_scripts"
@@ -74,23 +62,24 @@ echo -e ""
 read shield_hat
 clear
 case $shield_hat in
-    1)    echo -e "${RED}[+] You chose GSM/GPRS Shield${SET}";;
-    2)    echo -e "${RED}[+] You chose Base Shield${SET}";;
-    3)    echo -e "${RED}[+] You chose CellularIoT Shield${SET}";;
-    4)    echo -e "${RED}[+] You chose CellularIoT HAT${SET}";;
-	  5)    echo -e "${RED}[+] You chose Tracker HAT${SET}";;
-	  6)    echo -e "${RED}[+] You chose 3G/4G Base HAT${SET}";;
-    *)    echo -e "${WHITE}[!] Wrong Selection, exiting${SET}"; exit 1;
+	1)    echo -e "${RED}[+] You chose GSM/GPRS Shield${SET}";;
+	2)    echo -e "${RED}[+] You chose Base Shield${SET}";;
+	3)    echo -e "${RED}[+] You chose CellularIoT Shield${SET}";;
+	4)    echo -e "${RED}[+] You chose CellularIoT HAT${SET}";;
+	5)    echo -e "${RED}[+] You chose Tracker HAT${SET}";;
+	6)    echo -e "${RED}[+] You chose 3G/4G Base HAT${SET}";;
+	*)    echo -e "${WHITE}[!] Wrong Selection, exiting${SET}"; exit 1;
 esac
 
 echo
 echo -e "${RED}[+] Copying setup files...${NOCOLOR}"
-#Installing ppp and wiringpi is not necessary, because they are alredy there
-#However, we have to copy some unchanged configuration files
-cp  $SOURCE_PATH/chat-connect .
-cp  $SOURCE_PATH/chat-disconnect .
-cp  $SOURCE_PATH/provider .
-#sudo cp /home/torbox/torbox/install/Sixfab_PPP_Installer-master/ppp_installer/unchanged_files/configure_modem.sh .
+#Installing ppp is not necessary, because they are alredy there
+#Wiringpi is not necessary because we do not use the auto- / recobbect-features
+mkdir -p /etc/chatscripts
+cp $SOURCE_PATH/chat-connect /etc/chatscripts/
+cp $SOURCE_PATH/chat-disconnect /etc/chatscripts/
+#provider has to be change before copied to the right place
+cp $SOURCE_PATH/provider .
 sleep 3
 clear
 echo -e "${RED}Enter your carrier APN:${SET}"
@@ -99,41 +88,38 @@ read carrierapn
 
 while [ 1 ]
 do
-  echo ""
+	echo ""
 	echo -e "${RED}Does your carrier need username and password? [Y/n]${SET}"
 	read usernpass
-
 	case $usernpass in
 		[Yy]* )  while [ 1 ]
-        do
-
-        echo -e "${RED}Enter username${SET}"
-        read username
-
-        echo -e "${RED}Enter password${SET}"
-        read password
-        sed -i "s/noauth/#noauth\nuser \"$username\"\npassword \"$password\"/" provider
-        break
-        done
-
-        break;;
-
-		[Nn]* )  break;;
+			do
+				echo -e "${RED}Enter username${SET}"
+				read username
+				echo -e "${RED}Enter password${SET}"
+				read password
+				sed -i "s/noauth/#noauth\nuser \"$username\"\npassword \"$password\"/" provider
+				break
+			done
+		break;;
+		[Nn]* )
+			#Possibly out of date
+			#sed -i "s/^auth/#auth/" /etc/ppp/options  
+			break;;
 		*)  echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
 	esac
 done
 
-mkdir -p /etc/chatscripts
-cp chat-connect /etc/chatscripts/
-cp chat-disconnect /etc/chatscripts/
+# delete atcom config
+ls $PPP_PATH | grep configs.yml > /dev/null
+if [[ $? -eq 0 ]]; then rm $PPP_PATH/configs.yml; fi
 
 mkdir -p /etc/ppp/peers
 sed -i "s/#APN/$carrierapn/" provider
 mv provider /etc/ppp/peers/provider
-sed -i "s/^auth/#auth/" /etc/ppp/options
 
 if ! (grep -q 'sudo route' /etc/ppp/ip-up ); then
-    echo "sudo route add default ppp0" >> /etc/ppp/ip-up
+	echo "sudo route add default ppp0" >> /etc/ppp/ip-up
 fi
 
 if [[ $shield_hat -eq 2 ]] || [[ $shield_hat -eq 6 ]]; then
