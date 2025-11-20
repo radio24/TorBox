@@ -43,7 +43,7 @@ def create_app(debug: bool = False):
     api.add_resource(UserMessageResource, '/user_msg/<int:sender_id>')
     api.add_resource(GroupMessageResource, '/group_msg')
 
-    CORS(app)  # FIXME: Check for production
+    CORS(app, allow_private_network=True)  # FIXME: Check for production
 
     # init socketio
     socketio.init_app(app)

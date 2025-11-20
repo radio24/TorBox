@@ -21,7 +21,7 @@ app = Flask(
     static_url_path='/assets',
     static_folder=BASE_DIR / "webclient/dist/assets"
 )
-CORS(app, origins=ONION_DOMAIN)
+CORS(app, origins=ONION_DOMAIN, allow_private_network=True)
 Compress(app)
 
 
