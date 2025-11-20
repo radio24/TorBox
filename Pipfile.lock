@@ -369,12 +369,12 @@
         },
         "click": {
             "hashes": [
-                "sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2",
-                "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a"
+                "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202",
+                "sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==8.1.8"
+            "markers": "python_version >= '3.10'",
+            "version": "==8.2.1"
         },
         "cryptography": {
             "hashes": [
@@ -436,12 +436,12 @@
         },
         "flask": {
             "hashes": [
-                "sha256:5f873c5184c897c8d9d1b05df1e3d01b14910ce69607a117bd3277098a5836ac",
-                "sha256:d667207822eb83f1c4b50949b1623c8fc8d51f2341d65f72e1a1815397551136"
+                "sha256:07aae2bb5eaf77993ef57e357491839f5fd9f4dc281593a81a9e4d79a24f295c",
+                "sha256:284c7b8f2f58cb737f0cf1c30fd7eaf0ccfcde196099d24ecede3fc2005aa59e"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==3.1.0"
+            "version": "==3.1.1"
         },
         "flask-compress": {
             "hashes": [
@@ -454,11 +454,12 @@
         },
         "flask-cors": {
             "hashes": [
-                "sha256:38364faf1a7a5d0a55bd1d2e2f83ee9e359039182f5e6a029557e1f56d92c09a",
-                "sha256:493b98e2d1e2f1a4720a7af25693ef2fe32fbafec09a2f72c59f3e475eda61d2"
+                "sha256:4592c1570246bf7beee96b74bc0adbbfcb1b0318f6ba05c412e8909eceec3393",
+                "sha256:6332073356452343a8ccddbfec7befdc3fdd040141fe776ec9b94c262f058657"
             ],
             "index": "pypi",
-            "version": "==4.0.2"
+            "markers": "python_version >= '3.9' and python_version < '4.0'",
+            "version": "==6.0.0"
         },
         "flask-restful": {
             "hashes": [
