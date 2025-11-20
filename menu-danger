@@ -1,7 +1,8 @@
 #!/bin/bash
+# shellcheck disable=SC2062
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -31,7 +32,7 @@
 # SIZE OF THE MENU
 #
 # How many items do you have in the main menu?
-NO_ITEMS=7
+NO_ITEMS=10
 #
 # How many lines are only for decoration and spaces?
 NO_SPACER=4
@@ -54,6 +55,7 @@ NOCOLOR='\033[0m'
 
 #Other variables
 RUNFILE="/home/torbox/torbox/run/torbox.run"
+HOSTAPD="/etc/hostapd/hostapd.conf"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 CLEARNET_LIST="clearnet-list"
 CLEARNET_LIST_FILE="run/$CLEARNET_LIST"
@@ -63,6 +65,10 @@ VPN_LIST="vpn-list"
 VPN_LIST_FILE="run/$VPN_LIST"
 # Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
 VPN_LIST_FILE_OWN="run/vpn-list.own"
+
+# Read configuration from run/torbox.run
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI_DEFAULT=$(grep "^TORBOX_MINI_DEFAULT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##############################
 ######## FUNCTIONS ########
@@ -76,6 +82,30 @@ read_config()
 	# Is TorBox connected to a VPN?
 	tun0up=$(ip link | grep tun0)
 	clear
+
+	# TOGGLE11 shows if TorBox can be accessed by root
+	ROOT_SHADOW_LINE=$(sudo grep '^root:' /etc/shadow | cut -d: -f2 | grep -E '^!|^\*')
+	if [ -z "$ROOT_SHADOW_LINE" ]; then
+		TOGGLE11="Disable"
+	else
+	  # Check if /etc/securetty allows root login (e.g., on tty1, tty2, etc.)
+	  if [ -s /etc/securetty ]; then
+			TOGGLE11="Disable"
+	  else
+			TOGGLE11="Enable"
+	  fi
+	fi
+
+	# TOGGLE17 shows if TWEBSSH is enabled or disabled
+	clear
+	check_ssh_status
+	if grep -q "TWEBSSH=1" ${RUNFILE} && [ "$SSH_SERVICE_CHECK" == "ON" ]; then
+		clear
+		TOGGLE17="Disable"
+	else
+		clear
+		TOGGLE17="Enable"
+	fi
 
 	# TOGGLE19 shows if domain exclusion active or not
 	if grep -q "UNPROTECTED_DOMAIN=0" ${RUNFILE} ; then
@@ -97,33 +127,75 @@ read_config()
 	else
 		TOGGLE21="Disable"
 	fi
+
+	# TOGGLE23 shows if TorBox mini default configuration is enabled or disable
+	if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
+		TOGGLE23="Activate"
+	else
+		TOGGLE23="Deactivate"
+	fi
+
+	# TOGGLE24 shows if passwordless TorBox's WLAN is enabled or disabled
+	if grep "wpa=0" ${HOSTAPD}; then
+		TOGGLE24="Deactivate"
+	else
+		TOGGLE24="Activate"
+	fi
+
 }
 
 
 ######## PREPARATIONS ########
+read_config
+clear
+
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
 trap
-read_config
 
 
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
-"==" "==========================================[Domain Exclusion]===" \
-" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
-" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
-" 3" "List the exclusion lists" \
-" 4" "Backup/restore the exlusion lists" \
-"==" "=============================================[Lock-out risk]===" \
-" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
-" 6" "$TOGGLE21 SSH password login" \
-"==" "==========================================[Developer Tools]===" \
-" 7" "Forwarding only - tor protection disabled" \
-3>&1 1>&2 2>&3)
+if [ "$TORBOX_MINI" -eq "1" ]; then
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	"==" "==========================================[Domain Exclusion]===" \
+	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
+	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
+	" 3" "List the exclusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
+	"==" "=============================================[Lock-out risk]===" \
+	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
+	" 6" "$TOGGLE17 Torbox's WebSSH access" \
+	" 7" "Change SSH access from the Internet and from the Clients" \
+	" 8" "$TOGGLE21 SSH password login" \
+	"==" "==============================================[Expert Tools]===" \
+	" 9" "$TOGGLE11 root access" \
+	"10" "$TOGGLE24 passwordless TorBox's WLAN (reboot required)" \
+	"11" "Forwarding only - tor protection disabled" \
+	"12" "$TOGGLE23 other connection options in TorBox mini's Main Menu" \
+	3>&1 1>&2 2>&3)
+else
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	"==" "==========================================[Domain Exclusion]===" \
+	" 1" "$TOGGLE19 the exclusion of domains from tor protection"  \
+	" 2" "Add, change or remove a domain/IP entry in the exclusion lists"  \
+	" 3" "List the exclusion lists" \
+	" 4" "Backup/restore the exclusion lists" \
+	"==" "=============================================[Lock-out risk]===" \
+	" 5" "$TOGGLE20 the AP on wlan1 failsafe" \
+	" 6" "$TOGGLE17 Torbox's WebSSH access" \
+	" 7" "Change SSH access from the Internet and from the Clients" \
+	" 8" "$TOGGLE21 SSH password login" \
+	"==" "==========================================[Developer Tools]===" \
+	" 9" "$TOGGLE11 root access" \
+	"10" "$TOGGLE24 passwordless TorBox's WLAN" \
+	"11" "Forwarding only - tor protection disabled" \
+	3>&1 1>&2 2>&3)
+fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
 [ "$exitstatus" == "255" ] && exit 0
@@ -216,8 +288,8 @@ case "$CHOICE" in
 				DOMAINNAME=$(grep -P '(?=^.{4,253}$)(^(?:[a-zA-Z0-9](?:(?:[a-zA-Z0-9\-]){0,61}[a-zA-Z0-9])?\.)+([a-zA-Z]{2,}|xn--[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$)' <<< "$DOMAINNAME")
 				if [ "$DOMAINNAME" == "" ] ; then
 					clear
-					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${YELLOW}[!] Hmmm that's not a valid domain name, right?${NOCOLOR}"
+					echo -e "${RED}[!] You have to enter a valid domain name, for example netflix.com ${NOCOLOR}"
 					echo " "
 					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 					clear
@@ -354,6 +426,7 @@ case "$CHOICE" in
 					add_open_dns
 					echo ""
 					MORE_IPs=$(nslookup $DOMAINNAME | grep "Address: " | sed "s/Address: //g" | grep -v -E "(([a-f0-9]{0,4}:){4}))" | grep -v -E "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}" | tr '\n' ' ' | sed "s/::/:/g" | sed -E "s/(([a-f0-9]{0,4}+\:){3}+[a-f0-9]{0,4})//g" | sed -E "s/(:[a-f0-9]{0,4})//g" | sed "s/8.8.8.8//g" | sed "s/8.8.4.4//g" | sed "s/^[ \t]//g")
+					#"
 					if [ ! -z "$MORE_IPs" ]; then
 						echo -e "${RED}[+] Adding IPs for ${YELLOW}$DOMAINNAME${NOCOLOR}"
 						MORE_IPs="$DOMAINNAME $MORE_IPs"
@@ -395,8 +468,8 @@ case "$CHOICE" in
 				if grep -q "UNPROTECTED_DOMAIN=1" ${RUNFILE} ; then bin/set_interfaces_3; fi
 			else
 				clear
-				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${SERVICE_NAME}${NOCOLOR}"
-				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${SERVICE_NAME}${NOCOLOR}"
+				echo -e "${YELLOW}[!] NO DOMAIN NAME GIVEN!${NOCOLOR}"
+				echo -e "${RED}[!] You have to enter a domain name, for example netflix.com ${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				clear
@@ -450,13 +523,24 @@ case "$CHOICE" in
 	# Backup/restore the exlusion lists
 	4)
 		clear
-		INPUT=$(cat text/backup_restore_the_exlusion_lists-text)
+		INPUT=$(cat text/backup_restore_the_exclusion_lists-text)
 		whiptail --title "TorBox - INFO (scroll down!)" --msgbox --scrolltext "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH
 	;;
 
 	# Enable/Disable the AP on wlan1 failsafe
 	5)
 		clear
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-danger; exit 0" EXIT
+				exit 0
+			fi
+		fi
 		INPUT=$(cat text/disable_wlan1_failsafe-text)
 		if (whiptail --title "TorBox - INFO" --defaultno --yesno --no-button "ENABLE" --yes-button "Disable" "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 			sed -i "s/^WLAN_FAILSAFE=.*/WLAN_FAILSAFE=0/" ${RUNFILE}
@@ -469,54 +553,196 @@ case "$CHOICE" in
 		fi
 	;;
 
-	# Enable/disable SSH password login
+	#This disables / enables Torbox's WebSSH access
 	6)
+		if [ "$TOGGLE17" = "Disable" ]; then
+			INPUT=$(cat text/disable_twebssh-text)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				sudo pkill -f "twebssh"
+				sudo rm /etc/nginx/sites-enabled/webssh.conf
+        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+				clear
+				sudo systemctl restart nginx
+				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
+			fi
+		else
+			if [ "$SSH_SERVICE_CHECK" == "OFF" ]; then
+				whiptail --title "TorBox - INFO" --textbox text/no_ssh-text $MENU_HEIGHT_15 $MENU_WIDTH_REDUX
+			else
+				INPUT=$(cat text/enable_twebssh-text)
+				if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+					[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
+					[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
+					sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+					clear
+					sleep 3
+					(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
+					clear
+					sleep 2
+					sudo systemctl restart nginx
+					sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=1/" ${RUNFILE}
+				fi
+			fi
+		fi
+		read_config
+  ;;
+
+	#This disables / enables SSH access through Internet
+	7)
+		sudo bash bin/ssh_handling
+  ;;
+
+	# Enable/disable SSH password login
+	8)
 		clear
 		if [ "$TOGGLE21" == "Disable" ]; then
 			cd
 			if [ -f .ssh/authorized_keys ]; then
 				cd torbox
 				INPUT=$(cat text/disable_SSH_pasword_login-text)
-				if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					clear
-					echo -e "${RED}[+] Disabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] Disabling SSH password login...${NOCOLOR}"
 					(sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG) 2>/dev/null
 					echo ""
-					echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[+] Make sure that you are able to log into TorBox with the${SERVICE_NAME}${NOCOLOR}"
-					echo -e "${RED}[+] SSH key before you leave the actual SSH session!${SERVICE_NAME}${NOCOLOR}"
+					echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
 					sudo systemctl restart sshd
-					echo " "
-					read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
+					echo -e "${RED}[+] SSH password login has been disabled.${NOCOLOR}"
+					echo -e "${YELLOW}[+] DONE!${NOCOLOR}"
+					sleep 3
 					clear
 				fi
 			else
 				cd torbox
 				clear
-				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${SERVICE_NAME}${NOCOLOR}"
-				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys"
-				echo -e "${RED}[!] keys are generated, and the public key is on the TorBox ready to work."
+				echo -e "${YELLOW}[!] NO SSH PUBLIC KEY FOUND!${NOCOLOR}"
+				echo -e "${RED}[!] Disabling SSH password login is only possible if SSH keys are configured.${NOCOLOR}"
+				echo -e "${RED}[!] Password authentication will remain enabled.${NOCOLOR}"
 				echo " "
 				read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 				clear
 			fi
 		else
 			clear
-			echo -e "${RED}[+] Enabling SSH password login ${SERVICE_NAME}${NOCOLOR}"
+			echo -e "${RED}[+] Enabling SSH password login...${NOCOLOR}"
 			(sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}) 2>/dev/null
 			(sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}) 2>/dev/null
 			echo ""
-			echo -e "${RED}[+] Restarting SSH ${SERVICE_NAME}${NOCOLOR}"
-			echo -e "${RED}[+] DONE! ${SERVICE_NAME}${NOCOLOR}"
-			sleep 5
+			echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
+			sudo systemctl restart sshd
+			echo -e "${RED}[+] SSH password login has been enabled.${NOCOLOR}"
+			echo -e "${YELLOW}[+] DONE! ${NOCOLOR}"
+			sleep 3
 			clear
 		fi
 	;;
 
+	#This disables / enables root access
+	9)
+		if [ "$TOGGLE11" = "Enable" ]; then
+			INPUT=$(cat text/root_access-on-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Enable root access!${NOCOLOR}"
+				sudo passwd -u root
+				sudo usermod -s /bin/bash root
+				sudo passwd root
+				if grep -qE '^PermitRootLogin' "$SSHD_CONFIG"; then
+					sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' ${SSHD_CONFIG}
+				else
+					(printf "PermitRootLogin yes\n" | tee -a "$SSHD_CONFIG") >/dev/null 2>&1
+				fi
+				sudo systemctl reload sshd 2>/dev/null
+			fi
+		fi
+		if [ "$TOGGLE11" = "Disable" ]; then
+			INPUT=$(cat text/root_access-off-txt)
+			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+				clear
+				echo " "
+				echo -e "${RED}[+] Disable root access!${NOCOLOR}"
+				sudo passwd -l root
+				sudo usermod -s /sbin/nologin root
+				sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' ${SSHD_CONFIG}
+				sudo systemctl reload sshd 2>/dev/null
+				sleep 2
+			fi
+		fi
+  ;;
+
+	#Activate / Deactivate passwordless TorBox's WLAN
+	10)
+		clear
+		if [ "$ON_A_CLOUD" -eq "1" ]; then
+			INPUT=$(cat text/on_a_cloud_warning-text)
+			if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "DO IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+				exitstatus=$?
+				# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+				if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then exit 0 ; fi
+			else
+				trap "bash menu-danger; exit 0" EXIT
+				exit 0
+			fi
+		fi
+		if [ "$TOGGLE24" == "Activate" ]; then
+			INPUT=$(cat text/enable_passwordless_wifi-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				sudo sed -i "s/^wpa=.*/wpa=0/" ${HOSTAPD}
+				sudo sed -i "s/^wpa_passphrase=/#wpa_passphrase=/" ${HOSTAPD}
+				sudo sed -i "s/^wpa_key_mgmt=/#wpa_key_mgmt=/" ${HOSTAPD}
+				sudo sed -i "s/^rsn_pairwise=/#rsn_pairwise=/" ${HOSTAPD}
+				echo -e "${RED}[+] Passwordless TorBox's WLAN is now activated! Please be very careful!${NOCOLOR}"
+				echo -e "${RED}[+] For activation, we will reboot TorBox in about 3 seconds.${NOCOLOR}"
+				sleep 3
+				sudo reboot
+				exit 0
+			fi
+		else
+			INPUT=$(cat text/disable_passwordless_wifi-text)
+			if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				INPUT=$(whiptail --title "Setting the password for TorBox's WLAN" --inputbox "\n\nOnly letters (upper and lower case) and numbers are allowed. The length must be between 8 and 63 characters.\n\nEnter your new password:" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+				if [ ! -z "$INPUT" ]; then
+					if [[ $INPUT != *[0123456789ABCDEFGHIJKLMNOPQRSTUVWXZYabcdefghijklmnopqrstuvwxzy-]* ]]; then
+						clear
+						echo " "
+						echo -e "${YELLOW}[!] Only letters (upper and lower case) and numbers are allowed.${NOCOLOR}"
+						echo -e "${YELLOW}[!] We didn't change anything - try again!${NOCOLOR}"
+						sleep 5
+						trap "bash menu-danger; exit 0" EXIT
+						exit 0
+					elif ${#INPUT} -lt 8 || ${#INPUT} -gt 63 ; then
+						clear
+						echo " "
+						echo -e "${YELLOW}[!] The password has to be between 8 and 63 charcters.${NOCOLOR}"
+						echo -e "${YELLOW}[!] We didn't change anything - try again!${NOCOLOR}"
+						sleep 5
+						trap "bash menu-danger; exit 0" EXIT
+						exit 0
+					else
+						clear
+						echo -e "${RED}[+] Setting the password...${NOCOLOR}"
+						SSID_PW=wpa_passphrase=$INPUT
+						sudo sed -i "s/^#wpa_passphrase=.*/${SSID_PW}/" ${HOSTAPD}
+						echo -e "${RED}[+] Configuring hostapd.conf..${NOCOLOR}"
+						sudo sed -i "s/^wpa=.*/wpa=2/" ${HOSTAPD}
+						sudo sed -i "s/^#wpa_key_mgmt=/wpa_key_mgmt=/" ${HOSTAPD}
+						sudo sed -i "s/^#rsn_pairwise=/rsn_pairwise=/" ${HOSTAPD}
+						echo -e "${RED}[+] Passwordless TorBox's WLAN is now activated! Please be very careful!${NOCOLOR}"
+						echo -e "${RED}[+] For activation, we will reboot TorBox in about 3 seconds.${NOCOLOR}"
+						sleep 3
+						sudo reboot
+						exit 0
+					fi
+				fi
+			fi
+		fi
+  ;;
+
 	# Forwarding only - tor protection disabled
-	7)
+	11)
 		# Where is the Internet
 		INTERNET_IFACE=$(grep "^INTERNET_IFACE=" ${RUNFILE} | sed "s/.*=//g")
 		# Where are the clients
@@ -534,6 +760,31 @@ case "$CHOICE" in
 			I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 		fi
     sudo bash bin/set_captive_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3
+	;;
+
+	# Activate / Deactivate other connection options in TorBox mini's Main Menu
+	12)
+		clear
+		if [ "$TOGGLE23" == "Activate" ]; then
+			INPUT=$(cat text/disable_TorBox_mini_default-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now activated!${NOCOLOR}"
+				sleep 3
+			fi
+		else
+			INPUT=$(cat text/enable_TorBox_mini_default-text)
+			if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+				sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
+				echo -e "${RED}[+] Permanently disabling TorBox's WLAN...${NOCOLOR}"
+				echo -e "${RED}[+] Other connection options in TorBox mini's Main Menu are now deactivated!${NOCOLOR}"
+				sleep 3
+				sudo systemctl mask --now hostapd
+				sudo systemctl daemon-reload
+				sudo cp etc/rc.local.mini /etc/rc.local
+				sudo chmod a+x /etc/rc.local
+			fi
+		fi
 	;;
 
   *)

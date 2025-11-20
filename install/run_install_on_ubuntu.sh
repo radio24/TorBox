@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -108,10 +108,11 @@ GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the official Tor repositories
-TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # Snowflake repositories
@@ -123,9 +124,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4PROXY
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
-
-# Wiringpi - DEBIAN / UBUNTU SPECIFIC
-WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # above values will be saved into run/torbox.run #######
 
@@ -150,7 +148,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2024 radio24, nyxnor (Contributor)"
+			echo "Copyright (C) 2025 radio24, nyxnor (Contributor)"
 			echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--step_by_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
@@ -265,10 +263,7 @@ re-connect()
 				(sudo cp /etc/resolv.conf /etc/resolv.conf.bak) 2>&1
 			fi
 			(sudo printf "$RESOLVCONF" | sudo tee /etc/resolv.conf) 2>&1
-			(sudo dhclient -r) 2>&1
-	    sleep 5
-	    sudo dhclient &>/dev/null &
-	    sleep 30
+			sudo dhcpcd -n
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -344,7 +339,7 @@ download_and_compile_tor()
 	else
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -356,13 +351,13 @@ download_and_compile_tor()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED_NEW
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
 {
   # Difference to the update-function - we cannot use torsocks yet
-	echo -e "${RED}[+]         Can we access the $TOR_RELEASE Tor repositories on GitHub?${NOCOLOR}"
+	echo -e "${RED}[+]         Can we access the official Tor repositories on GitHub?${NOCOLOR}"
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
@@ -371,7 +366,7 @@ select_and_install_tor()
 	else
 		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -381,19 +376,15 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	if [ "$TOR_RELEASE" == "official" ]; then
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
-	elif [ "$TOR_RELEASE" == "unofficial" ]; then
-		# shellcheck disable=SC2153
-    readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	fi
+	# With TOR_HREF_FOR_SED, because of .*, sed -e has to be used!!
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -678,7 +669,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# Necessary packages for Ubuntu-based systems (not necessary with Raspberry Pi OS)
 	check_install_packages "net-tools unzip equivs rfkill iw"
 	# Installation of standard packages
-	check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
+	check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
 	check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
 	# IMPORTANT tor-geoipdb installs also the tor package
@@ -693,36 +684,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	fi
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		echo ""
-		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		clear
-	fi
-
-	#Install wiringpi
-	clear
-	echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-	echo ""
-	echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-	echo ""
-	cd
-	git clone $WIRINGPI_USED
-	DLCHECK=$?
-	if [ $DLCHECK -eq 0 ]; then
-		cd WiringPi
-		sudo ./build
-		cd
-		sudo rm -r WiringPi
-		if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-			echo ""
-			read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-			clear
-		fi
-	else
-		echo ""
-		echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
-		echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
-		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
 		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 		clear
@@ -960,7 +921,7 @@ if [ "$STEP_NUMBER" -le "6" ]; then
 	echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
 	echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
 	cd
-	git clone $SNOWFLAKE_USED
+	git clone $SNOWFLAKE_ORIGINAL_WEB
 	DLCHECK=$?
 	if [ $DLCHECK -eq 0 ]; then
 		export GO111MODULE="on"
@@ -1317,17 +1278,22 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 	sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 	sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-	sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-	sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+	sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
 	# NEW v.0.5.4: Specifc configurations for an installation on a cloud
 	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 		sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 		sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 		sudo sed -i "s/=random/=permanent/" ${RUNFILE}
 	else
 		sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 		sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 	fi
 
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1389,7 +1355,6 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 	clear
 	echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-	(sudo rm -r WiringPi) 2>/dev/null
 	(sudo rm -r Downloads) 2>/dev/null
 	(sudo rm -r get-pip.py) 2>/dev/null
 	(sudo rm -r python-urwid*) 2>/dev/null

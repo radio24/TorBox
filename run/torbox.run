@@ -1,5 +1,5 @@
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -36,9 +36,6 @@ OBFS4PROXY_USED=https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git
 # Snowflake repositories
 SNOWFLAKE_USED=https://github.com/tgragnato/snowflake
 
-# Wiringpi
-WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
-
 # Triggers some actions after a fresh installation
 # 0 - Not a fresh installation - does nothing
 # 1 - Will install and configure the OpenVPN server in a TorBox on a cloud installation (currently: 1 -> 3)
@@ -46,18 +43,34 @@ WIRINGPI_USED=https://project-downloads.drogon.net/wiringpi-latest.deb
 # 3 - Starts the first_use skript (currently: 3 -> 0)
 FRESH_INSTALLED=0
 
-# NEW v.0.5.4: Changed --> default has to be 1 for "torbox on a cloud" support
 # SSH access from the Internet
-# 0 - SSH access from the Internet is blocked (default)
-# 1 - SSH access from the Internet is allowed
-# 2 - SSH access from the Internet is blocked on a cloud installation
+# 0 - SSH access from the Internet is blocked (default on a TorBox / TorBox mini)
+# 1 - SSH access from the Internet is allowed (default on a TorBox on a Cloud)
 SSH_FROM_INTERNET=0
 
-# NEW v.0.5.4: New added with default 1 for "torbox on a cloud" support
+# SSH access from the Wifi
+# 0 - SSH access from the WiFi is blocked
+# 1 - SSH access from the WiFi is allowed (default)
+SSH_FROM_WIFI=1
+
+# SSH access from the Cable
+# 0 - SSH access from the Cable is blocked
+# 1 - SSH access from the Cable is allowed (default)
+SSH_FROM_CABLE=1
+
+# SSH access from the USB/VPN
+# 0 - SSH access from the USB/VPN is blocked
+# 1 - SSH access from the USB/VPN is allowed (default)
+SSH_FROM_USB=1
+
 # OPENVPN access from the Internet
-# 0 - OPENVPN access from the Internet is blocked
-# 1 - OPENVPN access from the Internet is allowed (default)
-OPENVPN_FROM_INTERNET=1
+# 0 - OPENVPN access from the Internet is blocked (default)
+# 1 - OPENVPN access from the Internet is allowed
+OPENVPN_FROM_INTERNET=0
+
+# NEW v.0.5.4-post: New added with default 1194
+# Default OPENVPN port
+OPENVPN_PORT=1194
 
 # Access to the Tor control port
 # 0 - Tor control port is limited to localhost connections (default)
@@ -125,11 +138,20 @@ WLAN_FAILSAFE=1
 # will be displayed in the main menu.
 FORWARDING_ONLY=0
 
-# TorBox is running on a cloud or as a cloud service
+# Is TorBox running on a cloud or as a cloud service
+# 0 - No (default)
+# 1 - Yes
 ON_A_CLOUD=0
 
-# TorBox is running on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget
+# Is TorBox running as TorBox Mini on a Raspberry Pi Zero 2 W as a RNDIS/Ethernet Gadget?
+# 0 - No (default)
+# 1 - Yes
 TORBOX_MINI=0
+
+# Is this a TorBox Mini default installation?
+# 0 - No
+# 1 - Yes (default)
+TORBOX_MINI_DEFAULT=1
 
 ## Global variables to help inter-script communication - don't change them!!
 

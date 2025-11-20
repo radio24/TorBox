@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2016,SC2059,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -101,18 +101,14 @@ NOCOLOR='\033[0m'
 DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
 
 # Where is the config.txt?
-if [ -f "/boot/dietpi/.version" ]; then
-	CONFIGFILE="/boot/config.txt"
-elif [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CONFIGFILE="/boot/firmware/config.txt"
 else
   CONFIGFILE="/boot/config.txt"
 fi
 
 # Where is the cmdline.txt?
-if [ -f "/boot/dietpi/.version" ]; then
-	CMDLINEFILE="/boot/cmdline.txt"
-elif [ "$DEBIAN_VERSION" -gt "11" ]; then
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
   CMDLINEFILE="/boot/firmware/cmdline.txt"
 else
   CMDLINEFILE="/boot/cmdline.txt"
@@ -132,10 +128,11 @@ GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the official Tor repositories
-TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # Snowflake repositories
@@ -147,9 +144,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4 repository
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
-
-# Wiringpi - DEBIAN / UBUNTU SPECIFIC
-WIRINGPI_USED="https://github.com/WiringPi/WiringPi.git"
 
 # Connectivity check
 CHECK_URL1="debian.org"
@@ -172,7 +166,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2024 radio24, nyxnor (Contributor)"
+			echo "Copyright (C) 2025 radio24, nyxnor (Contributor)"
       echo "Syntax : run_install_debian.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
@@ -275,26 +269,23 @@ re-connect()
 	  echo -e "${RED}[+]        We will check again in about 30 seconds...${NOCOLOR}"
 	  sleep 30
 	  echo ""
-	  echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	  echo -e "${RED}[+]        Trying again...${NOCOLOR}"
 	  ping -c 1 -q $CHECK_URL2 >&/dev/null
 	  if [ $? -eq 0 ]; then
 	    echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	  else
-	    echo -e "${YELLOW}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    (dhclient -r) 2>&1
-	    sleep 5
-	    dhclient &>/dev/null &
-	    sleep 30
+	    echo -e "${YELLOW}[!]        Hmmm, still no Internet connection... :-(${NOCOLOR}"
+	    echo -e "${RED}[+]        We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
+			sudo dhcpcd -n
 	    echo ""
-	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
+	    echo -e "${RED}[+]        Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
 	    if [ $? -eq 0 ]; then
-	      echo -e "${RED}[+]         Yes, now, we have an Internet connection! :-)${NOCOLOR}"
+	      echo -e "${RED}[+]        Yes, now, we have an Internet connection! :-)${NOCOLOR}"
 	    else
-				echo -e "${RED}[+]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
-				echo -e "${RED}[+]         Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
-				echo -e "${RED}[+]         Please, try to fix the problem and re-run the installation!${NOCOLOR}"
+				echo -e "${RED}[+]        Hmmm, still no Internet connection... :-(${NOCOLOR}"
+				echo -e "${RED}[+]        Internet connection is mandatory. We cannot continue - giving up!${NOCOLOR}"
+				echo -e "${RED}[+]        Please, try to fix the problem and re-run the installation!${NOCOLOR}"
 				exit 1
 	    fi
 	  fi
@@ -362,7 +353,7 @@ download_and_compile_tor()
 	else
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -374,13 +365,13 @@ download_and_compile_tor()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: RED, YELLOW, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, YELLOW, NOCOLOR, SELECT_TOR, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED_NEW
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
 {
   # Difference to the update-function - we cannot use torsocks yet
-	echo -e "${RED}[+]         Can we access the $TOR_RELEASE Tor repositories on GitHub?${NOCOLOR}"
+	echo -e "${RED}[+]         Can we access the official Tor repositories on GitHub?${NOCOLOR}"
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
@@ -389,7 +380,7 @@ select_and_install_tor()
 	else
 		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -399,19 +390,15 @@ select_and_install_tor()
 		clear
 	fi
   echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	if [ "$TOR_RELEASE" == "official" ]; then
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
-	elif [ "$TOR_RELEASE" == "unofficial" ]; then
-		# shellcheck disable=SC2153
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	fi
+	# With TOR_HREF_FOR_SED, because of .*, sed -e has to be used!!
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -662,9 +649,9 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   check_install_packages "wget curl gnupg net-tools unzip sudo rfkill resolvconf"
   # Installation of standard packages
 	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
 	else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp dkms nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw iw libjpeg-dev ifupdown"
 	fi
 	# Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt pkg-config zlib1g-dev"
@@ -690,36 +677,6 @@ if [ "$STEP_NUMBER" -le "3" ]; then
   fi
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	  echo ""
-	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	  clear
-  fi
-
-  #Install wiringpi
-  clear
-  echo -e "${RED}[+] Step 3: Installing all necessary packages....${NOCOLOR}"
-  echo ""
-  echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-  echo ""
-  cd
-  git clone $WIRINGPI_USED
-  DLCHECK=$?
-  if [ $DLCHECK -eq 0 ]; then
-	  cd WiringPi
-	  ./build
-	  cd
-	  rm -r WiringPi
-	  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-		  echo ""
-		  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-		  clear
-	  fi
-  else
-	  echo ""
-	  echo -e "${YELLOW}[!] COULDN'T CLONE THE WIRINGPI REPOSITORY!${NOCOLOR}"
-	  echo -e "${RED}[+] The WiringPi repository may be blocked or offline!${NOCOLOR}"
-	  echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
-	  echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 	  echo ""
 	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
 	  clear
@@ -975,7 +932,7 @@ if [ "$STEP_NUMBER" -le "6" ]; then
   echo -e "${RED}[+] Step 6: Installing Snowflake...${NOCOLOR}"
   echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
   cd
-  git clone $SNOWFLAKE_USED
+  git clone $SNOWFLAKE_ORIGINAL_WEB
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
 		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
@@ -1305,23 +1262,28 @@ if [ "$STEP_NUMBER" -le "12" ]; then
 	sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
 	sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
 	sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-	sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-	sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+	sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
 	# NEW v.0.5.4: Specifc configurations for an installation on a cloud
 	# Important: Randomizing MAC addresses could prevent the assignement of an IP address
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+		sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
 		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 		sed -i "s/=random/=permanent/" ${RUNFILE}
 	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
 		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
 	else
 		sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 		sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 		sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 	fi
 	if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
  		echo ""
@@ -1437,7 +1399,6 @@ if [ "$STEP_NUMBER" -le "16" ]; then
 	read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
 	clear
 	echo -e "${RED}[+] Erasing big not usefull packages...${NOCOLOR}"
-	(rm -r WiringPi) 2>/dev/null
 	# Find the bigest space waster packages: dpigs -H
 	apt-get -y --purge remove exim4 exim4-base exim4-config exim4-daemon-light
 	apt-get -y remove libgl1-mesa-dri texlive* lmodern

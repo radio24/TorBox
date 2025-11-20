@@ -1,7 +1,7 @@
 #!/bin/sh -e
 #
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -27,7 +27,6 @@ if [ -e /dev/rfkill ]; then
 	rfkill block bluetooth
 fi
 bash /home/torbox/torbox/bin/regset
-sudo systemctl stop hostapd
 
 CHECK_OS="$(lsb_release -si)"
 CHECK_OS="$(echo "$CHECK_OS" | tail -n1)"
@@ -50,7 +49,7 @@ fi
 
 # Change the MAC address if needed
 # List all available network interfaces
-AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^tun1/d")
+AVAILABLE_INTERFACES=$(ip -o link show | awk -F': ' '{print $2}' | sed "/^lo/d" | sed "/^wwan/d" | sed "/^tun1/d" | sed "/^usb0/d")
 for INTERFACE in $AVAILABLE_INTERFACES ; do
 	if grep "^MAC_$INTERFACE=permanent" /home/torbox/torbox/run/torbox.run || grep "^MAC_$INTERFACE=random" /home/torbox/torbox/run/torbox.run ; then
 		# NEW v.0.5.4: After a restart, the default MAC address is already set.

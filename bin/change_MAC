@@ -2,7 +2,7 @@
 # shellcheck disable=SC2120,SC2128,SC2178
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -115,6 +115,7 @@ change_mac_address()
 				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+					clear
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -142,6 +143,7 @@ change_mac_address()
 				# We have only to put an interface down, if it is not already down
 				# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 				if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+					clear
 					echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 					sudo ip link set dev $O_DEVICE down
 					INTERFACE1_DOWN=1
@@ -181,6 +183,7 @@ change_mac_address()
 					# We have only to put an interface down, if it is not already down
 					# ATTENTION not connected interfaces have to put down, even the state is already down --> NO-CARRIER
 					if ip link | grep "$O_DEVICE" | grep -e "state UP" -e "NO-CARRIER" ; then
+						clear
 						echo -e "${RED}[+] Shutting interface $O_DEVICE down!${NOCOLOR}"
 			 	 		sudo ip link set dev $O_DEVICE down
 						INTERFACE1_DOWN=1
@@ -222,7 +225,7 @@ change_mac_address_finish()
 	# if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
 	if [[ "$CLIENT_IFACE" =~ "$O_DEVICE" ]]; then
 		# New v.0.5.4 avoid to run hostapd if it is masked
-		AP_STATUS=$(sudo systemctl is-enable hostapd)
+		AP_STATUS=$(sudo systemctl is-enabled hostapd)
 		if [ "$AP_STATUS" != "masked" ] ; then
 			echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
 			sudo systemctl restart hostapd
@@ -256,7 +259,7 @@ case "$CHOICE3" in
 		if [ -z "$CHOICE2" ]; then
 			if grep -q "usb0" <<< "$AVAILABLE_INTERFACES"; then
 				###### DISPLAY THE AVAILABLE INTERFACES inluding usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 11 $MENU_WIDTH 5 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_15 $MENU_WIDTH 5 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
@@ -265,7 +268,7 @@ case "$CHOICE3" in
 				3>&1 1>&2 2>&3)
 			else
 				###### DISPLAY THE AVAILABLE INTERFACES without usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 10 $MENU_WIDTH 4 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\n\Please, use SPACE to select/deselect, ENTER to apply, ESC to go back." 11 $MENU_WIDTH 4 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \

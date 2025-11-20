@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2034,SC2064
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -1134,7 +1134,7 @@ stopping_domain_exclusion()
 		fi
 	elif [ "$NUMBER_OF_WORD" == "2" ]; then
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		if grep -q "^TORBOX_MINI=0" ${RUNFILE} ; then
 			I_DEVICE3="usb0"
 		else
@@ -1142,11 +1142,63 @@ stopping_domain_exclusion()
 		fi
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE3=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 	fi
 	clear
 	(sed -i "s/^UNPROTECTED_DOMAIN=.*/UNPROTECTED_DOMAIN=0/" ${RUNFILE}) 2>/dev/null
 	sudo bash bin/set_interfaces_2 $INTERNET_IFACE $I_DEVICE1 $I_DEVICE2 $I_DEVICE3 0 1
 	sudo ipset destroy 2>/dev/null
+}
+
+# check_ssh_status()
+# Used predefined variables: RED, NOCOLOR
+# This function checks the current SSH configuration status
+check_ssh_status()
+{
+    # Check if SSH service is running
+    if systemctl is-active --quiet sshd; then
+        SSH_SERVICE_STATUS="ENABLED"
+				SSH_SERVICE_CHECK="ON"
+    else
+        SSH_SERVICE_STATUS="DISABLED"
+				SSH_SERVICE_CHECK="OFF"
+    fi
+
+    # Check SSH access from Internet
+    if grep -q "^SSH_FROM_INTERNET=1" ${RUNFILE}; then
+        SSH_INTERNET_STATUS="ENABLED"
+				SSH_INTERNET_CHECK="ON"
+    else
+        SSH_INTERNET_STATUS="DISABLED"
+				SSH_INTERNET_CHECK="OFF"
+    fi
+
+    # Check iptables rules for different network interfaces
+    # WiFi network (192.168.42.x)
+		if grep -q "^SSH_FROM_WIFI=0" ${RUNFILE}; then
+        SSH_WIFI_STATUS="DISABLED"
+				SSH_WIFI_CHECK="OFF"
+    else
+        SSH_WIFI_STATUS="ENABLED"
+				SSH_WIFI_CHECK="ON"
+    fi
+
+    # Cable network (192.168.43.x)
+		if grep -q "^SSH_FROM_CABLE=0" ${RUNFILE}; then
+        SSH_CABLE_STATUS="DISABLED"
+				SSH_CABLE_CHECK="OFF"
+    else
+        SSH_CABLE_STATUS="ENABLED"
+				SSH_CABLE_CHECK="ON"
+    fi
+
+    # USB/VPN network (192.168.44.x)
+		if grep -q "^SSH_FROM_USB=0" ${RUNFILE}; then
+        SSH_USB_VPN_STATUS="DISABLED"
+				SSH_USB_VPN_CHECK="OFF"
+    else
+        SSH_USB_VPN_STATUS="ENABLED"
+				SSH_USB_VPN_CHECK="ON"
+    fi
 }

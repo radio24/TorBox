@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -27,10 +27,11 @@
 # network can be found on wlan0.
 #
 # SYNTAX
-# nohup ./hostapd_fallback_komplex_new <interface 1> <interface 2>
+# nohup ./hostapd_fallback_komplex_new <interface 1> <interface 2> <notusb0>
 #
 # <interface 1>: Is the interface with the AP: wlan0 or wlan1.
 # <interface 2>: Is the interface with the connected cable client: eth0 or eth1
+# <notusb0>: If set, there is no usb0-client present
 #
 # IMPORTANT
 # There is no failsave configuration in this procedure, because it interfered
@@ -38,11 +39,9 @@
 # wlan1 entries in the configuration fails and substitutet them with wlan0.
 #
 #
-# EXCEPTION: don't run on TorBox mini because TorBox mini has /etc/network/interfaces.mini and /etc/iptables.ipv-mini
-#            --> asuming that we don't have clients on the wifi
 RUNFILE="/home/torbox/torbox/run/torbox.run"
-if grep "^TORBOX_MINI=1" ${RUNFILE} ; then exit; fi
 ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
+TORBOX_MINI=$(grep "^TORBOX_MINI=.*" ${RUNFILE} | sed "s/.*=//g")
 
 ##### SET VARIABLES ######
 
@@ -50,9 +49,17 @@ ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 HOSTAPD="/etc/hostapd/hostapd.conf"
 INTERFACE1=$1
 INTERFACE2=$2
+NOTUSB0=$3
 INTERFACE1_DOWN=0
 INTERFACE2_DOWN=0
 INTERFACE3_DOWN=0
+INTERFACE_USB0_DOWN=0
+
+# Check for active SSH connections on USB0 before restarting
+USB0_SSH_ACTIVE=0
+if ss -tn | grep -q ":22.*192\.168\.44\." ; then
+	USB0_SSH_ACTIVE=1
+fi
 
 # INTERFACE1 and INTERFACE2 are clients - INTERFACE3 and INTERFACE4 are potential Internet sources
 if [ "$INTERFACE1" == "wlan1" ] ; then
@@ -97,15 +104,20 @@ if pgrep -f "dhclient.$INTERFACE2" ; then
 	INTERFACE2_DOWN=1
 fi
 
+if [ "$TORBOX_MINI" -eq "1" ]; then
+	NOTUSB0=""
+	if pgrep -f "dhclient.usb0" && [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
+		(sudo dhclient -r) 2>&1
+		sudo ifdown usb0 &>/dev/null
+		# NEW v.0.5.4-post: This will disconnect a cable connection
+		# sudo ifdown $INTERFACE4
+		INTERFACE_USB0_DOWN=1
+	fi
+fi
+
 if [ "$ON_A_CLOUD" -eq "0" ]; then
 	sudo cp /etc/network/interfaces /etc/network/interfaces.bak
-	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2 /etc/network/interfaces
-	# iptables can only be safed if WLAN_FAILSAFE=0 in torbox.run
-	# CHANGE v.0.5.4-post: I don't think these lines are necessary
-	# if grep -q "WLAN_FAILSAFE=0" ${RUNFILE} ; then
-	#	sudo cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.bak
-	#	sudo cp etc/iptables.ipv4-${INTERFACE1}${INTERFACE2}.nat /etc/iptables.ipv4.nat
-	# fi
+	sudo cp etc/network/interfaces.$INTERFACE1$INTERFACE2$NOTUSB0 /etc/network/interfaces
 fi
 
 if [ $INTERFACE1_DOWN = 1 ] ; then
@@ -124,20 +136,34 @@ if [ $INTERFACE3_DOWN = 1 ] ; then
 		INTERFACE3_DOWN=0
 fi
 
-# Is INTERFACE1 ready?
-STATICIP1=$(ip addr show $INTERFACE1 | grep -w inet)
-# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
-if [ -z "$STATICIP1" ] ; then
-	sudo ifdown $INTERFACE1 &>/dev/null
-	# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
-	sudo ifup $INTERFACE1 &>/dev/null
+if [ $INTERFACE_USB0_DOWN = 1 ] ; then
+		sudo ifup usb0 &>/dev/null
+		INTERFACE_USB0_DOWN=0
 fi
-# Avoiding to have no IP
-STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
-if [ -z "$STATICIP1" ] ; then
-	sudo ifdown $INTERFACE1 &>/dev/null
-	# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
-	sudo ifup $INTERFACE1 &>/dev/null
+
+# Is INTERFACE1 ready?
+if ip link | grep $INTERFACE1 | grep "state UP"; then
+	STATICIP1=$(ip addr show $INTERFACE1 | grep -w inet)
+	# If wlan0 or wlan1 doesn't have an IP address then we have to do something about it!
+	if [ -z "$STATICIP1" ] ; then
+		sudo ifdown $INTERFACE1 &>/dev/null
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+		sudo ifup $INTERFACE1 &>/dev/null
+	fi
+	unset STATICIP1
+	# Avoiding to have no IP
+	STATICIP1=$(ip addr show $INTERFACE1 | grep 192.168.42.1)
+	if [ -z "$STATICIP1" ] ; then
+		sudo ifdown $INTERFACE1 &>/dev/null
+		ip addr flush dev $INTERFACE1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+		sudo ifup $INTERFACE1 &>/dev/null
+	fi
+else
+		sudo ifdown $INTERFACE1 &>/dev/null
+		ip addr flush dev $INTERFACE1
+		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+		sudo ifup $INTERFACE1 &>/dev/null
 fi
 
 # Is INTERFACE2 ready?
@@ -146,34 +172,63 @@ if ip link | grep $INTERFACE2 | grep "state UP" ; then
 	STATICIP2=$(ip addr show $INTERFACE2 | grep -w 192.168.43.1)
 	if [ -z "$STATICIP2" ] ; then
 		sudo ifdown $INTERFACE2 &>/dev/null
+		ip addr flush dev $INTERFACE2
 		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
 	fi
 else
 		sudo ifdown $INTERFACE2 &>/dev/null
+		ip addr flush dev $INTERFACE2
 		# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
 		sudo ifup $INTERFACE2 &>/dev/null
 fi
 
 # If wlan0 or wlan1 is not acting as AP then we have to do something about it!
-if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
-	sudo sed -i "s/^interface=.*/interface=$INTERFACE1/" ${HOSTAPD}
-	AP_STATUS=$(sudo systemctl is-enable hostapd)
-	if [ "$AP_STATUS" != "masked" ] ; then
+# On a cloud, with TorBox mini and when WLAN is disabled, hostapd is masked by default
+AP_STATUS=$(sudo systemctl is-enabled hostapd)
+if [ "$AP_STATUS" != "masked" ] ; then
+	if ! grep "^interface=$INTERFACE1" ${HOSTAPD} ; then
+		sudo sed -i "s/^interface=.*/interface=$INTERFACE1/" ${HOSTAPD}
 		sudo systemctl restart hostapd
 		sleep 5
 	fi
-	AP_STATUS=$(sudo systemctl is-enable hostapd)
-	if [ "$AP_STATUS" != "masked" ] ; then
-		AP_STATUS=$(sudo systemctl is-active hostapd)
-		if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
-			sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
-			sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
-			sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
-			sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
-			sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
-			sudo systemctl restart hostapd
-			sleep 5
+	AP_STATUS=$(sudo systemctl is-active hostapd)
+	if [ $AP_STATUS = activating ] || [ $AP_STATUS = inactive ] ; then
+		sudo sed -i "s/^hw_mode=a/hw_mode=g/" ${HOSTAPD}
+		sudo sed -i "s/^channel=.*/channel=6/" ${HOSTAPD}
+		sudo sed -i "s/^ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/#ht_capab=[HT40-][HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]/" ${HOSTAPD}
+		sudo sed -i "s/^vht_oper_chwidth=1/#vht_oper_chwidth=1/" ${HOSTAPD}
+		sudo sed -i "s/^vht_oper_centr_freq_seg0_idx=42/#vht_oper_centr_freq_seg0_idx=42/" ${HOSTAPD}
+		sudo systemctl restart hostapd
+		sleep 5
+	fi
+fi
+
+# Is USB0 ready (only used in TorBox mini)?
+if [ "$TORBOX_MINI" -eq "1" ]; then
+	if ip link | grep usb0 | grep "state UP" ; then
+		STATICIP_USB0=$(ip addr show usb0 | grep -w inet)
+		# If usb0 doesn't have an IP address then we have to do something about it!
+		if [ -z "$STATICIP_USB0" ]; then
+			sudo ifdown usb0 &>/dev/null
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup usb0 &>/dev/null
+		fi
+		unset STATICIP_USB0
+		# Avoiding to have no IP
+		STATICIP_USB0=$(ip addr show usb0 | grep 192.168.44.1)
+		if [ -z "$STATICIP_USB0" ]; then
+			sudo ifdown usb0 &>/dev/null
+			ip addr flush dev usb0
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup usb0 &>/dev/null
+		fi
+	else
+		if [ "$USB0_SSH_ACTIVE" -eq "0" ] ; then
+			sudo ifdown usb0 &>/dev/null
+			ip addr flush dev usb0
+			# Cannot be run in the background because then it jumps into the next if-then-else clause (still missing IP)
+			sudo ifup usb0 &>/dev/null
 		fi
 	fi
 fi
@@ -192,13 +247,11 @@ if ip link | grep $INTERFACE3 | grep "state UP" ; then
 	STATICIP3=$(ip addr show $INTERFACE3 | grep 192.168.42.1)
 	if [ -n "$STATICIP3" ] ; then
 		sudo ifdown $INTERFACE3 &>/dev/null
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE3 &>/dev/null
 		sudo ifup $INTERFACE3 &>/dev/null &
 	fi
 else
 		sudo ifdown $INTERFACE3 &>/dev/null
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE3
 		sudo ifup $INTERFACE3 &>/dev/null &
 fi
@@ -217,19 +270,16 @@ if ip link | grep $INTERFACE4 | grep "state UP" ; then
 	STATICIP4=$(ip addr show $INTERFACE4 | grep 192.168.43.1)
 	if [ -n "$STATICIP4" ] ; then
 		sudo ifdown $INTERFACE4
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 	fi
 else
 		sudo ifdown $INTERFACE4
-		# The next line should help TorBox to forget the old IP
 		ip addr flush dev $INTERFACE4
 		sudo ifup $INTERFACE4 &>/dev/null &
 fi
 
-# This last part resets the dhcp server and opens the iptables to access TorBox
-# This function has to be used after an ifup command
+# This last part resets the dhcp server, which has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
 if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
 # CHANGE v.0.5.4-post: I don't think this line are necessary

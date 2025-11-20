@@ -1,8 +1,6 @@
-This menu entry disables temporary (until next
-reboot) or permanently TorBox's WLAN. This makes
-only sense and is only possible if your client is
-connected via Ethernet cable.
+This menu entry disables temporary (until the next reboot) or permanently TorBox's WLAN. It makes only sense and is only possible if your client is connected in another way (examples include an Ethernet cable, USB connector, or VPN connection).
 
-Currently, no client is connected via Ethernet cable.
-Please connect first a client with an Ethernet cable
-to TorBox and try again.
+Currently, there is no other connection.
+Please connect a client with one of the above-mentioned methods.
+
+If you think this error message is wrong in your situation, please report this to us with a detailed explanation of your settings: anonym@torbox.ch

@@ -1,0 +1,27 @@
+# This configuration file was modified by TorBox
+# Remark: eth1 has to be auto because it is handled this way in hostapd_fallback_komplex
+#         Inet -> wlan0 -> eth1 -> client is not possible; eth0 has to be used
+
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Include files from /etc/network/interfaces.d:
+# source-directory /etc/network/interfaces.d
+
+auto lo
+auto eth1
+auto wlan0
+auto usb0
+
+iface lo inet loopback
+iface eth1 inet dhcp
+iface wlan0 inet dhcp
+  wireless-power off
+allow-hotplug wlan0 wlan1 eth0 eth1 usb0
+
+iface wlan1 inet static
+  address 192.168.42.1
+  netmask 255.255.255.0
+  wireless-power off
+
+iface eth0 inet static
+  address 192.168.43.1
+  netmask 255.255.255.0

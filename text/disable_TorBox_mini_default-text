@@ -1,0 +1,11 @@
+The default TorBox mini configuration assumes that a Raspberry Pi Zero 2 W (or a similar device) is connected to the USB port of your client. The RNDIS/Ethernet Gadget mode ensures that the client can access the Raspberry Pi Zero 2 W via the usb0 interface. The wlan0 interface will be used to access the Internet.
+
+By activating other connection options in TorBox mini's Main Menu, you have the same functionality as a regular TorBox. However, usually, this makes only sense for experts who are adding additional interfaces to the Raspberry Pi Zero 2 W. Following are some remarks from user tests:
+- eth0/eth1 - it seems to add an Ethernet interface could lead to an eth1
+  interface instead of an eth0. Use Main Menu entry 5 for eth0 --> wlan0 /
+  eth1 / usb0 / tun1 (only this menu entry supports eth1 as a client!).
+  Use Main Menu entry 9 for eth1 --> wlan0 / eth0 / usb0 / tun1
+- wlan0 for clients: to use such a configuration, you have to enable
+  TorBox's WLAN with menu entry 11 in the Configuration sub-menu.
+
+Do you want to activate other connection options in TorBox mini's Main Menu?

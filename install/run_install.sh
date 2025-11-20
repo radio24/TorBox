@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2004,SC2181
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -133,10 +133,11 @@ GO_DL_PATH="https://go.dev/dl/"
 GO_PROGRAM="/usr/local/go/bin/go"
 
 # Release Page of the official Tor repositories
-TOR_RELEASE="official"
 TORURL="https://gitlab.torproject.org/tpo/core/tor/-/tags"
 TORPATH_TO_RELEASE_TAGS="/tpo/core/tor/-/tags/tor-"
+# WARNING: Sometimes, GitLab will change this prefix! With .* use sed -e
 TOR_HREF_FOR_SED="<a class=\".*\" href=\"/tpo/core/tor/-/tags/tor-"
+TOR_HREF_FOR_SED_NEW="<a href=\"/tpo/core/tor/-/tags/tor-"
 TORURL_DL_PARTIAL="https://dist.torproject.org/tor-"
 
 # Snowflake repositories
@@ -148,9 +149,6 @@ SNOWFLAKE_USED="https://github.com/tgragnato/snowflake"
 
 # OBFS4Proxy
 OBFS4PROXY_USED="https://salsa.debian.org/pkg-privacy-team/obfs4proxy.git"
-
-# Wiringpi
-WIRINGPI_USED="https://project-downloads.drogon.net/wiringpi-latest.deb"
 
 # Connectivity check
 CHECK_URL1="debian.org"
@@ -170,7 +168,7 @@ STEP_BY_STEP=
 while true; do
   case "$1" in
     -h | --help )
-			echo "Copyright (C) 2024 radio24, nyxnor (Contributor)"
+			echo "Copyright (C) 2025 radio24, nyxnor (Contributor)"
 			echo "Syntax : run_install.sh [-h|--help] [--randomize_hostname] [--select-tor] [--select-fork fork_name] [--select-branch branch_name] [--on_a_cloud] [--torbox_mini] [--step_by_step] [--continue_with_step]"
 			echo "Options: -h, --help     : Shows this help screen ;-)"
 			echo "         --randomize_hostname"
@@ -283,10 +281,7 @@ re-connect()
 	  else
 	    echo -e "${YELLOW}[!]         Hmmm, still no Internet connection... :-(${NOCOLOR}"
 	    echo -e "${RED}[+]         We will try to catch a dynamic IP adress and check again in about 30 seconds...${NOCOLOR}"
-	    (sudo dhclient -r) 2>&1
-	    sleep 5
-	    sudo dhclient &>/dev/null &
-	    sleep 30
+			sudo dhcpcd -n
 	    echo ""
 	    echo -e "${RED}[+]         Trying again...${NOCOLOR}"
 	    ping -c 1 -q $CHECK_URL1 >&/dev/null
@@ -363,7 +358,7 @@ download_and_compile_tor()
 	else
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T DOWNLOAD TOR!${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -375,13 +370,13 @@ download_and_compile_tor()
 
 # select_and_install_tor()
 # Syntax select_and_install_tor
-# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, URL, TORURL_DL_PARTIAL
+# Used predefined variables: RED, WHITE, NOCOLOR, SELECT_TOR, TORURL, TORPATH_TO_RELEASE_TAGS, TOR_HREF_FOR_SED_NEW
 # With this function change/update of tor from a list of versions is possible
 # IMPORTANT: This function is different from the one in the update script!
 select_and_install_tor()
 {
   # Difference to the update-function - we cannot use torsocks yet
-	echo -e "${RED}[+]         Can we access the $TOR_RELEASE Tor repositories on GitHub?${NOCOLOR}"
+	echo -e "${RED}[+]         Can we access the official Tor repositories on GitHub?${NOCOLOR}"
 	#-m 6 must not be lower, otherwise it looks like there is no connection! ALSO IMPORTANT: THIS WILL NOT WORK WITH A CAPTCHA!
 	OCHECK=$(curl -m 6 -s $TORURL)
 	if [ $? == 0 ]; then
@@ -390,7 +385,7 @@ select_and_install_tor()
 	else
 		echo -e "${YELLOW}[!]         NO!${NOCOLOR}"
 		echo -e ""
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -400,19 +395,16 @@ select_and_install_tor()
 		clear
 	fi
 	echo -e "${RED}[+]         Fetching possible tor versions... ${NOCOLOR}"
-	if [ "$TOR_RELEASE" == "official" ]; then
-		readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
-	elif [ "$TOR_RELEASE" == "unofficial" ]; then
-		# shellcheck disable=SC2153
-    readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed -e "s|$TOR_HREF_FOR_SED1||g" | sed -e "s|$TOR_HREF_FOR_SED2||g" | sed -e "s/<a//g" | sed -e "s/\">//g" | sed -e "s/ //g" | sort -r)
-	fi
+	# With TOR_HREF_FOR_SED, because of .*, sed -e has to be used!!
+	readarray -t torversion_versionsorted < <(curl --silent $TORURL | grep $TORPATH_TO_RELEASE_TAGS | sed "s|$TOR_HREF_FOR_SED_NEW||g" | sed -e "s/\">.*//g" | sed -e "s/ //g" | sort -r)
+
 
   #How many tor version did we fetch?
 	number_torversion=${#torversion_versionsorted[*]}
 	if [ $number_torversion = 0 ]; then
 		echo -e ""
 		echo -e "${YELLOW}[!] COULDN'T FIND ANY TOR VERSIONS${NOCOLOR}"
-		echo -e "${RED}[+] The $TOR_RELEASE Tor repositories may be blocked or offline!${NOCOLOR}"
+		echo -e "${RED}[+] The official Tor repositories may be blocked or offline!${NOCOLOR}"
 		echo -e "${RED}[+] Please try again later and if the problem persists, please report it${NOCOLOR}"
 		echo -e "${RED}[+] to ${YELLOW}anonym@torbox.ch${RED}. ${NOCOLOR}"
 		echo ""
@@ -634,15 +626,15 @@ if [ "$STEP_NUMBER" -le "2" ]; then
   echo -e "${RED}[+] Step 2a: Check the status of the WLAN regulatory domain...${NOCOLOR}"
   COUNTRY=$(sudo iw reg get | grep country | cut -d " " -f2)
   if [ "$COUNTRY" = "00:" ]; then
-    echo -e "${YELLOW}[!]         No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
-    echo -e "${YELLOW}[!]         Therefore we will set it to US! You can change it later.${NOCOLOR}"
+    echo -e "${YELLOW}[!]          No WLAN regulatory domain set - that will lead to problems!${NOCOLOR}"
+    echo -e "${YELLOW}[!]          Therefore we will set it to US! You can change it later.${NOCOLOR}"
     sudo iw reg set US
     INPUT="REGDOMAIN=US"
     sudo sed -i "s/^REGDOMAIN=.*/${INPUT}/" /etc/default/crda
   else
-    echo -e "${RED}[+]         The WLAN regulatory domain is set correctly! ${NOCOLOR}"
+    echo -e "${RED}[+]          The WLAN regulatory domain is set correctly! ${NOCOLOR}"
   fi
-  echo -e "${RED}[+]         To be sure we will unblock wlan, now! ${NOCOLOR}"
+  echo -e "${RED}[+]          To be sure we will unblock wlan, now! ${NOCOLOR}"
   sudo rfkill unblock wlan
   sleep 10
 
@@ -677,11 +669,14 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   # 4. Installing all necessary packages
   clear
   echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
+	echo -e " "
+	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
+	LINUX_HEADERS="linux-headers-$(uname -r)"
   # Installation of standard packages
   if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw libjpeg-dev ifupdown"
   else
-		check_install_packages "hostapd isc-dhcp-server usbmuxd dnsmasq dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw raspberrypi-kernel-headers dkms libjpeg-dev ifupdown"
+		check_install_packages "hostapd isc-dhcp-client isc-dhcp-server usbmuxd dnsmasq bind9-dnsutils tcpdump iftop vnstat debian-goodies apt-transport-https dirmngr imagemagick tesseract-ocr ntpsec-ntpdate screen git openvpn ppp nyx apt-transport-tor qrencode nginx basez iptables ipset macchanger openssl ca-certificates lshw $LINUX_HEADERS dkms libjpeg-dev ifupdown"
   fi
   # Installation of developer packages - THIS PACKAGES ARE NECESSARY FOR THE COMPILATION OF TOR!! Without them, tor will disconnect and restart every 5 minutes!!
   check_install_packages "build-essential automake libevent-dev libssl-dev asciidoc bc devscripts dh-apparmor libcap-dev liblzma-dev libsystemd-dev libzstd-dev quilt zlib1g-dev"
@@ -695,25 +690,6 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   if [[ -d /etc/openvpn/easy-rsa/ ]]; then
 	  rm -rf /etc/openvpn/easy-rsa/
   fi
-
-  if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
-	  echo ""
-	  read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
-	  clear
-  fi
-
-  # Install wiringpi
-  clear
-  echo -e "${RED}[+] Step 4: Installing all necessary packages....${NOCOLOR}"
-  echo ""
-  echo -e "${RED}[+]         Installing ${YELLOW}WiringPi${NOCOLOR}"
-  echo ""
-  wget $WIRINGPI_USED
-  sudo dpkg -i wiringpi-latest.deb
-  # Not nice, but working
-  sudo apt -y --fix-broken install
-  sudo dpkg -i wiringpi-latest.deb
-  sudo rm wiringpi-latest.deb
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	  echo ""
@@ -969,7 +945,7 @@ if [ "$STEP_NUMBER" -le "7" ]; then
   echo -e "${RED}[+] Step 7: Installing Snowflake...${NOCOLOR}"
   echo -e "${RED}[+]         This can take some time, please be patient!${NOCOLOR}"
   cd
-  git clone $SNOWFLAKE_USED
+  git clone $SNOWFLAKE_ORIGINAL_WEB
   DLCHECK=$?
   if [ $DLCHECK -eq 0 ]; then
 		if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
@@ -1181,13 +1157,14 @@ if [ "$STEP_NUMBER" -le "11" ]; then
       sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
     fi
   fi
-	sudo systemctl mask hciuart.service
-  sudo systemctl disable hciuart.service
 	sudo systemctl stop hciuart.service
-	sudo systemctl mask bluetooth.service
-  sudo systemctl disable bluetooth.service
+	sudo systemctl disable hciuart.service
+	sudo systemctl mask hciuart.service
 	sudo systemctl stop bluetooth.service
-  sudo apt-get -y purge bluez
+	sudo systemctl disable bluetooth.service
+	sudo systemctl mask bluetooth.service
+	# CHANGED v.0.5.5: Additional packages to remove
+  sudo apt-get purge -y bluez bluez-firmware pi-bluetooth
   sudo apt-get -y autoremove
   sudo rfkill block bluetooth
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
@@ -1268,22 +1245,27 @@ if [ "$STEP_NUMBER" -le "13" ]; then
   sudo sed -i "s/^NAMESERVERS=.*/NAMESERVERS=${NAMESERVERS_ORIG}/g" ${RUNFILE}
   sudo sed -i "s|^GO_DL_PATH=.*|GO_DL_PATH=${GO_DL_PATH}|g" ${RUNFILE}
   sudo sed -i "s|^OBFS4PROXY_USED=.*|OBFS4PROXY_USED=${OBFS4PROXY_USED}|g" ${RUNFILE}
-  sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_USED}|g" ${RUNFILE}
-  sudo sed -i "s|^WIRINGPI_USED=.*|WIRINGPI_USED=${WIRINGPI_USED}|g" ${RUNFILE}
+  sudo sed -i "s|^SNOWFLAKE_USED=.*|SNOWFLAKE_USED=${SNOWFLAKE_ORIGINAL_WEB}|g" ${RUNFILE}
   # NEW v.0.5.4: Specifc configurations for an installation on a cloud and for TorBox mini
   # Important: Randomizing MAC addresses could prevent the assignement of an IP address on a cloud
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
 	  sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=1/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 	  sudo sed -i "s/=random/=permanent/" ${RUNFILE}
   elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
     sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
   else
 	  sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
+		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
+		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
   fi
 

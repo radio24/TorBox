@@ -2,7 +2,7 @@
 # shellcheck disable=SC2001,SC2154
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -145,6 +145,7 @@ do_we_use_bridges
 read_config
 
 # Resetting
+cd "$(dirname "$0")" || exit 1
 shopt -s checkwinsize
 [ -f nohup.out ] && sudo rm nohup.out
 stty intr ^c
@@ -394,7 +395,7 @@ case "$CHOICE" in
     if [ "$LOGCHECK" = "Activate" ]; then
 
       ###### DISPLAY THE AVAILABLE OPTIONS ######
-      CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.4 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "Choose with SPACE and then press ENTER (ESC -> go back)" 12 $MENU_WIDTH 6 \
+			CHOICE2=$(whiptail --nocancel --title "TorBox v.0.5.4 - AUTOMATIC COUNTERACTIONS" --checklist --separate-output "\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_15 $MENU_WIDTH 6 \
       "1" "Protection against out of sync time" ON \
       "2" "Protection against entry guard failing and overloaded tor network" ON \
       "3" "Protection against interrupted WiFi connection with the Internet" ON \

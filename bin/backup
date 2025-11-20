@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -111,8 +111,8 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			WHIPTAIL_LINE="$WHIPTAIL_LINE 3>&1 1>&2 2>&3"
 			CHOICE=$(eval $WHIPTAIL_LINE)
 			exitstatus=$?
-			# exitstatus == 255 means that the ESC key was pressed
-			[ "$exitstatus" == "255" ] && exit 1
+			# exitstatus == 1 means that the ESC key was pressed
+			[ "$exitstatus" == "1" ] && exit 1
 			OBFS4RELAY=0
 			ONIONSERVICES=0
 			SHAREDFOLDERS=0

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -83,7 +83,7 @@ read_config()
 		fi
 	elif [ "$NUMBER_OF_WORD" == "2" ]; then
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
 		if grep -q "^TORBOX_MINI=0" ${RUNFILE} ; then
 			I_DEVICE3="usb0"
 		else
@@ -91,8 +91,8 @@ read_config()
 		fi
 	else
 		I_DEVICE1=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE2=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
-		I_DEVICE3=$(cut -d ' ' -f1 <<< $CLIENT_IFACE)
+		I_DEVICE2=$(cut -d ' ' -f2 <<< $CLIENT_IFACE)
+		I_DEVICE3=$(cut -d ' ' -f3 <<< $CLIENT_IFACE)
 	fi
 }
 
@@ -121,7 +121,7 @@ if [ "$FIRST_RUN" == "0" ]; then
 	read_config
 
 	# HTTP plain text traffic blocker active?
-	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=9; else R1=4; fi
+	if grep -q "^BLOCK_HTTP=1" ${RUNFILE} ; then R1=7; else R1=5; fi
 
 	# Remove old rules
 	# Old rules from set_interfaces_2 have to be catched and replaced by new rules (see below)

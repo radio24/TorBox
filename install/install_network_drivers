@@ -2,7 +2,7 @@
 # shellcheck disable=SC2046
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -56,8 +56,11 @@ if [ "$CHECK_OS" == "Raspbian" ]; then
 	echo -e "$INSTALLSTRING"
 	echo -e " "
 	echo -e "${RED}[+] Installing additional software... ${NOCOLOR}"
+	echo -e " "
+
 	# Update kernel headers - important: this has to be done every time after upgrading the kernel
-	sudo apt-get install -y raspberrypi-kernel-headers bc build-essential dkms
+	sudo apt-get install -y linux-headers-$(uname -r)
+	sudo apt-get install -y bc build-essential dkms
 	sleep 2
 
 	# Installing the RTL8188EU

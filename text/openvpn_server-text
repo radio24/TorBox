@@ -7,14 +7,15 @@ Before you continue, please check the following points:
   the Configuration menu (Manage the OpenVPN server).
 - For a client-server VPN connection, it is recommended to use the
   OpenVPN Connect client software: https://openvpn.net/client/
+- With a MacOS client, we recommend Tunnelblick because of its security
+  features: https://tunnelblick.net/
 - If you want to reach your OpenVPN server outside your local LAN,
-  the server must be reachable (exposed UDP port 443 to the internet).
+  the server must be reachable (exposed VPN UDP port to the Internet).
 - You may manually adapt your configuration if the server does not
-  have a static IP. See here for more: https://t.ly/jcsnL
+  have a static IP. See here for more: https://t.ly/d8iCR
 
 Next, you must choose if the TorBox is running on physical hardware (on a real box) or a virtual server (on a cloud). In a cloud-based installation, messages will show you if something (for example, the installation of  WLAN drivers) makes no sense, but it will not limit the functionality.
 
-You can also install the OpenVPN server later by using the Configuration
-sub-menu.
+You can also install the OpenVPN server later by using the Configuration sub-menu.
 
 Please choose one option or press ESC to abort.

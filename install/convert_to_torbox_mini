@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2024 radio24
+# Copyright (C) 2025 radio24
 # Contact: anonym@torbox.ch
 #
 # This program is free software: you can redistribute it and/or modify
@@ -71,9 +71,11 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	clear
 	echo -e "${RED}[+] These packages are not necessary anymore....${NOCOLOR}"
 	echo ""
-	echo -e "${RED}[+] Purging ${YELLOW}raspberrypi-kernel-headers dkms${NOCOLOR}"
+	echo -e "${RED}[+] Purging ${YELLOW}Kernel Headers and dkms${NOCOLOR}"
 	echo ""
-	(sudo apt-get -y purge raspberrypi-kernel-headers dkms) 2>/dev/null
+	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
+	LINUX_HEADERS="linux-headers-$(uname -r)"
+	(sudo apt-get -y purge $LINUX_HEADERS dkms) 2>/dev/null
 	#Fixing and cleaning
 	echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 	echo ""
@@ -102,6 +104,7 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	sudo systemctl mask hostapd
 	sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
 	sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
+	sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
 	if ! grep "dwc2,g_ether" ${CMDLINEFILE}; then
 		if grep "modules-load" ${CMDLINEFILE}; then
 			CMDLINE_STRING=$(grep -o "modules-load=.*" ${CMDLINEFILE} | cut -d ' ' -f 1)
