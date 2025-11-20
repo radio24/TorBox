@@ -341,28 +341,28 @@ configure_tfs()
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		echo -e "${RED}[+] Starting TFS (up- and downloading prohibited)...${NOCOLOR}"
 		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
-    if [ ! -f "${TFS_PATH}/.access" ]; then printf "${TFS_PATH};x" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};x/' "${TFS_PATH}/.access"; fi
+    printf "${TFS_PATH};x" > "${TFS_PATH}/.access"
 	elif [ "$allow_ud" == "1" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
 		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		echo -e "${RED}[+] Starting TFS (only for uploading)...${NOCOLOR}"
 		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
-    if [ ! -f "${TFS_PATH}/.access" ]; then printf "${TFS_PATH};xw" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xw/' "${TFS_PATH}/.access"; fi
+    printf "${TFS_PATH};xw" > "${TFS_PATH}/.access"
 	elif [ "$allow_ud" == "2" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
 		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		echo -e "${RED}[+] Starting TFS (only for downloading)...${NOCOLOR}"
 		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
-    if [ ! -f "${TFS_PATH}/.access" ]; then printf "${TFS_PATH};xr" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xr/' "${TFS_PATH}/.access"; fi
+		printf "${TFS_PATH};xr" > "${TFS_PATH}/.access"
 	elif [ "$allow_ud" == "3" ]; then
 		echo -e "${RED}[+] Configuring TFS...${NOCOLOR}"
 		TFS_STRING="\nTFS-$SERVICE_NAME=lib\/fileshare\/tfs -n $SERVICE_NAME -fp $TFS_PATH_STRING -od $ONION_HOSTNAME"
 		sudo sed -E -i "s/# This will configure the TFS program.*/$REPLACE_STRING$TFS_STRING/g" "${RUNFILE}"
 		echo -e "${RED}[+] Starting TFS (only for up- and downloading)...${NOCOLOR}"
 		(nohup sudo ./lib/fileshare/tfs -n $SERVICE_NAME -fp $TFS_PATH -od $ONION_HOSTNAME &) &>/dev/null
-    if [ ! -f "${TFS_PATH}/.access" ]; then printf "${TFS_PATH};xrw" > "${TFS_PATH}/.access"; else sed -i '1s/${TFS_PATH_STRING}*$/${TFS_PATH_STRING};xrw/' "${TFS_PATH}/.access"; fi
+    printf "${TFS_PATH};xrw" > "${TFS_PATH}/.access"
 	fi
 	#Configure Nginx
 	echo ""

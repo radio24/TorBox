@@ -50,7 +50,7 @@ permissions, separated by a semicolon, in the following format:
 Where:
 
 - `r` stands for read-only (can download files)
-- `w` stands for write (can upload files
+- `w` stands for write (can upload files)
 - `x` stands for excecute (can list files)
 - `rw` stands for read and write (can upload and download files)
 - `rx` stands for read and execute (can list and download files)
@@ -65,5 +65,3 @@ users to download and upload files to it.
 To run TFS in development mode, simply run
 
 ```./tfs -n test -od test -fp /path/to/directory --dev 1```
-
-
