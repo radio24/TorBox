@@ -1721,7 +1721,11 @@ case "$CHOICE" in
 										clear
 										# If the user doesn't write something into the dialogue, the old path is still valid
 										if [[ $SUB_FOLDER = "" || $SUB_FOLDER = " " ]]; then
-											sleep 1
+											if [[ $TFS_PATH == */ ]]; then
+												TFS_PATH="$WEBSITE_DIR/$TFS_PATH"
+											else
+												TFS_PATH="$WEBSITE_DIR/$TFS_PATH/"
+											fi
 										else
 											if [[ $SUB_FOLDER == */ ]]; then
 												TFS_PATH="$WEBSITE_DIR/$SUB_FOLDER"
@@ -1734,12 +1738,7 @@ case "$CHOICE" in
 											sudo -utorbox mkdir -p $TFS_PATH
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-										if [[ $TFS_PATH == */ ]]; then
-											sleep 1
-										else
-											TFS_PATH="$TFS_PATH/"
-										fi
-										if grep ";x" <<< "$TFS_PATH.access"; then
+											if grep ";x" <<< "$TFS_PATH.access"; then
 											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" OFF \
