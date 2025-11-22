@@ -1738,22 +1738,22 @@ case "$CHOICE" in
 											sudo -utorbox mkdir -p $TFS_PATH
 										fi
 										##### DISPLAY THE AVAILABLE OPTIONS ######
-											if grep ";x" <<< "$TFS_PATH.access"; then
+											if grep ";x" <<< "${TFS_PATH}.access"; then
 											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
-										elif grep ";xw" <<< "$TFS_PATH.access"; then
+										elif grep ";xw" <<< "${TFS_PATH}.access"; then
 											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" OFF \
 											3>&1 1>&2 2>&3)
-										elif grep ";xr" <<< "$TFS_PATH.access"; then
+										elif grep ";xr" <<< "${TFS_PATH}.access"; then
 											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" OFF \
 											" 2" "Allow downloading" ON \
 											3>&1 1>&2 2>&3)
-										elif grep ";xrw" <<< "$TFS_PATH.access"; then
+										elif grep ";xrw" <<< "${TFS_PATH}.access"; then
 											CHOICE3=$(whiptail --nocancel --title "TorBox v.0.5.4 - TorBox's File Sharing capabilities" --checklist --separate-output "Choose if you want to allow uploading or/and downloading.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 											" 1" "Allow uploading" ON \
 											" 2" "Allow downloading" ON \
