@@ -32,7 +32,7 @@ if grep "TWEBSSH=1" /home/torbox/torbox/run/torbox.run ; then
 	[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp /home/torbox/torbox/etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 	[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
 	(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null
-	sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+	sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sudo systemctl restart nginx
 fi
 

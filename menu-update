@@ -1371,6 +1371,7 @@ case "$CHOICE" in
 				echo -e "${RED}[+] Stopping TFS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
 				PID=$(cat lib/fileshare/pid/${TFS_NAME}.pid)
 				(sudo kill $PID) &>/dev/null
+				if [ -f "lib/fileshare/pid/${TFS_NAME}.pid" ]; then sudo rm "lib/fileshare/pid/${TFS_NAME}.pid"; fi
 			done
 			echo ""
 		fi
@@ -1381,6 +1382,7 @@ case "$CHOICE" in
         echo -e "${RED}[+] Stopping TCS named ${YELLOW}${TFS_NAME}${RED} on Onion domain...${NOCOLOR}"
         PID=$(cat lib/chatsecure/pid/${TCS_NAME}.pid)
         (sudo kill $PID) &>/dev/null
+				if [ -f "lib/chatsecure/pid/${TCS_NAME}.pid" ]; then sudo rm "lib/chatsecure/pid/${TCS_NAME}.pid"; fi
       done
       echo ""
     fi
@@ -1398,7 +1400,7 @@ case "$CHOICE" in
 		fi
 
 		# shellcheck disable=SC2062
-		sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		sleep 5
 		sudo systemctl restart nginx
 		echo -e "${RED}[+] Starting TFS and TCS again and reload Nginx...${NOCOLOR}"

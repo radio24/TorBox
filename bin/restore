@@ -511,7 +511,7 @@ if (whiptail --title "TorBox - INFO (scroll down!)" --scrolltext --yesno "$INPUT
 			# Reloading Nginx to apply new configuration
 			echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 			# shellcheck disable=SC2062
-			sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+			sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 			sleep 5
 			sudo systemctl restart nginx
 

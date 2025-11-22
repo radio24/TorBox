@@ -560,7 +560,7 @@ case "$CHOICE" in
 			if (whiptail --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
 				sudo pkill -f "twebssh"
 				sudo rm /etc/nginx/sites-enabled/webssh.conf
-        sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+				sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
 				clear
 				sudo systemctl restart nginx
 				sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
@@ -573,7 +573,7 @@ case "$CHOICE" in
 				if (whiptail --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 					[ ! -f /etc/nginx/sites-available/webssh.conf ] && sudo cp etc/nginx/sites-available/sample-webssh.conf /etc/nginx/sites-available/webssh.conf
 					[ ! -L /etc/nginx/sites-enabled/webssh.conf ] && sudo ln -sf /etc/nginx/sites-available/webssh.conf /etc/nginx/sites-enabled/
-					sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+					sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 					clear
 					sleep 3
 					(nohup sudo /home/torbox/torbox/lib/webssh/twebssh --unix-socket=/var/run/webssh.sock &) 2>/dev/null

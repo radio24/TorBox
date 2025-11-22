@@ -70,7 +70,8 @@ CLIENT_ONION_AUTH_DIR="${DATA_DIR}/onion_auth"
 WEBSERVER="nginx"
 WEBSITE_DIR="/var/www"
 NGINX_DIR="/etc/nginx"
-RUNFILE="/home/torbox/torbox/run/torbox.run"
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="${TORBOX_PATH}/run/torbox.run"
 SELECTION=$1
 ENTRY_NUMBERS=0
 
@@ -382,7 +383,7 @@ configure_tfs()
 	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
   # sudo systemctl reload nginx will not create new socks !!
-	# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+	# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sudo systemctl reload nginx
 	(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf") &>/dev/null
 }
@@ -403,6 +404,7 @@ configure_tcs()
 	find_virtport $SERVICE_NAME
 	echo -e "${RED}[+] Configuring TCS...${NOCOLOR}"
 	# NEW - TorBox v.0.5.4
+	PID_PATH="$TORBOX_PATH/lib/chatsecure/pid"
 	(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
 	(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
 	(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
@@ -427,7 +429,7 @@ configure_tcs()
 	(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
 	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
   # sudo systemctl reload nginx will not create new socks !!
-	# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+	# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 	sudo systemctl reload nginx
 	(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-chatsecure.conf") &>/dev/null
 }
@@ -441,7 +443,7 @@ config_shared_folders_TFS_and_TCS()
 	if [ ! -z "$WEB_SERVICE_NAME_LIST" ]; then
 		echo -e "${RED}[+] ${YELLOW}Found shared folder(s)...    ${RED}Nginx reloaded to make them available.${NOCOLOR}"
 		# sudo systemctl reload nginx will not create new socks !!
-		# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+		# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 		sudo systemctl reload nginx
 	fi
 	WEB_SERVICE_NAME_LIST=""
@@ -996,7 +998,7 @@ case "$CHOICE" in
         clear
 				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
         # sudo systemctl reload nginx will not create new socks !!
-				# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+				# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 				sudo systemctl reload nginx
         echo -e "${RED}[+] Restarting Tor!${NOCOLOR}"
         sudo systemctl restart tor
@@ -1461,7 +1463,7 @@ case "$CHOICE" in
 	               	fi
 									echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
                   # sudo systemctl reload nginx will not create new socks !!
-									# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+									# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									sudo systemctl reload nginx
 									(sudo rm -f "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion.conf") &>/dev/null
 									echo ""
@@ -1523,7 +1525,7 @@ case "$CHOICE" in
 										echo -e "${RED}[+] Sharing the folder ${YELLOW}$SHARE_PATH${RED} for the Onion Service named ${YELLOW}$SERVICE_NAME${RED} on port ${YELLOW}$VIRTPORT${RED}"
 										sudo rm "${NGINX_DIR}/sites-enabled/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
                     # sudo systemctl reload nginx will not create new socks !!
-										# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+										# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 										sudo systemctl reload nginx
 										sudo sed -i "s|$SHARE_PATH_OLD|$SHARE_PATH|g" "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf"
 										(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
@@ -1537,7 +1539,7 @@ case "$CHOICE" in
 									echo ""
 									echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
                   # sudo systemctl reload nginx will not create new socks !!
-									# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+									# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 									sudo systemctl reload nginx
 									echo ""
 									# This will give ONION_HOSTNAME
@@ -1583,7 +1585,7 @@ case "$CHOICE" in
              	echo ""
              	echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
               # sudo systemctl reload nginx will not create new socks !!
-							# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+							# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 							sudo systemctl reload nginx
            		echo ""
            		read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1812,7 +1814,7 @@ case "$CHOICE" in
 						fi
 						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
             # sudo systemctl reload nginx will not create new socks !!
-						# sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+						# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 						sudo systemctl reload nginx
 						echo ""
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'
@@ -1906,6 +1908,7 @@ case "$CHOICE" in
 							sudo sed -i "/^TCS-/d" "${RUNFILE}"
 							# NEW - TorBox v.0.5.4
 							sleep 2
+							PID_PATH="$TORBOX_PATH/lib/fileshare/pid/"
 							(sudo rm $PID_PATH/$SERVICE_NAME.pid) &>/dev/null
 							(sudo rm $DB_PATH/$SERVICE_NAME.*) &>/dev/null
 							(sudo rm /var/run/tcs_$SERVICE_NAME.sock) &>/dev/null
@@ -1931,7 +1934,7 @@ case "$CHOICE" in
 						fi
 						echo -e "${RED}[+] Reloading Nginx...${NOCOLOR}"
             # sudo systemctl reload nginx will not create new socks !!
-            # sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+						# sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 						sudo systemctl reload nginx
 						echo ""
 						read -n 1 -s -r -p $'\e[1;31mPlease press any key to continue... \e[0m'

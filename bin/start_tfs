@@ -108,6 +108,6 @@ if [ $n -gt 0 ] ; then
 fi
 
 # sudo systemctl reload nginx will not create new socks !!
-#sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
+#sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{}
 #sudo systemctl restart nginx
 sudo systemctl reload nginx

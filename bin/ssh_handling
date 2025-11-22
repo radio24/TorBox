@@ -97,7 +97,7 @@ apply_ssh_service()
 						sudo pkill -f "twebssh"
 						sudo rm /etc/nginx/sites-enabled/webssh.conf
 						# shellcheck disable=SC2062
-						sudo ls /var/run | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
+						sudo ls /var/run/ | grep .*-onion-.*.sock | xargs -I {} -d"\n" sudo rm /var/run/{} ; sudo rm /var/run/webssh.sock
 						clear
 						sudo systemctl restart nginx
 						sudo sed -i "s/^TWEBSSH=.*/TWEBSSH=0/" ${RUNFILE}
