@@ -1112,11 +1112,9 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 	(sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak) 2>/dev/null
 	sudo cp etc/systemd/resolved.conf /etc/systemd/
 	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/systemd/resolved.conf -- backup done"
-	if grep -q "#net.ipv4.ip_forward=1" /etc/sysctl.conf ; then
-  	sudo cp /etc/sysctl.conf /etc/sysctl.conf.bak
-  	sudo sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-  	echo -e "${RED}[+]${NOCOLOR}         Changed /etc/sysctl.conf -- backup done"
-	fi
+	# NEW v.0.5.5: Configuring IPv4 forwarding in sysctl.d, which replaces /etc/sysctl.conf on Debian Trixie
+	echo 'net.ipv4.ip_forward=1' | tee /etc/sysctl.d/99-ipforward.conf
+	sysctl -p /etc/sysctl.d/99-ipforward.conf
 	# NEW v.0.5.4: Cloudspecific torrc
 	(sudo cp /etc/tor/torrc /etc/tor/torrc.bak) 2>/dev/null
 	if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then sudo cp etc/tor/torrc-cloud /etc/tor/torrc
