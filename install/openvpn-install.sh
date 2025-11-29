@@ -212,7 +212,7 @@ function installQuestions() {
 			echo -e "${YELLOW}[!] It seems this server is behind NAT. What is its public IPv4 address or hostname?${NOCOLOR}"
 			echo -e "${YELLOW}[!] We need it for the clients to connect to the server.${NOCOLOR}"
 
-			# New v.0.5.4-post: Fix Public IP detection - Fix issue when seeip.org is unreachable. It solves the issue angristan#1241 (https://github.com/angristan/openvpn-install/issues/1241)
+			# NEW v.0.5.4-post: Fix Public IP detection - Fix issue when seeip.org is unreachable. It solves the issue angristan#1241 (https://github.com/angristan/openvpn-install/issues/1241)
 			if [[ -z $ENDPOINT ]]; then
 				DEFAULT_ENDPOINT=$(resolvePublicIP)
 			fi
@@ -1087,7 +1087,7 @@ function manageMenu() {
 
 	###### DISPLAY THE MENU ######
 	clear
-	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - OpenVPN Server Management" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Add a new client"  \
 	" 2" "Revoke an existing client"  \

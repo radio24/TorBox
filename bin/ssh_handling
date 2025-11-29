@@ -118,7 +118,7 @@ apply_ssh_internet()
 
 	if [ "$enable_internet" = "enable" ]; then
 		INPUT=$(cat "$TXT_DIR/ssh_i_access-on-txt")
-		ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --radiolist "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
+		ENABLED_CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --radiolist "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH 2 \
 		"1" "Temporary until reconfiguration or restart" OFF \
 		"2" "Permanently until disabled again" OFF \
 		3>&1 1>&2 2>&3)
@@ -226,7 +226,7 @@ while true; do
     check_ssh_status
 
     # Build the checklist
-		CHOICES=$(whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --checklist "\nSelect SSH access methods to enable/disable.\n\nIMPORTANT: Only entry 1 has an impact for WebSSH - if disabled, WebSSH stops working! Because of security reasons WebSSH is not reachable from the Internet, despite entry 2 allowing SSH access from the Internet. However, entries 3-5 have no impact on WebSSH. To disable WebSSH for clients, you must disable WebSSH itself.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." 21 $MENU_WIDTH $MENU_LIST_HEIGHT \
+		CHOICES=$(whiptail --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --checklist "\nSelect SSH access methods to enable/disable.\n\nIMPORTANT: Only entry 1 has an impact for WebSSH - if disabled, WebSSH stops working! Because of security reasons WebSSH is not reachable from the Internet, despite entry 2 allowing SSH access from the Internet. However, entries 3-5 have no impact on WebSSH. To disable WebSSH for clients, you must disable WebSSH itself.\n\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." 21 $MENU_WIDTH $MENU_LIST_HEIGHT \
 		"1" "SSH Service enabled" $SSH_SERVICE_CHECK \
 		"2" "SSH access from the Internet" $SSH_INTERNET_CHECK \
 		"3" "SSH access from WiFi clients (192.168.42.x)" $SSH_WIFI_CHECK \
@@ -246,7 +246,7 @@ while true; do
 		if [ "$SSH_SERVICE_CHECK" == "ON" ] && [ -z "$DANGEROUS_OPTIONS" ]; then
 			INPUT=$(cat "$TXT_DIR/ssh_off-txt")
 			# If NO, the SSH changes will be skipped and it returns to the selction menu.
-			if ! (whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
+			if ! (whiptail --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					continue
 			fi
 		fi
@@ -256,7 +256,7 @@ while true; do
 		if [ "$SSH_INTERNET_CHECK" == "ON" ] && [ -z "$DANGEROUS_OPTIONS" ]; then
 			INPUT=$(cat "$TXT_DIR/ssh_i_access-off-txt")
 			# If NO, the SSH changes will be skipped and it returns to the selction menu.
-			if ! (whiptail --title "TorBox v.0.5.4 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
+			if ! (whiptail --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
 					continue
 			fi
 		fi

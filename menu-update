@@ -53,7 +53,7 @@ YELLOW='\033[1;93m'
 NOCOLOR='\033[0m'
 
 # Default hostname
-HOSTNAME="TorBox054"
+HOSTNAME="TorBox055"
 
 #Identifying the hardware (see also https://gist.github.com/jperkin/c37a574379ef71e339361954be96be12)
 if grep -q --text 'Raspberry Pi 4' /proc/device-tree/model ; then CHECK_HD3="Raspberry Pi 4" ; fi
@@ -745,7 +745,7 @@ stty intr ^c
 trap
 
 ###### DISPLAY THE MAIN MENU ######
-CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.5 - UPDATE & MAINTENANCE MENU" --menu "Choose an option (ESC -> command prompt)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "===" "==================================================[Updates]===" \
 " 1" "Update the base system (reboot recommended!)" \
 " 2" "Update additional network drivers (reboot required!)" \

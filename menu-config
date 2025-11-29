@@ -259,7 +259,7 @@ trap
 ###### DISPLAY THE MENU ######
 clear
 
-CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - CONFIGURATION MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 "==" "================================================[Passwords]===" \
 " 1" "Change admin (user torbox) password"  \
 " 2" "Generate SSH key for TorBox login"  \
@@ -1017,8 +1017,8 @@ case "$CHOICE" in
 	13)
 		if [ "$TOGGLE18" = "Start" ]; then
     	INPUT=$(cat text/exclude_slow_tor_relays-text)
-			if (whiptail --title "TorBox v.0.5.4 - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				SPEED=$(whiptail --title "TorBox v.0.5.4 - Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
+			if (whiptail --title "TorBox v.0.5.5 - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
+				SPEED=$(whiptail --title "TorBox v.0.5.5 - Speed threshold" --inputbox "\nEnter the speed threeshold in KB/s. All relays below that threshold will be excluded (default: 4000)" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX 3>&1 1>&2 2>&3)
 				exitstatus=$?
 				if [ "$exitstatus" == "1" ] || [ "$exitstatus" == "255" ]; then
 					clear
@@ -1070,7 +1070,7 @@ case "$CHOICE" in
 			OLD_LIMIT=$(grep "^BandwidthRate .*" "$TORRC" | sed "s/^BandwidthRate *//")
 			if [ -z "$OLD_LIMIT" ] ; then OLD_LIMIT="1 GB"; fi
 			INPUT=$(cat text/limit_tor_bandwidth-text)
-			LIMIT=$(whiptail --title "TorBox v.0.5.4 - Bandwidth limit" --inputbox "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH $OLD_LIMIT 3>&1 1>&2 2>&3)
+			LIMIT=$(whiptail --title "TorBox v.0.5.5 - Bandwidth limit" --inputbox "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH $OLD_LIMIT 3>&1 1>&2 2>&3)
 			exitstatus=$?
 			if [ "$exitstatus" == "1" ] || [ "$exitstatus" == "255" ]; then
 				clear
@@ -1348,7 +1348,7 @@ case "$CHOICE" in
   ;;
 
   #This is the support for Sixfab Shields/HATs for cellular connections
-  #Remark for TorBox v.0.5.4 - we try to do it without an online connection.
+  #Remark for TorBox v.0.5.5 - we try to do it without an online connection.
   #Preinstalled packages needed: ppp
 	22)
 		if [ -z "$CHECK_HD3" ]; then

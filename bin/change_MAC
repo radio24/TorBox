@@ -96,7 +96,7 @@ change_mac_address()
 	O_DEVICE=$1
 	exitstatus=0
 	if [ -z "$CHOICE2" ]; then
-		INPUT="TorBox v.0.5.4 - Change the MAC address for $O_DEVICE"
+		INPUT="TorBox v.0.5.5 - Change the MAC address for $O_DEVICE"
 		CHOICE2=$(whiptail --nocancel --title "$INPUT" --radiolist "Choose with SPACE and then press ENTER (ESC -> go back)" 9 $MENU_WIDTH 3 \
 		"1" "Randomize the MAC addresse(s)" ON \
 		"2" "Use the permanent, unique MAC address of the interface(s)" OFF \
@@ -224,7 +224,7 @@ change_mac_address_finish()
 	# I guess the old one was wrong
 	# if [[ "$O_DEVICE" =~ "$CLIENT_IFACE" ]]; then
 	if [[ "$CLIENT_IFACE" =~ "$O_DEVICE" ]]; then
-		# New v.0.5.4 avoid to run hostapd if it is masked
+		# NEW v.0.5.4 avoid to run hostapd if it is masked
 		AP_STATUS=$(sudo systemctl is-enabled hostapd)
 		if [ "$AP_STATUS" != "masked" ] ; then
 			echo -e "${RED}[+] Restarting hostapd!${NOCOLOR}"
@@ -242,7 +242,7 @@ change_mac_address_finish()
 read_config
 
 if [ -z "$CHOICE2" ]; then
-	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+	CHOICE3=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - MAC ADRESSES OF TORBOX'S INTERFACES" --menu "Choose an option (ESC -> go back)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
 	"==" "===============================================================" \
 	" 1" "Change/randomize the MAC adresses of TorBox's interfaces"  \
 	" 2" "List the MAC adresses of TorBox's interfaces"  \
@@ -259,7 +259,7 @@ case "$CHOICE3" in
 		if [ -z "$CHOICE2" ]; then
 			if grep -q "usb0" <<< "$AVAILABLE_INTERFACES"; then
 				###### DISPLAY THE AVAILABLE INTERFACES inluding usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_15 $MENU_WIDTH 5 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.5 - CHANGE MAC ADRESSES" --checklist --separate-output "\nPlease, use SPACE to select/deselect, ENTER to apply, ESC to go back." $MENU_HEIGHT_15 $MENU_WIDTH 5 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \
@@ -268,7 +268,7 @@ case "$CHOICE3" in
 				3>&1 1>&2 2>&3)
 			else
 				###### DISPLAY THE AVAILABLE INTERFACES without usb0 ######
-				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.4 - CHANGE MAC ADRESSES" --checklist --separate-output "\n\Please, use SPACE to select/deselect, ENTER to apply, ESC to go back." 11 $MENU_WIDTH 4 \
+				CHOICE=$(whiptail --nocancel --title "TorBox v.0.5.5 - CHANGE MAC ADRESSES" --checklist --separate-output "\n\Please, use SPACE to select/deselect, ENTER to apply, ESC to go back." 11 $MENU_WIDTH 4 \
 				"1" "Change the wireless interface 0 (onboard chip; wlan0)" OFF \
 				"2" "Change the wireless interface 1 (USB adapter; wlan1)" OFF \
 				"3" "Change the ethernet interface 0 (onboard ethernet connector; eth0)" OFF \

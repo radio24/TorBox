@@ -126,7 +126,7 @@ fi
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox054"
+HOSTNAME="TorBox055"
 
 # For go
 GO_DL_PATH="https://go.dev/dl/"
@@ -1326,7 +1326,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
   echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
   echo -e "${YELLOW}    After this last step, TorBox has to be rebooted.${NOCOLOR}"
   echo -e "${YELLOW}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-  echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox054) use \"CHANGE-IT\" as password.${NOCOLOR}"
+  echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox055) use \"CHANGE-IT\" as password.${NOCOLOR}"
   echo ""
   read -n 1 -s -r -p $'\e[1;31mTo complete the installation, please press any key... \e[0m'
   clear
@@ -1373,7 +1373,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
   echo -e "${YELLOW}[!] IMPORTANT${NOCOLOR}"
   echo -e "${YELLOW}    TorBox has to be rebooted.${NOCOLOR}"
   echo -e "${YELLOW}    Afterwards, log in with \"torbox\" and your choosen password !! ${NOCOLOR}"
-  echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox054) use \"CHANGE-IT\" as password.${NOCOLOR}"
+  echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox055) use \"CHANGE-IT\" as password.${NOCOLOR}"
   echo ""
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then

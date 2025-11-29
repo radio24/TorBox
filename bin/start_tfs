@@ -60,7 +60,7 @@ if [ $n -gt 0 ] ; then
 			# This will give VIRTPORT and HIDDENSSERVICEPORT
 			find_virtport "${SERVICE_NAME}"
 			if (whiptail --title "TorBox - TorBox's File Sharing capabilities" --no-button "REMOVE" --yes-button "RESTART" --yesno "\nThere is already a TFS configuration for \"$SERVICE_NAME\" in the TorBox run-file, but not running yet. Do you want do restart TFS or remove the old configuration?" $MENU_HEIGHT_20 $MENU_WIDTH); then
-				# NEW - TorBox v.0.5.4
+				# NEW - TorBox v.0.5.5
 				(sudo rm /var/run/tfs_$SERVICE_NAME.sock) &>/dev/null
 				TFS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
 				# Start tfs program
@@ -78,7 +78,7 @@ if [ $n -gt 0 ] ; then
 					test_service_exists $SERVICE_NAME
 					sed -i'' "s|ONION_HOSTNAME|${ONION_HOSTNAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
 					sed -i'' "s|SERVICE|${SERVICE_NAME}|g" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
-					# NEW - TorBox v.0.5.4: Not necessary with TFS v.2
+					# NEW - TorBox v.0.5.5: Not necessary with TFS v.2
 					# sed -i'' "s|FOLDER|$TFS_PATH|" "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf"
 					(sudo mv "/tmp/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" "/etc/${WEBSERVER}/sites-available/") >/dev/null
 					(sudo ln -sf "${NGINX_DIR}/sites-available/${SERVICE_NAME}-${VIRTPORT}-onion-filesharing.conf" ${NGINX_DIR}/sites-enabled/) >/dev/null
@@ -93,12 +93,12 @@ if [ $n -gt 0 ] ; then
 				echo -e "${RED}[+] Reloading Nginx to apply new configuration...${NOCOLOR}"
 			fi
 		elif [[ ! -f $PID_PATH$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
-			# NEW - TorBox v.0.5.4
+			# NEW - TorBox v.0.5.5
 			(sudo rm /var/run/tfs_$SERVICE_NAME.sock) &>/dev/null
 			TFS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"
 			(eval $TFS_CONFIG_LIST) &>/dev/null
 		elif [[ -f $PID_PATH$SERVICE_NAME.pid && "$INITIAL" == "initial" ]]; then
-			# NEW - TorBox v.0.5.4
+			# NEW - TorBox v.0.5.5
 			(sudo rm $PID_PATH_PATH$SERVICE_NAME.pid) &>/dev/null
 			(sudo rm /var/run/tfs_$SERVICE_NAME.sock) &>/dev/null
 			TFS_CONFIG_LIST="nohup sudo /home/torbox/torbox/$TFS_CONFIG_LIST &"

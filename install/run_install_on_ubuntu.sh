@@ -101,7 +101,7 @@ NOCOLOR='\033[0m'
 NAMESERVERS="1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4"
 
 # Default hostname
-HOSTNAME="TorBox054"
+HOSTNAME="TorBox055"
 
 # For go
 GO_DL_PATH="https://go.dev/dl/"
@@ -1348,7 +1348,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	echo -e "${YELLOW}    After this last step, TorBox will reboot.${NOCOLOR}"
 	echo -e "${YELLOW}    To use TorBox, you have to log in with \"torbox\" and the default${NOCOLOR}"
 	echo -e "${YELLOW}    password \"$DEFAULT_PASS\"!! ${NOCOLOR}"
-	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox054) use \"CHANGE-IT\" as password.${NOCOLOR}"
+	echo -e "${YELLOW}    If connecting via TorBox's WiFi (TorBox055) use \"CHANGE-IT\" as password.${NOCOLOR}"
 	echo -e "${YELLOW}    After rebooting, please, change the default passwords immediately!!${NOCOLOR}"
 	echo -e "${YELLOW}    The associated menu entries are placed in the configuration sub-menu.${NOCOLOR}"
 	echo ""
@@ -1377,7 +1377,7 @@ if [ "$STEP_NUMBER" -le "14" ]; then
 	fi
 	#
 	echo -e "${RED}[+] Moving TorBox files...${NOCOLOR}"
-	# TEST v.0.5.4: what is if another user is installing torbox?
+	# TEST v.0.5.5: what is if another user is installing torbox?
 	cd
 	sudo mv * /home/torbox/
 	(sudo mv .profile /home/torbox/) 2>/dev/null

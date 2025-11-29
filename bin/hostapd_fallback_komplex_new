@@ -282,5 +282,5 @@ fi
 # This last part resets the dhcp server, which has to be used after an ifup command
 # Important: the right iptables rules to use Tor have to configured afterward
 if [ "$ON_A_CLOUD" -eq "0" ]; then sudo systemctl restart isc-dhcp-server; fi
-# CHANGE v.0.5.4-post: I don't think this line are necessary
+# CHANGE v.0.5.5-post: I don't think this line are necessary
 # sudo /sbin/iptables-restore < /etc/iptables.ipv4.nat

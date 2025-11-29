@@ -42,7 +42,7 @@ Please bear the following coding guidelines in mind:
   **Example for a short menu**
   ```shell
   clear
-  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.4 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
+  CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - ADD BRIDGES MENU" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
   "==" "===============================================================" \
   " 1" "Add one OBFS4 bridge automatically (one bridge every 24 hours)"  \
   " 2" "Add OBFS4 bridges manually"  \
