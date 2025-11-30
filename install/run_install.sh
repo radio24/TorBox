@@ -732,7 +732,8 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	sudo sed -i "/^pip==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	# re-connect (not needed, because of check_install_packages "python3-pip")
-	sudo pip3 install -r requirements.txt
+	# NEW v.0.5.5: Some older Python libraries are installed because of dependencies. This leads to problems with pip3. With --ignore-installed the old conflicting libraries will be overwritten.
+	sudo pip3 install --ignore-installed -r requirements.txt
   sleep 5
   clear
   echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"

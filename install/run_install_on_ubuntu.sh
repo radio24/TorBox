@@ -736,7 +736,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
 	re-connect
-	sudo pip3 install -r requirements.txt
+	sudo pip3 install --ignore-installed -r requirements.txt
 	sleep 5
 	clear
 	echo -e "${YELLOW}Following Python modules are installed:${NOCOLOR}"
