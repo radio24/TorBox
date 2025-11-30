@@ -718,11 +718,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
-	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# bcrypt needs rust, which waste 1 Gb of space.
-	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
-	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
-	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
+	# NEW v.0.5.5: No Python libraries must be installed using apt-get - this will lead to errors using pip3
   cd
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
