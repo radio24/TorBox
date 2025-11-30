@@ -709,33 +709,24 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# 1. Check the Pipfile --> is the package in the list?
 	# 2. Execute: pipenv lock (this should only be done on a test system not during installation or to prepare an image!)
 	# 3. Execute: pipenv requirements >requirements.txt
-	# 4. Execute: sudo pip install -r requirements (this will update outdated packages)
+	# 4. Execute: sudo pip install -r requirements.txt (this will update outdated packages)
 	# 5. Check the list of outdated packages: pip list --outdated
 	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
-	# NEW v.0.5.4: Some Python libraries have to be installed manually
-	# bcrypt needs rust, which waste 1 Gb of space.
-	# check_install_packages "python3-pip python3-pil python3-opencv python3-bcrypt python3-numpy"
-	# NEW v.0.5.4-post: python3-opencv doesn't seem to be necessary
-	check_install_packages "python3-pip python3-pil python3-bcrypt python3-numpy"
-	cd
+	# NEW v.0.5.5: No Python libraries must be installed using apt-get - this will lead to errors using pip3
+  cd
+	check_install_packages "python3-pip"
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
-	# bcrypt needs rust, which waste 1 Gb of space, but the python3- package is too old
-	sudo pip install --only-binary=:all: cryptography
-	sudo pip install --only-binary=:all: pillow
-	# Don't try to create Pipfile.lock during the installation process. It is too slow and complicated!
-	# The best way is to build it on a cloud installation
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-	#pipenv lock -v
+	# Download the latest Pipfile.lock
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
-	# wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
-	sudo sed -i "/^cryptography==.*/d" requirements.txt
+	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
+	# NEW v.0.5.5: Test if requirements.txt is able to install these packages bellow
 	sudo sed -i "/^pip==.*/d" requirements.txt
-	sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
-	re-connect
+	# re-connect (not needed, because of check_install_packages "python3-pip")
+	# NEW v.0.5.5: Some older Python libraries are installed because of dependencies. This leads to problems with pip3. With --ignore-installed the old conflicting libraries will be overwritten.
 	sudo pip3 install --ignore-installed -r requirements.txt
 	sleep 5
 	clear
