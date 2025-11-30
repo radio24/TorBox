@@ -720,26 +720,18 @@ if [ "$STEP_NUMBER" -le "4" ]; then
 	# Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
 	# NEW v.0.5.5: No Python libraries must be installed using apt-get - this will lead to errors using pip3
   cd
+	check_install_packages "python3-pip"
 	sudo pip install --upgrade pip
 	sudo pip3 install pipenv
-	# bcrypt needs rust, which waste 1 Gb of space, but the python3- package is too old
-	# NEW v.0.5.5: Test if requirements.txt is able to install these packages bellow
-	# sudo pip install --only-binary=:all: cryptography
-	# sudo pip install --only-binary=:all: pillow
-	# Don't try to create Pipfile.lock during the installation process. It is too slow and complicated!
-	# The best way is to build it on a cloud installation
-	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile
-	#pipenv lock -v
+	# Download the latest Pipfile.lock
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
 	# If the creation of requirements.txt failes then use the (most probably older) one from our repository
 	#wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/requirements.txt
 	# NEW v.0.5.5: Test if requirements.txt is able to install these packages bellow
-	# sudo sed -i "/^cryptography==.*/d" requirements.txt
 	sudo sed -i "/^pip==.*/d" requirements.txt
-	# sudo sed -i "/^pillow==.*/d" requirements.txt
 	sudo sed -i "s/^typing-extensions==/typing_extensions==/g" requirements.txt
-	re-connect
+	# re-connect (not needed, because of check_install_packages "python3-pip")
 	sudo pip3 install -r requirements.txt
   sleep 5
   clear
