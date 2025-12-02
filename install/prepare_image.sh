@@ -150,8 +150,8 @@ cd
 # Remark: we install all Python libraries globally (as root) because otherwice some programs troubling to find the library in the local environment
 # NEW v.0.5.5: No Python libraries must be installed using apt-get - this will lead to errors using pip3
 sudo apt-get -y install python3-pip
-sudo pip install --upgrade pip
-sudo pip3 install pipenv
+sudo pip install --ignore-installed --upgrade pip
+sudo pip3 install --ignore-installed pipenv
 sudo rm Pipfile.lock*
 sudo rm requirements.txt
 # Download the latest Pipfile.lock
@@ -189,7 +189,7 @@ while [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; do
     if [[ $REPLY =~ ^[YyNn]$ ]] ; then
       if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
 				# sudo pip3 install --ignore-installed -r requirements.txt
-        sudo pip3 install -r requirements.failed
+        sudo pip3 install --ignore-installed -r requirements.failed
         sleep 5
         rm requirements.failed
         unset REQUIREMENTS

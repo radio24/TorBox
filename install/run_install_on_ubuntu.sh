@@ -715,8 +715,8 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 	# NEW v.0.5.5: No Python libraries must be installed using apt-get - this will lead to errors using pip3
   cd
 	check_install_packages "python3-pip"
-	sudo pip install --upgrade pip
-	sudo pip3 install pipenv
+	sudo pip install --ignore-installed --upgrade pip
+	sudo pip3 install --ignore-installed pipenv
 	# Download the latest Pipfile.lock
 	wget --no-cache https://raw.githubusercontent.com/$TORBOXMENU_FORKNAME/TorBox/$TORBOXMENU_BRANCHNAME/Pipfile.lock
 	pipenv requirements >requirements.txt
@@ -755,7 +755,7 @@ if [ "$STEP_NUMBER" -le "3" ]; then
 			read -r -p $'\e[1;93mWould you like to try it again [Y/n]? -> \e[0m'
 			if [[ $REPLY =~ ^[YyNn]$ ]] ; then
 				if [ "$REPLY" == "Y" ] || [ "$REPLY" == "y" ]; then
-					sudo pip3 install -r requirements.failed
+					sudo pip3 install --ignore-installed -r requirements.failed
 					sleep 5
 					rm requirements.failed
 					unset REQUIREMENTS
