@@ -276,7 +276,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - CONFIGURATION
 "12" "$TOGGLE12 HTTP plain text traffic block $TOGGLE13" \
 "==" "======================================================[Tor]===" \
 "13" "$TOGGLE18 excluding slow tor relays"  \
-"14" "$TOGGLE10 Tor network bandwidth limitation"
+"14" "$TOGGLE10 Tor network bandwidth limitation" \
 "15" "$TOGGLE14 Tor control port access for clients $TOGGLE15" \
 "16" "Enter the advanced tor configuration editor"  \
 "==" "=============================================[Logging "$TOGGLE03 \
@@ -284,7 +284,7 @@ CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - CONFIGURATION
 "18" "Erase all log files" \
 "==" "=============================================[Add Features]===" \
 "19" "$TOGGLE22" \
-"10" "Support for Adafruit's PiTFT displays (reboot required)" \
+"20" "Support for Adafruit's PiTFT displays (reboot required)" \
 "21" "Support for 3.5\" no-name TFT displays (reboot required)" \
 "22" "Support for Sixfab Shields/HATs for cellular connections" \
 3>&1 1>&2 2>&3)
