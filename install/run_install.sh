@@ -1337,7 +1337,7 @@ if [ "$STEP_NUMBER" -le "15" ]; then
   done
 	sudo journalctl --vacuum-size=1M
   echo -e "${RED}[+]${NOCOLOR} Erasing History..."
-  #.bash_history is already deleted
+	(rm .bash_history) 2>/dev/null
   history -c
   # To start TACA, notices.log has to be present
   (sudo -u debian-tor touch /var/log/tor/notices.log) 2>/dev/null
