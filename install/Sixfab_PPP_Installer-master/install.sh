@@ -74,7 +74,7 @@ esac
 echo
 echo -e "${RED}[+] Copying setup files...${NOCOLOR}"
 #Installing ppp is not necessary, because they are alredy there
-#Wiringpi is not necessary because we do not use the auto- / recobbect-features
+#Wiringpi is not necessary because we do not use the auto- / reconnect-features
 mkdir -p /etc/chatscripts
 cp $SOURCE_PATH/chat-connect /etc/chatscripts/
 cp $SOURCE_PATH/chat-disconnect /etc/chatscripts/
@@ -104,7 +104,7 @@ do
 		break;;
 		[Nn]* )
 			#Possibly out of date
-			#sed -i "s/^auth/#auth/" /etc/ppp/options  
+			#sed -i "s/^auth/#auth/" /etc/ppp/options
 			break;;
 		*)  echo -e "${WHITE}Wrong Selection, Select among Y or n${SET}";;
 	esac

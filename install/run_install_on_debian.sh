@@ -849,6 +849,7 @@ if [ "$STEP_NUMBER" -le "4" ]; then
   echo -e "${RED}[+] Step 4: Installing Tor...${NOCOLOR}"
 	re-connect
   select_and_install_tor
+	check_install_packages "libtorsocks"
 
   if [ "$STEP_BY_STEP" = "--step_by_step" ]; then
 	  echo ""
