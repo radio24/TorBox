@@ -57,10 +57,10 @@ ON_A_CLOUD=$(grep "^ON_A_CLOUD=.*" ${RUNFILE} | sed "s/.*=//g")
 # Is the automatic counteractions feature activated?
 if pgrep -f "log_check.py" ; then
   clear
-  LOGCHECK="${GREEN} Activated!"
+	LOGCHECK_STRING="${GREEN} Activated!"
 else
     clear
-  LOGCHECK="${RED} Deactivated!"
+	LOGCHECK_STRING="${RED} Deactivated!"
 fi
 
 # Are bridges activated?
@@ -127,7 +127,7 @@ echo -e "${RED}Nyx version                            :${YELLOW} $(nyx -v | head
 echo -e "${RED}Go version                             :${YELLOW} $(/usr/local/go/bin/go version | head -1 | sed "s/go version //")${NOCOLOR}"
 echo -e "${RED}Firewall countermeasures               :$FIREWALL${NOCOLOR}"
 echo -e "${RED}Disconnection when idle countermeasure :$PING${NOCOLOR}"
-echo -e "${RED}TorBox's automatic counteractions are  :$LOGCHECK${NOCOLOR}"
+echo -e "${RED}TorBox's automatic counteractions are  :$LOGCHECK_STRING${NOCOLOR}"
 echo -e "${RED}Bridges                                :$MODE_BRIDGES${NOCOLOR}"
 echo -e "${RED}Bridge Relay                           :$BRIDGE_RELAY${NOCOLOR}"
 echo -e "${RED}Onion Services                         :$MODE_OS${NOCOLOR}"
