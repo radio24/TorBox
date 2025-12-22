@@ -1,0 +1,16 @@
+With a Raspberry Pi Zero 2 W, we have to configure some additional settings.
+
+Broadcom BCM43436 WiFi chip on the Raspberry Pi Zero 2 W exhibits kernel
+NULL pointer dereference in brcmf_p2p_send_action_frame+0x234 when P2P and
+WPA3-SAE are enabled in firmware.
+
+Root cause chain: hostapd initializes P2P → driver attempts P2P frame
+transmission → firmware bug in P2P handler → NULL pointer dereference →
+kernel OOPS (Tainted: CRAP).
+
+Impact: System instability, WLAN disconnects, potential data loss during
+active sessions
+
+Fix: adding p2p_disabled=1 to hostapd
+
+Will the converted system be used in a Raspberry Pi Zero 2 W?

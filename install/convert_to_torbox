@@ -66,9 +66,8 @@ RUNFILE="run/torbox.run"
 #include lib
 .  /home/torbox/torbox/lib/torbox.lib
 
-NPUT=$(cat text/convert_to_torbox-text)
+INPUT=$(cat text/convert_to_torbox-text)
 if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-
 	cd $TORBOX_PATH
 
 	# Reinstalling kernel-headers and dkms
@@ -120,6 +119,19 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 
 	# Necessary boot-script to activate etc/iptables.ipv4.nat after the reboot
 	sudo cp etc/rc.local /etc/
+
+	INPUT=$(cat text/convert_to_torbox-question-text)
+	if (whiptail --title "TorBox - INFO" --yesno --defaultno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+		if ! grep "p2p_disabled=1" /etc/hostapd/hostapd.conf ; then
+			sudo printf "\n# Added by convert_to_torbox\np2p_disabled=1\n" | sudo tee -a /etc/hostapd/hostapd.conf
+		fi
+		# In rc.local it is tested if the hostapd interface is up. Only in this case, hostapd will be startet.
+		# That could lead to problems, if the interface is not up when running the test, for exemple on a slow Raspberry Pi 2 W
+		if ! grep -qF "(sleep 15; systemctl restart hostapd) &" /etc/rc.local; then
+			sudo sed -i '/exit 0/i # Added by convert_to_torbox' /etc/rc.local
+			sudo sed -i '/exit 0/i (sleep 15; systemctl restart hostapd) &' /etc/rc.local
+		fi
+	fi
 
 	# Setting up the correct runtime variables (used by rc.local)
 	sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
