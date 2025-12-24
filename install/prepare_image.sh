@@ -301,6 +301,37 @@ echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 sudo apt --fix-broken install
 sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
 go clean -cache
+echo ""
+echo -e "${RED}[+] Removing APT cache completely to reduce image size...${NOCOLOR}"
+sudo rm -rf /var/cache/apt/archives/*
+sudo rm -rf /var/lib/apt/lists/*
+echo ""
+echo -e "${RED}[+] Removing Python pip cache to reduce image size...${NOCOLOR}"
+sudo rm -rf /root/.cache/pip
+sudo rm -rf /home/torbox/.cache/pip
+sudo rm -rf /home/torbox/.local/share/pip
+echo ""
+echo -e "${RED}[+] Removing Go build cache to reduce image size...${NOCOLOR}"
+sudo rm -rf /root/.cache/go-build
+sudo rm -rf /home/torbox/.cache/go-build
+sudo rm -rf /root/go
+sudo rm -rf /home/torbox/go
+echo ""
+echo -e "${RED}[+] Removing all user cache directories to reduce image size...${NOCOLOR}"
+sudo rm -rf /home/torbox/.cache/*
+sudo rm -rf /root/.cache/*
+echo ""
+echo -e "${RED}[+] Removing temporary files to reduce image size...${NOCOLOR}"
+sudo rm -rf /tmp/*
+sudo rm -rf /var/tmp/*
+echo ""
+echo -e "${RED}[+] Reducing systemd journal size to minimum...${NOCOLOR}"
+sudo journalctl --vacuum-size=1M
+sudo journalctl --vacuum-time=1d
+echo ""
+echo -e "${RED}[+] Removing bash history files...${NOCOLOR}"
+(rm /home/torbox/.bash_history) 2>/dev/null
+(sudo rm /root/.bash_history) 2>/dev/null
 sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service

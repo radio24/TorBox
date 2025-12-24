@@ -1154,6 +1154,7 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	sudo systemctl stop bluetooth.service
 	sudo systemctl disable bluetooth.service
 	sudo systemctl mask bluetooth.service
+	sudo systemctl daemon-reload
 	# CHANGED v.0.5.5: Additional packages to remove
   sudo apt-get purge -y bluez bluez-firmware pi-bluetooth
   sudo apt-get -y autoremove
