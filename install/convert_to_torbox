@@ -122,9 +122,12 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 
 	INPUT=$(cat text/convert_to_torbox-question-text)
 	if (whiptail --title "TorBox - INFO" --yesno --defaultno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
-		if ! grep "p2p_disabled=1" /etc/hostapd/hostapd.conf ; then
-			sudo printf "\n# Added by convert_to_torbox\np2p_disabled=1\n" | sudo tee -a /etc/hostapd/hostapd.conf
+		if sudo [ ! -e /etc/modprobe.d/brcmfmac.conf ] || sudo [ ! -s /etc/modprobe.d/brcmfmac.conf ]; then
+			echo "options brcmfmac roamoff=1 feature_disable=0x82000" | sudo tee /etc/modprobe.d/brcmfmac.conf
+		elif ! grep "options brcmfmac roamoff=1 feature_disable=0x82000" /etc/modprobe.d/brcmfmac.conf ; then
+			sudo sed -i "s/^options brcmfmac/options brcmfmac roamoff=1 feature_disable=0x82000/g" /etc/modprobe.d/brcmfmac.conf
 		fi
+		sudo update-initramfs -u
 		# In rc.local it is tested if the hostapd interface is up. Only in this case, hostapd will be startet.
 		# That could lead to problems, if the interface is not up when running the test, for exemple on a slow Raspberry Pi 2 W
 		if ! grep -qF "(sleep 15; systemctl restart hostapd) &" /etc/rc.local; then
