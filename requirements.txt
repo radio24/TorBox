@@ -31,7 +31,7 @@ packaging==25.0; python_version >= '3.8'
 paramiko==4.0.0; python_version >= '3.9'
 peewee==3.18.3
 pgpy==0.6.0; python_version >= '3.6'
-pillow==12.0.0; python_version >= '3.10'
+pillow==12.1.1; python_version >= '3.10'
 pyasn1==0.6.1; python_version >= '3.8'
 pycparser==2.23; python_version >= '3.8'
 pynacl==1.6.1; python_version >= '3.8'
