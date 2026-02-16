@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
+# Copyright (C) 2025 radio24
+# Contact: anonym@torbox.ch
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it is useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# DESCRIPTION
+# THIS SCRIPT IS INTENDED TO BE USED BY THE DEVELOPERS ONLY!
+# This script converts a TorBox mini installation to a default TorBox installation.
+# Important: This script must be run locally and not via a network connection.
+#
+# SYNTAX
+# sudo bash convert_to_torbox
+#
+#
+##### SET VARIABLES ######
+#
+# SIZE OF THE MENU
+#
+#Set the the variables for the menu
+MENU_WIDTH=80
+MENU_HEIGHT_15=15
+
+#Colors
+RED='\033[1;31m'
+YELLOW='\033[1;93m'
+NOCOLOR='\033[0m'
+
+# What main version is installed
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+
+# Where is the config.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CONFIGFILE="/boot/firmware/config.txt"
+else
+  CONFIGFILE="/boot/config.txt"
+fi
+
+# Where is the cmdline.txt?
+if [ "$DEBIAN_VERSION" -gt "11" ]; then
+  CMDLINEFILE="/boot/firmware/cmdline.txt"
+else
+  CMDLINEFILE="/boot/cmdline.txt"
+fi
+
+#Other variables
+TORBOX_PATH="/home/torbox/torbox"
+RUNFILE="run/torbox.run"
+
+##############################
+######## FUNCTIONS ###########
+
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
+INPUT=$(cat text/convert_to_torbox-text)
+if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
+	cd $TORBOX_PATH
+
+	# Reinstalling kernel-headers and dkms
+	clear
+	echo -e "${RED}[+] Reinstalling kernel-headers and dkms....${NOCOLOR}"
+	echo ""
+
+	# Fixing and cleaning
+	echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
+	echo ""
+	sudo apt --fix-broken install
+	sudo apt-get -y clean; sudo apt-get -y autoclean; sudo apt-get -y autoremove
+	go clean -cache
+	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+	sudo systemctl daemon-reload
+
+	# Updating the system
+	echo -e "${RED}[+] Updating the system...${NOCOLOR}"
+	echo ""
+	sudo apt-get -y update
+	sudo apt-get -y dist-upgrade
+	sudo apt-get -y clean
+	sudo apt-get -y autoclean
+	sudo apt-get -y autoremove
+	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+	sudo systemctl daemon-reload
+
+	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
+	LINUX_HEADERS="linux-headers-$(uname -r)"
+	sudo apt-get install $LINUX_HEADERS dkms
+
+	# Set up WiFi AP (Hostapd) - the files should already be there, but to be sure
+	sudo cp etc/default/hostapd /etc/default/
+	sudo cp etc/hostapd/hostapd.conf /etc/hostapd/
+
+	# Set up DHCP (Removes the IP Pool for 192.168.44.x)
+	sudo cp etc/dhcp/dhcpd.conf /etc/dhcp/
+	sudo cp etc/default/isc-dhcp-server /etc/default/
+
+	# Assign the correct IPs for the server and the client (192.168.44.x —> 192.168.42.x) - activated after the reboot
+	sudo cp etc/network/interfaces /etc/network/
+
+	# Set the correct routing for wlan0 and 192.168.42.x - activated after the reboot
+	sudo cp etc/iptables.ipv4.nat /etc/
+
+	# Necessary boot-script to activate etc/iptables.ipv4.nat after the reboot
+	sudo cp etc/rc.local /etc/
+
+	INPUT=$(cat text/convert_to_torbox-question-text)
+	if (whiptail --title "TorBox - INFO" --yesno --defaultno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
+		if sudo [ ! -e /etc/modprobe.d/brcmfmac.conf ] || sudo [ ! -s /etc/modprobe.d/brcmfmac.conf ]; then
+			echo "options brcmfmac roamoff=1 feature_disable=0x82000" | sudo tee /etc/modprobe.d/brcmfmac.conf
+		elif ! grep "options brcmfmac roamoff=1 feature_disable=0x82000" /etc/modprobe.d/brcmfmac.conf ; then
+			sudo sed -i "s/^options brcmfmac/options brcmfmac roamoff=1 feature_disable=0x82000/g" /etc/modprobe.d/brcmfmac.conf
+		fi
+		sudo update-initramfs -u
+		# In rc.local it is tested if the hostapd interface is up. Only in this case, hostapd will be startet.
+		# That could lead to problems, if the interface is not up when running the test, for exemple on a slow Raspberry Pi 2 W
+		if ! grep -qF "(sleep 15; systemctl restart hostapd) &" /etc/rc.local; then
+			sudo sed -i '/exit 0/i # Added by convert_to_torbox' /etc/rc.local
+			sudo sed -i '/exit 0/i (sleep 15; systemctl restart hostapd) &' /etc/rc.local
+		fi
+	fi
+
+	# Setting up the correct runtime variables (used by rc.local)
+	sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+	sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
+	# Forgot that - could be the reason that it didn’t work (it doesn’t matter if the interfaces are available or not - it will autoconfigure after the reboot and your choices in the main menu)
+	sudo sed -i "s/^INTERNET_IFACE=.*/INTERNET_IFACE=eth0/" ${RUNFILE}
+	sudo sed -i "s/^CLIENT_IFACE=.*/CLIENT_IFACE=wlan0 eth1/" ${RUNFILE}
+
+	# Set up systemctl services
+	sudo systemctl unmask hostapd
+	sudo systemctl enable hostapd
+	sudo systemctl start hostapd
+	sudo systemctl daemon-reload
+
+	# Remove Ethernet-Gadget capabilities
+	if grep "modules-load=dwc2,g_ether" "dwc2,g_ether" ${CMDLINEFILE}; then
+		sudo sed -i "s|modules-load=dwc2,g_ether ||g" ${CMDLINEFILE}
+	elif grep "dwc2,g_ether" ${CMDLINEFILE}; then
+		sudo sed -i "s|dwc2,g_ether ||g" ${CMDLINEFILE}
+	fi
+	if grep "dtoverlay=dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
+		sudo sed -i "/^dtoverlay=dwc2,dr_mode=peripheral/d" /boot/firmware/config.txt
+	fi
+	clear
+	echo -e "${RED}[+]TorBox is now configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
+fi
+
+# Reboot
+recommended_reboot

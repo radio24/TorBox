@@ -1154,6 +1154,7 @@ if [ "$STEP_NUMBER" -le "11" ]; then
 	sudo systemctl stop bluetooth.service
 	sudo systemctl disable bluetooth.service
 	sudo systemctl mask bluetooth.service
+	sudo systemctl daemon-reload
 	# CHANGED v.0.5.5: Additional packages to remove
   sudo apt-get purge -y bluez bluez-firmware pi-bluetooth
   sudo apt-get -y autoremove
@@ -1244,19 +1245,19 @@ if [ "$STEP_NUMBER" -le "13" ]; then
 		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=1/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
-		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
 	  sudo sed -i "s/=random/=permanent/" ${RUNFILE}
   elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
     sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
     sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
-		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=1/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=1/" ${RUNFILE}
   else
 	  sudo sed -i "s/^FRESH_INSTALLED=.*/FRESH_INSTALLED=3/" ${RUNFILE}
 		sudo sed -i "s/^SSH_FROM_INTERNET=.*/SSH_FROM_INTERNET=0/" ${RUNFILE}
 	  sudo sed -i "s/^ON_A_CLOUD=.*/ON_A_CLOUD=0/" ${RUNFILE}
-		sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
+		sudo sed -i "s/^TORBOX_MINI_DEFAULT=.*/TORBOX_MINI_DEFAULT=0/" ${RUNFILE}
     sudo sed -i "s/^TORBOX_MINI=.*/TORBOX_MINI=0/" ${RUNFILE}
   fi
 
