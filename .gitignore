@@ -9,3 +9,8 @@ lib/__pycache__/
 .gitignore
 .shellcheckrc
 .github
+.env
+.env.local
+.env.*.local
+*.key
+*.pem

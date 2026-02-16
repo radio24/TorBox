@@ -177,6 +177,7 @@ if [ "$TORBOX_MINI" -eq "1" ]; then
 	"10" "$TOGGLE24 passwordless TorBox's WLAN (reboot required)" \
 	"11" "Forwarding only - tor protection disabled" \
 	"12" "$TOGGLE23 other connection options in TorBox mini's Main Menu" \
+	"13" "Convert a TorBox mini installation to a default TorBox installation" \
 	3>&1 1>&2 2>&3)
 else
 	CHOICE=$(whiptail --cancel-button "Back" --title "TorBox v.0.5.5 - DANGER ZONE" --menu "Choose an option (ESC -> back to the main menu)" $MENU_HEIGHT $MENU_WIDTH $MENU_LIST_HEIGHT \
@@ -194,7 +195,9 @@ else
 	" 9" "$TOGGLE11 root access" \
 	"10" "$TOGGLE24 passwordless TorBox's WLAN" \
 	"11" "Forwarding only - tor protection disabled" \
+	"12" "Convert a default TorBox installation to a TorBox mini installation" \
 	3>&1 1>&2 2>&3)
+	if [ "$CHOICE" == "12" ]; then CHOICE="13"; fi
 fi
 exitstatus=$?
 # exitstatus == 255 means that the ESC key was pressed
@@ -784,6 +787,13 @@ case "$CHOICE" in
 				sudo cp etc/rc.local.mini /etc/rc.local
 				sudo chmod a+x /etc/rc.local
 			fi
+		fi
+	;;
+
+	# Convert a default TorBox installation to a TorBox mini installation (or the other way around)
+	13)
+		if [ "$TORBOX_MINI" -eq "1" ]; then sudo ./install/convert_to_torbox
+		else sudo ./install/convert_to_torbox_mini
 		fi
 	;;
 
