@@ -58,7 +58,7 @@ fi
 
 #Other variables
 TORBOX_PATH="/home/torbox/torbox"
-RUNFILE="run/torbox.run"
+RUNFILE="$TORBOX_PATH/run/torbox.run"
 
 ##############################
 ######## FUNCTIONS ###########
@@ -101,7 +101,7 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 
 	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
 	LINUX_HEADERS="linux-headers-$(uname -r)"
-	sudo apt-get install $LINUX_HEADERS dkms
+	sudo apt-get -y install $LINUX_HEADERS dkms
 
 	# Set up WiFi AP (Hostapd) - the files should already be there, but to be sure
 	sudo cp etc/default/hostapd /etc/default/
@@ -150,16 +150,16 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	sudo systemctl daemon-reload
 
 	# Remove Ethernet-Gadget capabilities
-	if grep "modules-load=dwc2,g_ether" "dwc2,g_ether" ${CMDLINEFILE}; then
+	if grep -q "modules-load=dwc2,g_ether" ${CMDLINEFILE}; then
 		sudo sed -i "s|modules-load=dwc2,g_ether ||g" ${CMDLINEFILE}
-	elif grep "dwc2,g_ether" ${CMDLINEFILE}; then
+	elif grep -q "dwc2,g_ether" ${CMDLINEFILE}; then
 		sudo sed -i "s|dwc2,g_ether ||g" ${CMDLINEFILE}
 	fi
-	if grep "dtoverlay=dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
-		sudo sed -i "/^dtoverlay=dwc2,dr_mode=peripheral/d" /boot/firmware/config.txt
+	if grep -q "dtoverlay=dwc2,dr_mode=peripheral" ${CONFIGFILE}; then
+		sudo sed -i "/^dtoverlay=dwc2,dr_mode=peripheral/d" ${CONFIGFILE}
 	fi
 	clear
-	echo -e "${RED}[+]TorBox is now configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
+	echo -e "${RED}[+]TorBox mini is now configured to be used in a default Raspberry Pi${NOCOLOR}"
 fi
 
 # Reboot

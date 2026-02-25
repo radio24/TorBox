@@ -105,6 +105,10 @@ function log_warn() {
 	echo -e "${RED}[WARN]${COLOR_RESET} $*"
 }
 
+fundction log_error() {
+	echo -e "${RED}[ERROR]${COLOR_RESET} $*"
+}
+
 function log_fatal() {
 	echo -e "${RED}[ERROR]${COLOR_RESET} $*"
 	exit 1
@@ -112,6 +116,10 @@ function log_fatal() {
 
 function log_success() {
 	echo -e "${GREEN}[OK]${COLOR_RESET} $*"
+}
+
+function log_debug() {
+		echo -e "${YELLOW}[DEBUG]${COLOR_RESET} $*"
 }
 
 function log_prompt() {
@@ -347,12 +355,14 @@ function generateClientConfig() {
 	local client="$1"
 	local filepath="$2"
 
-	# Determine if we use tls-auth or tls-crypt
+	# Determine if we use tls-crypt-v2, tls-crypt, or tls-auth
 	local tls_sig=""
-	if grep -qs "^tls-crypt" $OPENVPN_CONF; then
+	if grep -qs "^tls-crypt-v2" $OPENVPN_CONF; then
 		tls_sig="1"
-	elif grep -qs "^tls-auth" $OPENVPN_CONF; then
+	elif grep -qs "^tls-crypt" $OPENVPN_CONF; then
 		tls_sig="2"
+	elif grep -qs "^tls-auth" $OPENVPN_CONF; then
+		tls_sig="3"
 	fi
 
 	# Generate the custom client.ovpn
@@ -403,6 +413,7 @@ function generateClientConfig() {
 			;;
 		esac
 	} >>"$filepath"
+	chown torbox:torbox $filepath
 }
 
 function getDaysUntilExpiry() {
@@ -472,6 +483,18 @@ function selectClient() {
 	done
 	CLIENTNUMBER="${CLIENTNUMBER:-$client_number}"
 	CLIENT=$(tail -n +2 $OPENVPN_SERVER_PATH/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
+}
+
+# Escape a string for JSON output
+function json_escape() {
+	local str="$1"
+	# Escape backslashes first, then quotes, then control characters
+	str="${str//\\/\\\\}"
+	str="${str//\"/\\\"}"
+	str="${str//$'\n'/\\n}"
+	str="${str//$'\r'/\\r}"
+	str="${str//$'\t'/\\t}"
+	printf '%s' "$str"
 }
 
 function listClients() {
@@ -669,11 +692,11 @@ function installQuestions() {
 	log_prompt "What IP version should clients use to connect to this server?"
 
 	# Determine default based on available addresses
-	if [[ -n $IP_IPV4 ]]; then
-		ENDPOINT_TYPE_DEFAULT=1
-	fi
 	if [[ -n $IP_IPV6 ]]; then
 		ENDPOINT_TYPE_DEFAULT=2
+	fi
+	if [[ -n $IP_IPV4 ]]; then
+		ENDPOINT_TYPE_DEFAULT=1
 	fi
 
 	log_menu "   1) IPv4 (recommended)"
@@ -1521,22 +1544,18 @@ function newClient() {
 		export EASYRSA_CERT_EXPIRE=$CLIENT_CERT_DURATION_DAYS
 		case $PASS in
 		1)
-			run_cmd_fatal "Building client certificate" ./easyrsa --batch build-client-full "$CLIENT" nopass
+			run_cmd_fatal "Building $cert_desc" ./easyrsa --batch "$easyrsa_cmd" "$CLIENT" nopass
 			;;
 		2)
-			log_warn "You will be asked for the client password below"
-			# Run directly (not via run_cmd) so password prompt is visible to user
 			if [[ -z "$PASSPHRASE" ]]; then
 				log_warn "You will be asked for the client password below"
-				# Run directly (not via run_cmd) so password prompt is visible to user
-				if ! ./easyrsa --batch build-client-full "$CLIENT"; then
-					log_fatal "Building client certificate failed"
+				if ! ./easyrsa --batch "$easyrsa_cmd" "$CLIENT"; then
+					log_fatal "Building $cert_desc failed"
 				fi
 			else
 				log_info "Using provided passphrase for client certificate"
-				# Use env var to avoid exposing passphrase in install log
 				export EASYRSA_PASSPHRASE="$PASSPHRASE"
-				run_cmd_fatal "Building client certificate" ./easyrsa --batch --passin=env:EASYRSA_PASSPHRASE --passout=env:EASYRSA_PASSPHRASE build-client-full "$CLIENT"
+				run_cmd_fatal "Building $cert_desc" ./easyrsa --batch --passin=env:EASYRSA_PASSPHRASE --passout=env:EASYRSA_PASSPHRASE "$easyrsa_cmd" "$CLIENT"
 				unset EASYRSA_PASSPHRASE
 			fi
 			;;
@@ -1584,7 +1603,7 @@ function revokeClient() {
 
 function renewClient() {
 	clear
-	local homeDir client_cert_duration_days
+	local client_cert_duration_days
 	log_header "Renew Client Certificate"
 	log_prompt "Select the existing client certificate you want to renew"
 	selectClient "true"
@@ -1752,7 +1771,8 @@ function removeOpenVPN() {
 		if hash sestatus 2>/dev/null; then
 			if sestatus | grep "Current mode" | grep -qs "enforcing"; then
 				if [[ $PORT != '1194' ]]; then
-					run_cmd "Removing SELinux port" semanage port -d -t openvpn_port_t -p "$PROTOCOL" "$PORT"
+					SELINUX_PROTOCOL="${PROTOCOL%6}"
+					run_cmd "Removing SELinux port" semanage port -d -t openvpn_port_t -p "$SELINUX_PROTOCOL" "$PORT"
 				fi
 			fi
 		fi
