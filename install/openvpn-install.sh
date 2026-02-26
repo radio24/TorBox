@@ -119,7 +119,7 @@ function log_success() {
 }
 
 function log_debug() {
-		echo -e "${YELLOW}[DEBUG]${COLOR_RESET} $*"
+		echo -e "${YELLOW}${COLOR_RESET} $*"
 }
 
 function log_prompt() {
