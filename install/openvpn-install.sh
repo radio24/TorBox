@@ -105,7 +105,7 @@ function log_warn() {
 	echo -e "${RED}[WARN]${COLOR_RESET} $*"
 }
 
-fundction log_error() {
+function log_error() {
 	echo -e "${RED}[ERROR]${COLOR_RESET} $*"
 }
 
@@ -1542,6 +1542,17 @@ function newClient() {
 		cd $OPENVPN_SERVER_PATH/easy-rsa/ || return
 		log_info "Generating client certificate..."
 		export EASYRSA_CERT_EXPIRE=$CLIENT_CERT_DURATION_DAYS
+
+		# Determine easyrsa command based on auth mode
+		local easyrsa_cmd cert_desc
+		if [[ $AUTH_MODE == "pki" ]]; then
+			easyrsa_cmd="build-client-full"
+			cert_desc="client certificate"
+		else
+			easyrsa_cmd="self-sign-client"
+			cert_desc="self-signed client certificate"
+		fi
+
 		case $PASS in
 		1)
 			run_cmd_fatal "Building $cert_desc" ./easyrsa --batch "$easyrsa_cmd" "$CLIENT" nopass
