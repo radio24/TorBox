@@ -1299,6 +1299,7 @@ tls-cipher $CC_CIPHER
 tls-ciphersuites $TLS13_CIPHERSUITES
 client-config-dir $OPENVPN_SERVER_PATH/ccd
 status /var/log/openvpn/status.log
+management /var/run/openvpn-server/server.sock unix
 verb 3" >>$OPENVPN_CONF
 
 	# Create client-config-dir dir
@@ -1367,6 +1368,27 @@ verb 3" >>$OPENVPN_CONF
 	# This is needed for openSUSE which uses old-style paths by default
 	if grep -q "cd /etc/openvpn/" /etc/systemd/system/openvpn-server@.service; then
 		run_cmd "Patching service file (paths)" sed -i 's|/etc/openvpn/|/etc/openvpn/server/|g' /etc/systemd/system/openvpn-server@.service
+	fi
+
+	# Ensure RuntimeDirectory is set for the management socket
+	# Some distros (e.g., openSUSE) don't include this in their service file
+	if ! grep -q "RuntimeDirectory=" /etc/systemd/system/openvpn-server@.service; then
+		run_cmd "Patching service file (RuntimeDirectory)" sed -i '/\[Service\]/a RuntimeDirectory=openvpn-server' /etc/systemd/system/openvpn-server@.service
+	fi
+
+	# AppArmor: Ubuntu 25.04+ ships an enforcing profile for OpenVPN
+	# (/etc/apparmor.d/openvpn) that doesn't allow the management unix socket
+	# in /run/openvpn-server/. Add a local override to permit this.
+	if [[ -f /etc/apparmor.d/openvpn ]]; then
+		log_info "Configuring AppArmor for OpenVPN..."
+		mkdir -p /etc/apparmor.d/local
+		if [[ ! -f /etc/apparmor.d/local/openvpn ]] || ! grep -q "openvpn-server" /etc/apparmor.d/local/openvpn; then
+			{
+				echo "# Allow OpenVPN management socket and status files in openvpn-server directory"
+				echo "/{,var/}run/openvpn-server/** rw,"
+			} >>/etc/apparmor.d/local/openvpn
+		fi
+		run_cmd "Reloading AppArmor profile" apparmor_parser -r /etc/apparmor.d/openvpn
 	fi
 
 	run_cmd "Reloading systemd" systemctl daemon-reload
@@ -1543,15 +1565,10 @@ function newClient() {
 		log_info "Generating client certificate..."
 		export EASYRSA_CERT_EXPIRE=$CLIENT_CERT_DURATION_DAYS
 
-		# Determine easyrsa command based on auth mode
+		# Determine easyrsa command based on auth mode. Currently the TorBox version supports only pki
 		local easyrsa_cmd cert_desc
-		if [[ $AUTH_MODE == "pki" ]]; then
-			easyrsa_cmd="build-client-full"
-			cert_desc="client certificate"
-		else
-			easyrsa_cmd="self-sign-client"
-			cert_desc="self-signed client certificate"
-		fi
+		easyrsa_cmd="build-client-full"
+		cert_desc="client certificate"
 
 		case $PASS in
 		1)
@@ -1795,6 +1812,14 @@ function removeOpenVPN() {
 		run_cmd "Removing OpenVPN docs" rm -rf /usr/share/doc/openvpn*
 		run_cmd "Removing sysctl config" rm -f /etc/sysctl.d/99-openvpn.conf
 		run_cmd "Removing OpenVPN logs" rm -rf /var/log/openvpn
+
+		# AppArmor local override
+		if [[ -f /etc/apparmor.d/local/openvpn ]]; then
+			run_cmd "Removing AppArmor local override" rm -f /etc/apparmor.d/local/openvpn
+			if [[ -f /etc/apparmor.d/openvpn ]]; then
+				run_cmd "Reloading AppArmor profile" apparmor_parser -r /etc/apparmor.d/openvpn 2>/dev/null || true
+			fi
+		fi
 
 		# Setting torbox.run
 		sudo sed -i "s/^OPENVPN_FROM_INTERNET=.*/OPENVPN_FROM_INTERNET=0/" ${RUNFILE}
