@@ -1611,6 +1611,24 @@ function newClient() {
 	fi
 }
 
+# Disconnect a client via the management interface
+function disconnectClient() {
+	local client_name="$1"
+	local mgmt_socket="/var/run/openvpn-server/server.sock"
+
+	if [[ ! -S "$mgmt_socket" ]]; then
+		log_warn "Management socket not found. Client may still be connected until they reconnect."
+		return 0
+	fi
+
+	log_info "Disconnecting client $client_name..."
+	if echo "kill $client_name" | socat - UNIX-CONNECT:"$mgmt_socket" >/dev/null 2>&1; then
+		log_success "Client $client_name disconnected."
+	else
+		log_warn "Could not disconnect client (they may not be connected)."
+	fi
+}
+
 function revokeClient() {
 	clear
 	log_header "Revoke Client"
@@ -1624,6 +1642,8 @@ function revokeClient() {
 	run_cmd "Removing client config from /root" rm -f "/root/$CLIENT.ovpn"
 	run_cmd "Removing IP assignment" sed -i "/^$CLIENT,.*/d" $OPENVPN_SERVER_PATH/ipp.txt
 	run_cmd "Backing up index" cp $OPENVPN_SERVER_PATH/easy-rsa/pki/index.txt{,.bk}
+	# Disconnect the client if currently connected
+	disconnectClient "$CLIENT"
 	log_success "Certificate for client $CLIENT revoked."
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
