@@ -153,6 +153,11 @@ TORBOX_MINI=0
 # 1 - Yes (default)
 TORBOX_MINI_DEFAULT=1
 
+# OpenVPN multiclient; allow a single .ovpn profile to be used on multiple devices simultaneously
+# n - No (default)
+# y - Yes
+MULTI_CLIENT=n
+
 ## Global variables to help inter-script communication - don't change them!!
 
 # Exit control variable

@@ -810,6 +810,7 @@ function installQuestions() {
 	until [[ $MULTI_CLIENT =~ (y|n) ]]; do
 		read -rp "Allow multiple devices per client? [y/n]: " -e -i n MULTI_CLIENT
 	done
+	sudo sed -i "s/^MULTI_CLIENT=.*/MULTI_CLIENT=${MULTI_CLIENT}/g" ${RUNFILE}
 	clear
 	echo -e "${YELLOW}[+] Do you want to customize encryption settings?${NOCOLOR}"
 	echo -e "${RED}[+] Unless you know what you're doing, you should stick with the default parameters provided.${NOCOLOR}"
@@ -1075,7 +1076,9 @@ function installQuestions() {
 	echo -e "${NOCOLOR}    With a MacOS client, we recommend Tunnelblick because of its security features: https://tunnelblick.net/"
 	echo ""
 	echo -e "${YELLOW}[!] IMPORTANT 1: To activate the OpenVPN Server, you have to select again the Internet source in the Main Menu (entry 5-10)!${NOCOLOR}"
-	echo -e "${YELLOW}[!] IMPORTANT 2: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+	if [[ $MULTI_CLIENT == "n" ]]; then
+		echo -e "${YELLOW}[!] IMPORTANT 2: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+	fi
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 }
@@ -1595,6 +1598,7 @@ function newClient() {
 		clientFilePath="$homeDir/$CLIENT.ovpn"
 		# generateClientConfig "$client" "$clientFilePath"
 		generateClientConfig "$CLIENT" "$clientFilePath"
+		MULTI_CLIENT=$(grep "^MULTI_CLIENT=.*" ${RUNFILE} | sed "s/.*=//g")
 
 		clear
 		echo -e "${YELLOW}[+] All done! The ovpn-file has been written to $homeDir/$CLIENT.ovpn.${NOCOLOR}"
@@ -1603,8 +1607,10 @@ function newClient() {
 		echo -e "${RED}[+] You can access it by using a SFTP client (it uses the same login and password as your SSH client).${NOCOLOR}"
 		echo -e "${RED}[+] Use the ovpn-file with the OpenVPN Connect client software: https://openvpn.net/client/.${NOCOLOR}"
 		echo -e "${RED}[+] With a MacOS client, we recommend Tunnelblick because of its security features: https://tunnelblick.net/"
-		echo ""
-		echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+		if [[ $MULTI_CLIENT == "n" ]]; then
+			echo ""
+			echo -e "${YELLOW}[!] IMPORTANT: Every client machine needs its seperate ovpn-file!${NOCOLOR}"
+		fi
 		echo ""
 		read -n1 -r -p "Press any key to continue..."
 		exit 0

@@ -522,7 +522,7 @@ case "$CHOICE" in
 		wait $pid
 		echo -e "${YELLOW}[+] Step 2 of 2 done${NOCOLOR}"
 		sleep 2
-		if ip link | grep eth0 > /dev/null; then
+    if ip link show | grep -q eth0 || [ "$ON_A_CLOUD" -eq 1 ]; then
 			ask_captive
     	if ip link | grep wlan0 | grep "state UP" ; then
       	WLAN0_IP=$(ip addr show wlan0 | grep -w 192.168.42.1)
