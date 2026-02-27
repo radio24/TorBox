@@ -494,17 +494,19 @@ case "$CHOICE" in
 		else
 			INPUT=$(cat text/cable-text)
     	if (whiptail --title "TorBox - INFO" --yesno "$INPUT" $MENU_HEIGHT_25 $MENU_WIDTH); then
-				if ! ip link | grep eth0 > /dev/null; then
-					INPUT=$(cat text/no_interface_try_it_anyway-text)
-					if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
-						exitstatus=$?
-						# exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
-						if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 0 ; fi
-					else
-						trap "bash menu; exit 0" EXIT
-						exit 0
-					fi
-				fi
+        if [ "$ON_A_CLOUD" = "0" ] ; then
+				  if ! ip link | grep eth0 > /dev/null; then
+					  INPUT=$(cat text/no_interface_try_it_anyway-text)
+					  if (whiptail --title "TorBox - INFO" --yesno --defaultno --no-button "BACK!" --yes-button "PUSH IT!" "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH_REDUX); then
+						  exitstatus=$?
+						  # exitstatus = 255 means that the ESC key was pressed / exitstatus = 1 is cancelled
+						  if [ "$exitstatus" = "1" ] || [ "$exitstatus" = "255" ] ; then	exit 0 ; fi
+					  else
+						  trap "bash menu; exit 0" EXIT
+						  exit 0
+					  fi
+				  fi
+        fi
 			else
 				trap "bash menu; exit 0" EXIT
 				exit 0
