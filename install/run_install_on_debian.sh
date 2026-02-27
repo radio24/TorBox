@@ -1045,58 +1045,47 @@ if [ "$STEP_NUMBER" -le "9" ]; then
   cp etc/motd /etc/
   echo -e "${RED}[+]${NOCOLOR}         Copied /etc/motd -- backup done"
 
-  # NEW v.0.5.4: TorBox on a Cloud - there are two scenario
-  # 1 - The VPS get the network configuration via DHCP --> we can use our /etc/network/interfaces
-  # 2 - The VPS the network of the VPS is statically configured --> don't change /etc/network/interfaces
-  #     but disable with Predictable Network Interface Name in /etc/network/interfaces
-	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	# NEW v.0.5.5: TorBox on a Cloud
+	# We do not change /etc/network/interfaces
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-	  NIC=$(ip -4 route ls | grep default | grep -Po '(?<=dev )(\S+)' | head -1)
-	  if ! grep "$NIC" /etc/network/interfaces | grep "static"; then
-		  cp etc/network/interfaces /etc/network/
-		  echo
-		  echo -e "${YELLOW}[!]         The VPS network is configured via DHCP - copying /etc/network/interfaces -- Backup done!"
-		  echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
-		  echo
-		  sleep 10
-	  else
-		  sed -i "s/\<$NIC\>/eth0/g" /etc/network/interfaces
-		  echo
-		  echo -e "${YELLOW}[!]         The VPS network is configured statically - keeping /etc/network/interfaces!"
-		  echo -e "${YELLOW}            However, we changed $NIC into eth0!"
-		  echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
-		  echo
-		  sleep 10
-	  fi
+		sleep 1
 	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
+  	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		cp etc/network/interfaces.mini /etc/network/interfaces
+		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 	else
+		(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
 		cp etc/network/interfaces /etc/network/
+		echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 	fi
+
   # NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
-  # Added for TorBox on a Cloud -- has to be tested with a common Debian image
-	if [ ! -f "/boot/dietpi/.version" ] ; then
-  	echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
-  	if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
-	  	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
-	  	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
-		  	if [ "$GRUB_CONFIG" == "" ]; then
-			  	GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
-			  	#This is necessary to work with special characters in sed
-			  	GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			  	sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-		  	else
-			  	GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
-			  	#This is necessary to work with special characters in sed
-			  	GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-			  	sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-		  	fi
-	  	fi
-  	else
-	  	(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
-  	fi
-  	update-grub
+	# NEW v.0.5.5: Don't so it on a cloud
+	if [ "$ON_A_CLOUD" -eq "0" ]; then
+		if [ ! -f "/boot/dietpi/.version" ] ; then
+  		echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+  		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+	  		GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+	  		if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+		  		if [ "$GRUB_CONFIG" == "" ]; then
+			  		GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+			  		#This is necessary to work with special characters in sed
+			  		GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			  		sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		  		else
+			  		GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+			  		#This is necessary to work with special characters in sed
+			  		GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+			  		sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+		  		fi
+	  		fi
+  		else
+	  		(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+  		fi
+  		update-grub
+		fi
 	fi
+
   # With Debian 11 (Bullseye) there is no default rc.local file anymore. But this doesn't mean it has been completely removed.
   # URL: https://blog.wijman.net/enable-rc-local-in-debian-bullseye/
   cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
