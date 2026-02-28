@@ -98,7 +98,7 @@ readonly DEFAULT_CRL_VALIDITY_DURATION_DAYS=5475  # 15 years
 # The original script uses these function for logging purposes
 # In our fork, we don't _log_to_file and removed this function.
 function log_info() {
-	echo -e "${YELLOW}[INFO]${COLOR_RESET} $*"
+	echo -e "${YELLOW}$*${COLOR_RESET}"
 }
 
 function log_warn() {
