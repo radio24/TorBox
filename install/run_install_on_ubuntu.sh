@@ -1045,33 +1045,49 @@ if [ "$STEP_NUMBER" -le "9" ]; then
 	# Ubuntu supports Predictable Network Interface Names, but we need wlan0, wlan1 etc.
 	# See here: https://askubuntu.com/questions/826325/how-to-revert-usb-wifi-interface-name-from-wlxxxxxxxxxxxxx-to-wlanx
 	# See here: https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
-	# NEW v.0.5.5: Don't so it on a cloud
-	if [ "$ON_A_CLOUD" -eq "0" ]; then
-		if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
-		sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
-		echo -e "${RED}[+]${NOCOLOR}         Predictable Network Interface Names disabled"
-		# NEW v.0.5.4: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
-		# Added for TorBox on a Cloud -- has to be tested with a common Debian image
-		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
-			GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
-			if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
-				if [ "$GRUB_CONFIG" == "" ]; then
-					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
-					#This is necessary to work with special characters in sed
-					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+	if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
+	sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
+	# Part 1: Configuring with grub
+ 	echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+	echo -e "${RED}[!]         Using a VPS, you may have to restart the VPS!!${NOCOLOR}"
+	echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+	echo
+	sleep 10
+ 	if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+	  	GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+	  	if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+		  	if [ "$GRUB_CONFIG" == "" ]; then
+			  	GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+ 			  	#This is necessary to work with special characters in sed
+ 			  	GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
 					sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-				else
-					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
-					#This is necessary to work with special characters in sed
-					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+	 		  else
+	 			 	GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+	 			 	#This is necessary to work with special characters in sed
+	 			 	GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
 					sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-				fi
-			fi
-		else
-			(sudo printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | sudo tee -a /etc/default/grub) 2>&1
-		fi
-		sudo update-grub
-	fi
+ 		  	fi
+ 	  	fi
+   	else
+ 	  	(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+   	fi
+   	update-grub
+ 	fi
+	# Part 2: Configuring systemd
+	LINK_FILE="/etc/systemd/network/10-eth0.link"
+	DEF_IF=$(ip route show default 2>/dev/null | awk '/default/ {print $5; exit}')
+	PATH_VAL=$(udevadm info "/sys/class/net/$DEF_IF" | awk -F= '/^E: ID_PATH=/ {print $2; exit}')
+	mkdir -p "$(dirname "$LINK_FILE")"
+	ln -sf /dev/null /etc/systemd/network/99-default.link
+	cat > "$LINK_FILE" <<EOF
+[Match]
+Path=pci-0000:00:06.0
+
+[Link]
+Name=eth0
+AlternativeNamesPolicy=
+EOF
+	update-initramfs -u
 
 	# See also here: https://www.linuxbabe.com/linux-server/how-to-enable-etcrc-local-with-systemd
 	sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/
