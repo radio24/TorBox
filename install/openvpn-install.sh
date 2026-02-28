@@ -1529,6 +1529,7 @@ function listConnectedClients() {
 		done
 		log_menu ""
 		log_info "Note: Data refreshes every 60 seconds."
+		read -n1 -r -p "Press any key to continue..."
 	fi
 }
 
