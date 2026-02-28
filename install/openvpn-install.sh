@@ -600,6 +600,7 @@ function listClients() {
 			printf "   %-25s %-10s %-12s %s\n" "$name" "$status_display" "$expiry" "$relative"
 		done
 		log_menu ""
+		read -n1 -r -p "Press any key to continue..."
 	fi
 }
 
