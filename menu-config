@@ -237,7 +237,7 @@ read_config()
 
 	# TOGGLE22 shows if the OpenVPN server is configured
 	clear
-	if [[ -e /etc/openvpn/server.conf ]]; then
+	if [[ -e /etc/openvpn/server.conf || -e /etc/openvpn/server/server.conf ]]; then
 		TOGGLE22="Manage the OpenVPN server"
 	else
 		TOGGLE22="Install the OpenVPN server"
