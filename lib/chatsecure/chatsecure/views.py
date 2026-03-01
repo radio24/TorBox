@@ -4,7 +4,7 @@ import peewee
 import pgpy
 import hashlib
 from flask import Blueprint, request, jsonify, Response, current_app, render_template
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from chatsecure.models import User, Group, UserMessage, GroupMessage
 
 bp = Blueprint("index", __name__)
@@ -37,12 +37,7 @@ def token_required(func):
 class LoginResource(Resource):
     def post(self):
         """Receive user and pubkey and store in db"""
-        parser = reqparse.RequestParser()
-        parser.add_argument('name', type=str)
-        parser.add_argument('pubkey', type=str)
-        args = parser.parse_args()
-
-        # data = request.json
+        args = request.get_json(silent=True) or {}
         name_txt = args.get("name", None)
         pubkey_txt = args.get("pubkey", None)
         if name_txt and pubkey_txt:
