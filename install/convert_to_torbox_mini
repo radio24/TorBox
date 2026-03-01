@@ -63,11 +63,15 @@ RUNFILE="run/torbox.run"
 ##############################
 ######## FUNCTIONS ###########
 
+#include lib
+.  /home/torbox/torbox/lib/torbox.lib
+
 INPUT=$(cat text/convert_to_torbox_mini-text)
 if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_15 $MENU_WIDTH); then
-	cd
-	cd torbox
-	#These packages are not necessary anymore
+
+cd $TORBOX_PATH
+
+	# These packages are not necessary anymore
 	clear
 	echo -e "${RED}[+] These packages are not necessary anymore....${NOCOLOR}"
 	echo ""
@@ -76,7 +80,8 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	# NEW v.0.5.5: This is necessary for installing linux-headers, which replaces raspberrypi-kernel-headers on Debian Trixie
 	LINUX_HEADERS="linux-headers-$(uname -r)"
 	(sudo apt-get -y purge $LINUX_HEADERS dkms) 2>/dev/null
-	#Fixing and cleaning
+
+	# Fixing and cleaning
 	echo -e "${RED}[+] Fixing and cleaning${NOCOLOR}"
 	echo ""
 	sudo apt --fix-broken install
@@ -86,6 +91,7 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
 	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
 	sudo systemctl daemon-reload
+
 	# Updating the system
 	echo -e "${RED}[+] Updating the system...${NOCOLOR}"
 	echo ""
@@ -94,6 +100,12 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	sudo apt-get -y clean
 	sudo apt-get -y autoclean
 	sudo apt-get -y autoremove
+	sudo setcap 'cap_net_bind_service=+ep' /usr/bin/obfs4proxy
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@default.service
+	sudo sed -i "s/^NoNewPrivileges=yes/NoNewPrivileges=no/g" /lib/systemd/system/tor@.service
+	sudo systemctl daemon-reload
+
+	# Set up the system
 	echo -e "${RED}[+] Set up the system...${NOCOLOR}"
 	sudo cp $TORBOX_PATH/etc/dhcp/dhcpd-mini.conf /etc/dhcp/dhcpd.conf
 	sudo cp $TORBOX_PATH/etc/iptables.ipv4-mini.nat /etc/iptables.ipv4.nat
@@ -120,3 +132,6 @@ if (whiptail --title "TorBox - INFO" --defaultno --yesno "$INPUT" $MENU_HEIGHT_1
 	clear
 	echo -e "${RED}[+]TorBox is now configured to be used in a Raspberry Pi Zero 2 W${NOCOLOR}"
 fi
+
+# Reboot
+recommended_reboot

@@ -428,31 +428,57 @@ update_torcfg()
 	  sudo cp etc/network/interfaces.mini /etc/network/interfaces
 	fi
 
-	# NEW v.0.5.4: ONLY ON DEBIAN AND Ubuntu
-	# Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
-	# Added for TorBox on a Cloud -- has to be tested with a common Debian image
-	if [ "$CHECK_OS" == "Ubuntu" ] || [ "$CHECK_OS" == "Debian" ]; then
-		echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
-		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
-			GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
-			if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
-				if [ "$GRUB_CONFIG" == "" ]; then
-					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
-					#This is necessary to work with special characters in sed
-					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-				else
-					GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
-					#This is necessary to work with special characters in sed
-					GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
-					sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
-				fi
+	# NEW v.0.5.4: ONLY ON DEBIAN AND Ubuntu: Disable Predictable Network Interface Names, because we need eth0, wlan0, wlan1 etc.
+	# Part 1: Configuring with grub
+ 	if [ ! -f "/boot/dietpi/.version" ] ; then
+		if [ "$CHECK_OS" == "Ubuntu" ] || [ "$CHECK_OS" == "Debian" ]; then
+			if [ "$CHECK_OS" == "Ubuntu" ]; then
+				if [ -f "/dev/null /etc/udev/rules.d/80-net-setup-link.rules" ]; then sudo rm /dev/null /etc/udev/rules.d/80-net-setup-link.rules; fi
+				sudo ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
 			fi
-		else
-			(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+			echo -e "${RED}[+]${NOCOLOR}         Disabling Predictable Network Interface Names"
+			echo -e "${RED}[!]         Using a VPS, you may have to restart the VPS!!${NOCOLOR}"
+			echo -e "${YELLOW}            If you need support from the TorBox team, then please report this!"
+			echo
+			sleep 10
+   		if grep "GRUB_CMDLINE_LINUX=" /etc/default/grub; then
+ 	  		GRUB_CONFIG=$(grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | sed 's/GRUB_CMDLINE_LINUX=//g' | sed 's/"//g')
+ 	  		if [[ ${GRUB_CONFIG} != *"net.ifnames"* ]] && [[ ${GRUB_CONFIG} != *"biosdevname"* ]]; then
+ 		 			if [ "$GRUB_CONFIG" == "" ]; then
+ 		  			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
+ 		  			#This is necessary to work with special characters in sed
+ 		  			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+						sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+ 		 			else
+ 		  			GRUB_CONFIG_NEW="GRUB_CMDLINE_LINUX=\"$GRUB_CONFIG net.ifnames=0 biosdevname=0\""
+ 		  			#This is necessary to work with special characters in sed
+ 		  			GRUB_CONFIG_NEW="$(<<< "$GRUB_CONFIG_NEW" sed -e 's`[][\\/.*^$]`\\&`g')"
+						sudo sed -i "s/^GRUB_CMDLINE_LINUX=.*/$GRUB_CONFIG_NEW/g" /etc/default/grub
+ 		 			fi
+ 	  		fi
+   		else
+ 	  		(printf "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\"" | tee -a /etc/default/grub) 2>&1
+   		fi
+			sudo update-grub
+
+			# Part 2: Configuring systemd
+			LINK_FILE="/etc/systemd/network/10-eth0.link"
+			DEF_IF=$(ip route show default 2>/dev/null | awk '/default/ {print $5; exit}')
+			PATH_VAL=$(udevadm info "/sys/class/net/$DEF_IF" | awk -F= '/^E: ID_PATH=/ {print $2; exit}')
+			mkdir -p "$(dirname "$LINK_FILE")"
+			ln -sf /dev/null /etc/systemd/network/99-default.link
+			cat > "$LINK_FILE" <<EOF
+[Match]
+Path=pci-0000:00:06.0
+
+[Link]
+Name=eth0
+AlternativeNamesPolicy=
+EOF
+			update-initramfs -u
 		fi
-		update-grub
 	fi
+
   sudo cp etc/systemd/system/rc-local.service /etc/systemd/system/rc-local.service
   (sudo cp /etc/rc.local /etc/rc.local.bak) 2>/dev/null
 	if [ "$TORBOX_MINI" == "--torbox_mini" ]; then
