@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091,SC2129,SC2164,SC2034,SC1072,SC1073,SC1009
 
 # This file is a part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2025 radio24
+# Copyright (C) 2026 radio24
 # Contact: anonym@torbox.ch
 # Website: https://www.torbox.ch
 # Github:  https://github.com/radio24/TorBox
@@ -11,6 +11,7 @@
 # CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux,
 # which is under MIT Licence (https://raw.githubusercontent.com/Angristan/openvpn-install/master/LICENSE)
 # Github:  https://github.com/angristan/openvpn-install
+# Latest Commit: #cad603c
 #
 # DESCRIPTION
 # This script installs an openvpn server and manages the client ovpn-files.
@@ -20,7 +21,8 @@
 #
 # IMPORTANT
 # Currently, this script doesn't support peer-fingerprint authentication mode used by OpenVPN 2.6+.
-# The original script implement this feature with commit #df242ee (https://github.com/angristan/openvpn-install/commit/df242ee069e06b312c6af0b06487d108decd24fc#diff-0742f10ff479ac71573debd44cfad7847d79c1f575a81e44a4ac0c6063853e1c)
+# The original script implement this feature with commit #df242ee (https://github.com/angristan/openvpn-install/commit/df242ee069e06b312c6af0b06487d108decd24fc#diff-0742f10ff479ac71573debd44cfad7847d79c1f575a81e44a4ac0c6063853e1c) and
+# #28050ef (https://github.com/angristan/openvpn-install/commit/28050efa50a64d79f834a7bdd8a9eea6d32ec2f7).
 # Please give me a hint, if you need that feature (anonym@torbox.ch).
 #
 #

@@ -256,7 +256,7 @@ while true; do
 		if [ "$SSH_INTERNET_CHECK" == "ON" ] && [ -z "$DANGEROUS_OPTIONS" ]; then
 			INPUT=$(cat "$TXT_DIR/ssh_i_access-off-txt")
 			# If NO, the SSH changes will be skipped and it returns to the selction menu.
-			if ! (whiptail --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_10 $MENU_WIDTH); then
+			if ! (whiptail --title "TorBox v.0.5.5 - SSH ACCESS CONTROL" --yesno "$INPUT" $MENU_HEIGHT_20 $MENU_WIDTH); then
 					continue
 			fi
 		fi

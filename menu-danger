@@ -57,6 +57,7 @@ NOCOLOR='\033[0m'
 RUNFILE="/home/torbox/torbox/run/torbox.run"
 HOSTAPD="/etc/hostapd/hostapd.conf"
 SSHD_CONFIG="/etc/ssh/sshd_config"
+SSHD_CONFIGD_DIR="/etc/ssh/sshd_config.d/"
 CLEARNET_LIST="clearnet-list"
 CLEARNET_LIST_FILE="run/$CLEARNET_LIST"
 # Format of CLEARNET_LIST_FILE_OWN: <DOMAINNAME> <IP1> [<IPn>]
@@ -124,9 +125,15 @@ read_config()
 	# TOGGLE21 shows if SSH pasword login is enabled or disable
 	if sudo grep -q "^PasswordAuthentication no" ${SSHD_CONFIG} ; then
 		TOGGLE21="Enable"
+		if sudo grep -q "^PasswordAuthentication yes" $SSHD_CONFIGD_DIR* ; then
+			TOGGLE21="Disable"
+		fi
 	else
 		TOGGLE21="Disable"
-	fi
+		if sudo grep -q "^PasswordAuthentication no" $SSHD_CONFIGD_DIR* ; then
+			TOGGLE21="Enable"
+		fi
+  fi
 
 	# TOGGLE23 shows if TorBox mini default configuration is enabled or disable
 	if [ "$TORBOX_MINI_DEFAULT" -eq "1" ]; then
@@ -608,6 +615,7 @@ case "$CHOICE" in
 					echo -e "${RED}[+] Disabling SSH password login...${NOCOLOR}"
 					(sudo sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
 					(sudo sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" ${SSHD_CONFIG}) 2>/dev/null
+					(sudo sed -i 's/PasswordAuthentication[[:space:]]\+yes/PasswordAuthentication no/' "$SSHD_CONFIGD_DIR"*) 2>/dev/null
 					(printf "\nKbdInteractiveAuthentication no\n" | sudo tee -a $SSHD_CONFIG) 2>/dev/null
 					echo ""
 					echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
@@ -631,6 +639,7 @@ case "$CHOICE" in
 			clear
 			echo -e "${RED}[+] Enabling SSH password login...${NOCOLOR}"
 			(sudo sed -i "s/PasswordAuthentication no/#PasswordAuthentication yes/" ${SSHD_CONFIG}) 2>/dev/null
+			(sudo sed -i 's/PasswordAuthentication[[:space:]]\+no/PasswordAuthentication yes/' "$SSHD_CONFIGD_DIR"*) 2>/dev/null
 			(sudo sed -i "/KbdInteractiveAuthentication no/d" ${SSHD_CONFIG}) 2>/dev/null
 			echo ""
 			echo -e "${RED}[+] Restarting SSH service...${NOCOLOR}"
