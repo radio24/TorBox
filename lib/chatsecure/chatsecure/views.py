@@ -5,7 +5,7 @@ import pgpy
 import hashlib
 from flask import Blueprint, request, jsonify, Response, current_app, render_template
 from flask_restful import Resource
-from chatsecure.models import User, Group, UserMessage, GroupMessage
+from chatsecure.models import db, User, Group, UserMessage, GroupMessage
 
 bp = Blueprint("index", __name__)
 @bp.route("/")
@@ -74,13 +74,14 @@ class LoginResource(Resource):
             s = str(fp + current_app.config["SECRET_KEY"]).encode("utf-8")
             token = hashlib.sha1(s).hexdigest()
             # add to db
-            new_user = User.create(
-                name=name,
-                pubkey=pubkey_txt,
-                fp=fp,
-                token=token,
-            )
-            new_user.save()
+            with db.atomic():
+                new_user = User.create(
+                    name=name,
+                    pubkey=pubkey_txt,
+                    fp=fp,
+                    token=token,
+                )
+                new_user.save()
             reply = {"id": new_user.id, "token": token}
             return jsonify(reply)
 
