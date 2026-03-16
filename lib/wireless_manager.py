@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This file is part of TorBox, an easy to use anonymizing router based on Raspberry Pi.
-# Copyright (C) 2025 radio24
+# Copyright (C) 2026 radio_24
 # Contact: anonym@torbox.ch
 #
 # MODIFIED VERSION WITH WPA3 SUPPORT
