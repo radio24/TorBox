@@ -71,7 +71,8 @@ class GroupMessage(BaseModel):
 def init_db():
     # Create tables
     db.create_tables([User, Group, UserMessage, GroupMessage])
-    Group.create(name="default")
+    with db.atomic():
+        Group.create(name="default")
 
 
 def main():
