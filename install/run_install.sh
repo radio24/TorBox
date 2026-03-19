@@ -1060,13 +1060,13 @@ if [ "$STEP_NUMBER" -le "10" ]; then
 
 	# NEW v.0.5.5: TorBox on a Cloud
 	# We do not change our /etc/network/interfaces
-	(cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
+	(sudo cp /etc/network/interfaces /etc/network/interfaces.bak) 2>/dev/null
   if [ "$ON_A_CLOUD" == "--on_a_cloud" ]; then
-		cp etc/network/interfaces /etc/network/
+		sudo cp etc/network/interfaces /etc/network/
 	elif [ "$TORBOX_MINI" == "--torbox_mini" ]; then
-		cp etc/network/interfaces.mini /etc/network/interfaces
+		sudo cp etc/network/interfaces.mini /etc/network/interfaces
 	else
-		cp etc/network/interfaces /etc/network/
+		sudo cp etc/network/interfaces /etc/network/
 	fi
 	echo -e "${RED}[+]${NOCOLOR}         Copied /etc/network/interfaces -- backup done"
 
