@@ -1131,9 +1131,7 @@ if [ "$STEP_NUMBER" -le "11" ]; then
       sudo printf "\n# Added by TorBox\ndtoverlay=disable-bt\n" | sudo tee -a ${CONFIGFILE}
     fi
   fi
-	sudo systemctl stop hciuart.service
-	sudo systemctl disable hciuart.service
-	sudo systemctl mask hciuart.service
+	# NEW v.0.5.5: hciuart removed because it is not anymore used in the latest Raspberry Pi OS
 	sudo systemctl stop bluetooth.service
 	sudo systemctl disable bluetooth.service
 	sudo systemctl mask bluetooth.service
